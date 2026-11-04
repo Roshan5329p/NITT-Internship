@@ -346,7 +346,7 @@ public class AmPlatformApplication {
                 }
 
                 ProcessRecipe recipe = inferenceService.inferRecipe(opt.get());
-                String json = JsonUtil.toJson(recipe);
+                String json = JsonUtil.toJson(recipe.toMap());
                 sendJsonResponse(exchange, 200, json);
             }
         });
