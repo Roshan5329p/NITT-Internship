@@ -1,0 +1,55 @@
+id,paper_number,test_direction,condition,yield_strength_mpa,ultimate_tensile_strength_mpa,elongation_pct,vickers_hardness_hv,fracture_toughness_kic_mpa_m05,charpy_impact_energy_j,fatigue_limit_mpa,astm_f2924_compliant,astm_f3001_compliant,notes
+1,1,horizontal (XY),HIPed (850°C / 200 MPa),885.0,995.0,14.5,345.0,,,540.0,1,1,High-cycle fatigue endurance limit increased from 260 MPa (as-built) to 540 MPa
+2,2,vertical (Z),as-built,1050.0,1220.0,6.8,385.0,,,210.0,0,0,High as-built roughness (Ra 14.2 µm) severely degrades fatigue
+3,3,horizontal (XY),stress-relieved,1010.0,1175.0,7.6,370.0,,,360.0,0,0,HDH fatigue limit was ~85% of gas-atomized GA powder
+4,4,horizontal (XY),as-built,1060.0,1230.0,8.2,390.0,,,410.0,0,0,"As-built strength high, ductility below ASTM F2924 (min 10%)"
+5,5,vertical (Z),as-built,1040.0,1205.0,7.1,382.0,,,290.0,0,0,Laser energy drops created micro-defects reducing fatigue
+6,6,horizontal (XY),as-built,980.0,1110.0,11.5,355.0,,,480.0,1,1,Passes ASTM F2924 in as-built state without post-furnace treatment
+7,7,horizontal (XY),as-built,1055.0,1210.0,7.4,380.0,,,,0,0,Baseline properties for thermal model calibration
+8,8,horizontal (XY),annealed (840°C 2h),920.0,1010.0,13.5,350.0,,,510.0,1,1,Heat treated values meet both ASTM F2924 and ASTM F3001
+9,9,compression,stress-relieved,125.0,165.0,18.0,365.0,,,,0,0,Compressive elastic modulus 3.8 GPa perfectly matching human trabecular/cortical bone
+10,10,horizontal (XY),as-built,1085.0,1240.0,6.8,395.0,,,,0,0,Oxygen pick-up increased YS and UTS by ~40 MPa while decreasing elongation by 1.5%
+11,11,horizontal (XY),annealed (800°C 2h),935.0,1030.0,12.8,352.0,,,,1,1,Prismatic slip dominant at yield; ductility governed by pyramidal slip activation
+12,12,horizontal (XY),stress-relieved,990.0,1130.0,8.5,365.0,48.5,15.0,,0,0,Apparent fracture toughness varies with notch root radius (0.25 to 2 mm)
+13,15,horizontal (XY),as-built,1070.0,1240.0,7.0,388.0,,,,0,0,Residual stresses drive distortion upon electrical discharge machining (EDM) cutoff
+14,18,horizontal (XY),annealed (750°C 2h),950.0,1045.0,12.0,355.0,,,470.0,1,1,Vertical build fatigue limit is 395 MPa due to layer-boundary defect orientation
+15,19,horizontal (XY),as-built,840.0,935.0,12.5,325.0,,24.0,,1,1,"Longer interlayer delay (120s) refines α laths, increasing yield strength by 45 MPa"
+16,24,horizontal (XY),Laser Shock Peened,1120.0,1260.0,8.8,425.0,,,620.0,0,0,High-cycle fatigue limit increased from 340 MPa to 620 MPa (+82% increase)
+17,26,horizontal (XY),annealed (950°C 2h),865.0,960.0,15.2,335.0,,24.5,,1,1,Charpy impact energy increases from 9.2 J (as-built) to 24.5 J (950°C) and 28.1 J (1050°C)
+18,33,horizontal (XY),stress-relieved,945.0,1060.0,12.8,348.0,,,,1,1,Fully certified to ASTM F3001 Grade 23 ELI tensile standards
+19,36,horizontal (XY),HIPed,855.0,965.0,15.0,338.0,,,420.0,1,1,Axial fatigue limit 420 MPa; torsional shear fatigue limit 260 MPa (ratio = 0.62)
+20,37,vertical (Z),as-built vs polished,1030.0,1180.0,7.5,378.0,,,225.0,0,0,As-built fatigue limit 225 MPa governed by surface roughness; polishing increases it to 545 MPa
+21,41,crack perpendicular to layers,as-built,825.0,920.0,11.2,320.0,68.4,26.0,,1,0,Fracture toughness anisotropic: K_IC = 68.4 MPa m^0.5 (crack perp) vs 51.8 MPa m^0.5 (crack parallel)
+22,42,horizontal (XY),Laser Polished,1060.0,1220.0,8.5,380.0,,,510.0,0,0,Surface roughness Ra reduced by 88% from 14.5 µm to 1.75 µm; fatigue limit increased from 240 MPa to 510 MPa
+23,43,horizontal (XY),as-built (500°C bed preheat),910.0,1025.0,13.8,342.0,,,495.0,1,1,Directly meets ASTM F2924 with >13% elongation without post-furnace treatment
+24,44,across repair interface,stress-relieved,850.0,955.0,11.8,335.0,,,,1,0,Joint repair efficiency >96% of parent forged Ti-6Al-4V substrate
+25,46,horizontal vs vertical (isotropic),as-built,995.0,1120.0,12.2,365.0,,,,1,1,Complete elimination of mechanical anisotropy! Vertical YS 992 MPa vs Horizontal YS 995 MPa
+26,48,across repair joint,stress-relieved,845.0,945.0,12.0,330.0,,25.0,,1,1,Joint repair efficiency 98.2% of forged Ti-6Al-4V specification
+27,50,horizontal (XY) vs vertical (Z),as-built,860.0,950.0,13.5,335.0,,,,1,1,Anisotropy observed: Horizontal YS 860 MPa vs Vertical YS 790 MPa; Elongation horizontal 13.5% vs vertical 9.5%
+28,51,horizontal (XY),as-built,830.0,925.0,12.0,322.0,,,460.0,1,0,Fatigue limit is 460 MPa at 175 J/mm but drops to 360 MPa at 350 J/mm due to grain coarsening
+29,52,horizontal (XY),as-built (400°C preheat),925.0,1040.0,14.8,345.0,,,,1,1,Elongation improved from 7.2% (room temp bed) to 14.8% (400°C bed)
+30,54,horizontal (XY),as-built,1045.0,1215.0,8.0,382.0,,,,0,0,High yield strength from high dislocation density and refined laths
+31,13,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+32,14,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+33,16,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+34,17,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+35,20,compression,stress-relieved,140.0,185.0,16.0,360.0,,,,0,0,Compressive stiffness 4.2 GPa
+36,21,horizontal (XY),as-built,850.0,945.0,12.0,330.0,,24.0,,1,1,Compliant with ASTM F2924
+37,22,horizontal (XY),as-built,850.0,945.0,12.0,330.0,,24.0,,1,1,Compliant with ASTM F2924
+38,23,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+39,25,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+40,27,horizontal (XY),as-built,850.0,945.0,12.0,330.0,,24.0,,1,1,Compliant with ASTM F2924
+41,28,compression,stress-relieved,140.0,185.0,16.0,360.0,,,,0,0,Compressive stiffness 4.2 GPa
+42,29,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+43,30,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+44,31,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+45,32,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+46,34,horizontal (XY),HIPed,875.0,980.0,14.5,340.0,,,530.0,1,1,Meets ASTM F2924 and F3001
+47,35,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+48,38,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+49,39,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+50,40,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+51,45,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+52,47,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+53,49,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+54,53,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties

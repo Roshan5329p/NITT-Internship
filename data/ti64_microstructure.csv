@@ -1,0 +1,55 @@
+id,paper_number,condition,phases_identified,alpha_fraction_pct,beta_fraction_pct,alpha_prime_fraction_pct,alpha_lath_thickness_um,prior_beta_grain_width_um,prior_beta_morphology,characterization_methods,notes
+1,1,HIPed (850°C / 200 MPa),"alpha,beta",92.5,7.5,0.0,1.6,85.0,columnar,"SEM,EBSD,XRD",Sub-transus low-T HIP prevented grain coarsening while achieving 99.98% relative density
+2,2,as-built,alpha_prime,0.0,2.0,98.0,0.7,60.0,columnar,"OM,SEM,XRD",High-aspect acicular martensite with high dislocation density
+3,3,stress-relieved (650°C 2h),"alpha_prime,alpha",40.0,4.0,56.0,0.9,70.0,columnar,"SEM,EBSD,EDS",Higher interstitial oxygen (0.19 wt%) in HDH powder restricted ductility
+4,4,as-built,alpha_prime,5.0,2.0,93.0,0.65,55.0,columnar,"SEM,EBSD",Microstructure mapping linked into defect knowledge graph
+5,5,as-built,alpha_prime,0.0,1.5,98.5,0.72,62.0,columnar,"SEM,EDS,EBSD",Fine acicular α martensite needles inside prior-β grains
+6,6,as-built (in-situ heat treated),"alpha,beta",88.0,12.0,0.0,1.1,78.0,columnar,"Synchrotron XRD,SEM,TEM,EBSD",Direct formation of stable α+β without acicular martensite
+7,7,as-built,alpha_prime,0.0,3.0,97.0,0.68,58.0,columnar,"OM,SEM",Columnar prior-β aligned with heat dissipation flux
+8,8,as-built vs heat-treated (840°C 2h),"alpha_prime,alpha,beta",85.0,10.0,5.0,1.5,80.0,columnar,"OM,SEM,TEM,EBSD,XRD",Decomposition of α martensite into lamellar α+β via post-heat treatment
+9,9,stress-relieved (650°C 3h),"alpha_prime,alpha",35.0,5.0,60.0,0.8,40.0,mixed,"micro-CT,SEM,EDS",Strut surface roughness and internal microporosity evaluated by micro-CT
+10,10,as-built (Cycle 10 powder),alpha_prime,0.0,2.5,97.5,0.65,65.0,columnar,"SEM,EDS,PSD,XRD",Interstitial oxygen increased from 0.13 wt% (Cycle 1) to 0.17 wt% (Cycle 10)
+11,11,as-built vs annealed (800°C 2h),"alpha_prime,alpha,beta",82.0,11.0,7.0,1.25,72.0,columnar,"High-Res EBSD,In-situ SEM,TEM","Basal <a>, prismatic <a>, and 1st order pyramidal <c+a> slip systems quantified"
+12,12,stress-relieved,"alpha_prime,alpha",30.0,3.0,67.0,0.75,60.0,columnar,"SEM,Optical",Notch root microstructure and crack initiation path
+13,15,as-built,alpha_prime,0.0,1.0,99.0,0.62,55.0,columnar,"Neutron Diffraction,Synchrotron XRD,SEM",Neutron diffraction residual strain mapping through specimen thickness
+14,18,annealed (750°C 2h),"alpha,beta",87.0,13.0,0.0,1.15,75.0,columnar,"OM,SEM,Fractography",Lamellar α+β basketweave structure provides superior crack deflection
+15,19,as-built (varying interlayer delay: 0s to 120s),"alpha,beta",89.0,11.0,0.0,2.8,1400.0,columnar,"OM,SEM,EBSD,Pyrometry",Large prior-β columnar grains (>1 mm width) traversing multiple layers
+16,24,Laser Shock Peened (LSP),"alpha_prime,alpha",50.0,5.0,45.0,0.5,55.0,columnar,"TEM,EBSD,X-ray Stress Analyzer",Surface nanocrystallization and ultra-high dislocation density (~10^15 m^-2)
+17,26,"annealed (700°C, 800°C, 950°C, 1050°C)","alpha,beta",86.0,14.0,0.0,2.2,90.0,columnar,"OM,SEM,XRD,Charpy Instrumented",Acicular martensite fully decomposes into coarsened α+β lamellae above 800°C
+18,33,stress-relieved (650°C 2h),"alpha_prime,alpha",45.0,5.0,50.0,0.95,65.0,columnar,"OM,SEM,EBSD,XRD","Extra low interstitial content (O2 < 0.12 wt%, N2 < 0.02 wt%, C < 0.03 wt%)"
+19,36,HIPed (920°C / 100 MPa),"alpha,beta",88.0,12.0,0.0,2.4,95.0,columnar,"SEM,EBSD,Fractography",Standard HIP microstructure with fully globularized and coarsened α+β lamellae
+20,37,as-built vs machined/polished,alpha_prime,0.0,2.0,98.0,0.7,60.0,columnar,"SEM,X-ray CT,Confocal Profilometry",X-ray CT quantified 3D pore distributions and sphericity
+21,41,as-built (W-DED),"alpha,beta",90.0,10.0,0.0,2.6,1200.0,columnar,"OM,SEM,EBSD,CTOD Testing",Epitaxial columnar prior-β grains aligned along build direction Z
+22,42,Laser Polished (continuous wave vs pulsed),"alpha_prime,alpha",60.0,5.0,35.0,0.45,50.0,columnar,"Interferometry,SEM,EDS,Vickers",Ultra-fine refined surface remelt layer with high hardness (380 HV)
+23,43,as-built (500°C bed preheat),"alpha,beta",89.0,11.0,0.0,1.4,75.0,columnar,"Atom Probe Tomography (APT),Synchrotron XRD,SEM,TEM","APT reveals nanoscale elemental partitioning: Al concentrates in α (6.8 wt%), V concentrates in β (14.2 wt%)"
+24,44,repaired + stress-relieved,"alpha,beta",88.0,12.0,0.0,2.1,450.0,columnar,"OM,SEM,EDS line scan across interface",Defect-free epitaxial bonding across repair-substrate interface
+25,46,as-built (Ti64 + 1.0 wt% Fe),"alpha,beta",84.0,16.0,0.0,1.1,28.0,equiaxed,"EBSD pole figures,SEM,EDS,TEM",Columnar-to-Equiaxed Transition (CET) achieved! Columnar prior-β replaced by 28 µm equiaxed grains
+26,48,repaired + stress-relieved (650°C 2h),"alpha,beta",89.0,11.0,0.0,2.3,850.0,columnar,"OM,SEM,EBSD,X-ray Radiography",Zero lack-of-fusion defects at groove sidewall interfaces
+27,13,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+28,50,as-built (Laser-DED),"alpha,beta",88.5,11.5,0.0,2.2,650.0,columnar,"EBSD,SEM,OM,XRD",Strong <001> prior-β fiber crystallographic texture along build direction
+29,51,as-built (wire-DED),"alpha,beta",89.0,11.0,0.0,2.9,1100.0,columnar,"OM,SEM,EBSD,Rotating Bending Fatigue",Prior-β column width increased from 650 µm (175 J/mm) to 1350 µm (350 J/mm)
+30,52,as-built (400°C bed preheat),"alpha,beta",88.0,12.0,0.0,1.35,72.0,columnar,"OM,SEM,XRD,Tensile",Fine lamellar α+β basketweave achieved directly on the build plate
+31,54,as-built,"alpha_prime,alpha",15.0,3.0,82.0,0.75,58.0,columnar,"EBSD Parent Reconstruction,SEM,TEM",Reconstructed 12 variants of α from parent β via Burgers {0001}α // {110}β
+32,14,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+33,16,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+34,17,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+35,20,etched / stress-relieved,"alpha_prime,alpha",40.0,5.0,55.0,0.85,45.0,mixed,"micro-CT,SEM",Porous architecture with tuned pore sizes
+36,21,as-built,"alpha,beta",88.0,12.0,0.0,2.2,750.0,columnar,"OM,SEM,EBSD",Coarser lamellar structure typical of DED
+37,22,as-built,"alpha,beta",88.0,12.0,0.0,2.2,750.0,columnar,"OM,SEM,EBSD",Coarser lamellar structure typical of DED
+38,23,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+39,25,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+40,27,as-built,"alpha,beta",88.0,12.0,0.0,2.2,750.0,columnar,"OM,SEM,EBSD",Coarser lamellar structure typical of DED
+41,28,etched / stress-relieved,"alpha_prime,alpha",40.0,5.0,55.0,0.85,45.0,mixed,"micro-CT,SEM",Porous architecture with tuned pore sizes
+42,29,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+43,30,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+44,31,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+45,32,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+46,34,HIPed (920°C / 100 MPa),"alpha,beta",89.0,11.0,0.0,2.1,90.0,columnar,"OM,SEM,EBSD",Full transformation to coarse α+β lamellae
+47,35,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+48,38,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+49,39,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+50,40,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+51,45,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+52,47,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+53,49,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+54,53,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles

@@ -1,0 +1,55 @@
+id,paper_number,laser_power_w,scan_speed_mms,layer_thickness_um,hatch_spacing_um,volumetric_energy_density_j_mm3,beam_spot_diameter_um,wire_feed_speed_m_min,powder_feed_rate_g_min,scan_strategy,notes
+1,1,280.0,1200.0,30.0,100.0,77.8,80.0,,,Stripe 67° alternating,"LPBF EOS M290, Ti-6Al-4V ELI powder"
+2,2,175.0,900.0,50.0,90.0,55.6,100.0,,,Contour + Core raster,Contour scan parameter optimization for surface roughness
+3,3,280.0,1250.0,30.0,105.0,71.1,85.0,,,Chessboard 5x5 mm,Hydride-Dehydride (HDH) low-cost irregular powder
+4,4,250.0,1000.0,30.0,100.0,83.3,80.0,,,Bidirectional raster,LPBF defect taxonomy parameter mapping
+5,5,300.0,1300.0,40.0,110.0,52.4,90.0,,,Meander 90°,In-situ anomaly detection with Spiking Neural Networks
+6,6,200.0,800.0,30.0,80.0,104.2,75.0,,,High thermal accumulation tight pitch,In-situ heat treatment during SLM
+7,7,200.0,900.0,30.0,100.0,74.1,80.0,,,Stripe,Thermal conductivity benchmark of powder vs solid Ti64
+8,8,250.0,1100.0,30.0,100.0,75.8,80.0,,,67° alternating rotation,Comprehensive review consensus baseline for LPBF Ti-6Al-4V
+9,9,180.0,950.0,30.0,90.0,70.2,75.0,,,Strut contour + hatch,Diamond cellular lattice for bone implants (porosity 55-75%)
+10,10,200.0,900.0,30.0,105.0,70.5,80.0,,,Stripe,Powder recycling study across 10 successive print cycles
+11,11,275.0,1150.0,30.0,100.0,79.7,85.0,,,Meander 67°,In-situ SEM tensile testing and crystal plasticity
+12,12,200.0,900.0,30.0,100.0,74.1,80.0,,,Stripe,Notch fracture mechanics of AM Ti-6Al-4V
+13,15,250.0,1000.0,30.0,100.0,83.3,80.0,,,Alternating stripe 90°,LLNL bridge specimen residual stress validation
+14,18,200.0,900.0,30.0,100.0,74.1,80.0,,,Island / Checkerboard,High-cycle fatigue and Paris crack growth rate study
+15,19,3200.0,16.7,1200.0,2800.0,47.6,3500.0,2.8,,Oscillating weave,Laser Hot Wire DED (LHW-DED) high-deposition-rate AM
+16,24,250.0,1050.0,30.0,100.0,79.4,80.0,,,Stripe,Post-processing via Laser Shock Peening (LSP)
+17,26,200.0,900.0,30.0,100.0,74.1,80.0,,,Island,Systematic heat treatment and Charpy impact study
+18,33,275.0,1150.0,30.0,100.0,79.7,80.0,,,Stripe 67°,Nuclear and aerospace qualification of Ti-6Al-4V ELI
+19,36,280.0,1200.0,30.0,105.0,71.1,85.0,,,Bidirectional 67°,Multiaxial fatigue testing: pure torsion vs axial
+20,37,280.0,1200.0,30.0,100.0,77.8,80.0,,,Stripe,197 fatigue bar statistical campaign across varied scanning speeds
+21,41,2500.0,12.5,1500.0,3000.0,44.4,3000.0,2.2,,Bidirectional line,Wire laser-directed energy deposition (W-DED) fracture toughness
+22,42,200.0,900.0,30.0,100.0,74.1,80.0,,,Stripe,LPBF baseline + post-process Laser Surface Polishing (LSP)
+23,43,200.0,900.0,30.0,100.0,74.1,80.0,,,Chessboard 5x5 mm,High-temperature powder bed preheating (500°C)
+24,44,1200.0,15.0,600.0,1200.0,111.1,1800.0,,8.5,5-axis adaptive cavity fill,DED blown-powder repair of aeronautical Ti-6Al-4V compressor blades
+25,46,200.0,800.0,30.0,90.0,92.6,75.0,,,Island 5x5 mm,In-situ trace iron (Fe) addition (0.5 to 1.5 wt%) for grain refinement
+26,48,2200.0,14.0,1100.0,2400.0,59.5,2800.0,2.4,,Coaxial wire multi-pass,Coaxial wire laser metal deposition groove repair of aerospace forgings
+27,50,1800.0,10.0,800.0,1800.0,125.0,2200.0,,12.0,Bidirectional line with 90° rotation,Anisotropy study in laser-directed energy deposited Ti-6Al-4V
+28,51,2400.0,10.0,1200.0,2500.0,66.7,2600.0,2.0,,Linear single track walls,Wire-laser DED heat input variation (175 J/mm to 350 J/mm)
+29,52,200.0,900.0,30.0,100.0,74.1,80.0,,,Stripe,LPBF powder bed preheating from 25°C to 400°C
+30,54,250.0,1000.0,30.0,100.0,83.3,80.0,,,Bidirectional raster,Burgers orientation relationship (BOR) parent-β reconstruction
+31,13,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+32,14,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+33,16,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+34,17,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+35,20,180.0,950.0,30.0,90.0,70.2,75.0,,,Contour + hatch,Biomedical porous scaffold
+36,21,2000.0,12.0,1000.0,2200.0,75.8,2500.0,2.0,,Linear raster,DED Ti-6Al-4V regime
+37,22,2000.0,12.0,1000.0,2200.0,75.8,2500.0,2.0,,Linear raster,DED Ti-6Al-4V regime
+38,23,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+39,25,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+40,27,2000.0,12.0,1000.0,2200.0,75.8,2500.0,2.0,,Linear raster,DED Ti-6Al-4V regime
+41,28,180.0,950.0,30.0,90.0,70.2,75.0,,,Contour + hatch,Biomedical porous scaffold
+42,29,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+43,30,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+44,31,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+45,32,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+46,34,250.0,1100.0,30.0,100.0,75.8,80.0,,,Stripe 67°,LPBF followed by HIP
+47,35,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+48,38,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+49,39,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+50,40,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+51,45,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+52,47,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+53,49,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+54,53,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set

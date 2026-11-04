@@ -1,0 +1,55 @@
+id,paper_number,melt_pool_width_um,melt_pool_depth_um,peak_temperature_k,cooling_rate_k_s,thermal_gradient_g_k_m,solidification_rate_r_m_s,residual_stress_mpa,distortion_mm,defect_regime,notes
+1,1,135.0,65.0,2250.0,1200000.0,,,15.0,0.08,conduction,HIP at 850°C/200MPa eliminated virtually all residual stress and LOF pores
+2,2,140.0,75.0,2300.0,850000.0,,,380.0,0.35,conduction,Subsurface tensile residual stress peaks within 200 µm of contour
+3,3,125.0,60.0,2180.0,1100000.0,,,310.0,0.22,lack_of_fusion,Irregular HDH powder caused slightly higher LOF propensity
+4,4,145.0,70.0,2400.0,1400000.0,,,290.0,0.18,conduction,Graph-assisted boundary separating LOF and keyhole
+5,5,150.0,72.0,2350.0,920000.0,,,320.0,0.25,conduction,Power drops triggered transient cold LOF defects
+6,6,130.0,68.0,2280.0,450000.0,3800000.0,,140.0,0.12,conduction,Reduced cooling rate due to intrinsic reheating cycles
+7,7,128.0,62.0,2200.0,1100000.0,,,280.0,0.16,conduction,Loose powder thermal conductivity 0.18-0.24 W/mK vs solid 6.8-7.2 W/mK
+8,8,135.0,65.0,2300.0,1000000.0,,,350.0,0.25,conduction,Consensus cooling rate 10^5 - 10^6 K/s
+9,9,110.0,55.0,2150.0,1500000.0,,,220.0,0.05,conduction,Miniaturized melt pools in thin struts (300-500 µm)
+10,10,130.0,64.0,2240.0,1100000.0,,,330.0,0.2,conduction,Thermal stability consistent across 10 powder cycles
+11,11,140.0,68.0,2320.0,1050000.0,,,295.0,0.17,conduction,Melt pool thermal history informs crystal slip systems
+12,12,130.0,65.0,2250.0,1100000.0,,,270.0,0.15,conduction,Thermal residual stress at notch root accounted in phase field
+13,15,138.0,68.0,2340.0,1200000.0,,,460.0,0.42,conduction,Tensile stresses +460 MPa at top ribs; compressive -220 MPa in bulk interior
+14,18,132.0,64.0,2260.0,1100000.0,,,180.0,0.12,conduction,Annealed state relieves residual stress and enhances fatigue
+15,19,4200.0,1600.0,2450.0,4200.0,480000.0,,210.0,0.85,conduction,Cooling rates in DED are 2-3 orders of magnitude lower than LPBF
+16,24,135.0,66.0,2280.0,1100000.0,,,-520.0,0.08,conduction,LSP induced deep compressive residual stress (-520 MPa) down to 1.2 mm depth
+17,26,130.0,62.0,2250.0,1200000.0,,,45.0,0.05,conduction,Residual stresses eliminated above 700°C annealing
+18,33,136.0,65.0,2310.0,1100000.0,,,260.0,0.14,conduction,Low interstitial level ELI powder improves thermal conductivity and ductility
+19,36,134.0,64.0,2270.0,1150000.0,,,240.0,0.13,conduction,Anisotropic defect orientation affects shear vs tensile fatigue modes
+20,37,138.0,66.0,2300.0,1100000.0,,,310.0,0.16,conduction,Scan speed variations mapped transition into LOF regime at v > 1500 mm/s
+21,41,3800.0,1800.0,2400.0,5800.0,520000.0,,190.0,0.72,conduction,Solidification front controlled by wire feed melting stability
+22,42,160.0,25.0,2100.0,2500000.0,,,150.0,0.02,conduction,Shallow remelt zone (<30 µm) smoothed surface topography
+23,43,142.0,70.0,2320.0,320000.0,2900000.0,,85.0,0.06,conduction,500°C preheating drastically reduces cooling rate and thermal stresses
+24,44,2100.0,850.0,2380.0,28000.0,,,175.0,0.18,conduction,Adaptive power control prevents heat build-up at repair boundary
+25,46,135.0,68.0,2280.0,1100000.0,,,220.0,0.11,conduction,Fe addition alters constitutional supercooling at solidification front
+26,48,3200.0,1400.0,2420.0,8500.0,,,165.0,0.32,conduction,Coaxial wire delivery gives omnidirectional symmetric heat flow
+27,50,2600.0,1100.0,2410.0,15000.0,820000.0,,210.0,0.45,conduction,Cyclic reheating during multi-pass deposition creates heat-affected bands
+28,51,3400.0,1500.0,2440.0,6200.0,,,195.0,0.55,conduction,Higher linear heat input slows cooling rate from 9.5e3 K/s to 4.1e3 K/s
+29,52,138.0,67.0,2290.0,480000.0,3100000.0,,110.0,0.08,conduction,400°C bed preheat reduces thermal stress by 65%
+30,54,136.0,65.0,2320.0,1200000.0,4500000.0,0.28,310.0,0.16,conduction,Direct mapping of G and R across the solidification front
+31,13,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+32,14,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+33,16,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+34,17,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+35,20,115.0,58.0,2180.0,1400000.0,,,210.0,0.06,conduction,Thin strut thermal profile
+36,21,3000.0,1200.0,2400.0,12000.0,,,180.0,0.45,conduction,Moderate cooling rate in DED
+37,22,3000.0,1200.0,2400.0,12000.0,,,180.0,0.45,conduction,Moderate cooling rate in DED
+38,23,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+39,25,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+40,27,3000.0,1200.0,2400.0,12000.0,,,180.0,0.45,conduction,Moderate cooling rate in DED
+41,28,115.0,58.0,2180.0,1400000.0,,,210.0,0.06,conduction,Thin strut thermal profile
+42,29,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+43,30,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+44,31,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+45,32,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+46,34,135.0,65.0,2280.0,1100000.0,,,25.0,0.08,conduction,HIP relieves residual stresses
+47,35,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+48,38,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+49,39,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+50,40,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+51,45,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+52,47,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+53,49,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+54,53,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting

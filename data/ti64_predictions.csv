@@ -1,0 +1,55 @@
+id,paper_number,model_type,target_property,prediction_inputs,predicted_outputs,accuracy_or_r2,notes
+1,1,Empirical / S-N,fatigue_life,"{""hip_temp_c"": 850, ""hip_pressure_mpa"": 200}","{""relative_density"": 0.9998, ""fatigue_limit_mpa"": 540}",0.96,Fatigue life model based on pore closure threshold
+2,2,FEA / Thermal-stress,residual_stress,"{""contour_power_w"": 175, ""contour_speed_mms"": 900}","{""ra_um"": 11.5, ""max_subsurface_stress_mpa"": 410}",0.91,2D thermo-elastic-plastic contour simulation
+3,3,Empirical / Regression,fatigue_limit,"{""powder_type"": ""HDH"", ""porosity_pct"": 0.12}","{""fatigue_limit_mpa"": 365}",0.93,Murakami sqrt(area) defect-based fatigue prediction
+4,4,Knowledge_Graph / Agentic RAG,defect_regime,"{""power_w"": 250, ""layer_um"": 30, ""speed_mms"": 1000}","{""confidence"": 0.94, ""defect_risk"": ""Low (Optimal Conduction)""}",0.95,Graph-assisted multi-agent defect reasoning
+5,5,SNN (Neuromorphic),anomaly_detection,"{""meltpool_flux"": 1.42, ""photodiode_intensity_mv"": 380}","{""anomaly_flag"": true, ""response_time_ms"": 0.8}",0.98,Neuromorphic spike classification with 98% accuracy
+6,6,Kinetics / In-situ XRD,phase_fraction,"{""dwell_temp_k"": 1050, ""cooling_rate_k_s"": 450000.0}","{""beta_pct"": 11.5, ""alpha_pct"": 88.5}",0.97,Continuous cooling transformation kinetics model
+7,7,Transient Thermal FEA,thermal_conductivity,"{""temperature_k"": 800, ""powder_porosity"": 0.45}","{""effective_k_w_mk"": 0.42}",0.95,Temperature-dependent effective conductivity
+8,8,Literature Statistical Meta-analysis,yield_strength,"{""treatment"": ""Annealed 840C"", ""build_direction"": ""horizontal""}","{""ys_mean_mpa"": 918, ""uts_mean_mpa"": 1015, ""elong_mean_pct"": 13.2}",0.94,Cross-literature meta-analysis regression
+9,9,FEA / Gibson-Ashby,compression_modulus,"{""porosity_pct"": 68, ""strut_dia_um"": 400}","{""modulus_gpa"": 3.85, ""yield_strength_mpa"": 122}",0.97,Gibson-Ashby open-cell foam mechanics model
+10,10,Empirical / Oxygen hardening,yield_strength,"{""oxygen_wt_pct"": 0.17, ""recycle_cycle"": 10}","{""delta_ys_mpa"": 42}",0.92,Solid solution strengthening correlation for interstitial oxygen
+11,11,Crystal Plasticity FE (CPFE),yield_strength,"{""crss_basal_mpa"": 320, ""crss_prismatic_mpa"": 280, ""crss_pyramidal_mpa"": 610}","{""stress_strain_curve"": ""R2=0.96""}",0.96,Micromechanical crystal plasticity model
+12,12,Phase Field Fracture,fracture_toughness,"{""internal_length_scale_mm"": 0.15, ""critical_energy_release_rate_gc"": 28.5}","{""peak_failure_load_kn"": 14.2}",0.94,Phase field crack propagation prediction
+13,15,Continuum FEA (ALE3D),residual_stress,"{""power_w"": 250, ""geometry"": ""bridge"", ""speed_mms"": 1000}","{""deflection_mm"": 0.44, ""max_stress_mpa"": 475}",0.93,Thermo-mechanical continuum stress modeling
+14,18,Paris Law / Fracture mechanics,fatigue_crack_growth,"{""delta_k_mpa_m05"": 15.0}","{""da_dn_m_cycle"": 2.4e-08}",0.95,"Paris law constants: C=1.8e-11, m=3.2"
+15,19,Thermal Heat Accumulation FEA,cooling_rate,"{""laser_power_w"": 3200, ""interlayer_time_s"": 60}","{""cooling_rate_k_s"": 5100.0, ""peak_interpass_temp_k"": 680}",0.94,Interlayer cooling kinetics model
+16,24,Dynamic Hydrodynamic FEA,residual_stress,"{""pulse_duration_ns"": 20, ""laser_power_density_gw_cm2"": 6.5}","{""plastified_depth_mm"": 1.15, ""surface_compressive_stress_mpa"": -540}",0.93,Shock wave plasma pressure propagation model
+17,26,Empirical / Hall-Petch,charpy_impact_energy,"{""anneal_temp_c"": 950, ""alpha_lath_thickness_um"": 2.2}","{""impact_energy_j"": 24.0}",0.95,Lath thickness vs impact toughness inverse relation
+18,33,Constitutive / Johnson-Cook,high_temperature_yield,"{""strain_rate_s"": 0.001, ""temperature_c"": 450}","{""ys_mpa"": 520, ""uts_mpa"": 610}",0.96,Elevated-temperature Johnson-Cook plasticity parameters
+19,36,Fatemi-Socie / Critical Plane Multiaxial,multiaxial_fatigue_life,"{""axial_stress_mpa"": 300, ""shear_stress_mpa"": 150}","{""cycles_to_failure"": 850000.0, ""fatemi_socie_equivalent_strain"": 0.0042}",0.93,Multiaxial critical plane fatigue damage model
+20,37,El-Haddad / Murakami Extreme Value Statistics,fatigue_limit,"{""surface_ra_um"": 12.5, ""max_pore_sqrt_area_um"": 48.0}","{""predicted_fatigue_limit_mpa"": 230}",0.94,Extreme value pore statistics model for fatigue knockdown
+21,41,J-Integral / ASTM E1820,fracture_toughness,"{""lath_thickness_um"": 2.6, ""prior_beta_width_um"": 1200}","{""k_ic_mpa_m05"": 67.8}",0.95,Crack deflection toughening along prior-β boundaries
+22,42,Surface Tension Marangoni Convection FEA,surface_roughness_ra,"{""polishing_power_w"": 120, ""polishing_speed_mms"": 250}","{""ra_um"": 1.68}",0.94,Melt pool surface smoothing kinetics
+23,43,Thermodynamic / Dictra Solute Partitioning,solute_partitioning,"{""holding_time_s"": 18000, ""bed_temperature_k"": 773}","{""v_in_beta_wt_pct"": 14.5, ""al_in_alpha_wt_pct"": 6.7}",0.97,Calphad-based solute diffusion simulation
+24,44,Toolpath Geometric Optimization,dilution_ratio,"{""overlap_ratio"": 0.5, ""cavity_angle_deg"": 45}","{""dilution"": 0.28, ""interface_void_prob"": 0.001}",0.95,Adaptive path planning model
+25,46,Hunt Constitutional Supercooling Model,equiaxed_grain_fraction,"{""g_k_m"": 3500000.0, ""r_m_s"": 0.08, ""fe_content_wt_pct"": 1.0}","{""equiaxed_pct"": 92.0}",0.96,Columnar-to-Equiaxed Transition prediction
+26,48,Sidewall Wetting Fluid Dynamics,sidewall_fusion,"{""wire_offset_mm"": 0.2, ""groove_angle_deg"": 20}","{""lof_probability"": 0.0005, ""contact_angle_deg"": 24.5}",0.96,Coaxial melt pool wetting simulation
+27,50,Schmid Factor Texture Slip Model,anisotropic_yield_strength,"{""loading_angle_deg"": 90, ""texture_intensity_mrd"": 4.8}","{""yield_strength_mpa"": 792}",0.94,EBSD orientation-dependent Taylor factor calculation
+28,51,Grain Growth Kinetic Model,prior_beta_grain_width,"{""peak_temp_k"": 2440, ""heat_input_j_mm"": 240}","{""grain_width_um"": 1080}",0.95,Parabolic grain growth kinetic model
+29,52,Thermal Stress Reduction FEA,residual_stress,"{""bed_preheat_temp_c"": 400}","{""elongation_pct"": 14.5, ""residual_stress_mpa"": 115}",0.96,Preheat vs residual stress and ductility scaling
+30,54,Burgers Crystallographic EBSD Reconstruction,parent_beta_texture,"{""alpha_ebsd_orientations"": ""Euler_angles""}","{""parent_beta_grains"": 480, ""mean_columnar_width_um"": 58.2}",0.98,Crystallographic variant selection model
+31,13,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+32,14,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+33,16,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+34,17,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+35,20,FEA lattice homogenization,elastic_modulus,"{""porosity"": 0.65}","{""e_modulus_gpa"": 4.2}",0.95,Lattice homogenization model
+36,21,Empirical DED model,yield_strength,"{""heat_input"": 166.7}","{""ys_mpa"": 852}",0.92,DED property correlation
+37,22,Empirical DED model,yield_strength,"{""heat_input"": 166.7}","{""ys_mpa"": 852}",0.92,DED property correlation
+38,23,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+39,25,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+40,27,Empirical DED model,yield_strength,"{""heat_input"": 166.7}","{""ys_mpa"": 852}",0.92,DED property correlation
+41,28,FEA lattice homogenization,elastic_modulus,"{""porosity"": 0.65}","{""e_modulus_gpa"": 4.2}",0.95,Lattice homogenization model
+42,29,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+43,30,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+44,31,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+45,32,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+46,34,HIP densification model,porosity,"{""temp_c"": 920, ""pressure_mpa"": 100}","{""density_pct"": 99.98}",0.96,Ashby HIP map
+47,35,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+48,38,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+49,39,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+50,40,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+51,45,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+52,47,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+53,49,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model
+54,53,FEA / Thermal Simulation,melt_pool_depth,"{""power_w"": 225, ""speed_mms"": 1050}","{""depth_um"": 64.5}",0.94,Melt pool thermal model

@@ -1,0 +1,392 @@
+package com.nit.am;
+
+import com.matsci.model.Material;
+import com.matsci.model.MaterialVariant;
+import com.matsci.model.ProcessRecipe;
+import com.matsci.repository.CsvMaterialRepository;
+import com.matsci.service.MaterialService;
+import com.matsci.service.ParameterInferenceService;
+import com.matsci.util.JsonUtil;
+import com.nit.am.model.AmRecord;
+import com.nit.am.physics.ThermalPhysicsEngine;
+import com.nit.am.prediction.PropertyPredictor;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.util.*;
+
+/**
+ * Unified Pure Java Additive Manufacturing & Metallurgy Intelligence Platform.
+ * Integrates:
+ * 1. 54 Research Papers Literature Database (LPBF, DED, WAAM, Binder Jetting)
+ * 2. Complete Materials Science 42-Metric Registry (276 Titanium alloy variants)
+ * 3. ParameterInferenceService (Automated operational recipe synthesis across all AM routes)
+ * 4. ThermalPhysicsEngine (Rosenthal melt pool & defect boundary modeling)
+ * 5. PropertyPredictor (Hall-Petch, Murakami fatigue & ASTM F2924 / F3001 qualification)
+ * 6. ProcessWindowPlotter (Java2D high-resolution scientific visualization)
+ * 7. Embedded Native Web Server & REST API.
+ *
+ * Zero external runtime dependencies. Runs natively on JDK 21+.
+ */
+public class AmPlatformApplication {
+
+    private static final int PORT = 8080;
+    private final List<AmRecord> paperDatabase = new ArrayList<>();
+    private final String workspaceDir;
+
+    // Integrated Material Science services
+    private CsvMaterialRepository materialRepo;
+    private MaterialService materialService;
+    private ParameterInferenceService inferenceService;
+
+    public AmPlatformApplication(String workspaceDir) {
+        this.workspaceDir = workspaceDir;
+    }
+
+    public void init() throws IOException {
+        System.out.println("==================================================================");
+        System.out.println("  NIT INTERNSHIP: UNIFIED Ti-6Al-4V ADDITIVE MANUFACTURING ENGINE ");
+        System.out.println("    [INTEGRATED LITERATURE DATABASE + ADVANCED METALLURGY LOGIC]  ");
+        System.out.println("==================================================================");
+
+        String dataDir = Paths.get(workspaceDir, "data").toString();
+
+        // 1. Load Literature Database (54 Research Papers)
+        loadPaperCsvData(dataDir);
+        System.out.printf(">> [Literature Engine] Loaded %d Research Papers into Java memory.%n", paperDatabase.size());
+
+        // 2. Load Materials Informatics Repository (276 Alloy Variants)
+        Path matCsv = Paths.get(dataDir, "materials.csv");
+        if (Files.exists(matCsv)) {
+            try {
+                this.inferenceService = new ParameterInferenceService();
+                this.materialRepo = new CsvMaterialRepository(matCsv.toFile(), inferenceService);
+                this.materialService = new MaterialService(materialRepo);
+                System.out.printf(">> [Materials Engine] Loaded %d Titanium Alloys (%d Variants) with 42 Metrics each.%n",
+                        materialRepo.getTotalMaterialCount(), materialRepo.getTotalVariantCount());
+            } catch (Exception e) {
+                System.err.println(">> Warning: could not load materials.csv: " + e.getMessage());
+            }
+        }
+
+        // 3. Run Physics & Property Analysis on 54 papers
+        int astmCompliantCount = 0;
+        double totalYs = 0;
+        double totalElong = 0;
+
+        for (AmRecord rec : paperDatabase) {
+            ThermalPhysicsEngine.enrich(rec);
+            rec.astmF2924Compliant = PropertyPredictor.checkAstmF2924(rec);
+            if (rec.astmF2924Compliant) {
+                astmCompliantCount++;
+            }
+            totalYs += rec.yieldStrengthMpa;
+            totalElong += rec.elongationPct;
+        }
+
+        System.out.printf(">> [Physics Engine] Average Yield Strength: %.1f MPa | Average Elongation: %.1f%%%n",
+                totalYs / paperDatabase.size(), totalElong / paperDatabase.size());
+        System.out.printf(">> [Standards Engine] ASTM F2924 Compliant Entries: %d / %d (%.1f%%)%n",
+                astmCompliantCount, paperDatabase.size(), (astmCompliantCount * 100.0) / paperDatabase.size());
+
+        // 4. Generate Java2D High-Resolution Visualizations
+        System.out.println(">> [Plotter Engine] Generating Java2D scientific plots & interactive dashboard...");
+        ProcessWindowPlotter plotter = new ProcessWindowPlotter();
+        plotter.loadData(dataDir);
+
+        String plotsDir = Paths.get(workspaceDir, "plots").toString();
+        Files.createDirectories(Paths.get(plotsDir));
+
+        plotter.plotLpbfProcessWindow(Paths.get(plotsDir, "ti64_lpbf_defect_processing_window.png").toString());
+        plotter.plotDedProcessWindow(Paths.get(plotsDir, "ti64_ded_waam_process_window.png").toString());
+        plotter.plotAshbyQualificationMap(Paths.get(plotsDir, "ti64_astm_qualification_ashby_map.png").toString());
+        plotter.plotEnergyDensityTradeoff(Paths.get(plotsDir, "ti64_energy_density_density_tradeoff.png").toString());
+        plotter.generateHtmlDashboard(Paths.get(workspaceDir, "process_windows_dashboard.html").toString());
+
+        System.out.println(">> All Java2D maps and interactive HTML dashboard generated successfully.");
+    }
+
+    private void loadPaperCsvData(String dataDir) throws IOException {
+        Path papersPath = Paths.get(dataDir, "ti64_papers.csv");
+        Path procPath = Paths.get(dataDir, "ti64_process_parameters.csv");
+        Path thermPath = Paths.get(dataDir, "ti64_thermal_physics.csv");
+        Path mechPath = Paths.get(dataDir, "ti64_mechanical_properties.csv");
+
+        Map<Integer, AmRecord> map = new LinkedHashMap<>();
+
+        // Papers
+        List<String> lines = Files.readAllLines(papersPath, StandardCharsets.UTF_8);
+        for (int i = 1; i < lines.size(); i++) {
+            String[] tok = parseCsvLine(lines.get(i));
+            if (tok.length >= 5) {
+                int pid = Integer.parseInt(tok[0].trim());
+                AmRecord rec = new AmRecord();
+                rec.paperNumber = pid;
+                rec.title = tok[1];
+                rec.authors = tok[2];
+                rec.year = (int) parseD(tok[3]);
+                rec.amProcess = tok[4];
+                map.put(pid, rec);
+            }
+        }
+
+        // Process
+        lines = Files.readAllLines(procPath, StandardCharsets.UTF_8);
+        for (int i = 1; i < lines.size(); i++) {
+            String[] tok = parseCsvLine(lines.get(i));
+            if (tok.length >= 7) {
+                int pid = (int) parseD(tok[1]);
+                AmRecord rec = map.get(pid);
+                if (rec != null) {
+                    rec.laserPowerW = parseD(tok[2]);
+                    rec.scanSpeedMms = parseD(tok[3]);
+                    rec.layerThicknessUm = parseD(tok[4]);
+                    rec.hatchSpacingUm = parseD(tok[5]);
+                    rec.energyDensityJmm3 = parseD(tok[6]);
+                }
+            }
+        }
+
+        // Thermal
+        lines = Files.readAllLines(thermPath, StandardCharsets.UTF_8);
+        for (int i = 1; i < lines.size(); i++) {
+            String[] tok = parseCsvLine(lines.get(i));
+            if (tok.length >= 10) {
+                int pid = (int) parseD(tok[1]);
+                AmRecord rec = map.get(pid);
+                if (rec != null) {
+                    rec.meltPoolWidthUm = parseD(tok[2]);
+                    rec.meltPoolDepthUm = parseD(tok[3]);
+                    rec.coolingRateKs = parseD(tok[5]);
+                    rec.residualStressMpa = parseD(tok[8]);
+                    rec.defectRegime = tok[10];
+                }
+            }
+        }
+
+        // Mech
+        lines = Files.readAllLines(mechPath, StandardCharsets.UTF_8);
+        for (int i = 1; i < lines.size(); i++) {
+            String[] tok = parseCsvLine(lines.get(i));
+            if (tok.length >= 12) {
+                int pid = (int) parseD(tok[1]);
+                AmRecord rec = map.get(pid);
+                if (rec != null) {
+                    rec.condition = tok[3];
+                    rec.yieldStrengthMpa = parseD(tok[4]);
+                    rec.utsMpa = parseD(tok[5]);
+                    rec.elongationPct = parseD(tok[6]);
+                    rec.vickersHv = parseD(tok[7]);
+                    rec.fatigueLimitMpa = parseD(tok[10]);
+                }
+            }
+        }
+
+        paperDatabase.addAll(map.values());
+    }
+
+    private double parseD(String s) {
+        if (s == null || s.trim().isEmpty()) return 0.0;
+        try {
+            return Double.parseDouble(s.trim());
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
+
+    private String[] parseCsvLine(String line) {
+        List<String> list = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        boolean inQuote = false;
+        for (char c : line.toCharArray()) {
+            if (c == '\"') inQuote = !inQuote;
+            else if (c == ',' && !inQuote) {
+                list.add(sb.toString().trim());
+                sb.setLength(0);
+            } else {
+                sb.append(c);
+            }
+        }
+        list.add(sb.toString().trim());
+        return list.toArray(new String[0]);
+    }
+
+    public void startServer() throws IOException {
+        HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
+
+        // 1. Dashboard & Static Assets Handler
+        server.createContext("/", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                String path = exchange.getRequestURI().getPath();
+                if (path.equals("/") || path.equals("/dashboard")) {
+                    Path htmlFile = Paths.get(workspaceDir, "process_windows_dashboard.html");
+                    if (Files.exists(htmlFile)) {
+                        byte[] bytes = Files.readAllBytes(htmlFile);
+                        exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
+                        exchange.sendResponseHeaders(200, bytes.length);
+                        OutputStream os = exchange.getResponseBody();
+                        os.write(bytes);
+                        os.close();
+                        return;
+                    }
+                }
+
+                // Serve static plots
+                if (path.startsWith("/plots/")) {
+                    String filename = path.substring("/plots/".length());
+                    Path file = Paths.get(workspaceDir, "plots", filename);
+                    if (Files.exists(file)) {
+                        byte[] bytes = Files.readAllBytes(file);
+                        exchange.getResponseHeaders().set("Content-Type", "image/png");
+                        exchange.sendResponseHeaders(200, bytes.length);
+                        OutputStream os = exchange.getResponseBody();
+                        os.write(bytes);
+                        os.close();
+                        return;
+                    }
+                }
+
+                String notFound = "404 Not Found";
+                exchange.sendResponseHeaders(404, notFound.length());
+                exchange.getResponseBody().write(notFound.getBytes());
+                exchange.getResponseBody().close();
+            }
+        });
+
+        // 2. API /api/stats (Literature + Materials Registry Stats)
+        server.createContext("/api/stats", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                int astmCount = 0;
+                for (AmRecord r : paperDatabase) if (r.astmF2924Compliant) astmCount++;
+
+                int matCount = (materialRepo != null) ? materialRepo.getTotalMaterialCount() : 0;
+                int varCount = (materialRepo != null) ? materialRepo.getTotalVariantCount() : 0;
+
+                String json = String.format(Locale.US,
+                        "{\"literature_papers\": %d, \"astm_compliant_papers\": %d, \"registered_titanium_alloys\": %d, \"registered_variants\": %d, \"material_baseline\": \"Ti-6Al-4V (Grade 5 & ELI)\", \"status\": \"ACTIVE_HEALTHY\"}",
+                        paperDatabase.size(), astmCount, matCount, varCount);
+
+                sendJsonResponse(exchange, 200, json);
+            }
+        });
+
+        // 3. API /api/evaluate?power=250&speed=1000&layer=30&hatch=100
+        server.createContext("/api/evaluate", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                String query = exchange.getRequestURI().getQuery();
+                double p = 250.0, v = 1000.0, l = 30.0, h = 100.0;
+                if (query != null) {
+                    for (String pair : query.split("&")) {
+                        String[] kv = pair.split("=");
+                        if (kv.length == 2) {
+                            if (kv[0].equalsIgnoreCase("power")) p = parseD(kv[1]);
+                            if (kv[0].equalsIgnoreCase("speed")) v = parseD(kv[1]);
+                            if (kv[0].equalsIgnoreCase("layer")) l = parseD(kv[1]);
+                            if (kv[0].equalsIgnoreCase("hatch")) h = parseD(kv[1]);
+                        }
+                    }
+                }
+
+                ThermalPhysicsEngine.PhysicsResult phys = ThermalPhysicsEngine.evaluate(p, v, l, h);
+                PropertyPredictor.PredictionOutput pred = PropertyPredictor.predict(1.5, "HIP", 25.0);
+
+                String json = String.format(Locale.US,
+                        "{\"power_w\": %.1f, \"speed_mms\": %.1f, \"energy_density_j_mm3\": %.2f, \"defect_regime\": \"%s\", \"safe_window\": %b, \"melt_pool_width_um\": %.1f, \"melt_pool_depth_um\": %.1f, \"cooling_rate_k_s\": %.2e, \"predicted_ys_mpa\": %.1f, \"predicted_elongation_pct\": %.1f, \"astm_compliant\": %b, \"verdict\": \"%s\"}",
+                        p, v, phys.volumetricEnergyDensity, phys.defectRegime, phys.isSafeWindow, phys.estimatedMeltPoolWidthUm, phys.estimatedMeltPoolDepthUm, phys.estimatedCoolingRateKs, pred.predictedYieldStrengthMpa, pred.predictedElongationPct, pred.passesAstmF2924, pred.qualificationVerdict);
+
+                sendJsonResponse(exchange, 200, json);
+            }
+        });
+
+        // 4. API /api/materials (Integrated Material Science Registry)
+        server.createContext("/api/materials", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                if (materialService == null) {
+                    sendJsonResponse(exchange, 503, "{\"error\": \"Materials service not initialized\"}");
+                    return;
+                }
+                List<Map<String, Object>> list = materialService.listAllMaterials();
+                String json = JsonUtil.toJson(list);
+                sendJsonResponse(exchange, 200, json);
+            }
+        });
+
+        // 5. API /api/recipe?variant=TIV-00001 (Infers full process recipe from ParameterInferenceService)
+        server.createContext("/api/recipe", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                if (materialRepo == null || inferenceService == null) {
+                    sendJsonResponse(exchange, 503, "{\"error\": \"Materials service not initialized\"}");
+                    return;
+                }
+                String query = exchange.getRequestURI().getQuery();
+                String varId = "TIV-00001";
+                if (query != null && query.contains("variant=")) {
+                    for (String pair : query.split("&")) {
+                        String[] kv = pair.split("=");
+                        if (kv.length == 2 && kv[0].equalsIgnoreCase("variant")) {
+                            varId = kv[1];
+                        }
+                    }
+                }
+
+                Optional<MaterialVariant> opt = materialRepo.findVariantById(varId);
+                if (opt.isEmpty()) {
+                    sendJsonResponse(exchange, 404, "{\"error\": \"Variant not found: " + varId + "\"}");
+                    return;
+                }
+
+                ProcessRecipe recipe = inferenceService.inferRecipe(opt.get());
+                String json = JsonUtil.toJson(recipe);
+                sendJsonResponse(exchange, 200, json);
+            }
+        });
+
+        server.setExecutor(null);
+        server.start();
+
+        System.out.println("==================================================================");
+        System.out.printf(">> Pure Java AM Platform Server is LIVE on: http://localhost:%d%n", PORT);
+        System.out.println("   - Interactive Dashboard:  http://localhost:8080/dashboard");
+        System.out.println("   - Physics Evaluation API: http://localhost:8080/api/evaluate?power=250&speed=1100");
+        System.out.println("   - Materials Registry API: http://localhost:8080/api/materials");
+        System.out.println("   - Recipe Synthesis API:   http://localhost:8080/api/recipe?variant=TIV-00001");
+        System.out.println("   - Global Stats API:       http://localhost:8080/api/stats");
+        System.out.println("==================================================================");
+    }
+
+    private void sendJsonResponse(HttpExchange exchange, int status, String json) throws IOException {
+        byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+        exchange.sendResponseHeaders(status, bytes.length);
+        OutputStream os = exchange.getResponseBody();
+        os.write(bytes);
+        os.close();
+    }
+
+    public static void main(String[] args) {
+        try {
+            String workspace = System.getProperty("user.dir");
+            AmPlatformApplication app = new AmPlatformApplication(workspace);
+            app.init();
+
+            boolean runServer = args.length > 0 && args[0].equalsIgnoreCase("--serve");
+            if (runServer) {
+                app.startServer();
+            } else {
+                System.out.println(">> Batch evaluation complete. Run with '--serve' to start the interactive web server.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
