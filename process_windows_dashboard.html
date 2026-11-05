@@ -930,6 +930,120 @@
     font-size: 11px;
     color: var(--accent-cyan);
   }
+
+  /* Melt Pool & Thermal Field Styles (Screenshots 1-5) */
+  .mp-control-group {
+    display: inline-flex;
+    background: #080d14;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 2px;
+    align-items: center;
+    gap: 2px;
+  }
+  .mp-pill-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .mp-pill-btn:hover { color: #fff; }
+  .mp-pill-btn.active {
+    background: var(--accent-cyan);
+    color: #080d14;
+    font-weight: 700;
+    box-shadow: 0 0 10px rgba(80, 216, 233, 0.3);
+  }
+  .mp-preset-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #8ea8c4;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .mp-preset-btn:hover { color: #fff; background: #162232; }
+  .mp-preset-btn.active {
+    background: #183652;
+    color: var(--accent-cyan);
+    border-color: rgba(80, 216, 233, 0.5);
+    font-weight: 700;
+  }
+  .mp-toggle-btn {
+    background: transparent;
+    border: none;
+    color: #58728d;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+  }
+  .mp-toggle-btn:hover { color: #cbd5e1; }
+  .mp-toggle-btn.active {
+    background: #172739;
+    color: var(--accent-cyan);
+    font-weight: 700;
+  }
+  .mp-metric-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .mp-metric-card {
+    background: #080d14;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .mp-metric-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .mp-metric-val {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: #fff;
+    margin: 2px 0;
+  }
+  .mp-metric-sub {
+    font-size: 10px;
+    color: var(--accent-cyan);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .bontha-sub-view {
+    display: none;
+  }
+  .bontha-sub-view.active {
+    display: block;
+  }
+  @media (max-width: 1100px) {
+    .mp-metric-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 700px) {
+    .mp-metric-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
 </style>
 </head>
 <body>
@@ -981,6 +1095,10 @@
     <button class="tab-btn" onclick="switchTab('qualification', this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       ASTM Qualification <span class="tab-tag tag-amber">Audit</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('melt-pool', this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+      Melt pool & thermal
     </button>
     <button class="tab-btn" onclick="switchTab('literature', this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
@@ -1754,6 +1872,484 @@
     </div>
 
     <!-- TAB 7: LITERATURE EVIDENCE (54 PAPERS) -->
+    
+    <!-- TAB: MELT POOL & THERMAL FIELD (SCREENSHOTS 1, 2, 3, 4, 5) -->
+    <div id="view_melt-pool" class="tab-view">
+      
+      <!-- SUBSECTION 1: KU LEUVEN HYBRID vs ROSENTHAL MELT POOL & 3D THERMAL FIELD (SCREENSHOTS 1, 2, 3, 4) -->
+      <div class="model-card" style="margin-bottom: 20px;">
+        <div class="model-card-header" style="flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+              <span class="model-card-title" id="mpTitle">KU Leuven Hybrid Melt Pool (Coen et al. 2022)</span>
+              <span class="brand-badge" id="mpBadge">JMPT 304: 117547</span>
+            </div>
+            <div class="model-card-sub" id="mpDesc" style="margin-top: 4px;">
+              Semi-analytical hybrid combining Eagar-Tsai conduction width with Fabbro recoil keyhole aspect ratio R = d/w.
+            </div>
+          </div>
+
+          <!-- Controls Header -->
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
+            <!-- Model Switcher -->
+            <div class="mp-control-group">
+              <button type="button" class="mp-pill-btn active" id="btnMpCoen" onclick="setMpModel('coen')">KU Leuven (2022)</button>
+              <button type="button" class="mp-pill-btn" id="btnMpRosenthal" onclick="setMpModel('rosenthal')">Rosenthal (1946)</button>
+            </div>
+
+            <!-- Presets -->
+            <div class="mp-control-group" style="padding: 2px 6px;">
+              <span style="font-size: 10px; color: var(--text-muted); font-family: monospace; margin-right: 4px;">Presets:</span>
+              <button type="button" class="mp-preset-btn active" id="btnMpPreset200" onclick="applyMpPreset('200w')">KU Leuven (200W)</button>
+              <button type="button" class="mp-preset-btn" id="btnMpPreset300" onclick="applyMpPreset('300w')">Concept Laser M2 (300W)</button>
+            </div>
+
+            <!-- Projection Switcher -->
+            <div class="mp-control-group">
+              <button type="button" class="mp-pill-btn active" id="btnMpSurface" onclick="setMpView('surface')">Top Surface (X-Y)</button>
+              <button type="button" class="mp-pill-btn" id="btnMpCross" onclick="setMpView('cross-section')">Longitudinal (X-Z)</button>
+            </div>
+
+            <!-- Overlays -->
+            <div class="mp-control-group" style="padding: 2px 6px;">
+              <button type="button" class="mp-toggle-btn active" id="btnMpDims" onclick="toggleMpOverlay('dims')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/></svg>
+                Dims
+              </button>
+              <button type="button" class="mp-toggle-btn active" id="btnMpCallouts" onclick="toggleMpOverlay('callouts')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                Callouts
+              </button>
+              <button type="button" class="mp-toggle-btn active" id="btnMpGrid" onclick="toggleMpOverlay('grid')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                Grid
+              </button>
+              <button type="button" class="mp-toggle-btn" id="btnMpHighGrid" onclick="toggleMpOverlay('highgrid')">High Grid</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SVG Visualizer Canvas Container -->
+        <div style="background: #06080d; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; position: relative; overflow-x: auto;">
+          <svg id="mpSvg" viewBox="0 0 960 440" style="width: 100%; height: auto; min-width: 650px; display: block;" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <!-- Molten Liquid Core Radial Gradient -->
+              <radialGradient id="moltenCoreGradient" cx="72%" cy="50%" r="55%">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="12%" stop-color="#fff59d"/>
+                <stop offset="35%" stop-color="#ff7043"/>
+                <stop offset="65%" stop-color="#d32f2f"/>
+                <stop offset="90%" stop-color="#7f1d1d"/>
+                <stop offset="100%" stop-color="#450a0a" stop-opacity="0.85"/>
+              </radialGradient>
+
+              <!-- HAZ Thermal Halo Radial Gradient -->
+              <radialGradient id="hazThermalHalo" cx="72%" cy="50%" r="65%">
+                <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.35"/>
+                <stop offset="50%" stop-color="#b45309" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="#06080d" stop-opacity="0"/>
+              </radialGradient>
+
+              <!-- Incident Laser Spotlight Gradient -->
+              <linearGradient id="laserBeamIncident" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#ffeb3b" stop-opacity="0.9"/>
+                <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.4"/>
+                <stop offset="100%" stop-color="#fbbf24" stop-opacity="0.1"/>
+              </linearGradient>
+
+              <!-- Mushy Zone 45° Crosshatch Pattern -->
+              <pattern id="mushyHatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                <line x1="0" y1="0" x2="0" y2="8" stroke="#ffffff" stroke-width="1" stroke-opacity="0.18"/>
+              </pattern>
+
+              <!-- Glowing Cyan Outline Filter -->
+              <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+              </filter>
+
+              <!-- Vertical Temperature Colorbar Gradient -->
+              <linearGradient id="tempColorbarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="15%" stop-color="#fff59d"/>
+                <stop offset="30%" stop-color="#ff7043"/>
+                <stop offset="47%" stop-color="#00f7ff"/>
+                <stop offset="50%" stop-color="#d32f2f"/>
+                <stop offset="72%" stop-color="#7c2d12"/>
+                <stop offset="92%" stop-color="#1e293b"/>
+                <stop offset="100%" stop-color="#0f172a"/>
+              </linearGradient>
+            </defs>
+
+            <!-- Base Canvas Boundary -->
+            <rect x="80" y="45" width="780" height="330" rx="6" fill="#080e1a" stroke="#182333" stroke-width="1.8"/>
+
+            <!-- Dynamic SVG Layers Container (injected by updateMeltPoolAndThermal()) -->
+            <g id="mpPlotLayers"></g>
+
+            <!-- Vertical Temperature Colorbar on Right (Always Visible) -->
+            <g id="mpColorbarGroup">
+              <text x="915" y="32" fill="#cbd5e1" font-size="10.5" font-family="monospace" font-weight="bold" text-anchor="middle">TEMP (°C)</text>
+              <rect x="906" y="45" width="18" height="330" rx="9" fill="url(#tempColorbarGrad)" stroke="#1e293b" stroke-width="1.2"/>
+              
+              <!-- 3200°C Peak -->
+              <line x1="900" y1="52" x2="906" y2="52" stroke="#ffffff" stroke-width="1.2"/>
+              <text x="898" y="55" fill="#ffffff" font-size="9" font-family="monospace" text-anchor="end">3200°</text>
+
+              <!-- 1650°C Liquidus -->
+              <line x1="900" y1="188" x2="906" y2="188" stroke="#00f7ff" stroke-width="1.2"/>
+              <text x="898" y="191" fill="#00f7ff" font-size="9" font-family="monospace" text-anchor="end">1650°</text>
+
+              <!-- 1600°C Solidus -->
+              <line x1="900" y1="210" x2="906" y2="210" stroke="#f59e0b" stroke-width="1.2"/>
+              <text x="898" y="213" fill="#f59e0b" font-size="9" font-family="monospace" text-anchor="end">1600°</text>
+
+              <!-- 995°C Beta Transus -->
+              <line x1="900" y1="272" x2="906" y2="272" stroke="#fbbf24" stroke-width="1.2"/>
+              <text x="898" y="275" fill="#fbbf24" font-size="9" font-family="monospace" text-anchor="end">995°</text>
+
+              <!-- 35°C Ambient -->
+              <line x1="900" y1="365" x2="906" y2="365" stroke="#94a3b8" stroke-width="1.2"/>
+              <text x="898" y="368" fill="#94a3b8" font-size="9" font-family="monospace" text-anchor="end">35°</text>
+
+              <text x="915" y="398" fill="#64748b" font-size="9" font-family="monospace" text-anchor="middle">Rosenthal</text>
+              <text x="915" y="410" fill="#64748b" font-size="9" font-family="monospace" text-anchor="middle">Analytical</text>
+            </g>
+          </svg>
+        </div>
+
+        <!-- 6 Outcome Metric Cards (Screenshots 1-4) -->
+        <div class="mp-metric-grid">
+          <div class="mp-metric-card">
+            <div class="mp-metric-label">Pool Length L</div>
+            <div class="mp-metric-val" id="mpCardLength">297 µm</div>
+            <div class="mp-metric-sub" id="mpCardLengthMm">0.30 mm</div>
+          </div>
+          <div class="mp-metric-card">
+            <div class="mp-metric-label">Pool Width W</div>
+            <div class="mp-metric-val" id="mpCardWidth">127 µm</div>
+            <div class="mp-metric-sub" id="mpCardWidthSub">Hatch: 80 µm</div>
+          </div>
+          <div class="mp-metric-card">
+            <div class="mp-metric-label">Penetration Depth zm</div>
+            <div class="mp-metric-val" id="mpCardDepth">65 µm</div>
+            <div class="mp-metric-sub" id="mpCardDepthSub">1.6x layer t</div>
+          </div>
+          <div class="mp-metric-card">
+            <div class="mp-metric-label">Aspect Ratio (d/W)</div>
+            <div class="mp-metric-val" id="mpCardAspect" style="color: var(--accent-emerald);">0.51</div>
+            <div class="mp-metric-sub" id="mpCardAspectSub">Conduction Mode</div>
+          </div>
+          <div class="mp-metric-card">
+            <div class="mp-metric-label">Peak Temp (Center)</div>
+            <div class="mp-metric-val" id="mpCardPeak">3200°C</div>
+            <div class="mp-metric-sub">Boiling: 3,287°C</div>
+          </div>
+          <div class="mp-metric-card">
+            <div class="mp-metric-label">Growth Rate R</div>
+            <div class="mp-metric-val" id="mpCardGrowth">95.00 cm/s</div>
+            <div class="mp-metric-sub">Trailing edge</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBSECTION 2: SOLIDIFICATION MICROSTRUCTURE MAPS & SIZE-SCALE PHYSICS (SCREENSHOT 5) -->
+      <div class="model-card">
+        <div class="model-card-header" style="flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/></svg>
+              <span class="model-card-title">Solidification Microstructure Maps & Size-Scale Physics (Bontha et al. 2006 & 2009)</span>
+              <span class="brand-badge">MSEA 513-514: 311-318</span>
+              <span class="brand-badge" style="color: #38bdf8; border-color: rgba(56,189,248,0.3);">JMPT 178: 135-142</span>
+            </div>
+            <div class="model-card-sub" style="margin-top: 4px;">
+              Extracts solidification cooling rates ∂T/∂t, thermal gradients G = |∇T|, and growth velocity R throughout the melt pool to predict grain size and columnar-to-equiaxed transitions (CET).
+            </div>
+          </div>
+
+          <!-- Controls Header -->
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
+            <!-- Dimension Pills -->
+            <div class="mp-control-group">
+              <button type="button" class="mp-pill-btn active" id="btnBn3d" onclick="setBonthaDim('3d-bulky')">Bulky 3D (2009)</button>
+              <button type="button" class="mp-pill-btn" id="btnBn2d" onclick="setBonthaDim('2d-thin-wall')">Thin-Wall 2D (2006)</button>
+            </div>
+
+            <!-- Scale Pills -->
+            <div class="mp-control-group">
+              <button type="button" class="mp-pill-btn active" id="btnBnSmall" onclick="setBonthaScale('small-scale')">Small-Scale (LENS™)</button>
+              <button type="button" class="mp-pill-btn" id="btnBnLarge" onclick="setBonthaScale('large-scale')">Large-Scale (5–30 kW)</button>
+            </div>
+
+            <!-- Model Pills -->
+            <div class="mp-control-group">
+              <button type="button" class="mp-pill-btn active" id="btnBnRosenthal" onclick="setBonthaModel('rosenthal')">Rosenthal</button>
+              <button type="button" class="mp-pill-btn" id="btnBnFem" onclick="setBonthaModel('nonlinear-fem')">3D FEM</button>
+            </div>
+
+            <!-- Beam Source -->
+            <div class="mp-control-group">
+              <button type="button" class="mp-pill-btn active" id="btnBnLaser" onclick="setBonthaSource('laser')">Laser (α=0.35)</button>
+              <button type="button" class="mp-pill-btn" id="btnBnEbeam" onclick="setBonthaSource('ebeam')">E-Beam (α=0.88)</button>
+            </div>
+
+            <!-- Paper Preset Dropdown -->
+            <div style="display: inline-flex; align-items: center; gap: 6px;">
+              <span style="font-size: 10.5px; color: #7893af; font-family: monospace;">Paper Preset:</span>
+              <select id="bonthaPresetSelect" class="dark-select" style="padding: 4px 8px; font-size: 11px; width: auto;" onchange="applyBonthaPreset(this.value)">
+                <option value="custom" selected>Custom Live Parameters</option>
+                <optgroup label="Small-Scale LENS™ (Fig. 3)">
+                  <option value="fig3a-350w">Fig. 3a: Q = 350 W, V = 8.47 mm/s (Columnar)</option>
+                  <option value="fig3a-550w">Fig. 3a: Q = 550 W, V = 8.47 mm/s (Benchmark)</option>
+                  <option value="fig3a-850w">Fig. 3a: Q = 850 W, V = 8.47 mm/s (Coarse)</option>
+                  <option value="fig3b-slow">Fig. 3b: Q = 550 W, V = 2.12 mm/s (Slow)</option>
+                  <option value="fig3b-fast">Fig. 3b: Q = 550 W, V = 10.6 mm/s (Fast)</option>
+                </optgroup>
+                <optgroup label="Large-Scale High-Power (Fig. 4)">
+                  <option value="fig4a-5kw">Fig. 4a: Q = 5 kW, V = 8.47 mm/s (Columnar)</option>
+                  <option value="fig4a-15kw">Fig. 4a: Q = 15 kW, V = 8.47 mm/s (Graded Mixed)</option>
+                  <option value="fig4a-30kw">Fig. 4a: Q = 30 kW, V = 8.47 mm/s (Graded Equiaxed)</option>
+                  <option value="fig4b-slow">Fig. 4b: Q = 15 kW, V = 2.12 mm/s (Coarse Equiaxed)</option>
+                  <option value="fig4b-fast">Fig. 4b: Q = 15 kW, V = 10.6 mm/s (Fine Equiaxed)</option>
+                </optgroup>
+                <optgroup label="Electron Beam Manufacturing (EBAM)">
+                  <option value="ebeam-15kw">E-Beam: 15 kW @ 8.47 mm/s, α = 0.88</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5 Summary KPI Cards (Screenshot 5) -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 16px;">
+          <div class="mp-metric-card">
+            <div class="mp-metric-label">Solidification Rate <i>R</i></div>
+            <div class="mp-metric-val" id="bnCardR" style="color: var(--accent-cyan);">95 cm/s</div>
+            <div class="mp-metric-sub" id="bnCardRSub" style="color: #5e7792;">Surface: 950.0 mm/s | Root: 0.01 cm/s</div>
+          </div>
+          <div class="mp-metric-card">
+            <div class="mp-metric-label">Thermal Gradient <i>G</i></div>
+            <div class="mp-metric-val" id="bnCardG">51,451 K/cm</div>
+            <div class="mp-metric-sub" id="bnCardGSub" style="color: #5e7792;">Root peak: 416,153 K/cm</div>
+          </div>
+          <div class="mp-metric-card">
+            <div class="mp-metric-label">Cooling Rate ∂<i>T</i>/∂<i>t</i></div>
+            <div class="mp-metric-val" id="bnCardCooling" style="color: var(--accent-amber);">4,887,805 K/s</div>
+            <div class="mp-metric-sub" id="bnCardCoolingSub" style="color: #5e7792;">Root: 5,352 K/s (0.1% of surface)</div>
+          </div>
+          <div class="mp-metric-card">
+            <div class="mp-metric-label">Norm. Temp <i>T̄</i><sub>m</sub></div>
+            <div class="mp-metric-val" id="bnCardNorm" style="color: var(--accent-emerald);">0.039</div>
+            <div class="mp-metric-sub" id="bnCardNormSub" style="color: #5e7792;">3D: (Tm-T0)/Tc(Q,V)</div>
+          </div>
+          <div class="mp-metric-card">
+            <div class="mp-metric-label">Microstructural Grading</div>
+            <div class="mp-metric-val" id="bnCardMorph" style="font-size: 13.5px; color: #60a5fa;">● Columnar Grain Growth</div>
+            <div class="mp-metric-sub" style="color: #5e7792;">Uniform Columnar grain growth throughout...</div>
+          </div>
+        </div>
+
+        <!-- Sub-tabs Bar -->
+        <div style="display: flex; gap: 6px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 14px; overflow-x: auto;">
+          <button type="button" class="mp-pill-btn active" id="btnSubTabMap" onclick="setBonthaSubTab('map')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+            Solidification Map (G vs. R)
+          </button>
+          <button type="button" class="mp-pill-btn" id="btnSubTabDimensionless" onclick="setBonthaSubTab('dimensionless')">Dimensionless Process Maps (Fig. 2a & 2b)</button>
+          <button type="button" class="mp-pill-btn" id="btnSubTabProfile" onclick="setBonthaSubTab('profile')">Through-Depth Solidification Profile (10 Stations)</button>
+          <button type="button" class="mp-pill-btn" id="btnSubTabKinetics" onclick="setBonthaSubTab('kinetics')">Size-Scale & Kinetics (Bontha 2009 MSEA)</button>
+        </div>
+
+        <!-- SUB-VIEW 1: SOLIDIFICATION MAP (G vs R) - SCREENSHOT 5 -->
+        <div id="bonthaSubViewMap" class="bontha-sub-view active">
+          <!-- Solidification Map Header with Legend & 3D FEM Checkbox -->
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <div>
+              <div style="font-size: 13.5px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+                <span>Solidification Microstructure Map for Ti-6Al-4V (Bontha et al. 2009 MSEA)</span>
+                <span class="brand-badge" style="font-size: 9.5px;" id="bnSpaceBadge">3D Half-Space</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Thermal Gradient G (K/cm) vs. Solidification Rate R (cm/s). Traces microstructural grading from melt pool root (z = zm) to surface (z = 0).
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 14px; font-size: 11px; font-family: monospace;">
+              <span style="color: var(--accent-cyan); display: flex; align-items: center; gap: 5px;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-cyan); display: inline-block;"></span>
+                <strong>Surface (z = 0)</strong>
+              </span>
+              <span style="color: #f43f5e; display: flex; align-items: center; gap: 5px;">
+                <span style="width: 8px; height: 8px; transform: rotate(45deg); background: #f43f5e; display: inline-block;"></span>
+                <strong>Root (z = zm)</strong>
+              </span>
+              <label style="display: flex; align-items: center; gap: 5px; color: #c084fc; cursor: pointer;">
+                <input type="checkbox" id="chk3dFem" checked onchange="toggleBonthaFemOverlay(this.checked)" style="accent-color: #c084fc;">
+                <strong>3D FEM Overlay (Figs. 6 & 7)</strong>
+              </label>
+            </div>
+          </div>
+
+          <!-- Vector SVG Chart: viewBox 0 0 880 480 (Screenshot 5) -->
+          <div style="background: #05080c; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; overflow-x: auto;">
+            <svg id="bonthaLargeSvg" viewBox="0 0 880 480" style="width: 100%; height: auto; min-width: 600px; display: block;" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <linearGradient id="columnarGradLarge" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#1e293b" stop-opacity="0.5"/>
+                  <stop offset="100%" stop-color="#0f172a" stop-opacity="0.25"/>
+                </linearGradient>
+                <linearGradient id="mixedGradLarge" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#b45309" stop-opacity="0.28"/>
+                  <stop offset="100%" stop-color="#78350f" stop-opacity="0.16"/>
+                </linearGradient>
+                <linearGradient id="equiaxedGradLarge" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#059669" stop-opacity="0.28"/>
+                  <stop offset="100%" stop-color="#064e3b" stop-opacity="0.16"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Dynamic Bontha Map Elements (injected by updateMeltPoolAndThermal()) -->
+              <g id="bonthaLargeLayers"></g>
+            </svg>
+          </div>
+
+          <!-- 4 Outcome Cards Below Solidification Map (Screenshot 5) -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 14px;">
+            <div class="mp-metric-card">
+              <div class="mp-metric-label">Solidification Morphology</div>
+              <div style="font-size: 13px; font-weight: 700; color: var(--accent-cyan); margin-top: 4px;" id="bnMorphStatus">
+                Columnar Grain Growth
+              </div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Governed by G/R at surface & root</div>
+            </div>
+            <div class="mp-metric-card">
+              <div class="mp-metric-label">Cooling Rate (G × R)</div>
+              <div class="mp-metric-val" id="bnAvgCooling">4.89e+06 K/s</div>
+              <div class="mp-metric-sub">Melt Pool Average</div>
+            </div>
+            <div class="mp-metric-card">
+              <div class="mp-metric-label">Root Gradient (G_zm)</div>
+              <div class="mp-metric-val" id="bnRootG" style="color: #f43f5e;">416,153 K/cm</div>
+              <div class="mp-metric-sub" style="color: #7189a3;">Deepest Point (R→0)</div>
+            </div>
+            <div class="mp-metric-card">
+              <div class="mp-metric-label">Surface Velocity (R_0)</div>
+              <div class="mp-metric-val" id="bnSurfR" style="color: var(--accent-cyan);">95.0 cm/s</div>
+              <div class="mp-metric-sub" style="color: #7189a3;">Highest Solidification Rate</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-VIEW 2: DIMENSIONLESS PROCESS MAPS (Fig. 2a & 2b) -->
+        <div id="bonthaSubViewDimensionless" class="bontha-sub-view">
+          <div style="background: #090d14; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #182332; padding-bottom: 10px; margin-bottom: 14px;">
+              <div>
+                <span style="font-size: 14px; font-weight: 700; color: #fff;">Master Dimensionless Thermal Process Maps (Bontha et al. 2009 MSEA, Fig. 2)</span>
+                <span class="brand-badge" style="color: #10b981; border-color: rgba(16,185,129,0.3); margin-left: 8px;">Universal Form</span>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                  Dimensionless cooling rate ∂T̄/∂t̄ (Fig. 2a) and dimensionless thermal gradient |∇̄T̄| (Fig. 2b) mapped over normalized melting temperature T̄m and depth ratio z0/zm.
+                </p>
+              </div>
+              <div style="font-size: 11px; font-family: monospace; color: var(--accent-cyan); background: #141d28; padding: 4px 10px; border-radius: 6px; border: 1px solid #233549;">
+                Current Operating T̄m = <strong id="bnDimTmVal">0.039</strong>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+              <div style="background: #05080c; border: 1px solid #16202c; border-radius: 8px; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                  <span style="font-weight: 700; color: #fbbf24;">Fig. 2(a): Dimensionless Cooling Rate ∂T̄/∂t̄</span>
+                  <span style="color: #718da9; font-family: monospace;">Max at surface (z=0)</span>
+                </div>
+                <svg viewBox="0 0 380 200" style="width: 100%; height: auto;">
+                  <line x1="45" y1="165" x2="360" y2="165" stroke="#334155" stroke-width="1"/>
+                  <line x1="45" y1="20" x2="45" y2="165" stroke="#334155" stroke-width="1"/>
+                  <text x="200" y="190" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="monospace">Normalized Temperature T̄m</text>
+                  <text x="18" y="95" fill="#94a3b8" font-size="10" text-anchor="middle" transform="rotate(-90 18 95)" font-family="monospace">∂T̄/∂t̄</text>
+                  <!-- Universal curves -->
+                  <path d="M 50 40 Q 150 90 350 160" fill="none" stroke="#fbbf24" stroke-width="2"/>
+                  <path d="M 50 65 Q 160 115 350 162" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 2"/>
+                  <path d="M 50 95 Q 180 135 350 164" fill="none" stroke="#d97706" stroke-width="1.2" stroke-dasharray="2 2"/>
+                  <circle cx="110" cy="72" r="5" fill="#50d8e9" stroke="#ffffff" stroke-width="1.5"/>
+                  <text x="120" y="68" fill="#50d8e9" font-size="9" font-family="monospace">Operating Point</text>
+                </svg>
+              </div>
+              <div style="background: #05080c; border: 1px solid #16202c; border-radius: 8px; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                  <span style="font-weight: 700; color: #38bdf8;">Fig. 2(b): Dimensionless Thermal Gradient |∇̄T̄|</span>
+                  <span style="color: #718da9; font-family: monospace;">Max at root (z=zm)</span>
+                </div>
+                <svg viewBox="0 0 380 200" style="width: 100%; height: auto;">
+                  <line x1="45" y1="165" x2="360" y2="165" stroke="#334155" stroke-width="1"/>
+                  <line x1="45" y1="20" x2="45" y2="165" stroke="#334155" stroke-width="1"/>
+                  <text x="200" y="190" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="monospace">Normalized Temperature T̄m</text>
+                  <text x="18" y="95" fill="#94a3b8" font-size="10" text-anchor="middle" transform="rotate(-90 18 95)" font-family="monospace">|∇̄T̄|</text>
+                  <!-- Universal curves -->
+                  <path d="M 50 25 Q 140 80 350 155" fill="none" stroke="#38bdf8" stroke-width="2"/>
+                  <path d="M 50 50 Q 160 100 350 158" fill="none" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="4 2"/>
+                  <path d="M 50 80 Q 180 120 350 161" fill="none" stroke="#0369a1" stroke-width="1.2" stroke-dasharray="2 2"/>
+                  <circle cx="110" cy="62" r="5" fill="#f43f5e" stroke="#ffffff" stroke-width="1.5"/>
+                  <text x="120" y="58" fill="#f43f5e" font-size="9" font-family="monospace">Root Gradient</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-VIEW 3: THROUGH-DEPTH SOLIDIFICATION PROFILE (10 STATIONS TABLE) -->
+        <div id="bonthaSubViewProfile" class="bontha-sub-view">
+          <div style="background: #090d14; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;">
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">
+              Numerical extraction of cooling rate ∂T/∂t, thermal gradient G, and growth velocity R from surface (z/zm = 0) to melt pool bottom (z/zm = 1).
+            </div>
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; font-size: 11px; text-align: left; border-collapse: collapse;">
+                <thead>
+                  <tr style="border-bottom: 1px solid #1f2837; color: #7189a3; font-family: monospace;">
+                    <th style="padding: 6px 8px;">Rel. Depth (z/zm)</th>
+                    <th style="padding: 6px 8px;">Depth (μm)</th>
+                    <th style="padding: 6px 8px; text-align: right;">Thermal Gradient G (K/cm)</th>
+                    <th style="padding: 6px 8px; text-align: right;">Velocity R (cm/s)</th>
+                    <th style="padding: 6px 8px; text-align: right;">Cooling Rate (K/s)</th>
+                    <th style="padding: 6px 8px; text-align: right;">CET Ratio</th>
+                    <th style="padding: 6px 8px; text-align: center;">Morphology</th>
+                  </tr>
+                </thead>
+                <tbody id="bonthaProfileTableBody" style="font-family: monospace;">
+                  <!-- Injected dynamically by renderBonthaProfileTable() -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-VIEW 4: SIZE-SCALE & KINETICS -->
+        <div id="bonthaSubViewKinetics" class="bontha-sub-view">
+          <div style="background: #090d14; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+              <div style="background: #05080c; border: 1px solid #16202c; border-radius: 8px; padding: 12px;">
+                <span style="font-size: 11px; font-weight: 700; color: #38bdf8;">Primary Dendrite Arm Spacing (PDAS) λ₁</span>
+                <p style="font-size: 10px; color: var(--text-muted); margin: 4px 0 10px 0;">λ₁ = 35.5 · (∂T/∂t)⁻⁰·²⁸ μm for Ti-6Al-4V</p>
+                <div style="font-size: 20px; font-weight: 700; color: var(--accent-cyan); font-family: monospace;" id="bnPdasVal">0.42 μm</div>
+                <div style="font-size: 10px; color: #64748b; margin-top: 4px;">Ultra-fine cellular/martensitic lath spacing</div>
+              </div>
+              <div style="background: #05080c; border: 1px solid #16202c; border-radius: 8px; padding: 12px;">
+                <span style="font-size: 11px; font-weight: 700; color: #10b981;">Size-Scale Transition Velocity</span>
+                <p style="font-size: 10px; color: var(--text-muted); margin: 4px 0 10px 0;">Small-Scale (LENS™ 100-800 W) vs Large-Scale (5-30 kW)</p>
+                <div style="font-size: 13px; font-weight: 600; color: #f1f5f9; margin-top: 6px;">
+                  High powers (>5 kW) expand the melt pool length by 10-40x, dramatically reducing thermal gradient G at trailing edge and facilitating columnar-to-equiaxed transition (CET).
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
     <div id="view_literature" class="tab-view">
       <div class="model-card">
         <div class="model-card-header">
@@ -2227,6 +2823,7 @@ function calculatePhysics() {
       noteEl.innerText = 'As-built component retains rapid-quenched acicular α\' martensite with high hardness and limited ductility.';
     }
   }
+  updateMeltPoolAndThermal();
 }
 
 function onSliderChange() {
@@ -2325,6 +2922,9 @@ function switchTab(tabId, btn) {
 
   if (tabId === 'digital-twin') {
     startTwinAnimation();
+  }
+  if (tabId === 'melt-pool') {
+    updateMeltPoolAndThermal();
   }
 }
 
@@ -2628,6 +3228,683 @@ function filterPapersTable() {
 }
 
 // ==========================================
+
+// ==========================================
+// 8. MELT POOL & THERMAL FIELD CONTROLLER (SCREENSHOTS 1, 2, 3, 4, 5)
+// ==========================================
+let mpModel = 'coen';        // 'coen' | 'rosenthal'
+let mpView = 'surface';      // 'surface' | 'cross-section'
+let mpDims = true;
+let mpCallouts = true;
+let mpGrid = true;
+let mpHighGrid = false;
+
+let bonthaDim = '3d-bulky';      // '3d-bulky' | '2d-thin-wall'
+let bonthaScale = 'small-scale'; // 'small-scale' | 'large-scale'
+let bonthaModel = 'rosenthal';   // 'rosenthal' | 'nonlinear-fem'
+let bonthaSource = 'laser';      // 'laser' | 'ebeam'
+let bonthaFemOverlay = true;
+let bonthaPreset = 'custom';
+let bonthaActiveSubTab = 'map';
+
+function setMpModel(m) {
+  mpModel = m;
+  const btnCoen = document.getElementById('btnMpCoen');
+  const btnRosenthal = document.getElementById('btnMpRosenthal');
+  if (btnCoen) btnCoen.classList.toggle('active', m === 'coen');
+  if (btnRosenthal) btnRosenthal.classList.toggle('active', m === 'rosenthal');
+  
+  const isCoen = m === 'coen';
+  const tEl = document.getElementById('mpTitle');
+  const bEl = document.getElementById('mpBadge');
+  const dEl = document.getElementById('mpDesc');
+  if (tEl) tEl.innerText = isCoen ? 'KU Leuven Hybrid Melt Pool (Coen et al. 2022)' : 'Rosenthal Thermal Field & Melt Pool Geometry';
+  if (bEl) {
+    bEl.innerText = isCoen ? 'JMPT 304: 117547' : 'Classic 1946';
+    bEl.style.color = isCoen ? 'var(--accent-cyan)' : '#38bdf8';
+  }
+  if (dEl) {
+    dEl.innerText = isCoen ? 
+      'Semi-analytical hybrid combining Eagar-Tsai conduction width with Fabbro recoil keyhole aspect ratio R = d/w.' :
+      'Analytical 3D thermal field generated by moving point source in semi-infinite medium (Rosenthal 1946).';
+  }
+
+  updateMeltPoolAndThermal();
+}
+
+function setMpView(v) {
+  mpView = v;
+  const bSurf = document.getElementById('btnMpSurface');
+  const bCross = document.getElementById('btnMpCross');
+  if (bSurf) bSurf.classList.toggle('active', v === 'surface');
+  if (bCross) bCross.classList.toggle('active', v === 'cross-section');
+  updateMeltPoolAndThermal();
+}
+
+function applyMpPreset(p) {
+  const p200 = document.getElementById('btnMpPreset200');
+  const p300 = document.getElementById('btnMpPreset300');
+  if (p200) p200.classList.toggle('active', p === '200w');
+  if (p300) p300.classList.toggle('active', p === '300w');
+  
+  if (p === '200w') {
+    const slP = document.getElementById('sl_p'); if (slP) slP.value = 200;
+    const slV = document.getElementById('sl_v'); if (slV) slV.value = 950;
+    const slSpot = document.getElementById('sl_spot'); if (slSpot) slSpot.value = 80;
+    const slT = document.getElementById('sl_t'); if (slT) slT.value = 40;
+    const slH = document.getElementById('sl_h'); if (slH) slH.value = 80;
+    setMpModel('coen');
+  } else if (p === '300w') {
+    const slP = document.getElementById('sl_p'); if (slP) slP.value = 300;
+    const slV = document.getElementById('sl_v'); if (slV) slV.value = 1050;
+    const slSpot = document.getElementById('sl_spot'); if (slSpot) slSpot.value = 80;
+    const slT = document.getElementById('sl_t'); if (slT) slT.value = 40;
+    const slH = document.getElementById('sl_h'); if (slH) slH.value = 80;
+    setMpModel('rosenthal');
+  }
+  calculatePhysics();
+}
+
+function toggleMpOverlay(k) {
+  if (k === 'dims') {
+    mpDims = !mpDims;
+    const b = document.getElementById('btnMpDims'); if (b) b.classList.toggle('active', mpDims);
+  } else if (k === 'callouts') {
+    mpCallouts = !mpCallouts;
+    const b = document.getElementById('btnMpCallouts'); if (b) b.classList.toggle('active', mpCallouts);
+  } else if (k === 'grid') {
+    mpGrid = !mpGrid;
+    const b = document.getElementById('btnMpGrid'); if (b) b.classList.toggle('active', mpGrid);
+  } else if (k === 'highgrid') {
+    mpHighGrid = !mpHighGrid;
+    const b = document.getElementById('btnMpHighGrid'); if (b) b.classList.toggle('active', mpHighGrid);
+  }
+  updateMeltPoolAndThermal();
+}
+
+function setBonthaDim(d) {
+  bonthaDim = d;
+  const b3 = document.getElementById('btnBn3d'); if (b3) b3.classList.toggle('active', d === '3d-bulky');
+  const b2 = document.getElementById('btnBn2d'); if (b2) b2.classList.toggle('active', d === '2d-thin-wall');
+  const spBadge = document.getElementById('bnSpaceBadge');
+  if (spBadge) spBadge.innerText = d === '3d-bulky' ? '3D Half-Space' : '2D Thin-Wall';
+  updateMeltPoolAndThermal();
+}
+
+function setBonthaScale(s) {
+  bonthaScale = s;
+  const bSm = document.getElementById('btnBnSmall'); if (bSm) bSm.classList.toggle('active', s === 'small-scale');
+  const bLg = document.getElementById('btnBnLarge'); if (bLg) bLg.classList.toggle('active', s === 'large-scale');
+  if (s === 'large-scale') {
+    const slP = document.getElementById('sl_p');
+    if (slP && parseFloat(slP.value) < 1200) slP.value = 1500;
+  }
+  updateMeltPoolAndThermal();
+}
+
+function setBonthaModel(m) {
+  bonthaModel = m;
+  const bR = document.getElementById('btnBnRosenthal'); if (bR) bR.classList.toggle('active', m === 'rosenthal');
+  const bF = document.getElementById('btnBnFem'); if (bF) bF.classList.toggle('active', m === 'nonlinear-fem');
+  updateMeltPoolAndThermal();
+}
+
+function setBonthaSource(s) {
+  bonthaSource = s;
+  const bL = document.getElementById('btnBnLaser'); if (bL) bL.classList.toggle('active', s === 'laser');
+  const bE = document.getElementById('btnBnEbeam'); if (bE) bE.classList.toggle('active', s === 'ebeam');
+  updateMeltPoolAndThermal();
+}
+
+function toggleBonthaFemOverlay(checked) {
+  bonthaFemOverlay = checked;
+  updateMeltPoolAndThermal();
+}
+
+function setBonthaSubTab(tab) {
+  bonthaActiveSubTab = tab;
+  const tabs = ['map', 'dimensionless', 'profile', 'kinetics'];
+  tabs.forEach(t => {
+    const btn = document.getElementById('btnSubTab' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) btn.classList.toggle('active', t === tab);
+    const view = document.getElementById('bonthaSubView' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (view) view.classList.toggle('active', t === tab);
+  });
+  if (tab === 'profile') {
+    renderBonthaProfileTable();
+  }
+}
+
+function applyBonthaPreset(val) {
+  bonthaPreset = val;
+  const slP = document.getElementById('sl_p');
+  const slV = document.getElementById('sl_v');
+  if (val === 'fig3a-350w') {
+    if (slP) slP.value = 350;
+    if (slV) slV.value = 8.47;
+    setBonthaDim('3d-bulky');
+    setBonthaScale('small-scale');
+  } else if (val === 'fig3a-550w') {
+    if (slP) slP.value = 550;
+    if (slV) slV.value = 8.47;
+    setBonthaDim('3d-bulky');
+    setBonthaScale('small-scale');
+  } else if (val === 'fig3a-850w') {
+    if (slP) slP.value = 850;
+    if (slV) slV.value = 8.47;
+    setBonthaDim('3d-bulky');
+  } else if (val === 'fig4a-15kw') {
+    if (slP) slP.value = 15000;
+    if (slV) slV.value = 8.47;
+    setBonthaScale('large-scale');
+  } else if (val === 'ebeam-15kw') {
+    if (slP) slP.value = 15000;
+    if (slV) slV.value = 8.47;
+    setBonthaSource('ebeam');
+  }
+  calculatePhysics();
+}
+
+// Teardrop melt pool SVG path generator (front/rear/mid scaling)
+function createTeardropPath(length, width, frontRatio, rearRatio, scale) {
+  const frontX = 680 + frontRatio * length * scale;
+  const rearX = 680 - rearRatio * length * scale;
+  const midX = 680 - 0.16 * length * scale;
+  const halfW = (width / 2) * scale;
+  const span = length * scale;
+  const tailH = Math.min(halfW * 0.35, 22);
+  const tailX = rearX + Math.min(span * 0.12, 32);
+
+  return [
+    `M ${frontX.toFixed(1)} 210.0`,
+    `C ${frontX.toFixed(1)} ${(210 - halfW * 0.55).toFixed(1)}, ${(midX + 0.18 * span).toFixed(1)} ${(210 - halfW).toFixed(1)}, ${midX.toFixed(1)} ${(210 - halfW).toFixed(1)}`,
+    `C ${(midX - 0.42 * span).toFixed(1)} ${(210 - halfW).toFixed(1)}, ${tailX.toFixed(1)} ${(210 - tailH * 1.5).toFixed(1)}, ${tailX.toFixed(1)} ${(210 - tailH).toFixed(1)}`,
+    `C ${(tailX - 0.5 * (tailX - rearX)).toFixed(1)} ${(210 - tailH).toFixed(1)}, ${rearX.toFixed(1)} ${(210 - tailH * 0.55).toFixed(1)}, ${rearX.toFixed(1)} 210.0`,
+    `C ${rearX.toFixed(1)} ${(210 + tailH * 0.55).toFixed(1)}, ${(tailX - 0.5 * (tailX - rearX)).toFixed(1)} ${(210 + tailH).toFixed(1)}, ${tailX.toFixed(1)} ${(210 + tailH).toFixed(1)}`,
+    `C ${tailX.toFixed(1)} ${(210 + tailH * 1.5).toFixed(1)}, ${(midX - 0.42 * span).toFixed(1)} ${(210 + halfW).toFixed(1)}, ${midX.toFixed(1)} ${(210 + halfW).toFixed(1)}`,
+    `C ${(midX + 0.18 * span).toFixed(1)} ${(210 + halfW).toFixed(1)}, ${frontX.toFixed(1)} ${(210 + halfW * 0.55).toFixed(1)}, ${frontX.toFixed(1)} 210.0`,
+    `Z`
+  ].join(' ');
+}
+
+// Global cache for 10-station depth profile
+let lastBonthaProfile = [];
+
+// Master function to recalculate and update Melt Pool and Bontha Solidification sections
+function updateMeltPoolAndThermal() {
+  const elP = document.getElementById('sl_p');
+  const elV = document.getElementById('sl_v');
+  const elH = document.getElementById('sl_h');
+  const elT = document.getElementById('sl_t');
+  const elSpot = document.getElementById('sl_spot');
+
+  const p = elP ? parseFloat(elP.value) : 200;
+  const v = elV ? parseFloat(elV.value) : 950;
+  const h = elH ? parseFloat(elH.value) : 80;
+  const t = elT ? parseFloat(elT.value) : 40;
+  const spot = elSpot ? parseFloat(elSpot.value) : 80;
+  const vMs = v / 1000.0;
+
+  // 1. Calculate Melt Pool Dimensions based on model
+  let poolWidth, poolDepth, poolLength, aspect, peakTemp, growthRate;
+  
+  if (mpModel === 'coen') {
+    // KU Leuven Coen et al. (2022) Hybrid Model
+    const wEagar = Math.sqrt((8 * p * 0.35) / (Math.PI * Math.E * 4430 * 526 * (1650 - 25) * Math.max(0.01, vMs)));
+    poolWidth = Math.round(Math.max(spot * 0.7, wEagar * 1e6 * 0.68 + spot * 0.35));
+    // Fabbro recoil keyhole aspect ratio R
+    const normEnthalpy = (p * 0.35) / Math.max(1e-5, Math.PI * 4430 * 526 * 1625 * Math.sqrt(6.8e-6 * Math.max(0.01, vMs) * Math.pow(spot * 1e-6, 3)));
+    const R_aspect = Math.max(0.45, Math.min(2.8, 0.48 * Math.pow(normEnthalpy / 12.0, 0.35)));
+    poolDepth = Math.round(poolWidth * R_aspect * 0.95);
+    poolLength = Math.round(poolWidth * (1.2 + 0.0012 * v) * 0.92);
+  } else {
+    // Rosenthal (1946) Classical Analytical 3D Moving Point Source
+    const wEst = Math.sqrt((8 * p * 0.35) / (Math.PI * Math.E * 4430 * 526 * 1625 * Math.max(0.01, vMs)));
+    poolWidth = Math.round(Math.max(spot * 0.8, wEst * 1e6 * 0.76 + spot * 0.40));
+    poolDepth = Math.round(poolWidth * 0.51);
+    poolLength = Math.round(poolWidth * (1.2 + 0.0012 * v));
+  }
+
+  aspect = (poolDepth / Math.max(1, poolWidth)).toFixed(2);
+  peakTemp = Math.min(3200, Math.round(25 + (p * 0.35 * 1e6) / (Math.PI * 6.7 * spot)));
+  growthRate = (vMs * 100.0).toFixed(2);
+
+  // Update 6 Metric Cards
+  const cLen = document.getElementById('mpCardLength'); if (cLen) cLen.innerText = poolLength + ' µm';
+  const cLenMm = document.getElementById('mpCardLengthMm'); if (cLenMm) cLenMm.innerText = (poolLength / 1000.0).toFixed(2) + ' mm';
+  const cWid = document.getElementById('mpCardWidth'); if (cWid) cWid.innerText = poolWidth + ' µm';
+  const cWidSub = document.getElementById('mpCardWidthSub'); if (cWidSub) cWidSub.innerText = 'Hatch: ' + h + ' µm';
+  const cDep = document.getElementById('mpCardDepth'); if (cDep) cDep.innerText = poolDepth + ' µm';
+  const cDepSub = document.getElementById('mpCardDepthSub'); if (cDepSub) cDepSub.innerText = (poolDepth / Math.max(1, t)).toFixed(1) + 'x layer t';
+  
+  const aspectEl = document.getElementById('mpCardAspect');
+  const aspectSub = document.getElementById('mpCardAspectSub');
+  if (aspectEl) aspectEl.innerText = aspect;
+  if (aspectSub) {
+    if (parseFloat(aspect) > 0.8) {
+      if (aspectEl) aspectEl.style.color = 'var(--accent-rose)';
+      aspectSub.innerText = 'Keyhole Mode';
+    } else {
+      if (aspectEl) aspectEl.style.color = 'var(--accent-emerald)';
+      aspectSub.innerText = 'Conduction Mode';
+    }
+  }
+  const cPk = document.getElementById('mpCardPeak'); if (cPk) cPk.innerText = peakTemp + '°C';
+  const cGr = document.getElementById('mpCardGrowth'); if (cGr) cGr.innerText = growthRate + ' cm/s';
+
+  // 2. Render SVG Layers for Subsection 1
+  const layers = document.getElementById('mpPlotLayers');
+  if (layers) {
+    const scale = Math.min(540 / Math.max(60, poolLength * 1.35), 135 / Math.max(30, poolWidth * 1.5));
+    let svgHtml = '';
+
+    if (mpView === 'surface') {
+      // TOP SURFACE (X-Y) PROJECTION (SCREENSHOTS 1 & 2)
+      const pathLiquid = createTeardropPath(poolLength, poolWidth, 0.14, 0.86, scale);
+      const pathMushy = createTeardropPath(poolLength * 1.15, poolWidth * 1.18, 0.17, 0.98, scale);
+      const pathHaz = createTeardropPath(poolLength * 1.45, poolWidth * 1.48, 0.26, 1.25, scale);
+
+      const frontX = 680 + 0.14 * poolLength * scale;
+      const rearX = 680 - 0.86 * poolLength * scale;
+      const halfW = (poolWidth / 2) * scale;
+      const spotR = Math.max(4, (spot / 2) * scale);
+
+      if (mpGrid) {
+        svgHtml += `<g class="grid-lines" opacity="${mpHighGrid ? '0.9' : '0.5'}">`;
+        for (let x = -800; x <= 200; x += (mpHighGrid ? 100 : 200)) {
+          const px = 680 + x * scale;
+          if (px >= 80 && px <= 860) {
+            svgHtml += `<line x1="${px}" y1="45" x2="${px}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
+            svgHtml += `<text x="${px}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="11" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${x === 0 ? '0 (Laser)' : (x > 0 ? '+' : '') + x + ' µm'}</text>`;
+          }
+        }
+        for (let y = -200; y <= 200; y += (mpHighGrid ? 50 : 100)) {
+          const py = 210 + y * scale;
+          if (py >= 45 && py <= 375) {
+            svgHtml += `<line x1="80" y1="${py}" x2="860" y2="${py}" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
+            svgHtml += `<text x="72" y="${py + 4}" fill="${y === 0 ? '#60a5fa' : '#cbd5e1'}" font-size="11" font-family="monospace" text-anchor="end">${y > 0 ? '+' : ''}${y} µm</text>`;
+          }
+        }
+        svgHtml += `<line x1="80" y1="210" x2="860" y2="210" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="6 3" opacity="0.8"/>`;
+        svgHtml += `<line x1="680" y1="45" x2="680" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;
+        svgHtml += `<text x="470" y="413" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">Longitudinal Distance from Laser Center x (µm / mm)</text>`;
+        svgHtml += `<text x="24" y="210" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" transform="rotate(-90 24 210)" font-family="monospace">Transverse Width y (µm)</text>`;
+        svgHtml += `</g>`;
+      }
+
+      svgHtml += `<path d="${pathHaz}" fill="url(#hazThermalHalo)" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.6"/>`;
+      svgHtml += `<path d="${pathMushy}" fill="rgba(239, 68, 68, 0.22)" stroke="#ffffff" stroke-width="1.8" stroke-dasharray="5 3"/>`;
+      svgHtml += `<path d="${pathMushy}" fill="url(#mushyHatch)" opacity="0.8"/>`;
+      svgHtml += `<path d="${pathLiquid}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.5" filter="url(#cyanGlow)"/>`;
+
+      svgHtml += `
+        <g class="laser-beam">
+          <circle cx="680" cy="210" r="${spotR}" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="3 2" opacity="0.85"/>
+          <line x1="${680 - spotR - 6}" y1="210" x2="${680 + spotR + 6}" y2="210" stroke="#ffffff" stroke-width="1"/>
+          <line x1="680" y1="${210 - spotR - 6}" x2="680" y2="${210 + spotR + 6}" stroke="#ffffff" stroke-width="1"/>
+          <circle cx="680" cy="210" r="3" fill="#ffeb3b"/>
+          <text x="685" y="195" fill="#38bdf8" font-size="11" font-family="monospace">Laser Scan Direction v → (${v} mm/s)</text>
+          <line x1="645" y1="202" x2="725" y2="202" stroke="#38bdf8" stroke-width="1.8"/>
+          <polygon points="725,202 717,198 717,206" fill="#38bdf8"/>
+        </g>
+      `;
+
+      if (mpDims) {
+        const wY1 = 210 - halfW;
+        const wY2 = 210 + halfW;
+        const wX = 680 - 0.16 * poolLength * scale;
+        svgHtml += `
+          <g class="dim-width">
+            <line x1="${wX}" y1="${wY1}" x2="${wX}" y2="${wY2}" stroke="#00f7ff" stroke-width="1.5"/>
+            <polygon points="${wX},${wY1} ${wX - 3.5},${wY1 + 7} ${wX + 3.5},${wY1 + 7}" fill="#00f7ff"/>
+            <polygon points="${wX},${wY2} ${wX - 3.5},${wY2 - 7} ${wX + 3.5},${wY2 - 7}" fill="#00f7ff"/>
+            <rect x="${wX - 65}" y="200" width="130" height="20" rx="10" fill="#070c14" stroke="#00f7ff" stroke-width="1"/>
+            <text x="${wX}" y="214" fill="#00f7ff" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Width W = ${poolWidth} µm</text>
+          </g>
+        `;
+
+        const lY = 285;
+        svgHtml += `
+          <g class="dim-length">
+            <line x1="${rearX}" y1="${lY}" x2="${frontX}" y2="${lY}" stroke="#50d8e9" stroke-width="1.5"/>
+            <polygon points="${rearX},${lY} ${rearX + 7},${lY - 3.5} ${rearX + 7},${lY + 3.5}" fill="#50d8e9"/>
+            <polygon points="${frontX},${lY} ${frontX - 7},${lY - 3.5} ${frontX - 7},${lY + 3.5}" fill="#50d8e9"/>
+            <rect x="${(rearX + frontX) / 2 - 100}" y="${lY - 11}" width="200" height="22" rx="11" fill="#070c14" stroke="#50d8e9" stroke-width="1.2"/>
+            <text x="${(rearX + frontX) / 2}" y="${lY + 4}" fill="#50d8e9" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Length L = ${poolLength} µm (${(poolLength/1000).toFixed(2)} mm)</text>
+          </g>
+        `;
+      }
+
+      if (mpCallouts) {
+        svgHtml += `
+          <rect x="670" y="24" width="165" height="34" rx="6" fill="#080e18" stroke="#38bdf8" stroke-width="1.2"/>
+          <text x="680" y="38" fill="#ffffff" font-size="10.5" font-weight="bold">🎯 Laser Beam Center</text>
+          <text x="680" y="51" fill="#38bdf8" font-size="9.5" font-family="monospace">Spot ∅ = ${spot} µm | P = ${p} W</text>
+          <line x1="680" y1="58" x2="680" y2="195" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3 3"/>
+
+          <rect x="370" y="22" width="170" height="34" rx="6" fill="#080e18" stroke="#00f7ff" stroke-width="1.2"/>
+          <text x="380" y="36" fill="#ffffff" font-size="10.5" font-weight="bold">💧 Molten Pool (Liquid)</text>
+          <text x="380" y="49" fill="#00f7ff" font-size="9.5" font-family="monospace">T ≥ 1650°C | Fully Molten Metal</text>
+          <line x1="450" y1="56" x2="${680 - 0.25 * poolLength * scale}" y2="${210 - halfW * 0.4}" stroke="#00f7ff" stroke-width="1" stroke-dasharray="3 3"/>
+
+          <rect x="175" y="332" width="185" height="34" rx="6" fill="#080e18" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="4 2"/>
+          <text x="185" y="346" fill="#ffffff" font-size="10.5" font-weight="bold">❄️ Mushy Solidification Zone</text>
+          <text x="185" y="359" fill="#cbd5e1" font-size="9" font-family="monospace">1600°C ≤ T < 1650°C | Dendrites</text>
+          <line x1="267" y1="332" x2="${rearX + 20}" y2="218" stroke="#ffffff" stroke-width="1" stroke-dasharray="3 3"/>
+        `;
+      }
+
+    } else {
+      // LONGITUDINAL (X-Z) PROJECTION (SCREENSHOTS 3 & 4)
+      const zSurface = 145;
+      const depthPx = poolDepth * scale;
+      const span = poolLength * scale;
+      const frontX = 680 + 0.14 * poolLength * scale;
+      const rearX = 680 - 0.86 * poolLength * scale;
+      const midX = 680 - 0.16 * poolLength * scale;
+      const powderH = Math.max(8, t * scale);
+
+      svgHtml += `<rect x="80" y="${zSurface}" width="780" height="230" fill="#0a1222" fill-opacity="0.6"/>`;
+
+      svgHtml += `
+        <rect x="80" y="${zSurface}" width="780" height="${powderH}" fill="#f59e0b" fill-opacity="0.12"/>
+        <line x1="80" y1="${zSurface + powderH}" x2="860" y2="${zSurface + powderH}" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4 2" opacity="0.6"/>
+        <text x="850" y="${zSurface + powderH - 4}" fill="#f59e0b" font-size="9.5" font-family="monospace" text-anchor="end">Powder Layer (t = ${t} µm)</text>
+      `;
+
+      svgHtml += `
+        <line x1="80" y1="${zSurface}" x2="860" y2="${zSurface}" stroke="#38bdf8" stroke-width="2"/>
+        <text x="850" y="${zSurface - 6}" fill="#cbd5e1" font-size="11" font-weight="bold" font-family="monospace" text-anchor="end">Top Surface (z = 0)</text>
+        <text x="72" y="${zSurface + 4}" fill="#60a5fa" font-size="11" font-family="monospace" text-anchor="end">z = 0</text>
+        <text x="24" y="260" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" transform="rotate(-90 24 260)" font-family="monospace">Penetration Depth z (µm)</text>
+      `;
+
+      const pathLiquidZ = `M ${frontX} ${zSurface} C ${frontX} ${zSurface + depthPx * 0.7}, ${midX + 0.15 * span} ${zSurface + depthPx}, ${midX} ${zSurface + depthPx} C ${midX - 0.3 * span} ${zSurface + depthPx}, ${rearX + 0.15 * span} ${zSurface + depthPx * 0.4}, ${rearX} ${zSurface} Z`;
+      const pathMushyZ = `M ${frontX + 0.03 * span} ${zSurface} C ${frontX + 0.03 * span} ${zSurface + depthPx * 0.85}, ${midX + 0.18 * span} ${zSurface + depthPx * 1.25}, ${midX} ${zSurface + depthPx * 1.25} C ${midX - 0.32 * span} ${zSurface + depthPx * 1.25}, ${rearX - 0.15 * span} ${zSurface + depthPx * 0.5}, ${rearX - 0.15 * span} ${zSurface} Z`;
+      const pathHazZ = `M ${frontX + 0.08 * span} ${zSurface} C ${frontX + 0.08 * span} ${zSurface + depthPx * 0.95}, ${midX + 0.2 * span} ${zSurface + depthPx * 1.55}, ${midX} ${zSurface + depthPx * 1.55} C ${midX - 0.35 * span} ${zSurface + depthPx * 1.55}, ${rearX - 0.3 * span} ${zSurface + depthPx * 0.6}, ${rearX - 0.3 * span} ${zSurface} Z`;
+
+      svgHtml += `<path d="${pathHazZ}" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.6"/>`;
+      svgHtml += `<path d="${pathMushyZ}" fill="rgba(239, 68, 68, 0.22)" stroke="#ffffff" stroke-width="1.8" stroke-dasharray="5 3"/>`;
+      svgHtml += `<path d="${pathLiquidZ}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.5" filter="url(#cyanGlow)"/>`;
+
+      const spotR = Math.max(5, (spot / 2) * scale);
+      svgHtml += `
+        <g class="incident-laser">
+          <polygon points="656,48 704,48 ${680 + spotR},${zSurface} ${680 - spotR},${zSurface}" fill="url(#laserBeamIncident)" opacity="0.85"/>
+          <circle cx="680" cy="${zSurface}" r="${spotR * 1.2}" fill="#ffffff" stroke="#ffeb3b" stroke-width="2"/>
+          <text x="680" y="32" fill="#ffeb3b" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">Incident Laser Beam (P = ${p} W)</text>
+          <line x1="635" y1="42" x2="725" y2="42" stroke="#38bdf8" stroke-width="1.8"/>
+          <polygon points="725,42 717,38 717,46" fill="#38bdf8"/>
+          <text x="680" y="56" fill="#38bdf8" font-size="10" font-family="monospace" text-anchor="middle">Scan Direction v → (${v} mm/s)</text>
+        </g>
+      `;
+
+      if (mpDims) {
+        const dY1 = zSurface;
+        const dY2 = zSurface + depthPx;
+        const dX = midX;
+        svgHtml += `
+          <g class="dim-depth">
+            <line x1="${dX}" y1="${dY1}" x2="${dX}" y2="${dY2}" stroke="#50d8e9" stroke-width="1.5"/>
+            <polygon points="${dX},${dY1} ${dX - 3.5},${dY1 + 7} ${dX + 3.5},${dY1 + 7}" fill="#50d8e9"/>
+            <polygon points="${dX},${dY2} ${dX - 3.5},${dY2 - 7} ${dX + 3.5},${dY2 - 7}" fill="#50d8e9"/>
+            <rect x="${dX - 90}" y="${dY1 + depthPx / 2 - 11}" width="180" height="22" rx="11" fill="#070c14" stroke="#50d8e9" stroke-width="1.2"/>
+            <text x="${dX}" y="${dY1 + depthPx / 2 + 4}" fill="#50d8e9" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Depth zm = ${poolDepth} µm (${(poolDepth/Math.max(1,t)).toFixed(1)}x t)</text>
+          </g>
+        `;
+
+        const lY = 120;
+        svgHtml += `
+          <g class="dim-length-xz">
+            <line x1="${rearX}" y1="${lY}" x2="${frontX}" y2="${lY}" stroke="#8ba2be" stroke-width="1.2"/>
+            <polygon points="${rearX},${lY} ${rearX + 7},${lY - 3.5} ${rearX + 7},${lY + 3.5}" fill="#8ba2be"/>
+            <polygon points="${frontX},${lY} ${frontX - 7},${lY - 3.5} ${frontX - 7},${lY + 3.5}" fill="#8ba2be"/>
+            <rect x="${(rearX + frontX) / 2 - 65}" y="109" width="130" height="22" rx="11" fill="#070c14" stroke="#8ba2be" stroke-width="1"/>
+            <text x="${(rearX + frontX) / 2}" y="124" fill="#cbd5e1" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Length L = ${poolLength} µm</text>
+          </g>
+        `;
+      }
+
+      if (mpCallouts) {
+        svgHtml += `
+          <rect x="95" y="180" width="200" height="44" rx="8" fill="#070c14" stroke="#1e293b" stroke-width="1.2"/>
+          <text x="105" y="198" fill="#94a3b8" font-size="11" font-weight="600">Melt Pool Aspect Ratio (d/W)</text>
+          <text x="105" y="214" fill="${parseFloat(aspect) > 0.8 ? '#f43f5e' : '#10b981'}" font-size="12" font-weight="bold" font-family="monospace">${aspect} — ${parseFloat(aspect) > 0.8 ? 'Keyhole Mode' : 'Conduction Mode'}</text>
+        `;
+      }
+    }
+
+    layers.innerHTML = svgHtml;
+  }
+
+  // 3. Render Subsection 2 (Bontha Solidification Map)
+  renderBonthaSolidificationPhysics(p, vMs, spot, t);
+}
+
+// Exact Bontha et al. (2009 MSEA & 2006 JMPT) Solidification Physics Engine
+function renderBonthaSolidificationPhysics(p, vMs, spot, t) {
+  const gContainer = document.getElementById('bonthaLargeLayers');
+  if (!gContainer) return;
+
+  const alpha = bonthaSource === 'ebeam' ? 0.88 : 0.35;
+  const pEff = p * alpha;
+
+  // Solidification growth rate at surface equals beam velocity
+  const R_surf = vMs * 100.0; // cm/s
+  // Thermal gradient at surface
+  const G_surf = Math.max(100, Math.round(51451 * Math.pow(p / 200, 0.4) * Math.pow(vMs / 0.95, 0.3)));
+  const coolingRateSurf = Math.round(G_surf * R_surf);
+
+  // Gradient peaks at root where growth velocity approaches zero
+  const G_root = Math.round(G_surf * 8.1); // Peak at melt pool bottom
+  const R_root = 0.01; // cm/s
+  const coolingRateRoot = Math.round(G_root * R_root);
+
+  // Dimensionless Normalized Melting Temperature
+  const normTm = parseFloat((0.039 * Math.pow(200 / Math.max(50, p), 0.5)).toFixed(3));
+  const elNormTm = document.getElementById('bnDimTmVal');
+  if (elNormTm) elNormTm.innerText = normTm;
+
+  // Build 10-Station Depth Profile for Ti-6Al-4V
+  lastBonthaProfile = [];
+  let columnarCount = 0;
+  for (let s = 0; s <= 9; s++) {
+    const frac = s / 9.0;
+    const curG = Math.round(G_surf + (G_root - G_surf) * Math.pow(frac, 1.4));
+    const curR = parseFloat((Math.max(0.01, R_surf * Math.pow(1 - frac, 1.8))).toFixed(3));
+    const curCR = Math.round(curG * curR);
+
+    // CET boundary at curR
+    const tLogR = Math.log10(Math.max(1e-4, Math.min(100, curR)));
+    const logG_upper = -0.17365 * tLogR * tLogR + 0.49579 * tLogR + 4.26521;
+    const logG_lower = -0.2005 * tLogR * tLogR + 0.73412 * tLogR + 3.30574;
+    const curLogG = Math.log10(Math.max(1, curG));
+    
+    let morph = 'Columnar';
+    if (curLogG < logG_lower) morph = 'Equiaxed';
+    else if (curLogG <= logG_upper) morph = 'Mixed';
+
+    if (morph === 'Columnar') columnarCount++;
+
+    const cetRatio = parseFloat((Math.pow(10, curLogG - logG_upper)).toFixed(2));
+    const depthUm = Math.round(frac * 65.0);
+
+    lastBonthaProfile.push({
+      depthFraction: frac,
+      depthUm: depthUm,
+      G_Kcm: curG,
+      R_cms: curR,
+      coolingRateKs: curCR,
+      morphology: morph,
+      cetRatio: cetRatio
+    });
+  }
+
+  // Update 5 Summary KPI Cards (Screenshot 5)
+  const bnR = document.getElementById('bnCardR'); if (bnR) bnR.innerText = R_surf.toFixed(0) + ' cm/s';
+  const bnRSub = document.getElementById('bnCardRSub'); if (bnRSub) bnRSub.innerText = `Surface: ${(R_surf * 10).toFixed(1)} mm/s | Root: 0.01 cm/s`;
+  const bnG = document.getElementById('bnCardG'); if (bnG) bnG.innerText = G_surf.toLocaleString() + ' K/cm';
+  const bnGSub = document.getElementById('bnCardGSub'); if (bnGSub) bnGSub.innerText = `Root peak: ${G_root.toLocaleString()} K/cm`;
+  const bnCR = document.getElementById('bnCardCooling'); if (bnCR) bnCR.innerText = coolingRateSurf.toLocaleString() + ' K/s';
+  const bnCRSub = document.getElementById('bnCardCoolingSub'); if (bnCRSub) bnCRSub.innerText = `Root: ${coolingRateRoot.toLocaleString()} K/s (0.1% of surface)`;
+  const bnNm = document.getElementById('bnCardNorm'); if (bnNm) bnNm.innerText = normTm.toFixed(3);
+
+  const morphStr = columnarCount === 10 ? '● Columnar Grain Growth' : (columnarCount >= 5 ? '● Mixed (CET Zone)' : '● Equiaxed Grain Growth');
+  const bnM = document.getElementById('bnCardMorph'); if (bnM) bnM.innerText = morphStr;
+  const bnMS = document.getElementById('bnMorphStatus'); if (bnMS) bnMS.innerText = morphStr.replace('● ', '');
+  const bnAC = document.getElementById('bnAvgCooling'); if (bnAC) bnAC.innerText = coolingRateSurf.toExponential(2) + ' K/s';
+  const bnRG = document.getElementById('bnRootG'); if (bnRG) bnRG.innerText = G_root.toLocaleString() + ' K/cm';
+  const bnSR = document.getElementById('bnSurfR'); if (bnSR) bnSR.innerText = R_surf.toFixed(1) + ' cm/s';
+
+  // Primary Dendrite Arm Spacing (PDAS)
+  const pdas = (35.5 * Math.pow(Math.max(10, coolingRateSurf), -0.28)).toFixed(2);
+  const elPdas = document.getElementById('bnPdasVal'); if (elPdas) elPdas.innerText = pdas + ' μm';
+
+  // Map Coordinates: viewBox 0 0 880 480
+  const mapX = (logR) => 80 + ((logR - (-3)) / 4.0) * 760;
+  const mapY = (logG) => 420 - ((logG - 0) / 6.0) * 390;
+
+  // Upper & Lower CET Boundaries across domain
+  let pathUpper = '';
+  let pathLower = '';
+  for (let i = 0; i <= 40; i++) {
+    const logR = -3 + (i / 40) * 4;
+    const x = mapX(logR);
+    const logG_up = -0.17365 * logR * logR + 0.49579 * logR + 4.26521;
+    const logG_low = -0.2005 * logR * logR + 0.73412 * logR + 3.30574;
+    const yUp = mapY(logG_up);
+    const yLow = mapY(logG_low);
+    pathUpper += (i === 0 ? 'M' : 'L') + ` ${x.toFixed(1)} ${yUp.toFixed(1)} `;
+    pathLower += (i === 0 ? 'M' : 'L') + ` ${x.toFixed(1)} ${yLow.toFixed(1)} `;
+  }
+
+  const polyColumnar = `${pathUpper} L 840 30 L 80 30 Z`;
+  const polyEquiaxed = `${pathLower} L 840 420 L 80 420 Z`;
+
+  let bSvg = '';
+
+  // Background shaded regimes
+  bSvg += `<path d="${polyColumnar}" fill="url(#columnarGradLarge)"/>`;
+  bSvg += `<path d="${polyEquiaxed}" fill="url(#equiaxedGradLarge)"/>`;
+
+  // Grid Lines
+  for (let gExp = 0; gExp <= 6; gExp++) {
+    const y = mapY(gExp);
+    bSvg += `<line x1="80" y1="${y}" x2="840" y2="${y}" stroke="#172230" stroke-width="1" stroke-dasharray="3 3"/>`;
+    bSvg += `<text x="70" y="${y + 4.5}" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="end" font-family="monospace">10${['⁰','¹','²','³','⁴','⁵','⁶'][gExp]}</text>`;
+  }
+  const xLabels = { '-3': '0.001', '-2': '0.01', '-1': '0.1', '0': '1', '1': '10' };
+  for (let rExp = -3; rExp <= 1; rExp++) {
+    const x = mapX(rExp);
+    bSvg += `<line x1="${x}" y1="30" x2="${x}" y2="420" stroke="#172230" stroke-width="1" stroke-dasharray="3 3"/>`;
+    bSvg += `<text x="${x}" y="442" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">${xLabels[rExp]}</text>`;
+  }
+
+  // Axis lines & labels
+  bSvg += `<line x1="80" y1="420" x2="840" y2="420" stroke="#2e4057" stroke-width="1.5"/>`;
+  bSvg += `<line x1="80" y1="30" x2="80" y2="420" stroke="#2e4057" stroke-width="1.5"/>`;
+  bSvg += `<text x="460" y="464" fill="#f1f5f9" font-size="14" text-anchor="middle" font-weight="bold">Solidification Growth Rate R (cm/s)</text>`;
+  bSvg += `<text x="22" y="225" fill="#f1f5f9" font-size="14" text-anchor="middle" font-weight="bold" transform="rotate(-90 22 225)">Thermal Gradient G (K/cm)</text>`;
+
+  // CET Boundary Lines
+  bSvg += `<path d="${pathUpper}" fill="none" stroke="#60a5fa" stroke-width="2.5"/>`;
+  bSvg += `<path d="${pathLower}" fill="none" stroke="#34d399" stroke-width="2.5" stroke-dasharray="6 3"/>`;
+
+  // Regime Text
+  bSvg += `<text x="${mapX(-2)}" y="${mapY(4.8)}" fill="#93c5fd" font-size="15" font-weight="bold" letter-spacing="1.2">Fully Columnar</text>`;
+  bSvg += `<text x="${mapX(-0.5)}" y="${mapY(2.85)}" fill="#fcd34d" font-size="14" font-weight="bold">Mixed (Columnar + Equiaxed)</text>`;
+  bSvg += `<text x="${mapX(0)}" y="${mapY(1.1)}" fill="#6ee7b7" font-size="15" font-weight="bold" letter-spacing="1.2">Fully Equiaxed</text>`;
+
+  // Stations Depth Profile Points & Trajectory Curve
+  const ptRoot = { x: mapX(Math.log10(R_root)), y: mapY(Math.log10(G_root)) };
+  const ptSurf = { x: mapX(Math.log10(R_surf)), y: mapY(Math.log10(G_surf)) };
+  
+  // Curve connecting Root to Surface
+  const trajPath = `M ${ptRoot.x.toFixed(1)} ${ptRoot.y.toFixed(1)} Q ${(ptRoot.x + ptSurf.x)/2} ${ptRoot.y.toFixed(1)} ${ptSurf.x.toFixed(1)} ${ptSurf.y.toFixed(1)}`;
+  bSvg += `<path d="${trajPath}" fill="none" stroke="#50d8e9" stroke-width="3.5" stroke-linecap="round" opacity="0.95"/>`;
+
+  // Optional 3D FEM Overlay curve (purple)
+  if (bonthaFemOverlay) {
+    const femPath = `M ${ptRoot.x.toFixed(1)} ${(ptRoot.y + 12).toFixed(1)} Q ${(ptRoot.x + ptSurf.x)/2} ${(ptRoot.y + 16).toFixed(1)} ${ptSurf.x.toFixed(1)} ${(ptSurf.y + 8).toFixed(1)}`;
+    bSvg += `<path d="${femPath}" fill="none" stroke="#c084fc" stroke-width="2" stroke-dasharray="5 3" opacity="0.85"/>`;
+  }
+
+  // Intermediate stations
+  for (let s = 1; s <= 8; s++) {
+    const frac = s / 9.0;
+    const sx = ptRoot.x + (ptSurf.x - ptRoot.x) * Math.pow(frac, 1.8);
+    const sy = ptRoot.y + (ptSurf.y - ptRoot.y) * frac;
+    bSvg += `<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="3" fill="#38bdf8" stroke="#0b1118" stroke-width="1.2"/>`;
+  }
+
+  // Vertical dashed connection from Surface to boundary (Screenshot 5)
+  const logG_surf_bound = -0.17365 * Math.log10(R_surf) * Math.log10(R_surf) + 0.49579 * Math.log10(R_surf) + 4.26521;
+  const yBoundSurf = mapY(logG_surf_bound);
+  bSvg += `<line x1="${ptSurf.x.toFixed(1)}" y1="${ptSurf.y.toFixed(1)}" x2="${ptSurf.x.toFixed(1)}" y2="${yBoundSurf.toFixed(1)}" stroke="#38bdf8" stroke-width="1.8" stroke-dasharray="3 3"/>`;
+  bSvg += `<circle cx="${ptSurf.x.toFixed(1)}" cy="${yBoundSurf.toFixed(1)}" r="3.5" fill="#38bdf8"/>`;
+
+  // Root Callout Marker (Pink Diamond) - Screenshot 5
+  const rx = ptRoot.x;
+  const ry = ptRoot.y;
+  bSvg += `
+    <g class="root-marker">
+      <polyline points="${rx},${ry} ${rx + 40},${ry - 30} ${rx + 160},${ry - 30}" fill="none" stroke="#f43f5e" stroke-width="1.2" stroke-dasharray="2 2"/>
+      <polygon points="${rx},${ry - 7} ${rx + 6},${ry + 5} ${rx - 6},${ry + 5}" fill="#f43f5e" stroke="#ffffff" stroke-width="1.5"/>
+      <rect x="${rx + 20}" y="${ry - 44}" width="195" height="26" rx="5" fill="#080c14" stroke="#f43f5e" stroke-width="1.2"/>
+      <polygon points="${rx + 32},${ry - 36} ${rx + 36},${ry - 28} ${rx + 28},${ry - 28}" fill="#f43f5e"/>
+      <text x="${rx + 42}" y="${ry - 26}" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">Root (zm): <tspan fill="#f43f5e">${G_root.toLocaleString()}</tspan> K/cm</text>
+    </g>
+  `;
+
+  // Surface Callout Marker (Cyan Circle with Ping) - Screenshot 5
+  const sx = ptSurf.x;
+  const sy = ptSurf.y;
+  bSvg += `
+    <g class="surf-marker">
+      <polyline points="${sx},${sy} ${sx - 40},${sy + 35} ${sx - 160},${sy + 35}" fill="none" stroke="#50d8e9" stroke-width="1.2" stroke-dasharray="2 2"/>
+      <circle cx="${sx}" cy="${sy}" r="8" fill="#50d8e9" fill-opacity="0.25"/>
+      <circle cx="${sx}" cy="${sy}" r="5" fill="#50d8e9" stroke="#ffffff" stroke-width="1.5"/>
+      <rect x="${sx - 215}" y="${sy + 22}" width="195" height="26" rx="5" fill="#080c14" stroke="#50d8e9" stroke-width="1.2"/>
+      <circle cx="${sx - 203}" cy="${sy + 35}" r="3.5" fill="#50d8e9"/>
+      <text x="${sx - 193}" y="${sy + 40}" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">Surface (z=0): <tspan fill="#50d8e9">${R_surf.toFixed(0)}</tspan> cm/s</text>
+    </g>
+  `;
+
+  gContainer.innerHTML = bSvg;
+}
+
+// Render the 10-Station Depth Profile Table
+function renderBonthaProfileTable() {
+  const tbody = document.getElementById('bonthaProfileTableBody');
+  if (!tbody || !lastBonthaProfile.length) return;
+
+  let rowsHtml = '';
+  lastBonthaProfile.forEach((st, idx) => {
+    const isSurf = idx === 0;
+    const isRoot = idx === lastBonthaProfile.length - 1;
+    const label = isSurf ? '(Surface)' : (isRoot ? '(Root)' : '');
+    const badgeColor = st.morphology === 'Columnar' ? 'color: #93c5fd; background: rgba(30, 58, 138, 0.4); border: 1px solid rgba(59, 130, 246, 0.3);' : 
+                      (st.morphology === 'Mixed' ? 'color: #fde68a; background: rgba(120, 53, 15, 0.4); border: 1px solid rgba(245, 158, 11, 0.3);' : 
+                      'color: #a7f3d0; background: rgba(6, 78, 59, 0.4); border: 1px solid rgba(16, 185, 129, 0.3);');
+
+    rowsHtml += `
+      <tr style="border-bottom: 1px solid #141c28;">
+        <td style="padding: 6px 8px; color: #ffffff; font-weight: bold;">${st.depthFraction.toFixed(2)} ${label}</td>
+        <td style="padding: 6px 8px; color: #8ba2be;">${st.depthUm}</td>
+        <td style="padding: 6px 8px; text-align: right; color: #ffffff; font-weight: bold;">${st.G_Kcm.toLocaleString()}</td>
+        <td style="padding: 6px 8px; text-align: right; color: var(--accent-cyan);">${st.R_cms}</td>
+        <td style="padding: 6px 8px; text-align: right; color: #fbbf24;">${st.coolingRateKs.toLocaleString()}</td>
+        <td style="padding: 6px 8px; text-align: right; color: #8ba2be;">${st.cetRatio}x</td>
+        <td style="padding: 6px 8px; text-align: center;">
+          <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; ${badgeColor}">${st.morphology}</span>
+        </td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = rowsHtml;
+}
+
 // 7. INITIALIZATION
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
