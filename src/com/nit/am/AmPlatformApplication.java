@@ -445,8 +445,7 @@ public class AmPlatformApplication {
 
         System.out.println("==================================================================");
         System.out.printf(">> Pure Java AM Platform Server is LIVE on: http://localhost:%d%n", PORT);
-        System.out.println("   - Standalone Dashboard:   http://localhost:8080/dashboard");
-        System.out.println("   - React MatSci Navigator: http://localhost:8080/app");
+        System.out.println("   - Interactive Dashboard:  http://localhost:8080/dashboard");
         System.out.println("   - Physics Evaluation API: http://localhost:8080/api/evaluate?power=250&speed=1100");
         System.out.println("   - Melt Pool Physics API:  http://localhost:8080/api/meltpool?model=coen&power=200");
         System.out.println("   - Bontha Solidification:  http://localhost:8080/api/bontha?dim=3d-bulky&power=200");
