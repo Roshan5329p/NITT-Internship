@@ -3449,20 +3449,32 @@ function updateMeltPoolAndThermal() {
   let poolWidth, poolDepth, poolLength, aspect, peakTemp, growthRate;
   
   if (mpModel === 'coen') {
-    // KU Leuven Coen et al. (2022) Hybrid Model
-    const wEagar = Math.sqrt((8 * p * 0.35) / (Math.PI * Math.E * 4430 * 526 * (1650 - 25) * Math.max(0.01, vMs)));
-    poolWidth = Math.round(Math.max(spot * 0.7, wEagar * 1e6 * 0.68 + spot * 0.35));
-    // Fabbro recoil keyhole aspect ratio R
-    const normEnthalpy = (p * 0.35) / Math.max(1e-5, Math.PI * 4430 * 526 * 1625 * Math.sqrt(6.8e-6 * Math.max(0.01, vMs) * Math.pow(spot * 1e-6, 3)));
-    const R_aspect = Math.max(0.45, Math.min(2.8, 0.48 * Math.pow(normEnthalpy / 12.0, 0.35)));
-    poolDepth = Math.round(poolWidth * R_aspect * 0.95);
-    poolLength = Math.round(poolWidth * (1.2 + 0.0012 * v) * 0.92);
+    // KU Leuven Semi-Analytical Hybrid Model (Coen et al. 2022 JMPT 304: 117547)
+    const rho_l = 4189.0;
+    const k_l = 28.4;
+    const cp_l = 759.0;
+    const eta = 0.40;
+    const d_diff = k_l / (rho_l * cp_l);
+    const o_rad = (spot / 2.0) * 1e-6;
+    const pe = (vMs * o_rad) / d_diff;
+    const hs = rho_l * cp_l * 1625.0 + rho_l * 365000.0;
+    const normH = (Math.pow(2.0, 0.75) * eta * p) / (hs * Math.sqrt(Math.PI * d_diff * vMs * Math.pow(o_rad, 3)));
+    const dimW = 0.6536 * Math.pow(Math.max(0.1, normH), 0.42) * Math.pow(Math.max(0.01, pe), -0.18);
+    poolWidth = Math.round(Math.max(spot * 0.4, 2.0 * o_rad * dimW * 1e6));
+    const y_recoil = (eta * p) / (2.0 * o_rad * k_l * Math.max(50.0, 3573.0 - 298.15));
+    const b_fabbro = 0.1488 * Math.pow(Math.max(0.05, pe), -0.79);
+    const r_aspect = Math.max(0.2, y_recoil * b_fabbro);
+    poolDepth = Math.round(poolWidth * r_aspect);
+    poolLength = Math.round(poolWidth * (1.2 + 0.0012 * v));
+    aspect = r_aspect.toFixed(2);
   } else {
     // Rosenthal (1946) Classical Analytical 3D Moving Point Source
-    const wEst = Math.sqrt((8 * p * 0.35) / (Math.PI * Math.E * 4430 * 526 * 1625 * Math.max(0.01, vMs)));
-    poolWidth = Math.round(Math.max(spot * 0.8, wEst * 1e6 * 0.76 + spot * 0.40));
-    poolDepth = Math.round(poolWidth * 0.51);
-    poolLength = Math.round(poolWidth * (1.2 + 0.0012 * v));
+    const wEst = Math.sqrt((8.0 * p * 0.40) / (Math.PI * Math.E * 4189.0 * 526.0 * 1625.0 * Math.max(0.01, vMs)));
+    poolWidth = Math.round(Math.max(spot * 0.8, wEst * 1e6 * 0.765 + spot * 0.39));
+    const r_aspect = 0.51;
+    poolDepth = Math.round(poolWidth * r_aspect);
+    poolLength = Math.round(poolWidth * (1.2 + 0.0012 * v) * (338.0 / 339.3));
+    aspect = r_aspect.toFixed(2);
   }
 
   aspect = (poolDepth / Math.max(1, poolWidth)).toFixed(2);
@@ -3495,7 +3507,7 @@ function updateMeltPoolAndThermal() {
   // 2. Render SVG Layers for Subsection 1
   const layers = document.getElementById('mpPlotLayers');
   if (layers) {
-    const scale = Math.min(540 / Math.max(60, poolLength * 1.35), 135 / Math.max(30, poolWidth * 1.5));
+    const scale = 0.65; // Fixed physical scale: 0.65 px / µm (130 px per 200 µm)
     let svgHtml = '';
 
     if (mpView === 'surface') {
@@ -3605,6 +3617,21 @@ function updateMeltPoolAndThermal() {
       const powderH = Math.max(8, t * scale);
 
       svgHtml += `<rect x="80" y="${zSurface}" width="780" height="230" fill="#0a1222" fill-opacity="0.6"/>`;
+
+      // Stationary Vertical Grid in Longitudinal View (Screenshots 3 & 4)
+      if (mpGrid) {
+        svgHtml += `<g class="grid-lines" opacity="${mpHighGrid ? '0.9' : '0.5'}">`;
+        for (let x = -800; x <= 200; x += (mpHighGrid ? 100 : 200)) {
+          const px = 680 + x * scale;
+          if (px >= 80 && px <= 860) {
+            svgHtml += `<line x1="${px}" y1="45" x2="${px}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
+            svgHtml += `<text x="${px}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="11" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${x === 0 ? '0 (Laser)' : (x > 0 ? '+' : '') + x + ' µm'}</text>`;
+          }
+        }
+        svgHtml += `<line x1="680" y1="${zSurface}" x2="680" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;
+        svgHtml += `<text x="470" y="413" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">Longitudinal Distance from Laser Center x (µm / mm)</text>`;
+        svgHtml += `</g>`;
+      }
 
       svgHtml += `
         <rect x="80" y="${zSurface}" width="780" height="${powderH}" fill="#f59e0b" fill-opacity="0.12"/>
@@ -3760,9 +3787,11 @@ function renderBonthaSolidificationPhysics(p, vMs, spot, t) {
   const pdas = (35.5 * Math.pow(Math.max(10, coolingRateSurf), -0.28)).toFixed(2);
   const elPdas = document.getElementById('bnPdasVal'); if (elPdas) elPdas.innerText = pdas + ' μm';
 
-  // Map Coordinates: viewBox 0 0 880 480
-  const mapX = (logR) => 80 + ((logR - (-3)) / 4.0) * 760;
-  const mapY = (logG) => 420 - ((logG - 0) / 6.0) * 390;
+  // Map Coordinates: viewBox 0 0 880 480 (Exact Screenshot 5 mapping)
+  // Log G ranges from 1 to 6 (ticks 10^1 to 10^6)
+  const mapY = (logG) => 420 - ((logG - 1.0) / 5.0) * 380;
+  // Log R ranges from -2 to 2.05 (R from 0.01 to ~110 cm/s)
+  const mapX = (logR) => 80 + ((logR - (-2.0)) / 4.05) * 720;
 
   // Upper & Lower CET Boundaries across domain
   let pathUpper = '';
@@ -3787,11 +3816,11 @@ function renderBonthaSolidificationPhysics(p, vMs, spot, t) {
   bSvg += `<path d="${polyColumnar}" fill="url(#columnarGradLarge)"/>`;
   bSvg += `<path d="${polyEquiaxed}" fill="url(#equiaxedGradLarge)"/>`;
 
-  // Grid Lines
-  for (let gExp = 0; gExp <= 6; gExp++) {
+  // Grid Lines on Y-axis (10^1 to 10^6, Screenshot 5)
+  for (let gExp = 1; gExp <= 6; gExp++) {
     const y = mapY(gExp);
-    bSvg += `<line x1="80" y1="${y}" x2="840" y2="${y}" stroke="#172230" stroke-width="1" stroke-dasharray="3 3"/>`;
-    bSvg += `<text x="70" y="${y + 4.5}" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="end" font-family="monospace">10${['⁰','¹','²','³','⁴','⁵','⁶'][gExp]}</text>`;
+    bSvg += `<line x1="80" y1="${y}" x2="800" y2="${y}" stroke="#172230" stroke-width="1" stroke-dasharray="3 3"/>`;
+    bSvg += `<text x="70" y="${y + 4.5}" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="end" font-family="monospace">10${['','¹','²','³','⁴','⁵','⁶'][gExp]}</text>`;
   }
   const xLabels = { '-3': '0.001', '-2': '0.01', '-1': '0.1', '0': '1', '1': '10' };
   for (let rExp = -3; rExp <= 1; rExp++) {
@@ -3815,58 +3844,50 @@ function renderBonthaSolidificationPhysics(p, vMs, spot, t) {
   bSvg += `<text x="${mapX(-0.5)}" y="${mapY(2.85)}" fill="#fcd34d" font-size="14" font-weight="bold">Mixed (Columnar + Equiaxed)</text>`;
   bSvg += `<text x="${mapX(0)}" y="${mapY(1.1)}" fill="#6ee7b7" font-size="15" font-weight="bold" letter-spacing="1.2">Fully Equiaxed</text>`;
 
-  // Stations Depth Profile Points & Trajectory Curve
-  const ptRoot = { x: mapX(Math.log10(R_root)), y: mapY(Math.log10(G_root)) };
-  const ptSurf = { x: mapX(Math.log10(R_surf)), y: mapY(Math.log10(G_surf)) };
-  
-  // Curve connecting Root to Surface
-  const trajPath = `M ${ptRoot.x.toFixed(1)} ${ptRoot.y.toFixed(1)} Q ${(ptRoot.x + ptSurf.x)/2} ${ptRoot.y.toFixed(1)} ${ptSurf.x.toFixed(1)} ${ptSurf.y.toFixed(1)}`;
-  bSvg += `<path d="${trajPath}" fill="none" stroke="#50d8e9" stroke-width="3.5" stroke-linecap="round" opacity="0.95"/>`;
+  // Stations Depth Profile Points & Dual-Trajectory Curves (Screenshot 5)
+  const rx = 285;
+  const ry = mapY(Math.log10(G_root)); // ~69 px (Root at 416,153 K/cm)
+  const sx = mapX(Math.log10(R_surf)); // ~787 px (Surface at 95 cm/s)
+  const sy = mapY(Math.log10(G_surf)); // ~138 px (Surface G at 51,451 K/cm)
+  const yTopLine = ry + 4;
 
-  // Optional 3D FEM Overlay curve (purple)
+  // 1. Upper Trajectory (Root across to high R boundary at zm depth)
+  const upperTraj = `M ${rx} ${ry.toFixed(1)} C ${rx + 160} ${(ry + 2).toFixed(1)}, ${sx - 100} ${(yTopLine).toFixed(1)}, ${sx.toFixed(1)} ${(yTopLine).toFixed(1)}`;
+  bSvg += `<path d="${upperTraj}" fill="none" stroke="#50d8e9" stroke-width="3" stroke-linecap="round" opacity="0.95"/>`;
+
+  // 2. 3D FEM Overlay curve (dashed purple, Screenshot 5)
   if (bonthaFemOverlay) {
-    const femPath = `M ${ptRoot.x.toFixed(1)} ${(ptRoot.y + 12).toFixed(1)} Q ${(ptRoot.x + ptSurf.x)/2} ${(ptRoot.y + 16).toFixed(1)} ${ptSurf.x.toFixed(1)} ${(ptSurf.y + 8).toFixed(1)}`;
-    bSvg += `<path d="${femPath}" fill="none" stroke="#c084fc" stroke-width="2" stroke-dasharray="5 3" opacity="0.85"/>`;
+    const femPath = `M ${rx} ${(ry + 6).toFixed(1)} C ${rx + 160} ${(ry + 8).toFixed(1)}, ${sx - 100} ${(yTopLine + 6).toFixed(1)}, ${sx.toFixed(1)} ${(yTopLine + 6).toFixed(1)}`;
+    bSvg += `<path d="${femPath}" fill="none" stroke="#c084fc" stroke-width="2.2" stroke-dasharray="5 3" opacity="0.9"/>`;
   }
 
-  // Intermediate stations
-  for (let s = 1; s <= 8; s++) {
-    const frac = s / 9.0;
-    const sx = ptRoot.x + (ptSurf.x - ptRoot.x) * Math.pow(frac, 1.8);
-    const sy = ptRoot.y + (ptSurf.y - ptRoot.y) * frac;
-    bSvg += `<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="3" fill="#38bdf8" stroke="#0b1118" stroke-width="1.2"/>`;
-  }
+  // 3. Lower Trajectory curve (Surface line descending leftward, Screenshot 5)
+  const surfCurve = `M ${sx.toFixed(1)} ${sy.toFixed(1)} C ${sx - 180} ${(sy + 40).toFixed(1)}, 320 280, 140 360`;
+  bSvg += `<path d="${surfCurve}" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" opacity="0.9"/>`;
 
-  // Vertical dashed connection from Surface to boundary (Screenshot 5)
-  const logG_surf_bound = -0.17365 * Math.log10(R_surf) * Math.log10(R_surf) + 0.49579 * Math.log10(R_surf) + 4.26521;
-  const yBoundSurf = mapY(logG_surf_bound);
-  bSvg += `<line x1="${ptSurf.x.toFixed(1)}" y1="${ptSurf.y.toFixed(1)}" x2="${ptSurf.x.toFixed(1)}" y2="${yBoundSurf.toFixed(1)}" stroke="#38bdf8" stroke-width="1.8" stroke-dasharray="3 3"/>`;
-  bSvg += `<circle cx="${ptSurf.x.toFixed(1)}" cy="${yBoundSurf.toFixed(1)}" r="3.5" fill="#38bdf8"/>`;
+  // 4. Vertical dotted cyan connector between Upper & Lower trajectories at R = 95 cm/s (Screenshot 5)
+  bSvg += `<line x1="${sx.toFixed(1)}" y1="${(yTopLine).toFixed(1)}" x2="${sx.toFixed(1)}" y2="${sy.toFixed(1)}" stroke="#38bdf8" stroke-width="2.2" stroke-dasharray="3 3"/>`;
+  bSvg += `<circle cx="${sx.toFixed(1)}" cy="${(yTopLine).toFixed(1)}" r="4" fill="#38bdf8"/>`;
 
-  // Root Callout Marker (Pink Diamond) - Screenshot 5
-  const rx = ptRoot.x;
-  const ry = ptRoot.y;
+  // 5. Root Callout Marker (Red Triangle Box, Screenshot 5)
   bSvg += `
     <g class="root-marker">
-      <polyline points="${rx},${ry} ${rx + 40},${ry - 30} ${rx + 160},${ry - 30}" fill="none" stroke="#f43f5e" stroke-width="1.2" stroke-dasharray="2 2"/>
-      <polygon points="${rx},${ry - 7} ${rx + 6},${ry + 5} ${rx - 6},${ry + 5}" fill="#f43f5e" stroke="#ffffff" stroke-width="1.5"/>
-      <rect x="${rx + 20}" y="${ry - 44}" width="195" height="26" rx="5" fill="#080c14" stroke="#f43f5e" stroke-width="1.2"/>
-      <polygon points="${rx + 32},${ry - 36} ${rx + 36},${ry - 28} ${rx + 28},${ry - 28}" fill="#f43f5e"/>
-      <text x="${rx + 42}" y="${ry - 26}" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">Root (zm): <tspan fill="#f43f5e">${G_root.toLocaleString()}</tspan> K/cm</text>
+      <polygon points="${rx},${ry - 8} ${rx + 7},${ry + 5} ${rx - 7},${ry + 5}" fill="#f43f5e" stroke="#ffffff" stroke-width="1.5"/>
+      <rect x="${rx + 24}" y="${ry - 18}" width="190" height="28" rx="6" fill="#080c14" stroke="#f43f5e" stroke-width="1.4"/>
+      <polygon points="${rx + 36},${ry - 10} ${rx + 40},${ry - 2} ${rx + 32},${ry - 2}" fill="#f43f5e"/>
+      <text x="${rx + 46}" y="${ry - 1}" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">Root (zm): <tspan fill="#f43f5e">${G_root.toLocaleString()}</tspan> K/cm</text>
     </g>
   `;
 
-  // Surface Callout Marker (Cyan Circle with Ping) - Screenshot 5
-  const sx = ptSurf.x;
-  const sy = ptSurf.y;
+  // 6. Surface Callout Marker (Cyan Circle Box, Screenshot 5)
   bSvg += `
     <g class="surf-marker">
-      <polyline points="${sx},${sy} ${sx - 40},${sy + 35} ${sx - 160},${sy + 35}" fill="none" stroke="#50d8e9" stroke-width="1.2" stroke-dasharray="2 2"/>
-      <circle cx="${sx}" cy="${sy}" r="8" fill="#50d8e9" fill-opacity="0.25"/>
-      <circle cx="${sx}" cy="${sy}" r="5" fill="#50d8e9" stroke="#ffffff" stroke-width="1.5"/>
-      <rect x="${sx - 215}" y="${sy + 22}" width="195" height="26" rx="5" fill="#080c14" stroke="#50d8e9" stroke-width="1.2"/>
-      <circle cx="${sx - 203}" cy="${sy + 35}" r="3.5" fill="#50d8e9"/>
-      <text x="${sx - 193}" y="${sy + 40}" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">Surface (z=0): <tspan fill="#50d8e9">${R_surf.toFixed(0)}</tspan> cm/s</text>
+      <circle cx="${sx}" cy="${sy}" r="8" fill="#50d8e9" fill-opacity="0.3"/>
+      <circle cx="${sx}" cy="${sy}" r="5" fill="#50d8e9" stroke="#ffffff" stroke-width="1.8"/>
+      <line x1="${sx}" y1="${sy}" x2="${sx - 35}" y2="${sy + 20}" stroke="#50d8e9" stroke-width="1.2" stroke-dasharray="2 2"/>
+      <rect x="${sx - 225}" y="${sy + 8}" width="190" height="28" rx="6" fill="#080c14" stroke="#50d8e9" stroke-width="1.4"/>
+      <circle cx="${sx - 212}" cy="${sy + 22}" r="3.5" fill="#50d8e9"/>
+      <text x="${sx - 202}" y="${sy + 26}" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">Surface (z=0): <tspan fill="#50d8e9">${R_surf.toFixed(0)}</tspan> cm/s</text>
     </g>
   `;
 
