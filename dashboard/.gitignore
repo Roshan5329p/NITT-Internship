@@ -1,0 +1,8 @@
+node_modules/
+build/
+# dist/ is included so Java HTTP server can serve the React app out-of-the-box
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example

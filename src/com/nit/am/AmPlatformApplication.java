@@ -229,15 +229,40 @@ public class AmPlatformApplication {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
                 String path = exchange.getRequestURI().getPath();
-                if (path.equals("/") || path.equals("/dashboard")) {
+
+                // Standalone process windows dashboard
+                if (path.equals("/") || path.equals("/dashboard") || path.equals("/dashboard.html")) {
                     Path htmlFile = Paths.get(workspaceDir, "process_windows_dashboard.html");
                     if (Files.exists(htmlFile)) {
-                        byte[] bytes = Files.readAllBytes(htmlFile);
-                        exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
-                        exchange.sendResponseHeaders(200, bytes.length);
-                        OutputStream os = exchange.getResponseBody();
-                        os.write(bytes);
-                        os.close();
+                        serveFile(exchange, htmlFile, "text/html; charset=UTF-8");
+                        return;
+                    }
+                }
+
+                // Full React MatSci Navigator (Screenshots 1-5 Melt Pool & Thermal sections)
+                if (path.equals("/app") || path.equals("/navigator") || path.equals("/predictor") || path.equals("/app/")) {
+                    Path appFile = Paths.get(workspaceDir, "dashboard", "dist", "index.html");
+                    if (Files.exists(appFile)) {
+                        serveFile(exchange, appFile, "text/html; charset=UTF-8");
+                        return;
+                    }
+                }
+
+                // Presentation guide
+                if (path.equals("/presentation") || path.equals("/presentation-guide.html")) {
+                    Path pFile = Paths.get(workspaceDir, "dashboard", "dist", "presentation-guide.html");
+                    if (Files.exists(pFile)) {
+                        serveFile(exchange, pFile, "text/html; charset=UTF-8");
+                        return;
+                    }
+                }
+
+                // Serve static assets from dashboard/dist/assets
+                if (path.startsWith("/assets/")) {
+                    String sub = path.substring("/assets/".length());
+                    Path file = Paths.get(workspaceDir, "dashboard", "dist", "assets", sub);
+                    if (Files.exists(file) && !Files.isDirectory(file)) {
+                        serveFileWithContentType(exchange, file);
                         return;
                     }
                 }
@@ -247,14 +272,16 @@ public class AmPlatformApplication {
                     String filename = path.substring("/plots/".length());
                     Path file = Paths.get(workspaceDir, "plots", filename);
                     if (Files.exists(file)) {
-                        byte[] bytes = Files.readAllBytes(file);
-                        exchange.getResponseHeaders().set("Content-Type", "image/png");
-                        exchange.sendResponseHeaders(200, bytes.length);
-                        OutputStream os = exchange.getResponseBody();
-                        os.write(bytes);
-                        os.close();
+                        serveFile(exchange, file, "image/png");
                         return;
                     }
+                }
+
+                // Fallback for SPA routing under /app or general static assets
+                Path directFile = Paths.get(workspaceDir, "dashboard", "dist", path.startsWith("/") ? path.substring(1) : path);
+                if (Files.exists(directFile) && !Files.isDirectory(directFile)) {
+                    serveFileWithContentType(exchange, directFile);
+                    return;
                 }
 
                 String notFound = "404 Not Found";
@@ -418,7 +445,8 @@ public class AmPlatformApplication {
 
         System.out.println("==================================================================");
         System.out.printf(">> Pure Java AM Platform Server is LIVE on: http://localhost:%d%n", PORT);
-        System.out.println("   - Interactive Dashboard:  http://localhost:8080/dashboard");
+        System.out.println("   - Standalone Dashboard:   http://localhost:8080/dashboard");
+        System.out.println("   - React MatSci Navigator: http://localhost:8080/app");
         System.out.println("   - Physics Evaluation API: http://localhost:8080/api/evaluate?power=250&speed=1100");
         System.out.println("   - Melt Pool Physics API:  http://localhost:8080/api/meltpool?model=coen&power=200");
         System.out.println("   - Bontha Solidification:  http://localhost:8080/api/bontha?dim=3d-bulky&power=200");
@@ -426,6 +454,30 @@ public class AmPlatformApplication {
         System.out.println("   - Recipe Synthesis API:   http://localhost:8080/api/recipe?variant=TIV-00001");
         System.out.println("   - Global Stats API:       http://localhost:8080/api/stats");
         System.out.println("==================================================================");
+    }
+
+    private void serveFile(HttpExchange exchange, Path file, String contentType) throws IOException {
+        byte[] bytes = Files.readAllBytes(file);
+        exchange.getResponseHeaders().set("Content-Type", contentType);
+        exchange.sendResponseHeaders(200, bytes.length);
+        OutputStream os = exchange.getResponseBody();
+        os.write(bytes);
+        os.close();
+    }
+
+    private void serveFileWithContentType(HttpExchange exchange, Path file) throws IOException {
+        String name = file.getFileName().toString().toLowerCase(Locale.US);
+        String contentType = "application/octet-stream";
+        if (name.endsWith(".js")) contentType = "application/javascript; charset=UTF-8";
+        else if (name.endsWith(".css")) contentType = "text/css; charset=UTF-8";
+        else if (name.endsWith(".html")) contentType = "text/html; charset=UTF-8";
+        else if (name.endsWith(".json")) contentType = "application/json; charset=UTF-8";
+        else if (name.endsWith(".png")) contentType = "image/png";
+        else if (name.endsWith(".jpg") || name.endsWith(".jpeg")) contentType = "image/jpeg";
+        else if (name.endsWith(".svg")) contentType = "image/svg+xml";
+        else if (name.endsWith(".woff2")) contentType = "font/woff2";
+        else if (name.endsWith(".woff")) contentType = "font/woff";
+        serveFile(exchange, file, contentType);
     }
 
     private void sendJsonResponse(HttpExchange exchange, int status, String json) throws IOException {

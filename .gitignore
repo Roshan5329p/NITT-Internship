@@ -23,6 +23,7 @@ venv/
 # Node / JS
 node_modules/
 dist/
+!dashboard/dist/
 .cache/
 
 # OS / IDE

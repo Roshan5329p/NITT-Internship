@@ -109,9 +109,46 @@ public class DashboardVerifier {
             allPassed = false;
         }
 
-        // 3. Test HTTP Server Endpoints
+        // 3. Verify Melt Pool & Thermal Source Files from Conversation 26558942-1cb2-4119-904e-bc3c393511a3
+        totalChecks++;
+        Path predictorTsx = Paths.get("dashboard", "src", "components", "MatSciPredictor.tsx");
+        Path physicsEngineTs = Paths.get("dashboard", "src", "utils", "amPhysicsEngine.ts");
+        Path distIndex = Paths.get("dashboard", "dist", "index.html");
+
+        if (Files.exists(predictorTsx) && Files.exists(physicsEngineTs) && Files.exists(distIndex)) {
+            try {
+                String predictorSrc = Files.readString(predictorTsx);
+                String physicsSrc = Files.readString(physicsEngineTs);
+
+                boolean tsxOk = predictorSrc.contains("MELT POOL & THERMAL KINETICS")
+                        && predictorSrc.contains("KU Leuven Hybrid Melt Pool (Coen et al. 2022)")
+                        && predictorSrc.contains("Solidification Microstructure Maps");
+                boolean physicsOk = physicsSrc.contains("calculateCoenHybridMeltPool")
+                        && physicsSrc.contains("calculateBonthaThermalModel")
+                        && physicsSrc.contains("getBonthaDimensionlessProcessMapData");
+
+                if (tsxOk && physicsOk) {
+                    System.out.println("[CHECK 3] PASSED: Verified 26558942-1cb2-4119-904e-bc3c393511a3 Melt Pool & Thermal section files.");
+                    passCount++;
+                } else {
+                    System.err.println("[CHECK 3] FAILED: Missing required physics tokens in imported TypeScript sources.");
+                    allPassed = false;
+                }
+            } catch (Exception e) {
+                System.err.println("[CHECK 3] FAILED: Error checking TSX files: " + e.getMessage());
+                allPassed = false;
+            }
+        } else {
+            System.err.println("[CHECK 3] FAILED: Required dashboard files from 26558942-1cb2-4119-904e-bc3c393511a3 not found!");
+            allPassed = false;
+        }
+
+        // 4. Test HTTP Server Endpoints (Pure Java Server)
         String[] testUrls = {
             "http://localhost:8080/dashboard",
+            "http://localhost:8080/app",
+            "http://localhost:8080/assets/index-Be6UxASf.js",
+            "http://localhost:8080/assets/index-BhSphR8h.css",
             "http://localhost:8080/api/stats",
             "http://localhost:8080/api/evaluate?power=200&speed=950",
             "http://localhost:8080/api/meltpool?model=coen&power=200&speed=950",
