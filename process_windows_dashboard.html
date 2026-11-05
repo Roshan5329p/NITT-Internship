@@ -1928,6 +1928,19 @@
               </button>
               <button type="button" class="mp-toggle-btn" id="btnMpHighGrid" onclick="toggleMpOverlay('highgrid')">High Grid</button>
             </div>
+
+            <!-- Pyrometry & Fluid Dynamics (from 8949deb4 Ti-6Al-4V Workstation) -->
+            <div class="mp-control-group" style="padding: 2px 6px;">
+              <button type="button" class="mp-toggle-btn active" id="btnMpPyrometry" onclick="toggleMpOverlay('pyrometry')">
+                <span style="color:#00f7ff;">🌡️</span> Pyrometry (1650°/995°/575°)
+              </button>
+              <button type="button" class="mp-toggle-btn active" id="btnMpMarangoni" onclick="toggleMpOverlay('marangoni')">
+                <span style="color:#fbbf24;">⚡</span> Marangoni Flow
+              </button>
+              <button type="button" class="mp-toggle-btn" id="btnMpAbort" onclick="toggleEmergencyAbort()" style="border-color: rgba(239,68,68,0.4); color: #fca5a5;">
+                <span id="txtMpAbort">⛔ Quench Emitter</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -2051,6 +2064,49 @@
             <div class="mp-metric-label">Growth Rate R</div>
             <div class="mp-metric-val" id="mpCardGrowth">95.00 cm/s</div>
             <div class="mp-metric-sub">Trailing edge</div>
+          </div>
+        </div>
+
+        <!-- Real-Time ASTM F2924 / F3001 Phase Kinetics & Pyrometry Telemetry Row (from 8949deb4 Workstation) -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-top: 12px;">
+          <div style="background: #0b111e; border: 1px solid rgba(80,216,233,0.3); border-radius: 8px; padding: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: #38bdf8; font-family: monospace; text-transform: uppercase; letter-spacing: 0.5px;">
+                🧬 Metallurgical Phase Evolution (Ti-6Al-4V)
+              </div>
+              <div style="font-size: 15px; font-weight: 800; color: #ffffff; margin-top: 3px; font-family: monospace;" id="mpPhaseFractions">
+                α' Martensite: 88.2% · β: 6.4% · α: 5.4%
+              </div>
+              <div style="font-size: 11px; color: #94a3b8; margin-top: 2px; font-family: monospace;" id="mpMechanicalProperties">
+                Predicted UTS: 1,085 MPa · YS: 975 MPa · Elong: 11.2%
+              </div>
+            </div>
+            <div style="text-align: right; shrink-0;">
+              <span style="display: inline-block; font-size: 10px; font-weight: 800; font-family: monospace; padding: 3px 8px; border-radius: 12px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.5); color: #34d399;" id="mpAstmBadge">
+                ASTM F2924 COMPLIANT
+              </span>
+              <div style="font-size: 10px; color: #64748b; margin-top: 4px; font-family: monospace;">Aerospace Spec</div>
+            </div>
+          </div>
+
+          <div style="background: #0b111e; border: 1px solid rgba(251,191,36,0.3); border-radius: 8px; padding: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: #fbbf24; font-family: monospace; text-transform: uppercase; letter-spacing: 0.5px;">
+                🌡️ Pyrometry & Thermocapillary Fluid Telemetry
+              </div>
+              <div style="font-size: 15px; font-weight: 800; color: #ffffff; margin-top: 3px; font-family: monospace;" id="mpPyrometryTelemetry">
+                t₈/₅ Cooling: 2.1 ms · Rate: 1.4 × 10⁵ K/s
+              </div>
+              <div style="font-size: 11px; color: #94a3b8; margin-top: 2px; font-family: monospace;" id="mpMarangoniTelemetry">
+                Marangoni Outward Velocity: 1,240 mm/s (dγ/dT &lt; 0)
+              </div>
+            </div>
+            <div style="text-align: right; shrink-0;">
+              <span style="display: inline-block; font-size: 10px; font-weight: 800; font-family: monospace; padding: 3px 8px; border-radius: 12px; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.4); color: #38bdf8;">
+                HIGH PYROMETRY
+              </span>
+              <div style="font-size: 10px; color: #64748b; margin-top: 4px; font-family: monospace;">800°C → 500°C</div>
+            </div>
           </div>
         </div>
       </div>
@@ -3271,6 +3327,9 @@ let mpDims = true;
 let mpCallouts = true;
 let mpGrid = true;
 let mpHighGrid = false;
+let mpPyrometry = true;      // 1650°C Liquidus, 995°C β-Transus, 575°C Ms (from 8949deb4 Workstation)
+let mpMarangoni = true;      // Radial Marangoni surface flow vectors
+let isOpticalAborted = false;// Emergency optical beam quench simulation
 
 let bonthaDim = '3d-bulky';      // '3d-bulky' | '2d-thin-wall'
 let bonthaScale = 'small-scale'; // 'small-scale' | 'large-scale'
@@ -3361,6 +3420,34 @@ function toggleMpOverlay(k) {
   } else if (k === 'highgrid') {
     mpHighGrid = !mpHighGrid;
     const b = document.getElementById('btnMpHighGrid'); if (b) b.classList.toggle('active', mpHighGrid);
+  } else if (k === 'pyrometry') {
+    mpPyrometry = !mpPyrometry;
+    const b = document.getElementById('btnMpPyrometry'); if (b) b.classList.toggle('active', mpPyrometry);
+  } else if (k === 'marangoni') {
+    mpMarangoni = !mpMarangoni;
+    const b = document.getElementById('btnMpMarangoni'); if (b) b.classList.toggle('active', mpMarangoni);
+  }
+  updateMeltPoolAndThermal();
+}
+
+function toggleEmergencyAbort() {
+  isOpticalAborted = !isOpticalAborted;
+  const b = document.getElementById('btnMpAbort');
+  const t = document.getElementById('txtMpAbort');
+  if (b && t) {
+    if (isOpticalAborted) {
+      b.classList.add('active');
+      b.style.background = 'rgba(239, 68, 68, 0.25)';
+      b.style.borderColor = '#ef4444';
+      b.style.color = '#fecaca';
+      t.innerText = '⚡ Arm Optical Emitter';
+    } else {
+      b.classList.remove('active');
+      b.style.background = 'transparent';
+      b.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+      b.style.color = '#fca5a5';
+      t.innerText = '⛔ Quench Emitter';
+    }
   }
   updateMeltPoolAndThermal();
 }
@@ -3663,7 +3750,64 @@ function updateMeltPoolAndThermal() {
     peakTemp = Math.min(3200, Math.round(25 + (effP * effAlpha * 1e6) / (Math.PI * 6.7 * effSpot)));
   }
 
-  growthRate = (effVMs * 100.0).toFixed(2);
+  growthRate = isOpticalAborted ? '0.00' : (effVMs * 100.0).toFixed(2);
+  if (isOpticalAborted) {
+    peakTemp = 25;
+  }
+
+  // 8949deb4 Ti-6Al-4V Workstation Telemetry (Pyrometry, Phase Kinetics, and ASTM F2924 Compliance)
+  const t85Ms = isOpticalAborted ? 0 : Number((1.85 * (effP / Math.max(100, effV))).toFixed(1));
+  const coolingRateK_S = (t85Ms > 0) ? Math.round(300 / (t85Ms / 1000.0)) : 0;
+  const vMarangoniMmS = isOpticalAborted ? 0 : Math.round(180 * Math.pow(effP / 200.0, 0.5) * Math.pow(950 / Math.max(100, effV), 0.25));
+
+  // Metallurgical Phase Evolution (Koistinen-Marburger Kinetics)
+  const alphaPrimePct = isOpticalAborted ? 0 : (effP >= 1000 ? 12 : ((coolingRateK_S > 410) ? 88.5 : (coolingRateK_S > 100 ? 45.0 : 8.0)));
+  const betaRetainedPct = isOpticalAborted ? 100 : (effP >= 1000 ? 18.5 : 6.5);
+  const alphaLamellarPct = isOpticalAborted ? 0 : Number((100 - alphaPrimePct - betaRetainedPct).toFixed(1));
+
+  // Mechanical Tensile Properties
+  const utsMpa = isOpticalAborted ? 895 : Math.round(895 + (alphaPrimePct * 2.45));
+  const ysMpa = isOpticalAborted ? 825 : Math.round(825 + (alphaPrimePct * 2.15));
+  const elongPct = isOpticalAborted ? 14.0 : Number(Math.max(6.5, 14.5 - (alphaPrimePct * 0.08)).toFixed(1));
+
+  const isAstmCompliant = !isOpticalAborted && (parseFloat(aspect) <= 0.85) && (utsMpa >= 895) && (ysMpa >= 825) && (elongPct >= 10.0);
+
+  // Update Telemetry Elements
+  const elPhases = document.getElementById('mpPhaseFractions');
+  if (elPhases) elPhases.innerText = `α' Martensite: ${alphaPrimePct.toFixed(1)}% · β: ${betaRetainedPct.toFixed(1)}% · α: ${alphaLamellarPct}%`;
+  
+  const elMech = document.getElementById('mpMechanicalProperties');
+  if (elMech) elMech.innerText = `Predicted UTS: ${utsMpa.toLocaleString()} MPa · YS: ${ysMpa.toLocaleString()} MPa · Elong: ${elongPct}%`;
+
+  const elAstm = document.getElementById('mpAstmBadge');
+  if (elAstm) {
+    if (isOpticalAborted) {
+      elAstm.innerText = 'EMITTER QUENCHED';
+      elAstm.style.color = '#f87171';
+      elAstm.style.borderColor = 'rgba(239,68,68,0.5)';
+      elAstm.style.background = 'rgba(239,68,68,0.15)';
+    } else if (isAstmCompliant) {
+      elAstm.innerText = 'ASTM F2924 COMPLIANT';
+      elAstm.style.color = '#34d399';
+      elAstm.style.borderColor = 'rgba(16,185,129,0.5)';
+      elAstm.style.background = 'rgba(16,185,129,0.15)';
+    } else {
+      elAstm.innerText = 'OUT OF ASTM SPEC';
+      elAstm.style.color = '#fbbf24';
+      elAstm.style.borderColor = 'rgba(251,191,36,0.5)';
+      elAstm.style.background = 'rgba(251,191,36,0.15)';
+    }
+  }
+
+  const elPyro = document.getElementById('mpPyrometryTelemetry');
+  if (elPyro) {
+    elPyro.innerText = isOpticalAborted ? 't₈/₅ Quenched (Ambient 25°C)' : `t₈/₅ Cooling: ${t85Ms} ms · Rate: ${(coolingRateK_S >= 1000 ? (coolingRateK_S/1000).toFixed(1) + ' × 10³' : coolingRateK_S)} K/s`;
+  }
+
+  const elMarangoni = document.getElementById('mpMarangoniTelemetry');
+  if (elMarangoni) {
+    elMarangoni.innerText = isOpticalAborted ? 'Surface Convection: Dormant (0 mm/s)' : `Marangoni Outward Velocity: ${vMarangoniMmS.toLocaleString()} mm/s (dγ/dT < 0)`;
+  }
 
   // Update 6 Metric Cards
   const cLen = document.getElementById('mpCardLength'); if (cLen) cLen.innerText = (poolLength >= 10000 ? (poolLength/1000).toFixed(1) + ' mm' : poolLength + ' µm');
@@ -3750,10 +3894,55 @@ function updateMeltPoolAndThermal() {
         svgHtml += `</g>`;
       }
 
+      // Pyrometry Ms (575°C) Isotherm & t8/5 cooling line
+      if (mpPyrometry && !isOpticalAborted) {
+        const pathMs = createTeardropPath(poolLength * 1.82, poolWidth * 1.85, 0.35, 1.55, scale, xBeam, 210.0);
+        svgHtml += `<path d="${pathMs}" fill="none" stroke="#a855f7" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.75"/>`;
+        svgHtml += `<text x="${(xBeam - 1.55 * poolLength * scale * 0.95).toFixed(1)}" y="${(210 - halfW * 1.85 - 4).toFixed(1)}" fill="#c084fc" font-size="9" font-family="monospace">Ms (575°C) Martensite Start</text>`;
+
+        // t8/5 cooling pyrometry interval line (800°C to 500°C)
+        const t85_X1 = xBeam - 0.72 * poolLength * scale;
+        const t85_X2 = xBeam - 1.35 * poolLength * scale;
+        if (t85_X2 >= 85 && t85_X1 <= 855) {
+          svgHtml += `<line x1="${t85_X1.toFixed(1)}" y1="210" x2="${t85_X2.toFixed(1)}" y2="210" stroke="#c084fc" stroke-width="3" stroke-linecap="round" opacity="0.85"/>`;
+          svgHtml += `<rect x="${((t85_X1 + t85_X2)/2 - 40).toFixed(1)}" y="214" width="80" height="14" rx="4" fill="#070c14" stroke="#a855f7" stroke-width="0.8"/>`;
+          svgHtml += `<text x="${((t85_X1 + t85_X2)/2).toFixed(1)}" y="224" fill="#e9d5ff" font-size="8.5" font-family="monospace" text-anchor="middle">t₈/₅ = ${t85Ms} ms</text>`;
+        }
+      }
+
       svgHtml += `<path d="${pathHaz}" fill="url(#hazThermalHalo)" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.6"/>`;
       svgHtml += `<path d="${pathMushy}" fill="rgba(239, 68, 68, 0.22)" stroke="#ffffff" stroke-width="1.8" stroke-dasharray="5 3"/>`;
       svgHtml += `<path d="${pathMushy}" fill="url(#mushyHatch)" opacity="0.8"/>`;
-      svgHtml += `<path d="${pathLiquid}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.5" filter="url(#cyanGlow)"/>`;
+      svgHtml += isOpticalAborted
+        ? `<path d="${pathLiquid}" fill="#1e293b" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="4 2"/>`
+        : `<path d="${pathLiquid}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.5" filter="url(#cyanGlow)"/>`;
+
+      // Marangoni thermocapillary radial surface flow vectors
+      if (mpMarangoni && !isOpticalAborted) {
+        const arrowL = Math.max(12, Math.min(35, halfW * 0.7));
+        svgHtml += `
+          <g class="marangoni-vectors" opacity="0.85">
+            <line x1="${xBeam}" y1="${210 - spotR - 2}" x2="${xBeam}" y2="${210 - spotR - arrowL}" stroke="#fbbf24" stroke-width="1.4"/>
+            <polygon points="${xBeam},${210 - spotR - arrowL} ${xBeam - 3},${210 - spotR - arrowL + 6} ${xBeam + 3},${210 - spotR - arrowL + 6}" fill="#fbbf24"/>
+            <line x1="${xBeam}" y1="${210 + spotR + 2}" x2="${xBeam}" y2="${210 + spotR + arrowL}" stroke="#fbbf24" stroke-width="1.4"/>
+            <polygon points="${xBeam},${210 + spotR + arrowL} ${xBeam - 3},${210 + spotR + arrowL - 6} ${xBeam + 3},${210 + spotR + arrowL - 6}" fill="#fbbf24"/>
+            <line x1="${xBeam - spotR - 2}" y1="210" x2="${xBeam - spotR - arrowL * 1.5}" y2="210" stroke="#fbbf24" stroke-width="1.4"/>
+            <polygon points="${xBeam - spotR - arrowL * 1.5},210 ${xBeam - spotR - arrowL * 1.5 + 6},207 ${xBeam - spotR - arrowL * 1.5 + 6},213" fill="#fbbf24"/>
+            <rect x="${xBeam - 55}" y="${210 + spotR + arrowL + 4}" width="110" height="15" rx="4" fill="#070c14" stroke="#fbbf24" stroke-width="0.8"/>
+            <text x="${xBeam}" y="${210 + spotR + arrowL + 15}" fill="#fde68a" font-size="8" font-family="monospace" text-anchor="middle">Marangoni: ${vMarangoniMmS} mm/s</text>
+          </g>
+        `;
+      }
+
+      // Optical Emitter Quenched Warning Overlay
+      if (isOpticalAborted) {
+        svgHtml += `
+          <g class="quench-banner">
+            <rect x="270" y="22" width="400" height="36" rx="8" fill="#450a0a" stroke="#ef4444" stroke-width="1.8"/>
+            <text x="470" y="44" fill="#fecaca" font-size="11.5" font-weight="bold" font-family="monospace" text-anchor="middle">⚠️ OPTICAL EMITTER QUENCHED (T = 25°C AMBIENT)</text>
+          </g>
+        `;
+      }
 
       // Incident Beam Spot Center
       svgHtml += `

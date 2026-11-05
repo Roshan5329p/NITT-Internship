@@ -143,7 +143,37 @@ public class DashboardVerifier {
             allPassed = false;
         }
 
-        // 4. Test HTTP Server Endpoints (Pure Java Server)
+        // 4. Verify Titanium Additive Physics Workstation Files from Conversation 8949deb4-be5b-4756-ad1d-56803d3263a9
+        totalChecks++;
+        Path tiPhysicsTs = Paths.get("dashboard", "src", "physics", "titaniumPhysics.ts");
+        Path tiCanvasTsx = Paths.get("dashboard", "src", "components", "titanium", "MeltPoolPyrometryCanvas.tsx");
+        Path tiViewTsx = Paths.get("dashboard", "src", "components", "titanium", "TitaniumWorkstationView.tsx");
+
+        if (Files.exists(tiPhysicsTs) && Files.exists(tiCanvasTsx) && Files.exists(tiViewTsx)) {
+            try {
+                String physContent = Files.readString(tiPhysicsTs);
+                String viewContent = Files.readString(tiViewTsx);
+                boolean tiOk = physContent.contains("computeMeltPoolDiagnostics")
+                        && physContent.contains("calculateVolumetricEnergyDensity")
+                        && viewContent.contains("Titanium Additive Physics Workstation");
+
+                if (tiOk) {
+                    System.out.println("[CHECK 4] PASSED: Verified 8949deb4-be5b-4756-ad1d-56803d3263a9 Titanium Workstation files.");
+                    passCount++;
+                } else {
+                    System.err.println("[CHECK 4] FAILED: Missing required workstation tokens in imported sources.");
+                    allPassed = false;
+                }
+            } catch (Exception e) {
+                System.err.println("[CHECK 4] FAILED: Error checking Titanium Workstation files: " + e.getMessage());
+                allPassed = false;
+            }
+        } else {
+            System.err.println("[CHECK 4] FAILED: Required 8949deb4 workstation files not found!");
+            allPassed = false;
+        }
+
+        // 5. Test HTTP Server Endpoints (Pure Java Server)
         String[] testUrls = {
             "http://localhost:8080/dashboard",
             "http://localhost:8080/app",
