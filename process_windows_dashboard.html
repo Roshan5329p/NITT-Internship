@@ -2099,8 +2099,15 @@
             <div style="display: inline-flex; align-items: center; gap: 6px;">
               <span style="font-size: 10.5px; color: #7893af; font-family: monospace;">Paper Preset:</span>
               <select id="bonthaPresetSelect" class="dark-select" style="padding: 4px 8px; font-size: 11px; width: auto;" onchange="applyBonthaPreset(this.value)">
-                <option value="custom" selected>Custom Live Parameters</option>
-                <optgroup label="Small-Scale LENS™ (Fig. 3)">
+                <option value="custom" selected>Custom Live Parameters (Coupled to Process Sliders)</option>
+                <optgroup label="Thin-Wall 2D LENS™ (Bontha 2006 JMPT)">
+                  <option value="jmpt-550w-base">JMPT Fig. 4 Baseline: Q = 550 W, V = 8.47 mm/s (b = 2.26 mm)</option>
+                  <option value="jmpt-350w">JMPT Fig. 5: Q = 350 W, V = 8.47 mm/s (Fine Columnar)</option>
+                  <option value="jmpt-850w">JMPT Fig. 5: Q = 850 W, V = 8.47 mm/s (Coarser Mixed)</option>
+                  <option value="jmpt-slow">JMPT Fig. 6: Q = 550 W, V = 2.12 mm/s (Slow Scan)</option>
+                  <option value="jmpt-fast">JMPT Fig. 6: Q = 550 W, V = 10.6 mm/s (Fast Scan)</option>
+                </optgroup>
+                <optgroup label="Small-Scale Bulky 3D (Bontha 2009 MSEA, Fig. 3)">
                   <option value="fig3a-350w">Fig. 3a: Q = 350 W, V = 8.47 mm/s (Columnar)</option>
                   <option value="fig3a-550w">Fig. 3a: Q = 550 W, V = 8.47 mm/s (Benchmark)</option>
                   <option value="fig3a-850w">Fig. 3a: Q = 850 W, V = 8.47 mm/s (Coarse)</option>
@@ -3367,6 +3374,25 @@ function setBonthaDim(d) {
   if (cardNormSub) {
     cardNormSub.innerText = (d === '3d-bulky') ? '3D: (Tm-T0)/Tc(Q,V)' : '2D: (Tm-T0)/Tc(b=2.26mm)';
   }
+
+  // Automatic parameter synchronizer when changing geometry mode
+  if (d === '2d-thin-wall') {
+    if (bonthaPreset === 'custom' || bonthaPreset.startsWith('fig3') || bonthaPreset.startsWith('fig4')) {
+      bonthaOverridePower = 550;
+      bonthaOverrideSpeed = 8.47;
+      bonthaPreset = 'jmpt-550w-base';
+      const sel = document.getElementById('bonthaPresetSelect');
+      if (sel) sel.value = 'jmpt-550w-base';
+    }
+  } else {
+    if (bonthaPreset.startsWith('jmpt-')) {
+      bonthaOverridePower = 550;
+      bonthaOverrideSpeed = 8.47;
+      bonthaPreset = 'fig3a-550w';
+      const sel = document.getElementById('bonthaPresetSelect');
+      if (sel) sel.value = 'fig3a-550w';
+    }
+  }
   updateMeltPoolAndThermal();
 }
 
@@ -3426,6 +3452,21 @@ function applyBonthaPreset(val) {
   if (val === 'custom') {
     bonthaOverridePower = null;
     bonthaOverrideSpeed = null;
+  } else if (val === 'jmpt-550w-base') {
+    bonthaOverridePower = 550; bonthaOverrideSpeed = 8.47;
+    bonthaDim = '2d-thin-wall'; bonthaScale = 'small-scale'; bonthaSource = 'laser';
+  } else if (val === 'jmpt-350w') {
+    bonthaOverridePower = 350; bonthaOverrideSpeed = 8.47;
+    bonthaDim = '2d-thin-wall'; bonthaScale = 'small-scale'; bonthaSource = 'laser';
+  } else if (val === 'jmpt-850w') {
+    bonthaOverridePower = 850; bonthaOverrideSpeed = 8.47;
+    bonthaDim = '2d-thin-wall'; bonthaScale = 'small-scale'; bonthaSource = 'laser';
+  } else if (val === 'jmpt-slow') {
+    bonthaOverridePower = 550; bonthaOverrideSpeed = 2.12;
+    bonthaDim = '2d-thin-wall'; bonthaScale = 'small-scale'; bonthaSource = 'laser';
+  } else if (val === 'jmpt-fast') {
+    bonthaOverridePower = 550; bonthaOverrideSpeed = 10.6;
+    bonthaDim = '2d-thin-wall'; bonthaScale = 'small-scale'; bonthaSource = 'laser';
   } else if (val === 'fig3a-350w') {
     bonthaOverridePower = 350; bonthaOverrideSpeed = 8.47;
     bonthaDim = '3d-bulky'; bonthaScale = 'small-scale'; bonthaSource = 'laser';
@@ -4112,15 +4153,24 @@ function renderBonthaSolidificationPhysics(pLive, vLiveMs, spot, t) {
   // Map Coordinate scales: viewBox 0 0 880 480
   const left = 80, right = 840, top = 30, bottom = 420;
   const width = right - left, height = bottom - top;
-  const rMin = -3.0, rMax = 1.0;
-  const gMin = 0.0, gMax = 6.0;
+  
+  // Intelligent adaptive scale: supports both DED/LENS (0.001-10 cm/s) and LPBF (up to 150 cm/s)
+  const maxObservedR = Math.max(res.surfaceR_cms, res.bottomR_cms);
+  const maxObservedG = Math.max(res.surfaceG_Kcm, res.bottomG_Kcm);
+  const isHighSpeedMode = maxObservedR > 15.0 || maxObservedG > 2e6;
+  const rMin = -3.0;
+  const rMax = isHighSpeedMode ? 2.2 : 1.0;
+  const gMin = 0.0;
+  const gMax = isHighSpeedMode ? 7.5 : 6.0;
+
   const mapX = (logR) => left + ((logR - rMin) / (rMax - rMin)) * width;
   const mapY = (logG) => bottom - ((logG - gMin) / (gMax - gMin)) * height;
 
   // Boundaries
   let pathUpper = '', pathLower = '';
-  for (let i = 0; i <= 60; i++) {
-    const lr = rMin + (i / 60.0) * (rMax - rMin);
+  const numSteps = 80;
+  for (let i = 0; i <= numSteps; i++) {
+    const lr = rMin + (i / numSteps) * (rMax - rMin);
     const x = mapX(lr);
     const bnd = getKobrynBoundaries(Math.pow(10, lr));
     const yUp = mapY(bnd.logG_upper);
@@ -4135,16 +4185,18 @@ function renderBonthaSolidificationPhysics(pLive, vLiveMs, spot, t) {
   bSvg += `<path d="${polyColumnar}" fill="url(#columnarGradLarge)"/>`;
   bSvg += `<path d="${polyEquiaxed}" fill="url(#equiaxedGradLarge)"/>`;
 
-  // Y-axis grid lines (10^0 to 10^6)
-  const pSupers = ['10⁰','10¹','10²','10³','10⁴','10⁵','10⁶'];
-  for (let gExp = 0; gExp <= 6; gExp++) {
+  // Y-axis grid lines (10^0 to 10^6 or 10^7)
+  const pSupers = ['10⁰','10¹','10²','10³','10⁴','10⁵','10⁶','10⁷'];
+  const maxGExp = isHighSpeedMode ? 7 : 6;
+  for (let gExp = 0; gExp <= maxGExp; gExp++) {
     const y = mapY(gExp);
     bSvg += `<line x1="${left}" y1="${y}" x2="${right}" y2="${y}" stroke="#172230" stroke-width="1" stroke-dasharray="3 3"/>`;
     bSvg += `<text x="${left - 10}" y="${y + 4.5}" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="end" font-family="monospace">${pSupers[gExp]}</text>`;
   }
-  // X-axis grid lines (0.001 to 10)
-  const xLabels = { '-3': '0.001', '-2': '0.01', '-1': '0.1', '0': '1', '1': '10' };
-  for (let rExp = -3; rExp <= 1; rExp++) {
+  // X-axis grid lines (0.001 to 10 or 100)
+  const xLabels = { '-3': '0.001', '-2': '0.01', '-1': '0.1', '0': '1', '1': '10', '2': '100' };
+  const maxRExp = isHighSpeedMode ? 2 : 1;
+  for (let rExp = -3; rExp <= maxRExp; rExp++) {
     const x = mapX(rExp);
     bSvg += `<line x1="${x}" y1="${top}" x2="${x}" y2="${bottom}" stroke="#172230" stroke-width="1" stroke-dasharray="3 3"/>`;
     bSvg += `<text x="${x}" y="${bottom + 22}" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">${xLabels[rExp]}</text>`;
@@ -4200,12 +4252,12 @@ function renderBonthaSolidificationPhysics(pLive, vLiveMs, spot, t) {
 
   // Root Marker & Callout Box
   let rx = rootPt.x, ry = rootPt.y;
-  let rBoxX = rx + 30;
-  let rBoxY = Math.max(top + 8, ry - 14);
+  let rBoxX = Math.min(right - 215, Math.max(left + 10, rx + 25));
+  let rBoxY = Math.max(top + 8, Math.min(bottom - 36, ry - 14));
   bSvg += `
     <g class="root-marker">
       <polygon points="${rx},${ry - 8} ${rx + 7},${ry + 5} ${rx - 7},${ry + 5}" fill="#f43f5e" stroke="#ffffff" stroke-width="1.5"/>
-      <rect x="${rBoxX}" y="${rBoxY}" width="195" height="28" rx="6" fill="#080c14" stroke="#f43f5e" stroke-width="1.4"/>
+      <rect x="${rBoxX}" y="${rBoxY}" width="200" height="28" rx="6" fill="#080c14" stroke="#f43f5e" stroke-width="1.4"/>
       <polygon points="${rBoxX + 12},${rBoxY + 8} ${rBoxX + 16},${rBoxY + 16} ${rBoxX + 8},${rBoxY + 16}" fill="#f43f5e"/>
       <text x="${rBoxX + 22}" y="${rBoxY + 18}" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">Root (zm): <tspan fill="#f43f5e">${res.bottomG_Kcm.toLocaleString()}</tspan> K/cm</text>
     </g>
@@ -4213,14 +4265,14 @@ function renderBonthaSolidificationPhysics(pLive, vLiveMs, spot, t) {
 
   // Surface Marker & Callout Box
   let sx = surfPt.x, sy = surfPt.y;
-  let sBoxX = Math.max(left + 8, sx - 225);
-  let sBoxY = Math.min(bottom - 36, sy + 8);
+  let sBoxX = Math.min(right - 215, Math.max(left + 10, sx - 225));
+  let sBoxY = Math.max(top + 8, Math.min(bottom - 36, sy + 8));
   bSvg += `
     <g class="surf-marker">
       <circle cx="${sx}" cy="${sy}" r="8" fill="#50d8e9" fill-opacity="0.3"/>
       <circle cx="${sx}" cy="${sy}" r="5" fill="#50d8e9" stroke="#ffffff" stroke-width="1.8"/>
-      <line x1="${sx}" y1="${sy}" x2="${sBoxX + 195}" y2="${sBoxY + 14}" stroke="#50d8e9" stroke-width="1.2" stroke-dasharray="2 2"/>
-      <rect x="${sBoxX}" y="${sBoxY}" width="195" height="28" rx="6" fill="#080c14" stroke="#50d8e9" stroke-width="1.4"/>
+      <line x1="${sx}" y1="${sy}" x2="${sBoxX + 200}" y2="${sBoxY + 14}" stroke="#50d8e9" stroke-width="1.2" stroke-dasharray="2 2"/>
+      <rect x="${sBoxX}" y="${sBoxY}" width="200" height="28" rx="6" fill="#080c14" stroke="#50d8e9" stroke-width="1.4"/>
       <circle cx="${sBoxX + 14}" cy="${sBoxY + 14}" r="3.5" fill="#50d8e9"/>
       <text x="${sBoxX + 24}" y="${sBoxY + 18}" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">Surface (z=0): <tspan fill="#50d8e9">${res.surfaceR_cms.toFixed(0)}</tspan> cm/s</text>
     </g>
