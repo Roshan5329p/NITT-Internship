@@ -8,6 +8,8 @@ import com.matsci.service.MaterialService;
 import com.matsci.service.ParameterInferenceService;
 import com.matsci.util.JsonUtil;
 import com.nit.am.model.AmRecord;
+import com.nit.am.physics.BonthaSolidificationModel;
+import com.nit.am.physics.MeltPoolPhysicsEngine;
 import com.nit.am.physics.ThermalPhysicsEngine;
 import com.nit.am.prediction.PropertyPredictor;
 import com.sun.net.httpserver.HttpExchange;
@@ -362,6 +364,55 @@ public class AmPlatformApplication {
             }
         });
 
+        // 6. API /api/meltpool?model=coen&power=200&speed=950&spot=80&layer=40&hatch=80
+        server.createContext("/api/meltpool", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                String query = exchange.getRequestURI().getQuery();
+                String model = "coen";
+                double p = 200.0, v = 950.0, spot = 80.0, layer = 40.0, hatch = 80.0;
+                if (query != null) {
+                    for (String pair : query.split("&")) {
+                        String[] kv = pair.split("=");
+                        if (kv.length == 2) {
+                            if (kv[0].equalsIgnoreCase("model")) model = kv[1];
+                            if (kv[0].equalsIgnoreCase("power")) p = parseD(kv[1]);
+                            if (kv[0].equalsIgnoreCase("speed")) v = parseD(kv[1]);
+                            if (kv[0].equalsIgnoreCase("spot")) spot = parseD(kv[1]);
+                            if (kv[0].equalsIgnoreCase("layer")) layer = parseD(kv[1]);
+                            if (kv[0].equalsIgnoreCase("hatch")) hatch = parseD(kv[1]);
+                        }
+                    }
+                }
+                MeltPoolPhysicsEngine.MeltPoolResult res = MeltPoolPhysicsEngine.calculate(model, p, v, spot, layer, hatch);
+                sendJsonResponse(exchange, 200, res.json);
+            }
+        });
+
+        // 7. API /api/bontha?dim=3d-bulky&physics=rosenthal&source=laser&power=200&speed=950
+        server.createContext("/api/bontha", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                String query = exchange.getRequestURI().getQuery();
+                String dim = "3d-bulky", physics = "rosenthal", source = "laser";
+                double p = 200.0, v = 950.0;
+                if (query != null) {
+                    for (String pair : query.split("&")) {
+                        String[] kv = pair.split("=");
+                        if (kv.length == 2) {
+                            if (kv[0].equalsIgnoreCase("dim")) dim = kv[1];
+                            if (kv[0].equalsIgnoreCase("physics")) physics = kv[1];
+                            if (kv[0].equalsIgnoreCase("source")) source = kv[1];
+                            if (kv[0].equalsIgnoreCase("power")) p = parseD(kv[1]);
+                            if (kv[0].equalsIgnoreCase("speed")) v = parseD(kv[1]);
+                        }
+                    }
+                }
+                BonthaSolidificationModel.BonthaResult res = BonthaSolidificationModel.evaluate(dim, physics, source, p, v);
+                sendJsonResponse(exchange, 200, res.json);
+            }
+        });
+
         server.setExecutor(null);
         server.start();
 
@@ -369,6 +420,8 @@ public class AmPlatformApplication {
         System.out.printf(">> Pure Java AM Platform Server is LIVE on: http://localhost:%d%n", PORT);
         System.out.println("   - Interactive Dashboard:  http://localhost:8080/dashboard");
         System.out.println("   - Physics Evaluation API: http://localhost:8080/api/evaluate?power=250&speed=1100");
+        System.out.println("   - Melt Pool Physics API:  http://localhost:8080/api/meltpool?model=coen&power=200");
+        System.out.println("   - Bontha Solidification:  http://localhost:8080/api/bontha?dim=3d-bulky&power=200");
         System.out.println("   - Materials Registry API: http://localhost:8080/api/materials");
         System.out.println("   - Recipe Synthesis API:   http://localhost:8080/api/recipe?variant=TIV-00001");
         System.out.println("   - Global Stats API:       http://localhost:8080/api/stats");

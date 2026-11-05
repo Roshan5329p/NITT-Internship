@@ -7,7 +7,7 @@ if (-not (Test-Path "bin")) {
 }
 
 Write-Host "[1/2] Compiling Pure Java sources..." -ForegroundColor Yellow
-javac -encoding UTF-8 -d bin -sourcepath src src/com/matsci/Main.java src/com/nit/am/AmPlatformApplication.java src/com/nit/am/ProcessWindowPlotter.java
+javac -encoding UTF-8 -d bin -sourcepath src src/com/matsci/Main.java src/com/nit/am/AmPlatformApplication.java src/com/nit/am/ProcessWindowPlotter.java src/com/nit/am/physics/*.java src/com/nit/am/util/*.java
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Java compilation failed!" -ForegroundColor Red
     exit $LASTEXITCODE
