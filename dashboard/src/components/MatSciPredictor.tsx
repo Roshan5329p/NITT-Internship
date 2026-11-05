@@ -3188,6 +3188,14 @@ export function MatSciPredictor({
                                 <span>{gridContrastMode === 'ultra' ? 'Ultra Grid' : 'High Grid'}</span>
                               </button>
                             )}
+                            <a
+                              href="#titanium-workstation"
+                              className="px-2 py-1 rounded text-[10px] font-mono flex items-center gap-1 bg-[#142334] hover:bg-[#1a3048] text-[#38bdf8] border border-[#38bdf8]/40 transition-all font-bold"
+                              title="Open Ti-6Al-4V Workstation 60 FPS Pyrometry Simulator"
+                            >
+                              <Flame className="w-3 h-3 text-[#38bdf8] animate-pulse" />
+                              <span>60 FPS Simulator</span>
+                            </a>
                           </div>
                         </div>
                       </div>
@@ -3418,9 +3426,9 @@ export function MatSciPredictor({
                               filter="url(#cyanGlow)"
                             />
 
-                            {/* 5. LASER BEAM SPOT AT (X0, Y0) */}
+                            {/* 5. LASER BEAM SPOT AT (X0, Y0) WITH 60 FPS SHIMMER & BLOOM */}
                             <g className="laser-beam-center">
-                              {/* Beam Spot Diameter Ring */}
+                              {/* Beam Spot Diameter Ring with Pulsing Animation */}
                               <circle
                                 cx={X0}
                                 cy={Y0}
@@ -3430,13 +3438,35 @@ export function MatSciPredictor({
                                 strokeWidth="1.2"
                                 strokeDasharray="3 2"
                                 opacity="0.8"
-                              />
+                              >
+                                <animate attributeName="r" values={`${spotRadiusPx * 0.9};${spotRadiusPx * 1.35};${spotRadiusPx * 0.9}`} dur="1.2s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="0.85;0.35;0.85" dur="1.2s" repeatCount="indefinite" />
+                              </circle>
                               {/* Crosshair */}
                               <line x1={X0 - spotRadiusPx - 4} y1={Y0} x2={X0 + spotRadiusPx + 4} y2={Y0} stroke="#ffffff" strokeWidth="1" opacity="0.7" />
                               <line x1={X0} y1={Y0 - spotRadiusPx - 4} x2={X0} y2={Y0 + spotRadiusPx + 4} stroke="#ffffff" strokeWidth="1" opacity="0.7" />
-                              {/* Glowing White Laser Core */}
-                              <circle cx={X0} cy={Y0} r={Math.min(5, Math.max(3, spotRadiusPx * 0.35))} fill="#ffffff" />
-                              <circle cx={X0} cy={Y0} r={Math.min(10, Math.max(6, spotRadiusPx * 0.7))} fill="#ffeb3b" opacity="0.4" />
+                              {/* Glowing White Laser Core with Photon Oscillation */}
+                              <circle cx={X0} cy={Y0} r={Math.min(5, Math.max(3, spotRadiusPx * 0.35))} fill="#ffffff">
+                                <animate attributeName="r" values={`${Math.min(5, Math.max(3, spotRadiusPx * 0.35)) * 0.8};${Math.min(5, Math.max(3, spotRadiusPx * 0.35)) * 1.4};${Math.min(5, Math.max(3, spotRadiusPx * 0.35)) * 0.8}`} dur="0.9s" repeatCount="indefinite" />
+                              </circle>
+                              <circle cx={X0} cy={Y0} r={Math.min(10, Math.max(6, spotRadiusPx * 0.7))} fill="#ffeb3b" opacity="0.4">
+                                <animate attributeName="opacity" values="0.45;0.15;0.45" dur="1.1s" repeatCount="indefinite" />
+                              </circle>
+                            </g>
+
+                            {/* 5B. TRAILING CHEVRON SOLIDIFICATION RIPPLES IN WAKE */}
+                            <g className="wake-ripples">
+                              {[1, 2, 3, 4].map(idx => (
+                                <path
+                                  key={`wake-ripple-${idx}`}
+                                  d={`M ${X0 - idx * 26 * pxPerUm} ${Y0 - liquidusHalfW * 0.72} Q ${X0 - (idx * 26 + 14) * pxPerUm} ${Y0} ${X0 - idx * 26 * pxPerUm} ${Y0 + liquidusHalfW * 0.72}`}
+                                  fill="none"
+                                  stroke="#38bdf8"
+                                  strokeWidth="1.3"
+                                >
+                                  <animate attributeName="opacity" values="0.75;0.15;0.75" dur={`${0.8 + idx * 0.25}s`} repeatCount="indefinite" />
+                                </path>
+                              ))}
                             </g>
 
                             {/* 6. LASER SCAN TRAVEL DIRECTION INDICATOR */}
@@ -3815,13 +3845,18 @@ export function MatSciPredictor({
                                     strokeWidth="2.5"
                                   />
 
-                                  {/* Incident Laser Beam Cone from Above */}
+                                  {/* Incident Laser Beam Cone from Above with Photon Shimmer */}
                                   <polygon
                                     points={`${X0 - 24},48 ${X0 + 24},48 ${X0 + (spotDia / 2) * pxPerUmXZ},${Z0} ${X0 - (spotDia / 2) * pxPerUmXZ},${Z0}`}
                                     fill="url(#laserBeamIncident)"
                                     opacity="0.85"
-                                  />
+                                  >
+                                    <animate attributeName="opacity" values="0.85;0.6;0.85" dur="0.8s" repeatCount="indefinite" />
+                                  </polygon>
                                   <circle cx={X0} cy={Z0} r={Math.max(3, (spotDia / 2) * pxPerUmXZ)} fill="#ffffff" />
+                                  <ellipse cx={X0 - (spotDia / 4) * pxPerUmXZ} cy={Z0 + 3} rx={(spotDia / 3) * pxPerUmXZ} ry={Math.min(16, depthPx * 0.25)} fill="#020617" stroke="#38bdf8" strokeWidth="1">
+                                    <animate attributeName="ry" values={`${Math.min(16, depthPx * 0.25) * 0.75};${Math.min(16, depthPx * 0.25) * 1.35};${Math.min(16, depthPx * 0.25) * 0.75}`} dur="0.85s" repeatCount="indefinite" />
+                                  </ellipse>
                                   <text x={X0} y="44" fill="#ffeb3b" fontSize="11" fontWeight="bold" textAnchor="middle" fontFamily="monospace">
                                     Incident Laser Beam (P = {laserPower} W)
                                   </text>

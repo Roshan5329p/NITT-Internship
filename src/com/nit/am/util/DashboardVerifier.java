@@ -51,7 +51,10 @@ public class DashboardVerifier {
                     "btnSubTabDimensionless",
                     "btnSubTabProfile",
                     "btnSubTabKinetics",
-                    "updateMeltPoolAndThermal();"
+                    "updateMeltPoolAndThermal();",
+                    "id=\"mpAnimLayers\"",
+                    "btnMpAnimate",
+                    "renderMpAnimationStep"
                 };
 
                 boolean htmlOk = true;
