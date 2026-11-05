@@ -53,3 +53,7 @@ id,paper_number,test_direction,condition,yield_strength_mpa,ultimate_tensile_str
 52,47,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
 53,49,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
 54,53,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+55,55,horizontal (XY),as-built,1040.0,1210.0,7.8,385.0,,,340.0,0,0,As-built martensitic alpha prime needles
+56,56,horizontal (XY),as-built,1010.0,1180.0,8.2,375.0,,,330.0,0,0,Bulky 3D columnar prior-beta grains
+57,57,vertical (Z),as-built,890.0,1020.0,9.8,340.0,,,310.0,0,0,Thin-wall layer boundary ductility
+58,58,longitudinal,interpass-rolled,865.0,975.0,14.5,325.0,,,280.0,1,1,Refined equiaxed prior-beta grains compliant with ASTM F2924

@@ -1188,6 +1188,7 @@
         <option value="Stress-relieved">Stress-relieved (600°C / 2 hr)</option>
         <option value="Annealed">Annealed (730°C / 2 hr)</option>
         <option value="HIP" selected>HIP (Hot Isostatic Pressing: 920°C / 100 MPa)</option>
+        <option value="Bi-modal">Bi-modal α+β (Cyclic Heat Treatment / Cao 2021)</option>
         <option value="Solution-Aged">Solution-Treated & Aged (STA)</option>
       </select>
       <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;" id="postProcessingNote">
@@ -1426,6 +1427,112 @@
             <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 8px;">DED & WAAM Linear Heat Input Window</div>
             <img src="plots/ti64_ded_waam_process_window.png" style="width: 100%; border-radius: 6px; border: 1px solid var(--border-color);" alt="DED WAAM Window">
           </div>
+        </div>
+        <!-- Bontha Solidification Map (Bontha et al. 2006, 2009) -->
+        <div style="margin-top: 18px; background: #080d14; border: 1px solid var(--border-color); border-radius: 8px; padding: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #fff;">Solidification Microstructure Map: Thermal Gradient G vs. Solidification Rate R (Bontha et al. 2006, 2009)</div>
+              <div style="font-size: 11.5px; color: var(--text-muted);">Predicts prior-β grain morphology (Columnar vs. Equiaxed) and solidus cooling rate (Ṫ = G · R) across bulky 3D Ti-6Al-4V AM deposits</div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span class="brand-badge" id="bonthaMorphBadge" style="background: rgba(80, 216, 233, 0.2); color: var(--accent-cyan);">FULLY COLUMNAR</span>
+            </div>
+          </div>
+
+          <svg id="bonthaSvg" viewBox="0 0 760 360" style="width: 100%; height: auto; background: #060a0f; border-radius: 6px; border: 1px solid var(--border-color);">
+            <defs>
+              <linearGradient id="gradColumnar" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#0284c7" stop-opacity="0.15"/>
+              </linearGradient>
+              <linearGradient id="gradMixed" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#b45309" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#d97706" stop-opacity="0.1"/>
+              </linearGradient>
+              <linearGradient id="gradEquiaxed" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#065f46" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#10b981" stop-opacity="0.15"/>
+              </linearGradient>
+            </defs>
+
+            <!-- Shaded Regime Polygons -->
+            <!-- Fully Columnar (G/R > 10^3 K*s/cm^2) -->
+            <polygon points="80,40 700,40 700,196 235,300 80,300" fill="url(#gradColumnar)" stroke="none"/>
+            <!-- Mixed (200 <= G/R <= 1000 K*s/cm^2) -->
+            <polygon points="235,300 700,196 700,232 343,300" fill="url(#gradMixed)" stroke="none"/>
+            <!-- Fully Equiaxed (G/R < 200 K*s/cm^2) -->
+            <polygon points="343,300 700,232 700,300" fill="url(#gradEquiaxed)" stroke="none"/>
+
+            <!-- Cooling Rate Iso-contours (Tdot = G * R) -->
+            <line x1="80" y1="196" x2="545" y2="300" stroke="#334155" stroke-dasharray="4,4" stroke-width="1.2"/>
+            <text x="500" y="295" fill="#64748b" font-size="10" font-family="monospace">Ṫ = 10³ K/s</text>
+
+            <line x1="80" y1="144" x2="700" y2="274" stroke="#334155" stroke-dasharray="4,4" stroke-width="1.2"/>
+            <text x="630" y="268" fill="#64748b" font-size="10" font-family="monospace">Ṫ = 10⁴ K/s</text>
+
+            <line x1="80" y1="92" x2="700" y2="222" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.2"/>
+            <text x="630" y="216" fill="#94a3b8" font-size="10" font-family="monospace">Ṫ = 10⁵ K/s</text>
+
+            <line x1="80" y1="40" x2="700" y2="170" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.2"/>
+            <text x="630" y="164" fill="#94a3b8" font-size="10" font-family="monospace">Ṫ = 10⁶ K/s</text>
+
+            <!-- Regime Boundary Lines -->
+            <line x1="80" y1="248" x2="700" y2="196" stroke="#0ea5e9" stroke-dasharray="6,4" stroke-width="1.8"/>
+            <text x="120" y="235" fill="#38bdf8" font-size="11" font-weight="600" transform="rotate(-4.8, 120, 235)">G/R = 10³ (CET Boundary)</text>
+
+            <line x1="80" y1="284" x2="700" y2="232" stroke="#f59e0b" stroke-dasharray="6,4" stroke-width="1.5"/>
+            <text x="240" y="280" fill="#fbbf24" font-size="10" transform="rotate(-4.8, 240, 280)">G/R = 2×10² (Equiaxed Limit)</text>
+
+            <!-- Text annotations inside regimes -->
+            <text x="160" y="100" fill="#60a5fa" font-size="13" font-weight="700" letter-spacing="1">FULLY COLUMNAR GRAINS (Epitaxial prior-β)</text>
+            <text x="160" y="118" fill="#93c5fd" font-size="10.5">Typical LPBF & Bulky L-DED Core • Rapid directional heat extraction</text>
+            <text x="490" y="228" fill="#fbbf24" font-size="11" font-weight="700">MIXED (CET Zone)</text>
+            <text x="560" y="285" fill="#34d399" font-size="11" font-weight="700">FULLY EQUIAXED</text>
+
+            <!-- Axes -->
+            <line x1="80" y1="40" x2="80" y2="300" stroke="#475569" stroke-width="1.5"/>
+            <line x1="80" y1="300" x2="700" y2="300" stroke="#475569" stroke-width="1.5"/>
+
+            <!-- Y-axis ticks & labels (10^2 to 10^7) -->
+            <line x1="75" y1="300" x2="80" y2="300" stroke="#64748b"/>
+            <text x="70" y="304" fill="#94a3b8" font-size="10" text-anchor="end" font-family="monospace">10²</text>
+            <line x1="75" y1="248" x2="80" y2="248" stroke="#64748b"/>
+            <text x="70" y="252" fill="#94a3b8" font-size="10" text-anchor="end" font-family="monospace">10³</text>
+            <line x1="75" y1="196" x2="80" y2="196" stroke="#64748b"/>
+            <text x="70" y="200" fill="#94a3b8" font-size="10" text-anchor="end" font-family="monospace">10⁴</text>
+            <line x1="75" y1="144" x2="80" y2="144" stroke="#64748b"/>
+            <text x="70" y="148" fill="#94a3b8" font-size="10" text-anchor="end" font-family="monospace">10⁵</text>
+            <line x1="75" y1="92" x2="80" y2="92" stroke="#64748b"/>
+            <text x="70" y="96" fill="#94a3b8" font-size="10" text-anchor="end" font-family="monospace">10⁶</text>
+            <line x1="75" y1="40" x2="80" y2="40" stroke="#64748b"/>
+            <text x="70" y="44" fill="#94a3b8" font-size="10" text-anchor="end" font-family="monospace">10⁷</text>
+
+            <!-- X-axis ticks & labels (10^-3 to 10^1) -->
+            <line x1="80" y1="300" x2="80" y2="305" stroke="#64748b"/>
+            <text x="80" y="320" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="monospace">10⁻³</text>
+            <line x1="235" y1="300" x2="235" y2="305" stroke="#64748b"/>
+            <text x="235" y="320" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="monospace">10⁻²</text>
+            <line x1="390" y1="300" x2="390" y2="305" stroke="#64748b"/>
+            <text x="390" y="320" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="monospace">10⁻¹</text>
+            <line x1="545" y1="300" x2="545" y2="305" stroke="#64748b"/>
+            <text x="545" y="320" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="monospace">1.0</text>
+            <line x1="700" y1="300" x2="700" y2="305" stroke="#64748b"/>
+            <text x="700" y="320" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="monospace">10</text>
+
+            <!-- Axis Titles -->
+            <text x="390" y="345" fill="#e2e8f0" font-size="11.5" font-weight="600" text-anchor="middle">Solidification Rate R (cm/s) [Solidus Interface Velocity]</text>
+            <text x="25" y="170" fill="#e2e8f0" font-size="11.5" font-weight="600" text-anchor="middle" transform="rotate(-90, 25, 170)">Thermal Gradient G (K/cm)</text>
+
+            <!-- Active Real-Time Operating Point Cursor -->
+            <g id="bonthaCursorGroup">
+              <circle id="bonthaCursorPing" cx="530" cy="115" r="14" fill="none" stroke="#50d8e9" stroke-width="1.5" opacity="0.4"/>
+              <circle id="bonthaCursor" cx="530" cy="115" r="7" fill="#50d8e9" stroke="#ffffff" stroke-width="2"/>
+              <rect id="bonthaCursorBox" x="430" y="70" width="220" height="42" rx="6" fill="#09131f" stroke="#50d8e9" stroke-width="1.2" opacity="0.95"/>
+              <text id="bonthaCursorLabel1" x="440" y="88" fill="#ffffff" font-size="11" font-weight="700">R = 61.2 cm/s • G = 1.7×10⁴ K/cm</text>
+              <text id="bonthaCursorLabel2" x="440" y="102" fill="#50d8e9" font-size="10" font-family="monospace">Columnar-Dendritic (Ṫ = 1.2×10⁶ K/s)</text>
+            </g>
+          </svg>
         </div>
       </div>
     </div>
@@ -1949,11 +2056,12 @@ function calculatePhysics() {
   const hallPetchIncrement = alloy.hallPetchSlope / Math.sqrt(Math.max(0.1, lathSpacing));
   let baseHardness = alloy.baseHardnessHV + hallPetchIncrement;
 
-  // Post-processing multipliers
+    // Post-processing multipliers
   let postMultiplier = 1.0;
   if (post === 'Stress-relieved') postMultiplier = 0.96;
   if (post === 'Annealed') postMultiplier = 0.92;
   if (post === 'HIP') postMultiplier = 0.94;
+  if (post === 'Bi-modal') postMultiplier = 0.98;
   if (post === 'Solution-Aged') postMultiplier = 1.14;
 
   const hvAnalytical = Math.round(baseHardness * postMultiplier);
@@ -1966,8 +2074,8 @@ function calculatePhysics() {
   const primaryHv = hvGpr;
   const hrcEquiv = primaryHv >= 240 ? Math.max(20, Math.min(68, Math.round(100 - 15000 / primaryHv))) + ' HRC' : '—';
   const utsTabor = Math.round(primaryHv * (alloy.nominalUTS / alloy.baseHardnessHV));
-  const yieldStrength = Math.round(utsTabor * (post === 'None' ? 0.92 : 0.88));
-  const elongationPct = (post === 'HIP' ? 14.5 : (post === 'Annealed' ? 12.0 : (post === 'Stress-relieved' ? 9.5 : 7.2)));
+    const yieldStrength = Math.round(utsTabor * (post === 'None' ? 0.92 : 0.88));
+  const elongationPct = (post === 'HIP' ? 14.5 : (post === 'Bi-modal' ? 17.5 : (post === 'Annealed' ? 12.0 : (post === 'Stress-relieved' ? 9.5 : 7.2))));
 
   // Update KPIs
   document.getElementById('kpi_hv').innerText = primaryHv + ' HV';
@@ -2056,6 +2164,69 @@ function calculatePhysics() {
   // Update Build Economics
   const massRateKgH = ((v * h * t * 3600 * 1e-9) * (alloy.density / 1000.0)).toFixed(3);
   document.getElementById('econ_rate').innerText = ((v * h * t * 3600) / 1e9).toFixed(1) + ' cm³/h';
+
+  // 6. Update Bontha Solidification Map Cursor (Bontha et al. 2006, 2009)
+  const bonthaR = solidVelocityR * 100.0; // cm/s
+  const bonthaG = thermalGradientG / 100.0; // K/cm
+  const logR = Math.log10(Math.max(1e-4, bonthaR));
+  const bonthaX = Math.max(85, Math.min(695, 80 + ((logR - (-3)) / 4.0) * 620));
+  const logG = Math.log10(Math.max(10, bonthaG));
+  const bonthaY = Math.max(45, Math.min(295, 300 - ((logG - 2.0) / 5.0) * 260));
+
+  const bonthaCursor = document.getElementById('bonthaCursor');
+  const bonthaPing = document.getElementById('bonthaCursorPing');
+  const bonthaBox = document.getElementById('bonthaCursorBox');
+  const bonthaLabel1 = document.getElementById('bonthaCursorLabel1');
+  const bonthaLabel2 = document.getElementById('bonthaCursorLabel2');
+  const bonthaBadge = document.getElementById('bonthaMorphBadge');
+
+  if (bonthaCursor) {
+    bonthaCursor.setAttribute('cx', bonthaX);
+    bonthaCursor.setAttribute('cy', bonthaY);
+    if (bonthaPing) {
+      bonthaPing.setAttribute('cx', bonthaX);
+      bonthaPing.setAttribute('cy', bonthaY);
+    }
+    const boxX = bonthaX > 480 ? bonthaX - 230 : bonthaX + 15;
+    const boxY = Math.max(45, Math.min(250, bonthaY - 20));
+    if (bonthaBox) {
+      bonthaBox.setAttribute('x', boxX);
+      bonthaBox.setAttribute('y', boxY);
+    }
+    if (bonthaLabel1) {
+      bonthaLabel1.setAttribute('x', boxX + 10);
+      bonthaLabel1.setAttribute('y', boxY + 16);
+      bonthaLabel1.textContent = `R = ${bonthaR.toFixed(2)} cm/s • G = ${bonthaG.toExponential(1)} K/cm`;
+    }
+    if (bonthaLabel2) {
+      bonthaLabel2.setAttribute('x', boxX + 10);
+      bonthaLabel2.setAttribute('y', boxY + 30);
+      const morphText = grRatio > 1e3 ? 'Columnar (Ṫ=' + coolingRate.toExponential(1) + ' K/s)' : (grRatio >= 200 ? 'Mixed (CET Zone)' : 'Equiaxed');
+      bonthaLabel2.textContent = morphText;
+    }
+    if (bonthaBadge) {
+      const morph = grRatio > 1e3 ? 'FULLY COLUMNAR' : (grRatio >= 200 ? 'MIXED (CET)' : 'EQUIAXED');
+      bonthaBadge.textContent = morph;
+      bonthaBadge.style.color = grRatio > 1e3 ? 'var(--accent-cyan)' : (grRatio >= 200 ? 'var(--accent-amber)' : 'var(--accent-emerald)');
+      bonthaBadge.style.background = grRatio > 1e3 ? 'rgba(80, 216, 233, 0.2)' : (grRatio >= 200 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)');
+    }
+  }
+
+  // Update post-processing explanation note
+  const noteEl = document.getElementById('postProcessingNote');
+  if (noteEl) {
+    if (post === 'Bi-modal') {
+      noteEl.innerText = 'Bi-modal α+β microstructure formed via cyclic heat treatment / STA achieves both high tensile ductility (>16%) and high strength (>900 MPa) as reported by Cao et al. (2021).';
+    } else if (post === 'HIP') {
+      noteEl.innerText = 'Hot Isostatic Pressing decomposes brittle α\' martensite into ductile lamellar α+β basketweave and closes internal voids to satisfy ASTM F2924.';
+    } else if (post === 'Annealed') {
+      noteEl.innerText = 'Annealing at 730°C relieves residual stresses and partially decomposes α\' martensite into α+β lamellae.';
+    } else if (post === 'Stress-relieved') {
+      noteEl.innerText = 'Stress relief at 600°C reduces residual stress while retaining high yield strength and martensitic needle morphology.';
+    } else {
+      noteEl.innerText = 'As-built component retains rapid-quenched acicular α\' martensite with high hardness and limited ductility.';
+    }
+  }
 }
 
 function onSliderChange() {
@@ -2370,7 +2541,12 @@ function startTwinAnimation() {
 // 6. 54 PAPERS DATABASE POPULATION
 // ==========================================
 const PAPERS_DATABASE = [
-  { id: "P-01", author: "Cao et al. (2021)", process: "LPBF", desc: "Comprehensive review of LPBF Ti-6Al-4V process-porosity-property relationships.", density: "99.85%", ys: 980, uts: 1180, el: 8.5 },
+  { id: "P-01", author: "Cao et al. (2021)", process: "LPBF", desc: "Comprehensive review of LPBF Ti-6Al-4V: process, post-process treatment, microstructure, and property.", density: "99.85%", ys: 980, uts: 1180, el: 8.5 },
+  { id: "P-02", author: "Coen et al. (2022)", process: "LPBF", desc: "KU Leuven hybrid analytical model combining Eagar-Tsai width with keyhole aspect ratio for Ti-6Al-4V.", density: "99.88%", ys: 1040, uts: 1210, el: 7.8 },
+  { id: "P-03", author: "Bontha et al. (2009)", process: "LPBF / L-DED", desc: "Effects of process variables and size-scale on solidification microstructure (G vs R maps, CET) in bulky 3D Ti-6Al-4V.", density: "99.90%", ys: 1010, uts: 1180, el: 8.2 },
+  { id: "P-04", author: "Bontha et al. (2006)", process: "L-DED", desc: "Thermal process maps for predicting solidification microstructure in laser fabrication of thin-wall structures.", density: "99.70%", ys: 890, uts: 1020, el: 9.8 },
+  { id: "P-05", author: "Guo et al. (2025)", process: "WAAM", desc: "Wire + Arc Additive Manufacturing (WAAM) of Ti-6Al-4V: process control, CMT heat input, interpass rolling.", density: "99.95%", ys: 865, uts: 975, el: 14.5 },
+  el: 8.5 },
   { id: "P-02", author: "Nursyifaulkhair et al. (2019)", process: "LPBF", desc: "Effect of volumetric energy density on lack of fusion formation.", density: "99.70%", ys: 1020, uts: 1210, el: 6.8 },
   { id: "P-03", author: "Wang et al. (2026)", process: "LPBF", desc: "Heat input effects on microstructure evolution and high-cycle fatigue life.", density: "99.92%", ys: 940, uts: 1120, el: 11.2 },
   { id: "P-04", author: "Halder et al. (2024)", process: "LPBF", desc: "Effect of interlayer delay on heat accumulation and in situ phase kinetics.", density: "99.88%", ys: 960, uts: 1140, el: 9.8 },

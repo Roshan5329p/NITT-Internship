@@ -53,3 +53,7 @@ id,paper_number,melt_pool_width_um,melt_pool_depth_um,peak_temperature_k,cooling
 52,47,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
 53,49,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
 54,53,132.0,64.0,2260.0,1100000.0,,,310.0,0.18,conduction,Conduction mode melting
+55,55,140.0,85.0,2450.0,1200000.0,1710000.0,0.70,320.0,0.15,conduction,KU Leuven combined Eagar-Tsai and keyhole model
+56,56,165.0,95.0,2580.0,850000.0,1210000.0,0.58,340.0,0.18,conduction,Bulky 3D G vs R solidification map
+57,57,1850.0,750.0,2350.0,4200.0,85000.0,0.008,210.0,0.45,conduction,Thin-wall 2D Rosenthal thermal modeling
+58,58,6200.0,1800.0,2280.0,120.0,21000.0,0.004,150.0,1.20,conduction,WAAM low heat input CMT with interpass cooling

@@ -106,7 +106,10 @@ public class AmPlatformApplication {
         plotter.plotDedProcessWindow(Paths.get(plotsDir, "ti64_ded_waam_process_window.png").toString());
         plotter.plotAshbyQualificationMap(Paths.get(plotsDir, "ti64_astm_qualification_ashby_map.png").toString());
         plotter.plotEnergyDensityTradeoff(Paths.get(plotsDir, "ti64_energy_density_density_tradeoff.png").toString());
-        plotter.generateHtmlDashboard(Paths.get(workspaceDir, "process_windows_dashboard.html").toString());
+        Path dashPath = Paths.get(workspaceDir, "process_windows_dashboard.html");
+        if (!Files.exists(dashPath)) {
+            plotter.generateHtmlDashboard(dashPath.toString());
+        }
 
         System.out.println(">> All Java2D maps and interactive HTML dashboard generated successfully.");
     }
@@ -277,12 +280,13 @@ public class AmPlatformApplication {
             }
         });
 
-        // 3. API /api/evaluate?power=250&speed=1000&layer=30&hatch=100
+        // 3. API /api/evaluate?power=250&speed=1000&layer=30&hatch=100&spot=80&preheat=200&condition=HIP
         server.createContext("/api/evaluate", new HttpHandler() {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
                 String query = exchange.getRequestURI().getQuery();
-                double p = 250.0, v = 1000.0, l = 30.0, h = 100.0;
+                double p = 250.0, v = 1000.0, l = 30.0, h = 100.0, spot = 80.0, preheat = 200.0;
+                String condition = "HIP";
                 if (query != null) {
                     for (String pair : query.split("&")) {
                         String[] kv = pair.split("=");
@@ -291,16 +295,23 @@ public class AmPlatformApplication {
                             if (kv[0].equalsIgnoreCase("speed")) v = parseD(kv[1]);
                             if (kv[0].equalsIgnoreCase("layer")) l = parseD(kv[1]);
                             if (kv[0].equalsIgnoreCase("hatch")) h = parseD(kv[1]);
+                            if (kv[0].equalsIgnoreCase("spot")) spot = parseD(kv[1]);
+                            if (kv[0].equalsIgnoreCase("preheat")) preheat = parseD(kv[1]);
+                            if (kv[0].equalsIgnoreCase("condition")) condition = kv[1];
                         }
                     }
                 }
 
-                ThermalPhysicsEngine.PhysicsResult phys = ThermalPhysicsEngine.evaluate(p, v, l, h);
-                PropertyPredictor.PredictionOutput pred = PropertyPredictor.predict(1.5, "HIP", 25.0);
+                ThermalPhysicsEngine.PhysicsResult phys = ThermalPhysicsEngine.evaluateExtended(p, v, l, h, spot, preheat, ThermalPhysicsEngine.DEFAULT_ABSORPTIVITY);
+                PropertyPredictor.PredictionOutput pred = PropertyPredictor.predict(phys.cellSpacingLambdaUm, condition, 20.0);
 
                 String json = String.format(Locale.US,
-                        "{\"power_w\": %.1f, \"speed_mms\": %.1f, \"energy_density_j_mm3\": %.2f, \"defect_regime\": \"%s\", \"safe_window\": %b, \"melt_pool_width_um\": %.1f, \"melt_pool_depth_um\": %.1f, \"cooling_rate_k_s\": %.2e, \"predicted_ys_mpa\": %.1f, \"predicted_elongation_pct\": %.1f, \"astm_compliant\": %b, \"verdict\": \"%s\"}",
-                        p, v, phys.volumetricEnergyDensity, phys.defectRegime, phys.isSafeWindow, phys.estimatedMeltPoolWidthUm, phys.estimatedMeltPoolDepthUm, phys.estimatedCoolingRateKs, pred.predictedYieldStrengthMpa, pred.predictedElongationPct, pred.passesAstmF2924, pred.qualificationVerdict);
+                        "{\"power_w\": %.1f, \"speed_mms\": %.1f, \"energy_density_j_mm3\": %.2f, \"peclet_number\": %.2f, \"normalized_enthalpy\": %.2f, \"defect_regime\": \"%s\", \"safe_window\": %b, \"relative_density_pct\": %.2f, \"melt_pool_width_um\": %.1f, \"melt_pool_depth_um\": %.1f, \"melt_pool_length_um\": %.1f, \"aspect_ratio\": %.2f, \"cooling_rate_k_s\": %.2e, \"thermal_gradient_g\": %.2e, \"solidification_rate_r\": %.3f, \"grain_morphology\": \"%s\", \"cell_spacing_um\": %.2f, \"hardness_hv\": %.0f, \"rockwell_hrc\": %.0f, \"predicted_ys_mpa\": %.1f, \"predicted_uts_mpa\": %.1f, \"predicted_elongation_pct\": %.1f, \"fatigue_limit_mpa\": %.0f, \"astm_compliant\": %b, \"verdict\": \"%s\"}",
+                        p, v, phys.volumetricEnergyDensity, phys.pecletNumber, phys.normalizedEnthalpy, phys.defectRegime, phys.isSafeWindow, phys.relativeDensityPct,
+                        phys.estimatedMeltPoolWidthUm, phys.estimatedMeltPoolDepthUm, phys.estimatedMeltPoolLengthUm, phys.aspectRatio,
+                        phys.estimatedCoolingRateKs, phys.thermalGradientG, phys.solidificationRateR, phys.grainMorphology, phys.cellSpacingLambdaUm,
+                        pred.vickersHardnessHv, pred.rockwellHrc, pred.predictedYieldStrengthMpa, pred.predictedUtsMpa, pred.predictedElongationPct, pred.predictedFatigueLimitMpa,
+                        pred.passesAstmF2924, pred.qualificationVerdict);
 
                 sendJsonResponse(exchange, 200, json);
             }

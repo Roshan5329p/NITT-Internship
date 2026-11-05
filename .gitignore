@@ -30,3 +30,6 @@ dist/
 Thumbs.db
 .vscode/
 .idea/
+
+dvros_assets/
+dvros_dump.html
