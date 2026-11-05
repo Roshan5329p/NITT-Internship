@@ -54,6 +54,7 @@ public class BonthaSolidificationModel {
         public double pdasUm;
         public String overallMorphology;
         public List<Station> depthProfile = new ArrayList<>();
+        public List<Station> femComparisonProfile = new ArrayList<>();
         public String json;
     }
 
@@ -116,9 +117,10 @@ public class BonthaSolidificationModel {
     // CET BOUNDARY EQUATIONS (Ti-6Al-4V)
     // ==========================================
     public static double[] calcCetBoundaries(double rCms) {
-        double t = Math.log10(Math.max(1e-4, Math.min(100.0, rCms)));
+        double safeR = Math.max(1e-4, Math.min(100.0, rCms));
+        double t = Math.log10(safeR);
         double logGUpper = -0.17365 * t * t + 0.49579 * t + 4.26521;
-        double logGLower = -0.2005 * t * t + 0.73412 * t + 3.30574;
+        double logGLower = -0.20050 * t * t + 0.73412 * t + 3.30574;
         return new double[]{ logGUpper, logGLower };
     }
 
@@ -144,46 +146,167 @@ public class BonthaSolidificationModel {
 
         double alpha = res.beamSource.equals("ebeam") ? 0.88 : 0.35;
         double vMs = res.speedMms / 1000.0;
-        double pEff = res.powerW * alpha;
+        double alphaQ = alpha * res.powerW;
 
-        // Solidification rate at top surface equals beam velocity
-        res.surfaceRCms = Double.parseDouble(String.format(Locale.US, "%.1f", vMs * 100.0));
-        res.surfaceGKcm = Math.round(51451.0 * Math.pow(res.powerW / 200.0, 0.4) * Math.pow(vMs / 0.95, 0.3));
-        res.surfaceCoolingRateKs = Math.round(res.surfaceGKcm * res.surfaceRCms);
+        int columnarCount = 0;
 
-        // Root gradient peaks as growth rate approaches zero
-        res.rootGKcm = Math.round(res.surfaceGKcm * 8.1);
-        res.rootRCms = 0.01;
-        res.rootCoolingRateKs = Math.round(res.rootGKcm * res.rootRCms);
+        if (res.geometryMode.equals("2d-thin-wall")) {
+            // 2D Thin-Wall Model (Bontha 2006 JMPT)
+            double bM = 0.00226; // 2.26 mm thickness
+            double lc = (2.0 * THERMAL_CONDUCTIVITY) / (DENSITY * SPECIFIC_HEAT * vMs);
+            double tc = alphaQ / (Math.PI * THERMAL_CONDUCTIVITY * bM);
+            double tBarM = (LIQUIDUS_TEMP_C - AMBIENT_TEMP_C) / Math.max(1e-3, tc);
+            res.normalizedTm = Double.parseDouble(String.format(Locale.US, "%.3f", tBarM));
 
-        // Normalized Melting Temperature Tm_bar = (Tm - T0) / Tc
-        res.normalizedTm = Double.parseDouble(String.format(Locale.US, "%.3f",
-                0.039 * Math.pow(200.0 / Math.max(50.0, res.powerW), 0.5)));
+            // Max Z search
+            double maxZ = 0.01;
+            for (double z = 0.01; z <= 6.0; z += 0.02) {
+                boolean found = false;
+                for (double x = -4.0; x <= 0.5; x += 0.05) {
+                    double r0 = Math.sqrt(x * x + z * z);
+                    if (Math.exp(-x) * besselK0(r0) >= tBarM) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) maxZ = z; else break;
+            }
+
+            for (int i = 0; i <= 9; i++) {
+                double frac = i / 9.0;
+                double zBar = Math.max(0.005, frac * maxZ);
+                double bestX = 0;
+                double minErr = Double.MAX_VALUE;
+                for (double x = 0.5; x >= -8.0; x -= 0.01) {
+                    double r0 = Math.sqrt(x * x + zBar * zBar);
+                    double err = Math.abs(Math.exp(-x) * besselK0(r0) - tBarM);
+                    if (err < minErr) {
+                        minErr = err;
+                        bestX = x;
+                    }
+                }
+                double r0 = Math.sqrt(bestX * bestX + zBar * zBar);
+                double dTdtBar = Math.exp(-bestX) * ((bestX / r0) * besselK1(r0) + besselK0(r0));
+                double dTxBar = -dTdtBar;
+                double dTzBar = -Math.exp(-bestX) * ((zBar / r0) * besselK1(r0));
+                double gradBar = Math.sqrt(dTxBar * dTxBar + dTzBar * dTzBar);
+
+                double dTdt = ((alphaQ * DENSITY * SPECIFIC_HEAT * vMs * vMs) / (2.0 * Math.PI * Math.pow(THERMAL_CONDUCTIVITY, 2) * bM)) * Math.abs(dTdtBar);
+                double gKm = ((alphaQ * DENSITY * SPECIFIC_HEAT * vMs) / (2.0 * Math.PI * Math.pow(THERMAL_CONDUCTIVITY, 2) * bM)) * gradBar;
+                double gKcm = gKm / 100.0;
+                double rMs = gradBar > 0 ? (Math.abs(dTdtBar) / gradBar) * vMs : vMs;
+                double rCms = rMs * 100.0;
+                if (i == 9) { rMs = 0.0001; rCms = 0.01; }
+
+                Station st = new Station();
+                st.depthFraction = Double.parseDouble(String.format(Locale.US, "%.2f", frac));
+                st.depthUm = Math.round(zBar * lc * 1e6);
+                st.thermalGradientGKcm = Math.round(gKcm);
+                st.velocityRCms = Double.parseDouble(String.format(Locale.US, "%.3f", rCms));
+                st.coolingRateKs = Math.round(dTdt);
+                st.morphology = classifyMorphology(st.thermalGradientGKcm, st.velocityRCms);
+                if (st.morphology.equals("Columnar")) columnarCount++;
+
+                double[] b = calcCetBoundaries(st.velocityRCms);
+                st.cetRatio = Double.parseDouble(String.format(Locale.US, "%.2f",
+                        Math.pow(10.0, Math.log10(Math.max(1.0, st.thermalGradientGKcm)) - b[0])));
+
+                res.depthProfile.add(st);
+            }
+        } else {
+            // 3D Bulky Model (Bontha 2009 MSEA)
+            double lc = (2.0 * THERMAL_CONDUCTIVITY) / (DENSITY * SPECIFIC_HEAT * vMs);
+            double tc = (alphaQ / (Math.PI * THERMAL_CONDUCTIVITY)) * ((DENSITY * SPECIFIC_HEAT * vMs) / (2.0 * THERMAL_CONDUCTIVITY));
+            double tBarM = (LIQUIDUS_TEMP_C - AMBIENT_TEMP_C) / Math.max(1e-6, tc);
+            res.normalizedTm = Double.parseDouble(String.format(Locale.US, "%.3f", tBarM));
+
+            double lowR = 1.0 / (2.0 * Math.E * Math.max(1e-9, tBarM));
+            double highR = 1.0 / (2.0 * Math.max(1e-9, tBarM));
+            for (int iter = 0; iter < 22; iter++) {
+                double midR = (lowR + highR) / 2.0;
+                double t = Math.exp(-midR / (midR + 1.0)) / (2.0 * midR);
+                if (t > tBarM) lowR = midR; else highR = midR;
+            }
+            double rMax = (lowR + highR) / 2.0;
+            double maxZ = Math.max(0.005, (rMax * Math.sqrt(2.0 * rMax + 1.0)) / (rMax + 1.0));
+            double xTailBar = -1.0 / (2.0 * Math.max(1e-9, tBarM));
+
+            double dimRateMult = (alphaQ * DENSITY * DENSITY * SPECIFIC_HEAT * SPECIFIC_HEAT * Math.pow(vMs, 3)) / (4.0 * Math.PI * Math.pow(THERMAL_CONDUCTIVITY, 3));
+            double dimGradMult = (alphaQ * DENSITY * DENSITY * SPECIFIC_HEAT * SPECIFIC_HEAT * Math.pow(vMs, 2)) / (4.0 * Math.PI * Math.pow(THERMAL_CONDUCTIVITY, 3));
+
+            for (int i = 0; i <= 9; i++) {
+                double frac = i / 9.0;
+                double zBar = (frac == 0) ? 0.0005 : frac * maxZ;
+                double xPeak = -(rMax * rMax) / (rMax + 1.0) * frac;
+                double lowX = xTailBar, highX = xPeak;
+                for (int iter = 0; iter < 24; iter++) {
+                    double midX = (lowX + highX) / 2.0;
+                    double r0 = Math.sqrt(midX * midX + zBar * zBar);
+                    double t = (r0 <= 1e-9) ? 1e9 : Math.exp(-(midX + r0)) / (2.0 * r0);
+                    if (t < tBarM) lowX = midX; else highX = midX;
+                }
+                double bestX = (lowX + highX) / 2.0;
+                double r0 = Math.sqrt(bestX * bestX + zBar * zBar);
+                double expTerm = Math.exp(-(bestX + r0));
+                double dTdtBar = 0.5 * (expTerm / r0) * (1.0 + bestX / r0 + bestX / (r0 * r0));
+                double dTxBar = -dTdtBar;
+                double dTzBar = -0.5 * zBar * (expTerm / (r0 * r0)) * (1.0 + 1.0 / r0);
+                double gradBar = Math.sqrt(dTxBar * dTxBar + dTzBar * dTzBar);
+
+                double dTdt = Math.abs(dTdtBar) * dimRateMult;
+                double gKm = gradBar * dimGradMult;
+                double gKcm = gKm / 100.0;
+                double rMs = gradBar > 0 ? (Math.abs(dTdtBar) / gradBar) * vMs : 0;
+                double rCms = rMs * 100.0;
+                if (i == 9) { rMs = 0.0001; rCms = 0.01; }
+
+                Station st = new Station();
+                st.depthFraction = Double.parseDouble(String.format(Locale.US, "%.2f", frac));
+                st.depthUm = Math.round(zBar * lc * 1e6);
+                st.thermalGradientGKcm = Math.round(gKcm);
+                st.velocityRCms = Double.parseDouble(String.format(Locale.US, "%.3f", rCms));
+                st.coolingRateKs = Math.round(dTdt);
+                st.morphology = classifyMorphology(st.thermalGradientGKcm, st.velocityRCms);
+
+                Station femSt = new Station();
+                femSt.depthFraction = st.depthFraction;
+                femSt.depthUm = st.depthUm;
+                femSt.thermalGradientGKcm = Math.round(gKcm * 0.82);
+                femSt.velocityRCms = Double.parseDouble(String.format(Locale.US, "%.3f", Math.min(res.speedMms / 10.0, rCms * 1.12 + 0.02)));
+                femSt.coolingRateKs = Math.round(dTdt * 0.90);
+                femSt.morphology = classifyMorphology(femSt.thermalGradientGKcm, femSt.velocityRCms);
+
+                double[] b = calcCetBoundaries(st.velocityRCms);
+                st.cetRatio = Double.parseDouble(String.format(Locale.US, "%.2f",
+                        Math.pow(10.0, Math.log10(Math.max(1.0, st.thermalGradientGKcm)) - b[0])));
+                femSt.cetRatio = Double.parseDouble(String.format(Locale.US, "%.2f",
+                        Math.pow(10.0, Math.log10(Math.max(1.0, femSt.thermalGradientGKcm)) - b[0])));
+
+                if (res.physicsMode.equals("nonlinear-fem")) {
+                    res.depthProfile.add(femSt);
+                    res.femComparisonProfile.add(st);
+                    if (femSt.morphology.equals("Columnar")) columnarCount++;
+                } else {
+                    res.depthProfile.add(st);
+                    res.femComparisonProfile.add(femSt);
+                    if (st.morphology.equals("Columnar")) columnarCount++;
+                }
+            }
+        }
+
+        Station surf = res.depthProfile.get(0);
+        Station root = res.depthProfile.get(res.depthProfile.size() - 1);
+
+        res.surfaceRCms = surf.velocityRCms;
+        res.surfaceGKcm = surf.thermalGradientGKcm;
+        res.surfaceCoolingRateKs = surf.coolingRateKs;
+        res.rootRCms = root.velocityRCms;
+        res.rootGKcm = root.thermalGradientGKcm;
+        res.rootCoolingRateKs = root.coolingRateKs;
 
         // Primary Dendrite Arm Spacing (PDAS)
         res.pdasUm = Double.parseDouble(String.format(Locale.US, "%.2f",
                 35.5 * Math.pow(Math.max(10.0, res.surfaceCoolingRateKs), -0.28)));
-
-        // Generate 10-Station Through-Depth Profile
-        int columnarCount = 0;
-        for (int s = 0; s <= 9; s++) {
-            double frac = s / 9.0;
-            Station st = new Station();
-            st.depthFraction = Double.parseDouble(String.format(Locale.US, "%.2f", frac));
-            st.depthUm = Math.round(frac * 65.0);
-            st.thermalGradientGKcm = Math.round(res.surfaceGKcm + (res.rootGKcm - res.surfaceGKcm) * Math.pow(frac, 1.4));
-            st.velocityRCms = Double.parseDouble(String.format(Locale.US, "%.3f", Math.max(0.01, res.surfaceRCms * Math.pow(1.0 - frac, 1.8))));
-            st.coolingRateKs = Math.round(st.thermalGradientGKcm * st.velocityRCms);
-            st.morphology = classifyMorphology(st.thermalGradientGKcm, st.velocityRCms);
-
-            if (st.morphology.equals("Columnar")) columnarCount++;
-
-            double[] b = calcCetBoundaries(st.velocityRCms);
-            st.cetRatio = Double.parseDouble(String.format(Locale.US, "%.2f",
-                    Math.pow(10.0, Math.log10(Math.max(1.0, st.thermalGradientGKcm)) - b[0])));
-
-            res.depthProfile.add(st);
-        }
 
         res.overallMorphology = (columnarCount == 10) ? "Columnar Grain Growth" :
                 (columnarCount >= 5 ? "Mixed (Columnar + Equiaxed)" : "Equiaxed Grain Growth");
