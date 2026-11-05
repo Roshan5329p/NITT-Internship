@@ -3810,6 +3810,7 @@ function updateMeltPoolAndThermal() {
       if (mpCallouts) {
         // 1. Incident Laser Beam Center Callout (Top Right)
         const beamCalloutX = Math.min(680, Math.max(510, xBeam + 15));
+        const poolCalloutX = Math.max(95, Math.min(290, xBeam - 0.45 * span - 90));
         svgHtml += `
           <rect x="${beamCalloutX}" y="16" width="180" height="34" rx="6" fill="#080e18" stroke="#38bdf8" stroke-width="1.2"/>
           <text x="${beamCalloutX + 10}" y="30" fill="#ffffff" font-size="10.5" font-weight="bold">🎯 ${effSourceLabel} Center</text>
