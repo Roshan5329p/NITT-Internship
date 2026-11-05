@@ -2000,6 +2000,10 @@
                 <stop offset="92%" stop-color="#1e293b"/>
                 <stop offset="100%" stop-color="#0f172a"/>
               </linearGradient>
+              <!-- Clip path strictly bounding graph content to the frame -->
+              <clipPath id="mpFrameClip">
+                <rect x="80" y="45" width="780" height="330" rx="6"/>
+              </clipPath>
             </defs>
 
             <!-- Base Canvas Boundary -->
@@ -2009,7 +2013,7 @@
             <g id="mpPlotLayers"></g>
 
             <!-- Dynamic 60 FPS Live Fluid Dynamics Layer (Trailing chevron ripples, pulsating laser beam, Marangoni vortices) -->
-            <g id="mpAnimLayers"></g>
+            <g id="mpAnimLayers" clip-path="url(#mpFrameClip)"></g>
 
             <!-- Vertical Temperature Colorbar on Right (Always Visible) -->
             <g id="mpColorbarGroup">
@@ -3431,12 +3435,12 @@ function renderMpAnimationStep(now) {
     const ripplePitch = 24;
     const rippleOffset = (mpAnimPhase * 36) % ripplePitch;
     const wakeStart = xBeam - 0.18 * span;
-    const wakeEnd = Math.max(85, rearX - 0.25 * span);
+    const wakeEnd = Math.max(90, rearX - 0.25 * span);
 
     animHtml += `<g class="solidification-ripples" pointer-events="none">`;
     for (let i = 0; i < 6; i++) {
       const rx = wakeStart - (i * ripplePitch + rippleOffset);
-      if (rx > wakeEnd && rx > 85 && rx < 855) {
+      if (rx > wakeEnd && rx > 90 && rx < 850) {
         const progress = (wakeStart - rx) / Math.max(1, wakeStart - wakeEnd);
         const ripW = halfW * Math.max(0.2, 1.0 - 0.7 * progress);
         const ripOpacity = Math.max(0.1, (1.0 - progress) * 0.65);
@@ -4052,23 +4056,39 @@ function updateMeltPoolAndThermal() {
   // 2. Render SVG Layers for Subsection 1 with Intelligent Adaptive Scaling & Anti-Collision Layout
   const layers = document.getElementById('mpPlotLayers');
   if (layers) {
-    // Adaptive visual auto-scale across all size-scales: LPBF (300 µm), LENS (2.5 mm), and High-Power DED (25 mm)
-    const maxHazLen = poolLength * 2.2;
-    const maxHazWid = poolWidth * 1.5;
-    const maxHazDep = poolDepth * 1.6;
+    // Adaptive visual auto-scale strictly bounded to frame [80, 45, 780, 330] across all regimes
+    const hasMs = mpPyrometry && !isOpticalAborted;
+    const rearRatio = hasMs ? 2.821 : 1.8125;
+    const frontRatio = hasMs ? 0.637 : 0.377;
+    const widthRatio = hasMs ? 1.85 : 1.48;
 
-    const scaleX = 490.0 / Math.max(250, maxHazLen);
-    const scaleY = 150.0 / Math.max(80, maxHazWid);
-    const scaleZ = 160.0 / Math.max(50, maxHazDep);
-    const scale = Math.min(0.75, Math.min(scaleX, Math.min(scaleY, scaleZ)));
+    const maxEnvelopeLen = poolLength * (rearRatio + frontRatio);
+    const maxEnvelopeWid = poolWidth * widthRatio;
+    const maxEnvelopeDep = poolDepth * 1.6;
+
+    // Available span inside canvas [80, 45, 780, 330]:
+    // X span: 620 px budget for envelope to leave >= 45 px left margin and >= 65 px right margin for scan arrow
+    // Y span: 210 px budget for envelope to leave >= 45 px top margin for callouts and >= 45 px bottom margin
+    const scaleX = 620.0 / Math.max(200, maxEnvelopeLen);
+    const scaleY = 210.0 / Math.max(60, maxEnvelopeWid);
+    const scaleZ = 160.0 / Math.max(50, maxEnvelopeDep);
+    const scale = Math.min(0.65, Math.min(scaleX, Math.min(scaleY, scaleZ)));
 
     const span = poolLength * scale;
     const halfW = (poolWidth / 2) * scale;
     const depthPx = poolDepth * scale;
-    const spotR = Math.max(4, Math.min(28, (effSpot / 2) * scale));
+    const spotR = Math.max(4, Math.min(26, (effSpot / 2) * scale));
 
-    // Dynamic beam center: keeps the melt pool beautifully centered within canvas X (80 to 860, center=470)
-    const xBeam = Math.max(500, Math.min(680, Math.round(450 + 0.38 * span)));
+    const rearDistPx = poolLength * rearRatio * scale;
+    const frontDistPx = poolLength * frontRatio * scale;
+    const arrowWidthPx = 54;
+
+    // Dynamic beam center: guarantees that the rear isotherm >= 115 px and front scan arrow <= 845 px
+    const minXBeam = 80 + rearDistPx + 35; // rearMsX >= 115 px (35 px inside left border 80)
+    const maxXBeam = 860 - frontDistPx - arrowWidthPx - 15; // arrowTip <= 845 px (15 px inside right border 860)
+    const idealXBeam = Math.round(80 + (780 + rearDistPx - frontDistPx - arrowWidthPx - 15) / 2);
+    const xBeam = Math.max(minXBeam, Math.min(maxXBeam, idealXBeam));
+
     const frontX = xBeam + 0.14 * span;
     const rearX = xBeam - 0.86 * span;
     const midX = xBeam - 0.16 * span;
@@ -4076,6 +4096,9 @@ function updateMeltPoolAndThermal() {
     const frontHazX = xBeam + 0.26 * 1.45 * span;
     const rearHazX = xBeam - 1.25 * 1.45 * span;
     const halfWHaz = halfW * 1.48;
+
+    const frontMsX = xBeam + 0.35 * 1.82 * span;
+    const rearMsX = xBeam - 1.55 * 1.82 * span;
 
     let svgHtml = '';
 
@@ -4088,14 +4111,17 @@ function updateMeltPoolAndThermal() {
       if (mpGrid) {
         svgHtml += `<g class="grid-lines" opacity="${mpHighGrid ? '0.9' : '0.5'}">`;
         const gridStep = isDedRegime ? (effP >= 1000 ? 5000 : 500) : (mpHighGrid ? 100 : 200);
-        const minXGrid = -Math.ceil((poolLength * 1.5) / gridStep) * gridStep;
-        const maxXGrid = Math.ceil((poolLength * 0.6) / gridStep) * gridStep;
+        const maxReachLen = mpPyrometry ? (poolLength * 3.0) : (poolLength * 2.0);
+        const minXGrid = -Math.ceil(maxReachLen / gridStep) * gridStep;
+        const maxXGrid = Math.ceil((poolLength * 1.0) / gridStep) * gridStep;
         for (let x = Math.max(-80000, minXGrid); x <= Math.min(80000, maxXGrid); x += gridStep) {
           const px = xBeam + x * scale;
           if (px >= 85 && px <= 860) {
             svgHtml += `<line x1="${px}" y1="45" x2="${px}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
-            const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
-            svgHtml += `<text x="${px}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
+            if (px >= 105 && px <= 845) {
+              const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
+              svgHtml += `<text x="${px}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
+            }
           }
         }
         for (let y = -200; y <= 200; y += (mpHighGrid ? 50 : 100)) {
@@ -4111,11 +4137,16 @@ function updateMeltPoolAndThermal() {
         svgHtml += `</g>`;
       }
 
+      // Hard-clipped Thermal Envelope strictly inside [80, 45, 780, 330] frame
+      svgHtml += `<g class="thermal-shapes" clip-path="url(#mpFrameClip)">`;
+
       // Pyrometry Ms (575°C) Isotherm & t8/5 cooling line
       if (mpPyrometry && !isOpticalAborted) {
         const pathMs = createTeardropPath(poolLength * 1.82, poolWidth * 1.85, 0.35, 1.55, scale, xBeam, 210.0);
         svgHtml += `<path d="${pathMs}" fill="none" stroke="#a855f7" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.75"/>`;
-        svgHtml += `<text x="${(xBeam - 1.55 * poolLength * scale * 0.95).toFixed(1)}" y="${(210 - halfW * 1.85 - 4).toFixed(1)}" fill="#c084fc" font-size="9" font-family="monospace">Ms (575°C) Martensite Start</text>`;
+        const msLblX = Math.max(95, Math.min(xBeam - 120, rearMsX + 15));
+        const msLblY = Math.max(96, Math.round(210 - halfW * 1.85 - 6));
+        svgHtml += `<text x="${msLblX.toFixed(1)}" y="${msLblY.toFixed(1)}" fill="#c084fc" font-size="9" font-family="monospace">Ms (575°C) Martensite Start</text>`;
 
         // t8/5 cooling pyrometry interval line (800°C to 500°C)
         const t85_X1 = xBeam - 0.72 * poolLength * scale;
@@ -4133,6 +4164,8 @@ function updateMeltPoolAndThermal() {
       svgHtml += isOpticalAborted
         ? `<path d="${pathLiquid}" fill="#1e293b" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="4 2"/>`
         : `<path d="${pathLiquid}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.5" filter="url(#cyanGlow)"/>`;
+
+      svgHtml += `</g>`; // End thermal-shapes
 
       // Marangoni thermocapillary radial surface flow vectors
       if (mpMarangoni && !isOpticalAborted) {
@@ -4155,8 +4188,8 @@ function updateMeltPoolAndThermal() {
       if (isOpticalAborted) {
         svgHtml += `
           <g class="quench-banner">
-            <rect x="270" y="22" width="400" height="36" rx="8" fill="#450a0a" stroke="#ef4444" stroke-width="1.8"/>
-            <text x="470" y="44" fill="#fecaca" font-size="11.5" font-weight="bold" font-family="monospace" text-anchor="middle">⚠️ OPTICAL EMITTER QUENCHED (T = 25°C AMBIENT)</text>
+            <rect x="270" y="52" width="400" height="34" rx="8" fill="#450a0a" stroke="#ef4444" stroke-width="1.8"/>
+            <text x="470" y="73" fill="#fecaca" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">⚠️ OPTICAL EMITTER QUENCHED (T = 25°C AMBIENT)</text>
           </g>
         `;
       }
@@ -4171,9 +4204,9 @@ function updateMeltPoolAndThermal() {
         </g>
       `;
 
-      // Scan Direction Indicator Vector (Forward of the melt pool nose - zero collision!)
-      const scanArrowX1 = Math.min(760, Math.max(frontX + 16, frontHazX + 10));
-      const scanArrowX2 = Math.min(845, scanArrowX1 + 52);
+      // Scan Direction Indicator Vector (Forward of the melt pool nose - strictly inside frame)
+      const scanArrowX1 = Math.min(780, Math.max(frontX + 16, Math.max(frontHazX + 8, frontMsX + 8)));
+      const scanArrowX2 = Math.min(845, scanArrowX1 + 50);
       svgHtml += `
         <g class="scan-arrow-xy">
           <line x1="${scanArrowX1}" y1="210" x2="${scanArrowX2}" y2="210" stroke="#38bdf8" stroke-width="2"/>
@@ -4188,7 +4221,7 @@ function updateMeltPoolAndThermal() {
         const wY1 = 210 - halfW;
         const wY2 = 210 + halfW;
         const wX = midX;
-        const wBadgeY = Math.max(68, 210 - halfW - 14);
+        const wBadgeY = Math.max(98, 210 - halfW - 14);
         svgHtml += `
           <g class="dim-width">
             <line x1="${wX}" y1="${wY1}" x2="${wX}" y2="${wY2}" stroke="#00f7ff" stroke-width="1.5"/>
@@ -4201,7 +4234,7 @@ function updateMeltPoolAndThermal() {
 
         // Length L dimension line (Dynamically placed below the bottom HAZ border)
         const bottomHazY = 210 + halfWHaz;
-        const lY = Math.min(352, Math.max(270, bottomHazY + 22));
+        const lY = Math.min(318, Math.max(265, bottomHazY + 20));
         svgHtml += `
           <g class="dim-length">
             <line x1="${rearX}" y1="${lY}" x2="${frontX}" y2="${lY}" stroke="#50d8e9" stroke-width="1.5"/>
@@ -4214,29 +4247,28 @@ function updateMeltPoolAndThermal() {
       }
 
       if (mpCallouts) {
-        // 1. Incident Laser Beam Center Callout (Top Right)
-        const beamCalloutX = Math.min(680, Math.max(510, xBeam + 15));
-        const poolCalloutX = Math.max(95, Math.min(290, xBeam - 0.45 * span - 90));
+        // 1. Incident Laser Beam Center Callout (Top Right, strictly inside frame y in [54, 86])
+        const beamCalloutX = Math.min(665, Math.max(490, Math.round(xBeam + 15)));
+        const poolCalloutX = Math.max(95, Math.min(320, Math.round(xBeam - 0.45 * span - 90)));
         svgHtml += `
-          <rect x="${beamCalloutX}" y="16" width="180" height="34" rx="6" fill="#080e18" stroke="#38bdf8" stroke-width="1.2"/>
-          <text x="${beamCalloutX + 10}" y="30" fill="#ffffff" font-size="10.5" font-weight="bold">🎯 ${effSourceLabel} Center</text>
-          <text x="${beamCalloutX + 10}" y="43" fill="#38bdf8" font-size="9.5" font-family="monospace">Spot ∅ = ${effSpot} µm | P = ${effPDisplay}</text>
-          <line x1="${beamCalloutX + 20}" y1="50" x2="${xBeam}" y2="${210 - spotR - 4}" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect x="${beamCalloutX}" y="54" width="185" height="32" rx="6" fill="#080e18" stroke="#38bdf8" stroke-width="1.2"/>
+          <text x="${beamCalloutX + 10}" y="67" fill="#ffffff" font-size="10.5" font-weight="bold">🎯 ${effSourceLabel} Center</text>
+          <text x="${beamCalloutX + 10}" y="79" fill="#38bdf8" font-size="9" font-family="monospace">Spot ∅ = ${effSpot} µm | P = ${effPDisplay}</text>
+          <line x1="${beamCalloutX + 20}" y1="86" x2="${xBeam}" y2="${210 - spotR - 4}" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3 3"/>
 
-          <!-- 2. Molten Pool (Liquid) Callout (Top Left) -->
-          <rect x="${poolCalloutX}" y="16" width="180" height="34" rx="6" fill="#080e18" stroke="#00f7ff" stroke-width="1.2"/>
-          <text x="${poolCalloutX + 10}" y="30" fill="#ffffff" font-size="10.5" font-weight="bold">💧 Molten Pool (Liquid)</text>
-          <text x="${poolCalloutX + 10}" y="43" fill="#00f7ff" font-size="9.5" font-family="monospace">T ≥ 1650°C | Fully Molten Metal</text>
-          <line x1="${poolCalloutX + 90}" y1="50" x2="${(xBeam - 0.28 * span).toFixed(1)}" y2="${(210 - halfW).toFixed(1)}" stroke="#00f7ff" stroke-width="1" stroke-dasharray="3 3"/>
+          <!-- 2. Molten Pool (Liquid) Callout (Top Left, strictly inside frame y in [54, 86]) -->
+          <rect x="${poolCalloutX}" y="54" width="180" height="32" rx="6" fill="#080e18" stroke="#00f7ff" stroke-width="1.2"/>
+          <text x="${poolCalloutX + 10}" y="67" fill="#ffffff" font-size="10.5" font-weight="bold">💧 Molten Pool (Liquid)</text>
+          <text x="${poolCalloutX + 10}" y="79" fill="#00f7ff" font-size="9" font-family="monospace">T ≥ 1650°C | Fully Molten Metal</text>
+          <line x1="${poolCalloutX + 90}" y1="86" x2="${(xBeam - 0.28 * span).toFixed(1)}" y2="${(210 - halfW).toFixed(1)}" stroke="#00f7ff" stroke-width="1" stroke-dasharray="3 3"/>
 
-          <!-- 3. Mushy Solidification Zone Callout (Bottom Left) -->
-          <rect x="95" y="328" width="195" height="34" rx="6" fill="#080e18" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="4 2"/>
-          <text x="105" y="342" fill="#ffffff" font-size="10.5" font-weight="bold">❄️ Mushy Solidification Zone</text>
+          <!-- 3. Mushy Solidification Zone Callout (Bottom Left, strictly inside frame y in [330, 362]) -->
+          <rect x="95" y="330" width="195" height="32" rx="6" fill="#080e18" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="4 2"/>
+          <text x="105" y="343" fill="#ffffff" font-size="10.5" font-weight="bold">❄️ Mushy Solidification Zone</text>
           <text x="105" y="355" fill="#cbd5e1" font-size="9" font-family="monospace">1600°C ≤ T < 1650°C | Dendrites</text>
-          <line x1="192" y1="328" x2="${(rearX - 0.08 * span).toFixed(1)}" y2="${Math.min(265, 210 + halfW * 0.4).toFixed(1)}" stroke="#ffffff" stroke-width="1" stroke-dasharray="3 3"/>
+          <line x1="192" y1="330" x2="${(rearX - 0.08 * span).toFixed(1)}" y2="${Math.min(265, 210 + halfW * 0.4).toFixed(1)}" stroke="#ffffff" stroke-width="1" stroke-dasharray="3 3"/>
         `;
       }
-
     } else {
       // LONGITUDINAL (X-Z) PROJECTION
       const zSurface = 145;
@@ -4247,14 +4279,17 @@ function updateMeltPoolAndThermal() {
       if (mpGrid) {
         svgHtml += `<g class="grid-lines" opacity="${mpHighGrid ? '0.9' : '0.5'}">`;
         const gridStep = isDedRegime ? (effP >= 1000 ? 5000 : 500) : (mpHighGrid ? 100 : 200);
-        const minXGrid = -Math.ceil((poolLength * 1.5) / gridStep) * gridStep;
-        const maxXGrid = Math.ceil((poolLength * 0.6) / gridStep) * gridStep;
+        const maxReachLen = mpPyrometry ? (poolLength * 3.0) : (poolLength * 2.0);
+        const minXGrid = -Math.ceil(maxReachLen / gridStep) * gridStep;
+        const maxXGrid = Math.ceil((poolLength * 1.0) / gridStep) * gridStep;
         for (let x = Math.max(-80000, minXGrid); x <= Math.min(80000, maxXGrid); x += gridStep) {
           const px = xBeam + x * scale;
           if (px >= 85 && px <= 860) {
             svgHtml += `<line x1="${px}" y1="45" x2="${px}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
-            const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
-            svgHtml += `<text x="${px}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
+            if (px >= 105 && px <= 845) {
+              const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
+              svgHtml += `<text x="${px}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
+            }
           }
         }
         svgHtml += `<line x1="${xBeam}" y1="${zSurface}" x2="${xBeam}" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;

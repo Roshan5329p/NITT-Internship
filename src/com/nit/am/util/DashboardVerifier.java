@@ -177,11 +177,24 @@ public class DashboardVerifier {
         }
 
         // 5. Test HTTP Server Endpoints (Pure Java Server)
+        String currentJsAsset = "index-Cy1u7cQU.js";
+        String currentCssAsset = "index-CUbhpxe1.css";
+        Path distIndexPath = Paths.get("dashboard/dist/index.html");
+        if (Files.exists(distIndexPath)) {
+            try {
+                String distHtml = Files.readString(distIndexPath);
+                java.util.regex.Matcher mJs = java.util.regex.Pattern.compile("/assets/(index-[A-Za-z0-9_-]+\\.js)").matcher(distHtml);
+                if (mJs.find()) currentJsAsset = mJs.group(1);
+                java.util.regex.Matcher mCss = java.util.regex.Pattern.compile("/assets/(index-[A-Za-z0-9_-]+\\.css)").matcher(distHtml);
+                if (mCss.find()) currentCssAsset = mCss.group(1);
+            } catch (Exception ignored) {}
+        }
+
         String[] testUrls = {
             "http://localhost:8080/dashboard",
             "http://localhost:8080/app",
-            "http://localhost:8080/assets/index-Be6UxASf.js",
-            "http://localhost:8080/assets/index-BhSphR8h.css",
+            "http://localhost:8080/assets/" + currentJsAsset,
+            "http://localhost:8080/assets/" + currentCssAsset,
             "http://localhost:8080/api/stats",
             "http://localhost:8080/api/evaluate?power=200&speed=950",
             "http://localhost:8080/api/meltpool?model=coen&power=200&speed=950",

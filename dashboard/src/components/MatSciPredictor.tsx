@@ -2927,14 +2927,17 @@ export function MatSciPredictor({
                   const plotW = plotX2 - plotX1;
                   const plotH = plotY2 - plotY1;
 
-                  // Laser Center at (680, 210)
-                  const X0 = 680;
                   const Y0 = 210;
 
-                  // Maximum span limits to prevent any clipping:
-                  const maxSpanX = meltL * 1.35;
-                  const maxSpanY = meltW * 1.5;
-                  const pxPerUm = Math.min(540 / Math.max(60, maxSpanX), 135 / Math.max(30, maxSpanY));
+                  // Maximum span limits to prevent any clipping across all operating regimes:
+                  const maxSpanX = meltL * 2.2;
+                  const maxSpanY = meltW * 1.6;
+                  const pxPerUm = Math.min(540 / Math.max(60, maxSpanX), 125 / Math.max(30, maxSpanY));
+
+                  // Dynamic Laser Center X0 strictly bounded inside frame [80, 860]:
+                  const rearPx = meltL * 1.82 * pxPerUm;
+                  const frontPx = meltL * 0.38 * pxPerUm;
+                  const X0 = Math.max(plotX1 + rearPx + 35, Math.min(plotX2 - frontPx - 60, Math.round(plotX1 + (plotW + rearPx - frontPx - 60) / 2)));
 
                   // Helper function to build mathematically continuous smooth aerodynamic tear-drop curves with rounded tail apex
                   const generateTeardrop = (lUm: number, wUm: number, headRatio = 0.14, tailRatio = 0.86) => {
@@ -3233,6 +3236,9 @@ export function MatSciPredictor({
                                 <feGaussianBlur stdDeviation="2.5" result="blur" />
                                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
                               </filter>
+                              <clipPath id="meltPoolFrameClip">
+                                <rect x={plotX1} y={plotY1} width={plotW} height={plotH} rx="6" />
+                              </clipPath>
                             </defs>
 
                             {/* 0. DEDICATED COORDINATE CANVAS BACKGROUND */}
@@ -3393,6 +3399,7 @@ export function MatSciPredictor({
                               </g>
                             )}
 
+                            <g className="thermal-envelope" clipPath="url(#meltPoolFrameClip)">
                             {/* 2. HEAT AFFECTED ZONE (HAZ / BETA-TRANSUS 995°C) */}
                             <path
                               d={hazTransusPath}
@@ -3425,6 +3432,7 @@ export function MatSciPredictor({
                               strokeWidth="2.5"
                               filter="url(#cyanGlow)"
                             />
+                            </g>
 
                             {/* 5. LASER BEAM SPOT AT (X0, Y0) WITH 60 FPS SHIMMER & BLOOM */}
                             <g className="laser-beam-center">
@@ -3574,17 +3582,17 @@ export function MatSciPredictor({
                                 {/* Callout 1: Laser Beam Spot (Top Right) */}
                                 <g className="callout-laser">
                                   <polyline
-                                    points={`720,48 720,${Y0 - spotRadiusPx - 15} ${X0},${Y0 - spotRadiusPx - 4}`}
+                                    points={`${Math.min(plotX2 - 100, X0 + 60)},86 ${Math.min(plotX2 - 100, X0 + 60)},${Y0 - spotRadiusPx - 15} ${X0},${Y0 - spotRadiusPx - 4}`}
                                     fill="none"
                                     stroke="#38bdf8"
                                     strokeWidth="1"
                                     strokeDasharray="2 2"
                                   />
-                                  <rect x="670" y="24" width="165" height="34" rx="6" fill="#080e18" stroke="#38bdf8" strokeWidth="1.2" />
-                                  <text x="680" y="38" fill="#ffffff" fontSize="11" fontWeight="bold">
+                                  <rect x={Math.min(plotX2 - 175, Math.max(plotX1 + 10, X0 + 15))} y="54" width="165" height="34" rx="6" fill="#080e18" stroke="#38bdf8" strokeWidth="1.2" />
+                                  <text x={Math.min(plotX2 - 165, Math.max(plotX1 + 20, X0 + 25))} y="68" fill="#ffffff" fontSize="11" fontWeight="bold">
                                     🎯 Laser Beam Center
                                   </text>
-                                  <text x="680" y="51" fill="#cbd5e1" fontSize="9.5" fontFamily="monospace">
+                                  <text x={Math.min(plotX2 - 165, Math.max(plotX1 + 20, X0 + 25))} y="80" fill="#cbd5e1" fontSize="9.5" fontFamily="monospace">
                                     Spot Ø = {spotDia} μm | P = {laserPower} W
                                   </text>
                                 </g>
@@ -3592,17 +3600,17 @@ export function MatSciPredictor({
                                 {/* Callout 2: Molten Liquid Pool (Top Center) */}
                                 <g className="callout-molten">
                                   <polyline
-                                    points={`430,48 430,${Y0 - liquidusHalfW - 12} ${liquidusMaxWX},${Y0 - liquidusHalfW}`}
+                                    points={`${Math.max(plotX1 + 100, X0 - 150)},86 ${Math.max(plotX1 + 100, X0 - 150)},${Y0 - liquidusHalfW - 12} ${liquidusMaxWX},${Y0 - liquidusHalfW}`}
                                     fill="none"
                                     stroke="#00f7ff"
                                     strokeWidth="1"
                                     strokeDasharray="2 2"
                                   />
-                                  <rect x="350" y="22" width="170" height="34" rx="6" fill="#080e18" stroke="#00f7ff" strokeWidth="1.2" />
-                                  <text x="360" y="36" fill="#00f7ff" fontSize="11" fontWeight="bold">
+                                  <rect x={Math.max(plotX1 + 15, Math.min(380, X0 - 240))} y="54" width="170" height="34" rx="6" fill="#080e18" stroke="#00f7ff" strokeWidth="1.2" />
+                                  <text x={Math.max(plotX1 + 25, Math.min(390, X0 - 230))} y="68" fill="#00f7ff" fontSize="11" fontWeight="bold">
                                     💧 Molten Pool (Liquid)
                                   </text>
-                                  <text x="360" y="49" fill="#cbd5e1" fontSize="9.5" fontFamily="monospace">
+                                  <text x={Math.max(plotX1 + 25, Math.min(390, X0 - 230))} y="80" fill="#cbd5e1" fontSize="9.5" fontFamily="monospace">
                                     T ≥ {liquidusC}°C | Fully Molten Metal
                                   </text>
                                 </g>
