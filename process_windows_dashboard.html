@@ -1884,6 +1884,7 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
               <span class="model-card-title" id="mpTitle">KU Leuven Hybrid Melt Pool (Coen et al. 2022)</span>
               <span class="brand-badge" id="mpBadge">JMPT 304: 117547</span>
+              <span class="brand-badge" id="mpCoupledBadge" style="background: rgba(80, 216, 233, 0.15); color: var(--accent-cyan); border-color: rgba(80, 216, 233, 0.4); margin-left: 6px;">🔗 Synced with Solidification Physics</span>
             </div>
             <div class="model-card-sub" id="mpDesc" style="margin-top: 4px;">
               Semi-analytical hybrid combining Eagar-Tsai conduction width with Fabbro recoil keyhole aspect ratio R = d/w.
@@ -3323,6 +3324,12 @@ function applyMpPreset(p) {
   if (p200) p200.classList.toggle('active', p === '200w');
   if (p300) p300.classList.toggle('active', p === '300w');
   
+  bonthaOverridePower = null;
+  bonthaOverrideSpeed = null;
+  bonthaPreset = 'custom';
+  const sel = document.getElementById('bonthaPresetSelect');
+  if (sel) sel.value = 'custom';
+
   if (p === '200w') {
     const slP = document.getElementById('sl_p'); if (slP) slP.value = 200;
     const slV = document.getElementById('sl_v'); if (slV) slV.value = 950;
@@ -3564,51 +3571,105 @@ function updateMeltPoolAndThermal() {
   const h = elH ? parseFloat(elH.value) : 80;
   const t = elT ? parseFloat(elT.value) : 40;
   const spot = elSpot ? parseFloat(elSpot.value) : 80;
-  const vMs = v / 1000.0;
 
-  // 1. Calculate Melt Pool Dimensions based on model
-  let poolWidth, poolDepth, poolLength, aspect, peakTemp, growthRate;
-  
-  if (mpModel === 'coen') {
-    // KU Leuven Semi-Analytical Hybrid Model (Coen et al. 2022 JMPT 304: 117547)
-    const rho_l = 4189.0;
-    const k_l = 28.4;
-    const cp_l = 759.0;
-    const eta = 0.40;
-    const d_diff = k_l / (rho_l * cp_l);
-    const o_rad = (spot / 2.0) * 1e-6;
-    const pe = (vMs * o_rad) / d_diff;
-    const hs = rho_l * cp_l * 1625.0 + rho_l * 365000.0;
-    const normH = (Math.pow(2.0, 0.75) * eta * p) / (hs * Math.sqrt(Math.PI * d_diff * vMs * Math.pow(o_rad, 3)));
-    const dimW = 0.6536 * Math.pow(Math.max(0.1, normH), 0.42) * Math.pow(Math.max(0.01, pe), -0.18);
-    poolWidth = Math.round(Math.max(spot * 0.4, 2.0 * o_rad * dimW * 1e6));
-    const y_recoil = (eta * p) / (2.0 * o_rad * k_l * Math.max(50.0, 3573.0 - 298.15));
-    const b_fabbro = 0.1488 * Math.pow(Math.max(0.05, pe), -0.79);
-    const r_aspect = Math.max(0.2, y_recoil * b_fabbro);
-    poolDepth = Math.round(poolWidth * r_aspect);
-    poolLength = Math.round(poolWidth * (1.2 + 0.0012 * v));
-    aspect = r_aspect.toFixed(2);
-  } else {
-    // Rosenthal (1946) Classical Analytical 3D Moving Point Source
-    const wEst = Math.sqrt((8.0 * p * 0.40) / (Math.PI * Math.E * 4189.0 * 526.0 * 1625.0 * Math.max(0.01, vMs)));
-    poolWidth = Math.round(Math.max(spot * 0.8, wEst * 1e6 * 0.765 + spot * 0.39));
-    const r_aspect = 0.51;
-    poolDepth = Math.round(poolWidth * r_aspect);
-    poolLength = Math.round(poolWidth * (1.2 + 0.0012 * v) * (338.0 / 339.3));
-    aspect = r_aspect.toFixed(2);
+  // Fully Coupled Cross-Subsection Operating Parameters
+  const effP = (bonthaOverridePower !== null) ? bonthaOverridePower : p;
+  const effV = (bonthaOverrideSpeed !== null) ? bonthaOverrideSpeed : v;
+  const effVMs = effV / 1000.0;
+  const effAlpha = (bonthaSource === 'ebeam') ? 0.88 : (mpModel === 'coen' ? 0.40 : 0.35);
+  const effSpot = (effP >= 1000) ? Math.max(spot * 4, 1200) : ((effV < 50) ? Math.max(spot * 2, 400) : spot);
+  const effPDisplay = (effP >= 1000) ? (effP / 1000.0).toFixed(1) + ' kW' : effP + ' W';
+  const effVDisplay = (effV >= 100) ? Math.round(effV) + ' mm/s' : effV.toFixed(2) + ' mm/s';
+  const effSourceLabel = (bonthaSource === 'ebeam') ? 'Incident Electron Beam (EBAM)' : 'Incident Laser Beam';
+  const isDedRegime = effV < 100.0 || effP >= 1000.0;
+
+  // Update Synced Status Badge in Subsection 1 Header
+  const elCoupledBadge = document.getElementById('mpCoupledBadge');
+  if (elCoupledBadge) {
+    if (bonthaPreset === 'custom' && bonthaOverridePower === null && bonthaOverrideSpeed === null) {
+      elCoupledBadge.innerText = `🔗 Coupled: LPBF Live Sliders (${effP} W @ ${effVDisplay})`;
+      elCoupledBadge.style.color = 'var(--accent-cyan)';
+      elCoupledBadge.style.borderColor = 'rgba(80, 216, 233, 0.4)';
+    } else {
+      const modeName = (bonthaDim === '2d-thin-wall') ? 'Bontha 2D' : 'Bontha 3D';
+      elCoupledBadge.innerText = `🔗 Coupled: ${modeName} (${effPDisplay} @ ${effVDisplay})`;
+      elCoupledBadge.style.color = 'var(--accent-emerald)';
+      elCoupledBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+    }
   }
 
-  aspect = (poolDepth / Math.max(1, poolWidth)).toFixed(2);
-  peakTemp = Math.min(3200, Math.round(25 + (p * 0.35 * 1e6) / (Math.PI * 6.7 * spot)));
-  growthRate = (vMs * 100.0).toFixed(2);
+  // 1. Calculate Melt Pool Dimensions based on model and coupled parameters
+  let poolWidth, poolDepth, poolLength, aspect, peakTemp, growthRate;
+  
+  if (isDedRegime) {
+    // DED / LENS / EBAM Process Regime (Coupled with Bontha Solidification Physics)
+    if (bonthaDim === '2d-thin-wall') {
+      // 2D Thin-Wall (Bontha 2006 JMPT)
+      const bUm = (bonthaCustomWallThicknessMm || 2.26) * 1000.0;
+      poolWidth = Math.round(bUm);
+      poolDepth = Math.round(686.0 * (effAlpha / 0.35) * (effP / 550.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.42));
+      poolLength = Math.round(2420.0 * (effAlpha / 0.35) * (effP / 550.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.65));
+      aspect = (poolDepth / Math.max(1, poolWidth)).toFixed(2);
+      peakTemp = Math.min(3200, Math.round(1654 + (effP * effAlpha * 0.42)));
+    } else {
+      // 3D Bulky (Bontha 2009 MSEA)
+      if (effP < 1000.0) {
+        // Small-Scale LENS (Bontha 2009 Fig. 3)
+        poolDepth = Math.round(640.0 * (effAlpha / 0.35) * (effP / 550.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.40));
+        poolWidth = Math.round(1350.0 * Math.sqrt((effAlpha / 0.35) * (effP / 550.0)) * Math.pow(8.47 / Math.max(0.1, effV), 0.25));
+        poolLength = Math.round(2100.0 * (effAlpha / 0.35) * (effP / 550.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.60));
+      } else {
+        // Large-Scale High-Power DED (Bontha 2009 Fig. 4)
+        poolDepth = Math.round(6200.0 * (effAlpha / 0.35) * (effP / 15000.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.40));
+        poolWidth = Math.round(9800.0 * Math.sqrt((effAlpha / 0.35) * (effP / 15000.0)) * Math.pow(8.47 / Math.max(0.1, effV), 0.25));
+        poolLength = Math.round(24000.0 * (effAlpha / 0.35) * (effP / 15000.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.58));
+      }
+      aspect = (poolDepth / Math.max(1, poolWidth)).toFixed(2);
+      peakTemp = Math.min(3200, Math.round(1654 + Math.min(1500, (effP * effAlpha * 0.15))));
+    }
+  } else {
+    // LPBF Process Regime (V >= 100 mm/s)
+    if (mpModel === 'coen') {
+      // KU Leuven Semi-Analytical Hybrid Model (Coen et al. 2022 JMPT 304: 117547)
+      const rho_l = 4189.0;
+      const k_l = 28.4;
+      const cp_l = 759.0;
+      const eta = effAlpha;
+      const d_diff = k_l / (rho_l * cp_l);
+      const o_rad = (effSpot / 2.0) * 1e-6;
+      const pe = (effVMs * o_rad) / d_diff;
+      const hs = rho_l * cp_l * 1625.0 + rho_l * 365000.0;
+      const normH = (Math.pow(2.0, 0.75) * eta * effP) / (hs * Math.sqrt(Math.PI * d_diff * effVMs * Math.pow(o_rad, 3)));
+      const dimW = 0.6536 * Math.pow(Math.max(0.1, normH), 0.42) * Math.pow(Math.max(0.01, pe), -0.18);
+      poolWidth = Math.round(Math.max(effSpot * 0.4, 2.0 * o_rad * dimW * 1e6));
+      const y_recoil = (eta * effP) / (2.0 * o_rad * k_l * Math.max(50.0, 3573.0 - 298.15));
+      const b_fabbro = 0.1488 * Math.pow(Math.max(0.05, pe), -0.79);
+      const r_aspect = Math.max(0.2, y_recoil * b_fabbro);
+      poolDepth = Math.round(poolWidth * r_aspect);
+      poolLength = Math.round(poolWidth * (1.2 + 0.0012 * effV));
+      aspect = r_aspect.toFixed(2);
+    } else {
+      // Rosenthal (1946) Classical Analytical 3D Moving Point Source
+      const wEst = Math.sqrt((8.0 * effP * effAlpha) / (Math.PI * Math.E * 4189.0 * 526.0 * 1625.0 * Math.max(0.01, effVMs)));
+      poolWidth = Math.round(Math.max(effSpot * 0.8, wEst * 1e6 * 0.765 + effSpot * 0.39));
+      const r_aspect = 0.51;
+      poolDepth = Math.round(poolWidth * r_aspect);
+      poolLength = Math.round(poolWidth * (1.2 + 0.0012 * effV) * (338.0 / 339.3));
+      aspect = r_aspect.toFixed(2);
+    }
+    aspect = (poolDepth / Math.max(1, poolWidth)).toFixed(2);
+    peakTemp = Math.min(3200, Math.round(25 + (effP * effAlpha * 1e6) / (Math.PI * 6.7 * effSpot)));
+  }
+
+  growthRate = (effVMs * 100.0).toFixed(2);
 
   // Update 6 Metric Cards
-  const cLen = document.getElementById('mpCardLength'); if (cLen) cLen.innerText = poolLength + ' µm';
+  const cLen = document.getElementById('mpCardLength'); if (cLen) cLen.innerText = (poolLength >= 10000 ? (poolLength/1000).toFixed(1) + ' mm' : poolLength + ' µm');
   const cLenMm = document.getElementById('mpCardLengthMm'); if (cLenMm) cLenMm.innerText = (poolLength / 1000.0).toFixed(2) + ' mm';
-  const cWid = document.getElementById('mpCardWidth'); if (cWid) cWid.innerText = poolWidth + ' µm';
-  const cWidSub = document.getElementById('mpCardWidthSub'); if (cWidSub) cWidSub.innerText = 'Hatch: ' + h + ' µm';
-  const cDep = document.getElementById('mpCardDepth'); if (cDep) cDep.innerText = poolDepth + ' µm';
-  const cDepSub = document.getElementById('mpCardDepthSub'); if (cDepSub) cDepSub.innerText = (poolDepth / Math.max(1, t)).toFixed(1) + 'x layer t';
+  const cWid = document.getElementById('mpCardWidth'); if (cWid) cWid.innerText = (poolWidth >= 10000 ? (poolWidth/1000).toFixed(1) + ' mm' : poolWidth + ' µm');
+  const cWidSub = document.getElementById('mpCardWidthSub'); if (cWidSub) cWidSub.innerText = (bonthaDim === '2d-thin-wall' ? 'Wall b: ' + (bonthaCustomWallThicknessMm || 2.26) + ' mm' : 'Hatch: ' + h + ' µm');
+  const cDep = document.getElementById('mpCardDepth'); if (cDep) cDep.innerText = (poolDepth >= 10000 ? (poolDepth/1000).toFixed(1) + ' mm' : poolDepth + ' µm');
+  const cDepSub = document.getElementById('mpCardDepthSub'); if (cDepSub) cDepSub.innerText = isDedRegime ? (poolDepth / 1000.0).toFixed(2) + ' mm depth' : (poolDepth / Math.max(1, t)).toFixed(1) + 'x layer t';
   
   const aspectEl = document.getElementById('mpCardAspect');
   const aspectSub = document.getElementById('mpCardAspectSub');
@@ -3625,14 +3686,17 @@ function updateMeltPoolAndThermal() {
   const cPk = document.getElementById('mpCardPeak'); if (cPk) cPk.innerText = peakTemp + '°C';
   const cGr = document.getElementById('mpCardGrowth'); if (cGr) cGr.innerText = growthRate + ' cm/s';
 
-  // 2. Render SVG Layers for Subsection 1
+  // 2. Render SVG Layers for Subsection 1 with Intelligent Adaptive Scaling
   const layers = document.getElementById('mpPlotLayers');
   if (layers) {
-    const scale = 0.65; // Fixed physical scale: 0.65 px / µm (130 px per 200 µm)
+    // Adaptive visual scale so LPBF (300 µm), LENS (2.5 mm), and High-Power DED (25 mm) all render beautifully
+    const maxSpanUm = Math.max(poolLength * 1.15, poolWidth * 2.2, poolDepth * 3.2, 500);
+    const scale = Math.min(0.65, 520.0 / maxSpanUm);
+    const spotR = Math.max(4, Math.min(32, (effSpot / 2) * scale));
     let svgHtml = '';
 
     if (mpView === 'surface') {
-      // TOP SURFACE (X-Y) PROJECTION (SCREENSHOTS 1 & 2)
+      // TOP SURFACE (X-Y) PROJECTION
       const pathLiquid = createTeardropPath(poolLength, poolWidth, 0.14, 0.86, scale);
       const pathMushy = createTeardropPath(poolLength * 1.15, poolWidth * 1.18, 0.17, 0.98, scale);
       const pathHaz = createTeardropPath(poolLength * 1.45, poolWidth * 1.48, 0.26, 1.25, scale);
@@ -3640,28 +3704,29 @@ function updateMeltPoolAndThermal() {
       const frontX = 680 + 0.14 * poolLength * scale;
       const rearX = 680 - 0.86 * poolLength * scale;
       const halfW = (poolWidth / 2) * scale;
-      const spotR = Math.max(4, (spot / 2) * scale);
 
       if (mpGrid) {
         svgHtml += `<g class="grid-lines" opacity="${mpHighGrid ? '0.9' : '0.5'}">`;
-        for (let x = -800; x <= 200; x += (mpHighGrid ? 100 : 200)) {
+        const gridStep = isDedRegime ? (effP >= 1000 ? 5000 : 500) : (mpHighGrid ? 100 : 200);
+        const minXGrid = -Math.ceil((poolLength * 1.25) / gridStep) * gridStep;
+        for (let x = Math.max(-80000, minXGrid); x <= gridStep * 2; x += gridStep) {
           const px = 680 + x * scale;
-          if (px >= 80 && px <= 860) {
+          if (px >= 85 && px <= 860) {
             svgHtml += `<line x1="${px}" y1="45" x2="${px}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
-            svgHtml += `<text x="${px}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="11" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${x === 0 ? '0 (Laser)' : (x > 0 ? '+' : '') + x + ' µm'}</text>`;
+            const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
+            svgHtml += `<text x="${px}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
           }
         }
         for (let y = -200; y <= 200; y += (mpHighGrid ? 50 : 100)) {
-          const py = 210 + y * scale;
+          const py = 210 + y * (scale / 0.65) * 65;
           if (py >= 45 && py <= 375) {
             svgHtml += `<line x1="80" y1="${py}" x2="860" y2="${py}" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
-            svgHtml += `<text x="72" y="${py + 4}" fill="${y === 0 ? '#60a5fa' : '#cbd5e1'}" font-size="11" font-family="monospace" text-anchor="end">${y > 0 ? '+' : ''}${y} µm</text>`;
           }
         }
         svgHtml += `<line x1="80" y1="210" x2="860" y2="210" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="6 3" opacity="0.8"/>`;
         svgHtml += `<line x1="680" y1="45" x2="680" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;
         svgHtml += `<text x="470" y="413" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">Longitudinal Distance from Laser Center x (µm / mm)</text>`;
-        svgHtml += `<text x="24" y="210" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" transform="rotate(-90 24 210)" font-family="monospace">Transverse Width y (µm)</text>`;
+        svgHtml += `<text x="24" y="210" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" transform="rotate(-90 24 210)" font-family="monospace">Transverse Width y</text>`;
         svgHtml += `</g>`;
       }
 
@@ -3676,7 +3741,7 @@ function updateMeltPoolAndThermal() {
           <line x1="${680 - spotR - 6}" y1="210" x2="${680 + spotR + 6}" y2="210" stroke="#ffffff" stroke-width="1"/>
           <line x1="680" y1="${210 - spotR - 6}" x2="680" y2="${210 + spotR + 6}" stroke="#ffffff" stroke-width="1"/>
           <circle cx="680" cy="210" r="3" fill="#ffeb3b"/>
-          <text x="685" y="195" fill="#38bdf8" font-size="11" font-family="monospace">Laser Scan Direction v → (${v} mm/s)</text>
+          <text x="685" y="195" fill="#38bdf8" font-size="11" font-family="monospace">${bonthaSource === 'ebeam' ? 'Beam' : 'Laser'} Scan Direction v → (${effVDisplay})</text>
           <line x1="645" y1="202" x2="725" y2="202" stroke="#38bdf8" stroke-width="1.8"/>
           <polygon points="725,202 717,198 717,206" fill="#38bdf8"/>
         </g>
@@ -3691,8 +3756,8 @@ function updateMeltPoolAndThermal() {
             <line x1="${wX}" y1="${wY1}" x2="${wX}" y2="${wY2}" stroke="#00f7ff" stroke-width="1.5"/>
             <polygon points="${wX},${wY1} ${wX - 3.5},${wY1 + 7} ${wX + 3.5},${wY1 + 7}" fill="#00f7ff"/>
             <polygon points="${wX},${wY2} ${wX - 3.5},${wY2 - 7} ${wX + 3.5},${wY2 - 7}" fill="#00f7ff"/>
-            <rect x="${wX - 65}" y="200" width="130" height="20" rx="10" fill="#070c14" stroke="#00f7ff" stroke-width="1"/>
-            <text x="${wX}" y="214" fill="#00f7ff" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Width W = ${poolWidth} µm</text>
+            <rect x="${wX - 75}" y="200" width="150" height="20" rx="10" fill="#070c14" stroke="#00f7ff" stroke-width="1"/>
+            <text x="${wX}" y="214" fill="#00f7ff" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Width W = ${poolWidth >= 10000 ? (poolWidth/1000).toFixed(1) + ' mm' : poolWidth + ' µm'}</text>
           </g>
         `;
 
@@ -3702,25 +3767,25 @@ function updateMeltPoolAndThermal() {
             <line x1="${rearX}" y1="${lY}" x2="${frontX}" y2="${lY}" stroke="#50d8e9" stroke-width="1.5"/>
             <polygon points="${rearX},${lY} ${rearX + 7},${lY - 3.5} ${rearX + 7},${lY + 3.5}" fill="#50d8e9"/>
             <polygon points="${frontX},${lY} ${frontX - 7},${lY - 3.5} ${frontX - 7},${lY + 3.5}" fill="#50d8e9"/>
-            <rect x="${(rearX + frontX) / 2 - 100}" y="${lY - 11}" width="200" height="22" rx="11" fill="#070c14" stroke="#50d8e9" stroke-width="1.2"/>
-            <text x="${(rearX + frontX) / 2}" y="${lY + 4}" fill="#50d8e9" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Length L = ${poolLength} µm (${(poolLength/1000).toFixed(2)} mm)</text>
+            <rect x="${(rearX + frontX) / 2 - 110}" y="${lY - 11}" width="220" height="22" rx="11" fill="#070c14" stroke="#50d8e9" stroke-width="1.2"/>
+            <text x="${(rearX + frontX) / 2}" y="${lY + 4}" fill="#50d8e9" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Length L = ${poolLength >= 10000 ? (poolLength/1000).toFixed(1) + ' mm' : poolLength + ' µm'} (${(poolLength/1000).toFixed(2)} mm)</text>
           </g>
         `;
       }
 
       if (mpCallouts) {
         svgHtml += `
-          <rect x="670" y="24" width="165" height="34" rx="6" fill="#080e18" stroke="#38bdf8" stroke-width="1.2"/>
-          <text x="680" y="38" fill="#ffffff" font-size="10.5" font-weight="bold">🎯 Laser Beam Center</text>
-          <text x="680" y="51" fill="#38bdf8" font-size="9.5" font-family="monospace">Spot ∅ = ${spot} µm | P = ${p} W</text>
+          <rect x="670" y="24" width="180" height="34" rx="6" fill="#080e18" stroke="#38bdf8" stroke-width="1.2"/>
+          <text x="680" y="38" fill="#ffffff" font-size="10.5" font-weight="bold">🎯 ${effSourceLabel} Center</text>
+          <text x="680" y="51" fill="#38bdf8" font-size="9.5" font-family="monospace">Spot ∅ = ${effSpot} µm | P = ${effPDisplay}</text>
           <line x1="680" y1="58" x2="680" y2="195" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3 3"/>
 
-          <rect x="370" y="22" width="170" height="34" rx="6" fill="#080e18" stroke="#00f7ff" stroke-width="1.2"/>
+          <rect x="370" y="22" width="180" height="34" rx="6" fill="#080e18" stroke="#00f7ff" stroke-width="1.2"/>
           <text x="380" y="36" fill="#ffffff" font-size="10.5" font-weight="bold">💧 Molten Pool (Liquid)</text>
           <text x="380" y="49" fill="#00f7ff" font-size="9.5" font-family="monospace">T ≥ 1650°C | Fully Molten Metal</text>
           <line x1="450" y1="56" x2="${680 - 0.25 * poolLength * scale}" y2="${210 - halfW * 0.4}" stroke="#00f7ff" stroke-width="1" stroke-dasharray="3 3"/>
 
-          <rect x="175" y="332" width="185" height="34" rx="6" fill="#080e18" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="4 2"/>
+          <rect x="175" y="332" width="195" height="34" rx="6" fill="#080e18" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="4 2"/>
           <text x="185" y="346" fill="#ffffff" font-size="10.5" font-weight="bold">❄️ Mushy Solidification Zone</text>
           <text x="185" y="359" fill="#cbd5e1" font-size="9" font-family="monospace">1600°C ≤ T < 1650°C | Dendrites</text>
           <line x1="267" y1="332" x2="${rearX + 20}" y2="218" stroke="#ffffff" stroke-width="1" stroke-dasharray="3 3"/>
@@ -3728,7 +3793,7 @@ function updateMeltPoolAndThermal() {
       }
 
     } else {
-      // LONGITUDINAL (X-Z) PROJECTION (SCREENSHOTS 3 & 4)
+      // LONGITUDINAL (X-Z) PROJECTION
       const zSurface = 145;
       const depthPx = poolDepth * scale;
       const span = poolLength * scale;
@@ -3739,14 +3804,16 @@ function updateMeltPoolAndThermal() {
 
       svgHtml += `<rect x="80" y="${zSurface}" width="780" height="230" fill="#0a1222" fill-opacity="0.6"/>`;
 
-      // Stationary Vertical Grid in Longitudinal View (Screenshots 3 & 4)
       if (mpGrid) {
         svgHtml += `<g class="grid-lines" opacity="${mpHighGrid ? '0.9' : '0.5'}">`;
-        for (let x = -800; x <= 200; x += (mpHighGrid ? 100 : 200)) {
+        const gridStep = isDedRegime ? (effP >= 1000 ? 5000 : 500) : (mpHighGrid ? 100 : 200);
+        const minXGrid = -Math.ceil((poolLength * 1.25) / gridStep) * gridStep;
+        for (let x = Math.max(-80000, minXGrid); x <= gridStep * 2; x += gridStep) {
           const px = 680 + x * scale;
-          if (px >= 80 && px <= 860) {
+          if (px >= 85 && px <= 860) {
             svgHtml += `<line x1="${px}" y1="45" x2="${px}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
-            svgHtml += `<text x="${px}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="11" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${x === 0 ? '0 (Laser)' : (x > 0 ? '+' : '') + x + ' µm'}</text>`;
+            const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
+            svgHtml += `<text x="${px}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
           }
         }
         svgHtml += `<line x1="680" y1="${zSurface}" x2="680" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;
@@ -3757,7 +3824,7 @@ function updateMeltPoolAndThermal() {
       svgHtml += `
         <rect x="80" y="${zSurface}" width="780" height="${powderH}" fill="#f59e0b" fill-opacity="0.12"/>
         <line x1="80" y1="${zSurface + powderH}" x2="860" y2="${zSurface + powderH}" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4 2" opacity="0.6"/>
-        <text x="850" y="${zSurface + powderH - 4}" fill="#f59e0b" font-size="9.5" font-family="monospace" text-anchor="end">Powder Layer (t = ${t} µm)</text>
+        <text x="850" y="${zSurface + powderH - 4}" fill="#f59e0b" font-size="9.5" font-family="monospace" text-anchor="end">${isDedRegime ? 'Substrate Surface' : 'Powder Layer (t = ' + t + ' µm)'}</text>
       `;
 
       svgHtml += `
@@ -3775,15 +3842,14 @@ function updateMeltPoolAndThermal() {
       svgHtml += `<path d="${pathMushyZ}" fill="rgba(239, 68, 68, 0.22)" stroke="#ffffff" stroke-width="1.8" stroke-dasharray="5 3"/>`;
       svgHtml += `<path d="${pathLiquidZ}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.5" filter="url(#cyanGlow)"/>`;
 
-      const spotR = Math.max(5, (spot / 2) * scale);
       svgHtml += `
         <g class="incident-laser">
           <polygon points="656,48 704,48 ${680 + spotR},${zSurface} ${680 - spotR},${zSurface}" fill="url(#laserBeamIncident)" opacity="0.85"/>
           <circle cx="680" cy="${zSurface}" r="${spotR * 1.2}" fill="#ffffff" stroke="#ffeb3b" stroke-width="2"/>
-          <text x="680" y="32" fill="#ffeb3b" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">Incident Laser Beam (P = ${p} W)</text>
+          <text x="680" y="32" fill="#ffeb3b" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">${effSourceLabel} (P = ${effPDisplay})</text>
           <line x1="635" y1="42" x2="725" y2="42" stroke="#38bdf8" stroke-width="1.8"/>
           <polygon points="725,42 717,38 717,46" fill="#38bdf8"/>
-          <text x="680" y="56" fill="#38bdf8" font-size="10" font-family="monospace" text-anchor="middle">Scan Direction v → (${v} mm/s)</text>
+          <text x="680" y="56" fill="#38bdf8" font-size="10" font-family="monospace" text-anchor="middle">Scan Direction v → (${effVDisplay})</text>
         </g>
       `;
 
@@ -3796,8 +3862,8 @@ function updateMeltPoolAndThermal() {
             <line x1="${dX}" y1="${dY1}" x2="${dX}" y2="${dY2}" stroke="#50d8e9" stroke-width="1.5"/>
             <polygon points="${dX},${dY1} ${dX - 3.5},${dY1 + 7} ${dX + 3.5},${dY1 + 7}" fill="#50d8e9"/>
             <polygon points="${dX},${dY2} ${dX - 3.5},${dY2 - 7} ${dX + 3.5},${dY2 - 7}" fill="#50d8e9"/>
-            <rect x="${dX - 90}" y="${dY1 + depthPx / 2 - 11}" width="180" height="22" rx="11" fill="#070c14" stroke="#50d8e9" stroke-width="1.2"/>
-            <text x="${dX}" y="${dY1 + depthPx / 2 + 4}" fill="#50d8e9" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Depth zm = ${poolDepth} µm (${(poolDepth/Math.max(1,t)).toFixed(1)}x t)</text>
+            <rect x="${dX - 100}" y="${dY1 + depthPx / 2 - 11}" width="200" height="22" rx="11" fill="#070c14" stroke="#50d8e9" stroke-width="1.2"/>
+            <text x="${dX}" y="${dY1 + depthPx / 2 + 4}" fill="#50d8e9" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Depth zm = ${poolDepth >= 10000 ? (poolDepth/1000).toFixed(1) + ' mm' : poolDepth + ' µm'} (${(poolDepth/1000).toFixed(2)} mm)</text>
           </g>
         `;
 
@@ -3807,8 +3873,8 @@ function updateMeltPoolAndThermal() {
             <line x1="${rearX}" y1="${lY}" x2="${frontX}" y2="${lY}" stroke="#8ba2be" stroke-width="1.2"/>
             <polygon points="${rearX},${lY} ${rearX + 7},${lY - 3.5} ${rearX + 7},${lY + 3.5}" fill="#8ba2be"/>
             <polygon points="${frontX},${lY} ${frontX - 7},${lY - 3.5} ${frontX - 7},${lY + 3.5}" fill="#8ba2be"/>
-            <rect x="${(rearX + frontX) / 2 - 65}" y="109" width="130" height="22" rx="11" fill="#070c14" stroke="#8ba2be" stroke-width="1"/>
-            <text x="${(rearX + frontX) / 2}" y="124" fill="#cbd5e1" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Length L = ${poolLength} µm</text>
+            <rect x="${(rearX + frontX) / 2 - 80}" y="109" width="160" height="22" rx="11" fill="#070c14" stroke="#8ba2be" stroke-width="1"/>
+            <text x="${(rearX + frontX) / 2}" y="124" fill="#cbd5e1" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Length L = ${poolLength >= 10000 ? (poolLength/1000).toFixed(1) + ' mm' : poolLength + ' µm'}</text>
           </g>
         `;
       }
@@ -3826,7 +3892,7 @@ function updateMeltPoolAndThermal() {
   }
 
   // 3. Render Subsection 2 (Bontha Solidification Map)
-  renderBonthaSolidificationPhysics(p, vMs, spot, t);
+  renderBonthaSolidificationPhysics(effP, effVMs, effSpot, t);
 }
 
 // ========================================================
