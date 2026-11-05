@@ -2678,8 +2678,8 @@ function calculatePhysics() {
   const solidVelocityR = vMs * 0.72;
   const grRatio = thermalGradientG / solidVelocityR;
 
-  // Secondary dendrite arm / lath spacing (µm)
-  const lathSpacing = Math.max(0.12, alloy.cellSpacingFactor * Math.pow(coolingRate, -alloy.cellSpacingExponent));
+  // Secondary dendrite arm / lath spacing (µm) with physical lower limit (TEM martensite width 0.55-1.5 µm)
+  const lathSpacing = Math.max(0.55, alloy.cellSpacingFactor * Math.pow(coolingRate, -alloy.cellSpacingExponent));
 
   // 3. Defect Regimes
   // Lack of fusion index: A
@@ -2725,17 +2725,23 @@ function calculatePhysics() {
   document.getElementById('regimeDesc').innerText = regimeDesc;
   document.getElementById('regimeIndices').innerHTML = `Lof index: <strong>${lofIndex.toFixed(2)}</strong> • keyhole ratio: <strong>${keyholeRatio.toFixed(2)}</strong> • balling ratio: <strong>${ballingRatio.toFixed(2)}</strong>`;
 
-  // 4. Hardness & Tensile Properties
-  const hallPetchIncrement = alloy.hallPetchSlope / Math.sqrt(Math.max(0.1, lathSpacing));
+  // 4. Hardness & Tensile Properties (Calibrated for Ti-6Al-4V ASTM F2924 / F3001)
+  const effectiveHallPetchSlope = Math.min(42, alloy.hallPetchSlope * 0.55);
+  const hallPetchIncrement = effectiveHallPetchSlope / Math.sqrt(Math.max(0.45, lathSpacing));
   let baseHardness = alloy.baseHardnessHV + hallPetchIncrement;
 
-    // Post-processing multipliers
+  // Post-processing multipliers based on ASTM F2924 / F3001 metallurgical microstructures:
+  // As-built (None): 100% fine alpha' martensite -> ~385-400 HV, UTS ~1200 MPa
+  // Stress-relieved: slight recovery -> ~365-380 HV, UTS ~1100 MPa
+  // Annealed: coarsened alpha+beta lamellae -> ~335-350 HV, UTS ~990-1030 MPa
+  // HIP: full recrystallization and pore healing -> ~325-340 HV, UTS ~940-980 MPa
+  // Solution-Aged: secondary alpha precipitate hardening -> ~375-390 HV, UTS ~1120-1160 MPa
   let postMultiplier = 1.0;
-  if (post === 'Stress-relieved') postMultiplier = 0.96;
-  if (post === 'Annealed') postMultiplier = 0.92;
-  if (post === 'HIP') postMultiplier = 0.94;
-  if (post === 'Bi-modal') postMultiplier = 0.98;
-  if (post === 'Solution-Aged') postMultiplier = 1.14;
+  if (post === 'Stress-relieved') postMultiplier = 0.94;
+  if (post === 'Annealed') postMultiplier = 0.88;
+  if (post === 'HIP') postMultiplier = 0.85;
+  if (post === 'Bi-modal') postMultiplier = 0.90;
+  if (post === 'Solution-Aged') postMultiplier = 0.98;
 
   const hvAnalytical = Math.round(baseHardness * postMultiplier);
   const hvRf = Math.round(hvAnalytical * (1.0 + 0.012 * Math.log10(coolingRate / 1e4)));
@@ -2745,16 +2751,17 @@ function calculatePhysics() {
   const hvEnsemble = Math.round((hvAnalytical + hvRf + hvXgb + hvSvm + hvGpr) / 5);
 
   const primaryHv = hvGpr;
-  const hrcEquiv = primaryHv >= 240 ? Math.max(20, Math.min(68, Math.round(100 - 15000 / primaryHv))) + ' HRC' : '—';
-  const utsTabor = Math.round(primaryHv * (alloy.nominalUTS / alloy.baseHardnessHV));
-    const yieldStrength = Math.round(utsTabor * (post === 'None' ? 0.92 : 0.88));
-  const elongationPct = (post === 'HIP' ? 14.5 : (post === 'Bi-modal' ? 17.5 : (post === 'Annealed' ? 12.0 : (post === 'Stress-relieved' ? 9.5 : 7.2))));
+  const hrcEquiv = hvToHrcStandard(primaryHv);
+  // Tabor empirical relation: UTS (MPa) ~ 3.05 * HV for Ti-6Al-4V (calibrated across literature)
+  const utsTabor = Math.round(primaryHv * 3.05);
+  const yieldStrength = Math.round(utsTabor * (post === 'None' ? 0.91 : (post === 'HIP' ? 0.89 : 0.90)));
+  const elongationPct = (post === 'HIP' ? 15.5 : (post === 'Bi-modal' ? 17.0 : (post === 'Annealed' ? 12.5 : (post === 'Stress-relieved' ? 9.5 : 7.2))));
 
-  // Update KPIs
+  // Update KPIs (Density formatted to 2 decimals to accurately represent true density and eliminate misleading 100.0%)
   document.getElementById('kpi_hv').innerText = primaryHv + ' HV';
   document.getElementById('kpi_hrc').innerText = hrcEquiv;
   document.getElementById('kpi_uts').innerText = utsTabor + ' MPa';
-  document.getElementById('kpi_density').innerText = densityPct.toFixed(1) + ' %';
+  document.getElementById('kpi_density').innerText = densityPct.toFixed(2) + ' %';
   document.getElementById('kpi_porosity').innerText = 'Porosity: ' + porosityPct + '%';
 
   const vedBadge = document.getElementById('kpi_ved_badge');
@@ -2791,7 +2798,7 @@ function calculatePhysics() {
 
   let tbodyHtml = '';
   models.forEach((m, idx) => {
-    const hrc = m.hv >= 240 ? Math.round(100 - 15000 / m.hv) + ' HRC' : '—';
+    const hrc = hvToHrcStandard(m.hv);
     tbodyHtml += `
       <tr>
         <td><span class="dot ${m.dot}"></span><strong>${m.name}</strong></td>
