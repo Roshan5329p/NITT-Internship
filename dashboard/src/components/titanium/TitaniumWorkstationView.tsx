@@ -67,7 +67,7 @@ export const TitaniumWorkstationView: React.FC<TitaniumWorkstationViewProps> = (
       setParams(found.params);
       setActivePresetId(found.id);
       setIsAborted(false);
-      setStatusMessage(`Loaded preset profile: ${found.label}`);
+      setStatusMessage(`Loaded preset profile: ${found.name}`);
     }
   };
 

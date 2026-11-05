@@ -3390,6 +3390,13 @@ function renderMpAnimationStep(now) {
     return;
   }
 
+  // Throttle animation when Melt Pool tab is not active to conserve CPU
+  const viewMeltPool = document.getElementById('view_melt-pool');
+  if (viewMeltPool && !viewMeltPool.classList.contains('active')) {
+    if (isMpSimulating) mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
+    return;
+  }
+
   const {
     xBeam, span, halfW, depthPx, spotR, rearHazX, frontHazX, rearX, frontX, midX,
     effV, effP, view, marangoni, pyrometry, isOpticalAborted: aborted
