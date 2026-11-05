@@ -3533,24 +3533,26 @@ function applyBonthaPreset(val) {
   updateMeltPoolAndThermal();
 }
 
-// Teardrop melt pool SVG path generator (front/rear/mid scaling)
-function createTeardropPath(length, width, frontRatio, rearRatio, scale) {
-  const frontX = 680 + frontRatio * length * scale;
-  const rearX = 680 - rearRatio * length * scale;
-  const midX = 680 - 0.16 * length * scale;
+// Teardrop melt pool SVG path generator (front/rear/mid scaling with dynamic center)
+function createTeardropPath(length, width, frontRatio, rearRatio, scale, xCenter, yCenter) {
+  const xc = (typeof xCenter === 'number') ? xCenter : 680;
+  const yc = (typeof yCenter === 'number') ? yCenter : 210.0;
+  const frontX = xc + frontRatio * length * scale;
+  const rearX = xc - rearRatio * length * scale;
+  const midX = xc - 0.16 * length * scale;
   const halfW = (width / 2) * scale;
   const span = length * scale;
   const tailH = Math.min(halfW * 0.35, 22);
   const tailX = rearX + Math.min(span * 0.12, 32);
 
   return [
-    `M ${frontX.toFixed(1)} 210.0`,
-    `C ${frontX.toFixed(1)} ${(210 - halfW * 0.55).toFixed(1)}, ${(midX + 0.18 * span).toFixed(1)} ${(210 - halfW).toFixed(1)}, ${midX.toFixed(1)} ${(210 - halfW).toFixed(1)}`,
-    `C ${(midX - 0.42 * span).toFixed(1)} ${(210 - halfW).toFixed(1)}, ${tailX.toFixed(1)} ${(210 - tailH * 1.5).toFixed(1)}, ${tailX.toFixed(1)} ${(210 - tailH).toFixed(1)}`,
-    `C ${(tailX - 0.5 * (tailX - rearX)).toFixed(1)} ${(210 - tailH).toFixed(1)}, ${rearX.toFixed(1)} ${(210 - tailH * 0.55).toFixed(1)}, ${rearX.toFixed(1)} 210.0`,
-    `C ${rearX.toFixed(1)} ${(210 + tailH * 0.55).toFixed(1)}, ${(tailX - 0.5 * (tailX - rearX)).toFixed(1)} ${(210 + tailH).toFixed(1)}, ${tailX.toFixed(1)} ${(210 + tailH).toFixed(1)}`,
-    `C ${tailX.toFixed(1)} ${(210 + tailH * 1.5).toFixed(1)}, ${(midX - 0.42 * span).toFixed(1)} ${(210 + halfW).toFixed(1)}, ${midX.toFixed(1)} ${(210 + halfW).toFixed(1)}`,
-    `C ${(midX + 0.18 * span).toFixed(1)} ${(210 + halfW).toFixed(1)}, ${frontX.toFixed(1)} ${(210 + halfW * 0.55).toFixed(1)}, ${frontX.toFixed(1)} 210.0`,
+    `M ${frontX.toFixed(1)} ${yc.toFixed(1)}`,
+    `C ${frontX.toFixed(1)} ${(yc - halfW * 0.55).toFixed(1)}, ${(midX + 0.18 * span).toFixed(1)} ${(yc - halfW).toFixed(1)}, ${midX.toFixed(1)} ${(yc - halfW).toFixed(1)}`,
+    `C ${(midX - 0.42 * span).toFixed(1)} ${(yc - halfW).toFixed(1)}, ${tailX.toFixed(1)} ${(yc - tailH * 1.5).toFixed(1)}, ${tailX.toFixed(1)} ${(yc - tailH).toFixed(1)}`,
+    `C ${(tailX - 0.5 * (tailX - rearX)).toFixed(1)} ${(yc - tailH).toFixed(1)}, ${rearX.toFixed(1)} ${(yc - tailH * 0.55).toFixed(1)}, ${rearX.toFixed(1)} ${yc.toFixed(1)}`,
+    `C ${rearX.toFixed(1)} ${(yc + tailH * 0.55).toFixed(1)}, ${(tailX - 0.5 * (tailX - rearX)).toFixed(1)} ${(yc + tailH).toFixed(1)}, ${tailX.toFixed(1)} ${(yc + tailH).toFixed(1)}`,
+    `C ${tailX.toFixed(1)} ${(yc + tailH * 1.5).toFixed(1)}, ${(midX - 0.42 * span).toFixed(1)} ${(yc + halfW).toFixed(1)}, ${midX.toFixed(1)} ${(yc + halfW).toFixed(1)}`,
+    `C ${(midX + 0.18 * span).toFixed(1)} ${(yc + halfW).toFixed(1)}, ${frontX.toFixed(1)} ${(yc + halfW * 0.55).toFixed(1)}, ${frontX.toFixed(1)} ${yc.toFixed(1)}`,
     `Z`
   ].join(' ');
 }
@@ -3686,31 +3688,49 @@ function updateMeltPoolAndThermal() {
   const cPk = document.getElementById('mpCardPeak'); if (cPk) cPk.innerText = peakTemp + '°C';
   const cGr = document.getElementById('mpCardGrowth'); if (cGr) cGr.innerText = growthRate + ' cm/s';
 
-  // 2. Render SVG Layers for Subsection 1 with Intelligent Adaptive Scaling
+  // 2. Render SVG Layers for Subsection 1 with Intelligent Adaptive Scaling & Anti-Collision Layout
   const layers = document.getElementById('mpPlotLayers');
   if (layers) {
-    // Adaptive visual scale so LPBF (300 µm), LENS (2.5 mm), and High-Power DED (25 mm) all render beautifully
-    const maxSpanUm = Math.max(poolLength * 1.15, poolWidth * 2.2, poolDepth * 3.2, 500);
-    const scale = Math.min(0.65, 520.0 / maxSpanUm);
-    const spotR = Math.max(4, Math.min(32, (effSpot / 2) * scale));
+    // Adaptive visual auto-scale across all size-scales: LPBF (300 µm), LENS (2.5 mm), and High-Power DED (25 mm)
+    const maxHazLen = poolLength * 2.2;
+    const maxHazWid = poolWidth * 1.5;
+    const maxHazDep = poolDepth * 1.6;
+
+    const scaleX = 490.0 / Math.max(250, maxHazLen);
+    const scaleY = 150.0 / Math.max(80, maxHazWid);
+    const scaleZ = 160.0 / Math.max(50, maxHazDep);
+    const scale = Math.min(0.75, Math.min(scaleX, Math.min(scaleY, scaleZ)));
+
+    const span = poolLength * scale;
+    const halfW = (poolWidth / 2) * scale;
+    const depthPx = poolDepth * scale;
+    const spotR = Math.max(4, Math.min(28, (effSpot / 2) * scale));
+
+    // Dynamic beam center: keeps the melt pool beautifully centered within canvas X (80 to 860, center=470)
+    const xBeam = Math.max(500, Math.min(680, Math.round(450 + 0.38 * span)));
+    const frontX = xBeam + 0.14 * span;
+    const rearX = xBeam - 0.86 * span;
+    const midX = xBeam - 0.16 * span;
+
+    const frontHazX = xBeam + 0.26 * 1.45 * span;
+    const rearHazX = xBeam - 1.25 * 1.45 * span;
+    const halfWHaz = halfW * 1.48;
+
     let svgHtml = '';
 
     if (mpView === 'surface') {
       // TOP SURFACE (X-Y) PROJECTION
-      const pathLiquid = createTeardropPath(poolLength, poolWidth, 0.14, 0.86, scale);
-      const pathMushy = createTeardropPath(poolLength * 1.15, poolWidth * 1.18, 0.17, 0.98, scale);
-      const pathHaz = createTeardropPath(poolLength * 1.45, poolWidth * 1.48, 0.26, 1.25, scale);
-
-      const frontX = 680 + 0.14 * poolLength * scale;
-      const rearX = 680 - 0.86 * poolLength * scale;
-      const halfW = (poolWidth / 2) * scale;
+      const pathLiquid = createTeardropPath(poolLength, poolWidth, 0.14, 0.86, scale, xBeam, 210.0);
+      const pathMushy = createTeardropPath(poolLength * 1.15, poolWidth * 1.18, 0.17, 0.98, scale, xBeam, 210.0);
+      const pathHaz = createTeardropPath(poolLength * 1.45, poolWidth * 1.48, 0.26, 1.25, scale, xBeam, 210.0);
 
       if (mpGrid) {
         svgHtml += `<g class="grid-lines" opacity="${mpHighGrid ? '0.9' : '0.5'}">`;
         const gridStep = isDedRegime ? (effP >= 1000 ? 5000 : 500) : (mpHighGrid ? 100 : 200);
-        const minXGrid = -Math.ceil((poolLength * 1.25) / gridStep) * gridStep;
-        for (let x = Math.max(-80000, minXGrid); x <= gridStep * 2; x += gridStep) {
-          const px = 680 + x * scale;
+        const minXGrid = -Math.ceil((poolLength * 1.5) / gridStep) * gridStep;
+        const maxXGrid = Math.ceil((poolLength * 0.6) / gridStep) * gridStep;
+        for (let x = Math.max(-80000, minXGrid); x <= Math.min(80000, maxXGrid); x += gridStep) {
+          const px = xBeam + x * scale;
           if (px >= 85 && px <= 860) {
             svgHtml += `<line x1="${px}" y1="45" x2="${px}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
             const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
@@ -3724,7 +3744,7 @@ function updateMeltPoolAndThermal() {
           }
         }
         svgHtml += `<line x1="80" y1="210" x2="860" y2="210" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="6 3" opacity="0.8"/>`;
-        svgHtml += `<line x1="680" y1="45" x2="680" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;
+        svgHtml += `<line x1="${xBeam}" y1="45" x2="${xBeam}" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;
         svgHtml += `<text x="470" y="413" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">Longitudinal Distance from Laser Center x (µm / mm)</text>`;
         svgHtml += `<text x="24" y="210" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" transform="rotate(-90 24 210)" font-family="monospace">Transverse Width y</text>`;
         svgHtml += `</g>`;
@@ -3735,33 +3755,47 @@ function updateMeltPoolAndThermal() {
       svgHtml += `<path d="${pathMushy}" fill="url(#mushyHatch)" opacity="0.8"/>`;
       svgHtml += `<path d="${pathLiquid}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.5" filter="url(#cyanGlow)"/>`;
 
+      // Incident Beam Spot Center
       svgHtml += `
         <g class="laser-beam">
-          <circle cx="680" cy="210" r="${spotR}" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="3 2" opacity="0.85"/>
-          <line x1="${680 - spotR - 6}" y1="210" x2="${680 + spotR + 6}" y2="210" stroke="#ffffff" stroke-width="1"/>
-          <line x1="680" y1="${210 - spotR - 6}" x2="680" y2="${210 + spotR + 6}" stroke="#ffffff" stroke-width="1"/>
-          <circle cx="680" cy="210" r="3" fill="#ffeb3b"/>
-          <text x="685" y="195" fill="#38bdf8" font-size="11" font-family="monospace">${bonthaSource === 'ebeam' ? 'Beam' : 'Laser'} Scan Direction v → (${effVDisplay})</text>
-          <line x1="645" y1="202" x2="725" y2="202" stroke="#38bdf8" stroke-width="1.8"/>
-          <polygon points="725,202 717,198 717,206" fill="#38bdf8"/>
+          <circle cx="${xBeam}" cy="210" r="${spotR}" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="3 2" opacity="0.85"/>
+          <line x1="${xBeam - spotR - 6}" y1="210" x2="${xBeam + spotR + 6}" y2="210" stroke="#ffffff" stroke-width="1"/>
+          <line x1="${xBeam}" y1="${210 - spotR - 6}" x2="${xBeam}" y2="${210 + spotR + 6}" stroke="#ffffff" stroke-width="1"/>
+          <circle cx="${xBeam}" cy="210" r="3" fill="#ffeb3b"/>
+        </g>
+      `;
+
+      // Scan Direction Indicator Vector (Forward of the melt pool nose - zero collision!)
+      const scanArrowX1 = Math.min(760, Math.max(frontX + 16, frontHazX + 10));
+      const scanArrowX2 = Math.min(845, scanArrowX1 + 52);
+      svgHtml += `
+        <g class="scan-arrow-xy">
+          <line x1="${scanArrowX1}" y1="210" x2="${scanArrowX2}" y2="210" stroke="#38bdf8" stroke-width="2"/>
+          <polygon points="${scanArrowX2},210 ${scanArrowX2 - 7},206 ${scanArrowX2 - 7},214" fill="#38bdf8"/>
+          <text x="${(scanArrowX1 + scanArrowX2) / 2}" y="196" fill="#38bdf8" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">v → ${effVDisplay}</text>
+          <text x="${(scanArrowX1 + scanArrowX2) / 2}" y="226" fill="#64748b" font-size="8.5" font-family="monospace" text-anchor="middle">Scan Direction</text>
         </g>
       `;
 
       if (mpDims) {
+        // Width W dimension line (Badge positioned cleanly above the melt pool top boundary)
         const wY1 = 210 - halfW;
         const wY2 = 210 + halfW;
-        const wX = 680 - 0.16 * poolLength * scale;
+        const wX = midX;
+        const wBadgeY = Math.max(68, 210 - halfW - 14);
         svgHtml += `
           <g class="dim-width">
             <line x1="${wX}" y1="${wY1}" x2="${wX}" y2="${wY2}" stroke="#00f7ff" stroke-width="1.5"/>
             <polygon points="${wX},${wY1} ${wX - 3.5},${wY1 + 7} ${wX + 3.5},${wY1 + 7}" fill="#00f7ff"/>
             <polygon points="${wX},${wY2} ${wX - 3.5},${wY2 - 7} ${wX + 3.5},${wY2 - 7}" fill="#00f7ff"/>
-            <rect x="${wX - 75}" y="200" width="150" height="20" rx="10" fill="#070c14" stroke="#00f7ff" stroke-width="1"/>
-            <text x="${wX}" y="214" fill="#00f7ff" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Width W = ${poolWidth >= 10000 ? (poolWidth/1000).toFixed(1) + ' mm' : poolWidth + ' µm'}</text>
+            <rect x="${wX - 75}" y="${wBadgeY - 10}" width="150" height="20" rx="10" fill="#070c14" stroke="#00f7ff" stroke-width="1"/>
+            <text x="${wX}" y="${wBadgeY + 4}" fill="#00f7ff" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Width W = ${poolWidth >= 10000 ? (poolWidth/1000).toFixed(1) + ' mm' : poolWidth + ' µm'}</text>
           </g>
         `;
 
-        const lY = 285;
+        // Length L dimension line (Dynamically placed below the bottom HAZ border)
+        const bottomHazY = 210 + halfWHaz;
+        const lY = Math.min(352, Math.max(270, bottomHazY + 22));
         svgHtml += `
           <g class="dim-length">
             <line x1="${rearX}" y1="${lY}" x2="${frontX}" y2="${lY}" stroke="#50d8e9" stroke-width="1.5"/>
@@ -3774,32 +3808,31 @@ function updateMeltPoolAndThermal() {
       }
 
       if (mpCallouts) {
+        // 1. Incident Laser Beam Center Callout (Top Right)
+        const beamCalloutX = Math.min(680, Math.max(510, xBeam + 15));
         svgHtml += `
-          <rect x="670" y="24" width="180" height="34" rx="6" fill="#080e18" stroke="#38bdf8" stroke-width="1.2"/>
-          <text x="680" y="38" fill="#ffffff" font-size="10.5" font-weight="bold">🎯 ${effSourceLabel} Center</text>
-          <text x="680" y="51" fill="#38bdf8" font-size="9.5" font-family="monospace">Spot ∅ = ${effSpot} µm | P = ${effPDisplay}</text>
-          <line x1="680" y1="58" x2="680" y2="195" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect x="${beamCalloutX}" y="16" width="180" height="34" rx="6" fill="#080e18" stroke="#38bdf8" stroke-width="1.2"/>
+          <text x="${beamCalloutX + 10}" y="30" fill="#ffffff" font-size="10.5" font-weight="bold">🎯 ${effSourceLabel} Center</text>
+          <text x="${beamCalloutX + 10}" y="43" fill="#38bdf8" font-size="9.5" font-family="monospace">Spot ∅ = ${effSpot} µm | P = ${effPDisplay}</text>
+          <line x1="${beamCalloutX + 20}" y1="50" x2="${xBeam}" y2="${210 - spotR - 4}" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3 3"/>
 
-          <rect x="370" y="22" width="180" height="34" rx="6" fill="#080e18" stroke="#00f7ff" stroke-width="1.2"/>
-          <text x="380" y="36" fill="#ffffff" font-size="10.5" font-weight="bold">💧 Molten Pool (Liquid)</text>
-          <text x="380" y="49" fill="#00f7ff" font-size="9.5" font-family="monospace">T ≥ 1650°C | Fully Molten Metal</text>
-          <line x1="450" y1="56" x2="${680 - 0.25 * poolLength * scale}" y2="${210 - halfW * 0.4}" stroke="#00f7ff" stroke-width="1" stroke-dasharray="3 3"/>
+          <!-- 2. Molten Pool (Liquid) Callout (Top Left) -->
+          <rect x="${poolCalloutX}" y="16" width="180" height="34" rx="6" fill="#080e18" stroke="#00f7ff" stroke-width="1.2"/>
+          <text x="${poolCalloutX + 10}" y="30" fill="#ffffff" font-size="10.5" font-weight="bold">💧 Molten Pool (Liquid)</text>
+          <text x="${poolCalloutX + 10}" y="43" fill="#00f7ff" font-size="9.5" font-family="monospace">T ≥ 1650°C | Fully Molten Metal</text>
+          <line x1="${poolCalloutX + 90}" y1="50" x2="${(xBeam - 0.28 * span).toFixed(1)}" y2="${(210 - halfW).toFixed(1)}" stroke="#00f7ff" stroke-width="1" stroke-dasharray="3 3"/>
 
-          <rect x="175" y="332" width="195" height="34" rx="6" fill="#080e18" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="4 2"/>
-          <text x="185" y="346" fill="#ffffff" font-size="10.5" font-weight="bold">❄️ Mushy Solidification Zone</text>
-          <text x="185" y="359" fill="#cbd5e1" font-size="9" font-family="monospace">1600°C ≤ T < 1650°C | Dendrites</text>
-          <line x1="267" y1="332" x2="${rearX + 20}" y2="218" stroke="#ffffff" stroke-width="1" stroke-dasharray="3 3"/>
+          <!-- 3. Mushy Solidification Zone Callout (Bottom Left) -->
+          <rect x="95" y="328" width="195" height="34" rx="6" fill="#080e18" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="4 2"/>
+          <text x="105" y="342" fill="#ffffff" font-size="10.5" font-weight="bold">❄️ Mushy Solidification Zone</text>
+          <text x="105" y="355" fill="#cbd5e1" font-size="9" font-family="monospace">1600°C ≤ T < 1650°C | Dendrites</text>
+          <line x1="192" y1="328" x2="${(rearX - 0.08 * span).toFixed(1)}" y2="${Math.min(265, 210 + halfW * 0.4).toFixed(1)}" stroke="#ffffff" stroke-width="1" stroke-dasharray="3 3"/>
         `;
       }
 
     } else {
       // LONGITUDINAL (X-Z) PROJECTION
       const zSurface = 145;
-      const depthPx = poolDepth * scale;
-      const span = poolLength * scale;
-      const frontX = 680 + 0.14 * poolLength * scale;
-      const rearX = 680 - 0.86 * poolLength * scale;
-      const midX = 680 - 0.16 * poolLength * scale;
       const powderH = Math.max(8, t * scale);
 
       svgHtml += `<rect x="80" y="${zSurface}" width="780" height="230" fill="#0a1222" fill-opacity="0.6"/>`;
@@ -3807,16 +3840,17 @@ function updateMeltPoolAndThermal() {
       if (mpGrid) {
         svgHtml += `<g class="grid-lines" opacity="${mpHighGrid ? '0.9' : '0.5'}">`;
         const gridStep = isDedRegime ? (effP >= 1000 ? 5000 : 500) : (mpHighGrid ? 100 : 200);
-        const minXGrid = -Math.ceil((poolLength * 1.25) / gridStep) * gridStep;
-        for (let x = Math.max(-80000, minXGrid); x <= gridStep * 2; x += gridStep) {
-          const px = 680 + x * scale;
+        const minXGrid = -Math.ceil((poolLength * 1.5) / gridStep) * gridStep;
+        const maxXGrid = Math.ceil((poolLength * 0.6) / gridStep) * gridStep;
+        for (let x = Math.max(-80000, minXGrid); x <= Math.min(80000, maxXGrid); x += gridStep) {
+          const px = xBeam + x * scale;
           if (px >= 85 && px <= 860) {
             svgHtml += `<line x1="${px}" y1="45" x2="${px}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
             const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
             svgHtml += `<text x="${px}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
           }
         }
-        svgHtml += `<line x1="680" y1="${zSurface}" x2="680" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;
+        svgHtml += `<line x1="${xBeam}" y1="${zSurface}" x2="${xBeam}" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;
         svgHtml += `<text x="470" y="413" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">Longitudinal Distance from Laser Center x (µm / mm)</text>`;
         svgHtml += `</g>`;
       }
@@ -3834,22 +3868,32 @@ function updateMeltPoolAndThermal() {
         <text x="24" y="260" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" transform="rotate(-90 24 260)" font-family="monospace">Penetration Depth z (µm)</text>
       `;
 
-      const pathLiquidZ = `M ${frontX} ${zSurface} C ${frontX} ${zSurface + depthPx * 0.7}, ${midX + 0.15 * span} ${zSurface + depthPx}, ${midX} ${zSurface + depthPx} C ${midX - 0.3 * span} ${zSurface + depthPx}, ${rearX + 0.15 * span} ${zSurface + depthPx * 0.4}, ${rearX} ${zSurface} Z`;
-      const pathMushyZ = `M ${frontX + 0.03 * span} ${zSurface} C ${frontX + 0.03 * span} ${zSurface + depthPx * 0.85}, ${midX + 0.18 * span} ${zSurface + depthPx * 1.25}, ${midX} ${zSurface + depthPx * 1.25} C ${midX - 0.32 * span} ${zSurface + depthPx * 1.25}, ${rearX - 0.15 * span} ${zSurface + depthPx * 0.5}, ${rearX - 0.15 * span} ${zSurface} Z`;
-      const pathHazZ = `M ${frontX + 0.08 * span} ${zSurface} C ${frontX + 0.08 * span} ${zSurface + depthPx * 0.95}, ${midX + 0.2 * span} ${zSurface + depthPx * 1.55}, ${midX} ${zSurface + depthPx * 1.55} C ${midX - 0.35 * span} ${zSurface + depthPx * 1.55}, ${rearX - 0.3 * span} ${zSurface + depthPx * 0.6}, ${rearX - 0.3 * span} ${zSurface} Z`;
+      const pathLiquidZ = `M ${frontX.toFixed(1)} ${zSurface} C ${frontX.toFixed(1)} ${(zSurface + depthPx * 0.7).toFixed(1)}, ${(midX + 0.15 * span).toFixed(1)} ${(zSurface + depthPx).toFixed(1)}, ${midX.toFixed(1)} ${(zSurface + depthPx).toFixed(1)} C ${(midX - 0.3 * span).toFixed(1)} ${(zSurface + depthPx).toFixed(1)}, ${(rearX + 0.15 * span).toFixed(1)} ${(zSurface + depthPx * 0.4).toFixed(1)}, ${rearX.toFixed(1)} ${zSurface} Z`;
+      const pathMushyZ = `M ${(frontX + 0.03 * span).toFixed(1)} ${zSurface} C ${(frontX + 0.03 * span).toFixed(1)} ${(zSurface + depthPx * 0.85).toFixed(1)}, ${(midX + 0.18 * span).toFixed(1)} ${(zSurface + depthPx * 1.25).toFixed(1)}, ${midX.toFixed(1)} ${(zSurface + depthPx * 1.25).toFixed(1)} C ${(midX - 0.32 * span).toFixed(1)} ${(zSurface + depthPx * 1.25).toFixed(1)}, ${(rearX - 0.15 * span).toFixed(1)} ${(zSurface + depthPx * 0.5).toFixed(1)}, ${(rearX - 0.15 * span).toFixed(1)} ${zSurface} Z`;
+      const pathHazZ = `M ${(frontX + 0.08 * span).toFixed(1)} ${zSurface} C ${(frontX + 0.08 * span).toFixed(1)} ${(zSurface + depthPx * 0.95).toFixed(1)}, ${(midX + 0.2 * span).toFixed(1)} ${(zSurface + depthPx * 1.55).toFixed(1)}, ${midX.toFixed(1)} ${(zSurface + depthPx * 1.55).toFixed(1)} C ${(midX - 0.35 * span).toFixed(1)} ${(zSurface + depthPx * 1.55).toFixed(1)}, ${(rearX - 0.3 * span).toFixed(1)} ${(zSurface + depthPx * 0.6).toFixed(1)}, ${(rearX - 0.3 * span).toFixed(1)} ${zSurface} Z`;
 
       svgHtml += `<path d="${pathHazZ}" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.6"/>`;
       svgHtml += `<path d="${pathMushyZ}" fill="rgba(239, 68, 68, 0.22)" stroke="#ffffff" stroke-width="1.8" stroke-dasharray="5 3"/>`;
       svgHtml += `<path d="${pathLiquidZ}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.5" filter="url(#cyanGlow)"/>`;
 
+      // Incident Beam Column
       svgHtml += `
         <g class="incident-laser">
-          <polygon points="656,48 704,48 ${680 + spotR},${zSurface} ${680 - spotR},${zSurface}" fill="url(#laserBeamIncident)" opacity="0.85"/>
-          <circle cx="680" cy="${zSurface}" r="${spotR * 1.2}" fill="#ffffff" stroke="#ffeb3b" stroke-width="2"/>
-          <text x="680" y="32" fill="#ffeb3b" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">${effSourceLabel} (P = ${effPDisplay})</text>
-          <line x1="635" y1="42" x2="725" y2="42" stroke="#38bdf8" stroke-width="1.8"/>
-          <polygon points="725,42 717,38 717,46" fill="#38bdf8"/>
-          <text x="680" y="56" fill="#38bdf8" font-size="10" font-family="monospace" text-anchor="middle">Scan Direction v → (${effVDisplay})</text>
+          <polygon points="${xBeam - 24},48 ${xBeam + 24},48 ${xBeam + spotR},${zSurface} ${xBeam - spotR},${zSurface}" fill="url(#laserBeamIncident)" opacity="0.85"/>
+          <circle cx="${xBeam}" cy="${zSurface}" r="${spotR * 1.2}" fill="#ffffff" stroke="#ffeb3b" stroke-width="2"/>
+          <text x="${xBeam}" y="32" fill="#ffeb3b" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">${effSourceLabel} (P = ${effPDisplay})</text>
+        </g>
+      `;
+
+      // Scan Direction Arrow in X-Z view (To the right of the laser beam - zero collision!)
+      const scanZ_X1 = Math.min(760, xBeam + Math.max(spotR + 15, 36));
+      const scanZ_X2 = Math.min(840, scanZ_X1 + 50);
+      svgHtml += `
+        <g class="scan-arrow-xz">
+          <line x1="${scanZ_X1}" y1="56" x2="${scanZ_X2}" y2="56" stroke="#38bdf8" stroke-width="1.8"/>
+          <polygon points="${scanZ_X2},56 ${scanZ_X2 - 6},52 ${scanZ_X2 - 6},60" fill="#38bdf8"/>
+          <text x="${(scanZ_X1 + scanZ_X2) / 2}" y="46" fill="#38bdf8" font-size="9.5" font-family="monospace" text-anchor="middle">v → ${effVDisplay}</text>
+          <text x="${(scanZ_X1 + scanZ_X2) / 2}" y="70" fill="#64748b" font-size="8.5" font-family="monospace" text-anchor="middle">Scan Direction</text>
         </g>
       `;
 
@@ -3857,33 +3901,46 @@ function updateMeltPoolAndThermal() {
         const dY1 = zSurface;
         const dY2 = zSurface + depthPx;
         const dX = midX;
+        const depthText = (poolDepth >= 10000 ? (poolDepth/1000).toFixed(1) + ' mm' : poolDepth + ' µm') + ' (' + (poolDepth/1000).toFixed(2) + ' mm)';
         svgHtml += `
           <g class="dim-depth">
             <line x1="${dX}" y1="${dY1}" x2="${dX}" y2="${dY2}" stroke="#50d8e9" stroke-width="1.5"/>
             <polygon points="${dX},${dY1} ${dX - 3.5},${dY1 + 7} ${dX + 3.5},${dY1 + 7}" fill="#50d8e9"/>
             <polygon points="${dX},${dY2} ${dX - 3.5},${dY2 - 7} ${dX + 3.5},${dY2 - 7}" fill="#50d8e9"/>
-            <rect x="${dX - 100}" y="${dY1 + depthPx / 2 - 11}" width="200" height="22" rx="11" fill="#070c14" stroke="#50d8e9" stroke-width="1.2"/>
-            <text x="${dX}" y="${dY1 + depthPx / 2 + 4}" fill="#50d8e9" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Depth zm = ${poolDepth >= 10000 ? (poolDepth/1000).toFixed(1) + ' mm' : poolDepth + ' µm'} (${(poolDepth/1000).toFixed(2)} mm)</text>
-          </g>
         `;
+        if (depthPx < 45) {
+          svgHtml += `
+            <rect x="${dX - 185}" y="${dY1 + depthPx / 2 - 11}" width="180" height="22" rx="11" fill="#070c14" stroke="#50d8e9" stroke-width="1.2"/>
+            <text x="${dX - 95}" y="${dY1 + depthPx / 2 + 4}" fill="#50d8e9" font-size="10.5" font-weight="bold" text-anchor="middle" font-family="monospace">Depth zm = ${depthText}</text>
+          `;
+        } else {
+          svgHtml += `
+            <rect x="${dX - 100}" y="${dY1 + depthPx / 2 - 11}" width="200" height="22" rx="11" fill="#070c14" stroke="#50d8e9" stroke-width="1.2"/>
+            <text x="${dX}" y="${dY1 + depthPx / 2 + 4}" fill="#50d8e9" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Depth zm = ${depthText}</text>
+          `;
+        }
+        svgHtml += `</g>`;
 
-        const lY = 120;
+        // Length L dimension line (Placed cleanly below HAZ depth - no overlap with laser beam!)
+        const bottomZ = zSurface + depthPx * 1.55;
+        const lZ_Y = Math.min(355, Math.max(260, bottomZ + 22));
         svgHtml += `
           <g class="dim-length-xz">
-            <line x1="${rearX}" y1="${lY}" x2="${frontX}" y2="${lY}" stroke="#8ba2be" stroke-width="1.2"/>
-            <polygon points="${rearX},${lY} ${rearX + 7},${lY - 3.5} ${rearX + 7},${lY + 3.5}" fill="#8ba2be"/>
-            <polygon points="${frontX},${lY} ${frontX - 7},${lY - 3.5} ${frontX - 7},${lY + 3.5}" fill="#8ba2be"/>
-            <rect x="${(rearX + frontX) / 2 - 80}" y="109" width="160" height="22" rx="11" fill="#070c14" stroke="#8ba2be" stroke-width="1"/>
-            <text x="${(rearX + frontX) / 2}" y="124" fill="#cbd5e1" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Length L = ${poolLength >= 10000 ? (poolLength/1000).toFixed(1) + ' mm' : poolLength + ' µm'}</text>
+            <line x1="${rearX}" y1="${lZ_Y}" x2="${frontX}" y2="${lZ_Y}" stroke="#50d8e9" stroke-width="1.5"/>
+            <polygon points="${rearX},${lZ_Y} ${rearX + 7},${lZ_Y - 3.5} ${rearX + 7},${lZ_Y + 3.5}" fill="#50d8e9"/>
+            <polygon points="${frontX},${lZ_Y} ${frontX - 7},${lZ_Y - 3.5} ${frontX - 7},${lZ_Y + 3.5}" fill="#50d8e9"/>
+            <rect x="${(rearX + frontX) / 2 - 110}" y="${lZ_Y - 11}" width="220" height="22" rx="11" fill="#070c14" stroke="#50d8e9" stroke-width="1.2"/>
+            <text x="${(rearX + frontX) / 2}" y="${lZ_Y + 4}" fill="#50d8e9" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Length L = ${poolLength >= 10000 ? (poolLength/1000).toFixed(1) + ' mm' : poolLength + ' µm'} (${(poolLength/1000).toFixed(2)} mm)</text>
           </g>
         `;
       }
 
       if (mpCallouts) {
+        // Aspect ratio badge (Placed in top-left air space above substrate - zero collision!)
         svgHtml += `
-          <rect x="95" y="180" width="200" height="44" rx="8" fill="#070c14" stroke="#1e293b" stroke-width="1.2"/>
-          <text x="105" y="198" fill="#94a3b8" font-size="11" font-weight="600">Melt Pool Aspect Ratio (d/W)</text>
-          <text x="105" y="214" fill="${parseFloat(aspect) > 0.8 ? '#f43f5e' : '#10b981'}" font-size="12" font-weight="bold" font-family="monospace">${aspect} — ${parseFloat(aspect) > 0.8 ? 'Keyhole Mode' : 'Conduction Mode'}</text>
+          <rect x="95" y="60" width="200" height="44" rx="8" fill="#070c14" stroke="#1e293b" stroke-width="1.2"/>
+          <text x="105" y="78" fill="#94a3b8" font-size="11" font-weight="600">Melt Pool Aspect Ratio (d/W)</text>
+          <text x="105" y="94" fill="${parseFloat(aspect) > 0.8 ? '#f43f5e' : '#10b981'}" font-size="12" font-weight="bold" font-family="monospace">${aspect} — ${parseFloat(aspect) > 0.8 ? 'Keyhole Mode' : 'Conduction Mode'}</text>
         `;
       }
     }
