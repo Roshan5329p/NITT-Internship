@@ -236,7 +236,7 @@ public class AmPlatformApplication {
                 String path = exchange.getRequestURI().getPath();
 
                 // Main Website: Standalone interactive process windows dashboard
-                if (path.equals("/") || path.equals("/dashboard") || path.equals("/dashboard.html")) {
+                if (path.equals("/") || path.equals("/dashboard") || path.equals("/dashboard/") || path.equals("/dashboard.html")) {
                     Path htmlFile = Paths.get(workspaceDir, "process_windows_dashboard.html");
                     if (Files.exists(htmlFile)) {
                         serveFile(exchange, htmlFile, "text/html; charset=UTF-8");

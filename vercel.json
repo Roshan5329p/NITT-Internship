@@ -25,31 +25,31 @@
   ],
   "routes": [
     {
-      "src": "/api/stats",
+      "src": "/api/stats/?",
       "dest": "/api/stats.js"
     },
     {
-      "src": "/api/evaluate",
+      "src": "/api/evaluate/?",
       "dest": "/api/evaluate.js"
     },
     {
-      "src": "/api/meltpool",
+      "src": "/api/meltpool/?",
       "dest": "/api/meltpool.js"
     },
     {
-      "src": "/api/bontha",
+      "src": "/api/bontha/?",
       "dest": "/api/bontha.js"
     },
     {
-      "src": "/api/materials",
+      "src": "/api/materials/?",
       "dest": "/api/materials.js"
     },
     {
-      "src": "/api/papers",
+      "src": "/api/papers/?",
       "dest": "/api/papers.js"
     },
     {
-      "src": "/api/scopus",
+      "src": "/api/scopus/?",
       "dest": "/api/scopus.js"
     },
     {
@@ -65,7 +65,7 @@
       "dest": "/docs/$1"
     },
     {
-      "src": "/dashboard",
+      "src": "/dashboard/?",
       "dest": "/process_windows_dashboard.html"
     },
     {

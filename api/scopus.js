@@ -1,15 +1,20 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') { res.status(204).end(); return; }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   res.setHeader('Content-Type', 'application/json');
 
   try {
+    const q = req.query || {};
     const apiKey = process.env.SCOPUS_API_KEY || 'c4c5b696cfd9e5c3ad43a784c60b75a5';
-    const query = req.query.query || 'TITLE-ABS-KEY("Ti-6Al-4V" AND ("selective laser melting" OR "LPBF" OR "additive manufacturing") AND ("solidification" OR "melt pool"))';
-    const count = Math.min(parseInt(req.query.count) || 10, 25);
-    const sort = req.query.sort || 'citedby-count';
+    const query = q.query || 'TITLE-ABS-KEY("Ti-6Al-4V" AND ("selective laser melting" OR "LPBF" OR "additive manufacturing") AND ("solidification" OR "melt pool"))';
+    const count = Math.min(parseInt(q.count) || 10, 25);
+    const sort = q.sort || 'citedby-count';
 
     const url = `https://api.elsevier.com/content/search/scopus?query=${encodeURIComponent(query)}&count=${count}&sort=${encodeURIComponent(sort)}&view=STANDARD`;
 

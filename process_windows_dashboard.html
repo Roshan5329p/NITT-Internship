@@ -1401,7 +1401,7 @@
           <div class="lit-strip-sub">Explore indexed publications, parameter envelopes, reported properties, and ASTM qualification compliance.</div>
         </div>
       </div>
-      <button class="lit-strip-btn" onclick="switchTab('literature', document.querySelectorAll('.tab-btn')[6])">Open Evidence & Gaps Hub →</button>
+      <button class="lit-strip-btn" onclick="openEvidenceHub()">Open Evidence & Gaps Hub →</button>
     </div>
 
     <!-- TAB 1: PREDICTIONS VIEW (DEFAULT) -->
@@ -2717,29 +2717,45 @@ function hvToHrcStandard(hv) {
 }
 
 function calculatePhysics() {
-  const alloy = ALLOY_DATA[currentAlloy] || ALLOY_DATA.ti64_gr5;
-  const p = parseFloat(document.getElementById('sl_p').value);
-  const v = parseFloat(document.getElementById('sl_v').value);
-  const h = parseFloat(document.getElementById('sl_h').value);
-  const t = parseFloat(document.getElementById('sl_t').value);
-  const spot = parseFloat(document.getElementById('sl_spot').value);
-  const preheat = parseFloat(document.getElementById('sl_preheat').value);
-  const post = document.getElementById('postProcessingSelect').value;
+  const alloy = (typeof ALLOY_DATA !== 'undefined' && ALLOY_DATA[currentAlloy]) ? ALLOY_DATA[currentAlloy] : (ALLOY_DATA?.ti64_gr5 || {
+    name: "Ti-6Al-4V (Grade 5)", density: 4430, specificHeat: 526, thermalConductivity: 6.7, liquidusC: 1668,
+    betaTransusC: 995, baseHardnessHV: 345, nominalUTS: 950, hallPetchSlope: 68, laserAbsorptivity: 0.448,
+    cellSpacingFactor: 18.5, cellSpacingExponent: 0.38
+  });
+  const elP = document.getElementById('sl_p');
+  const elV = document.getElementById('sl_v');
+  const elH = document.getElementById('sl_h');
+  const elT = document.getElementById('sl_t');
+  const elSpot = document.getElementById('sl_spot');
+  const elPreheat = document.getElementById('sl_preheat');
+  const elPost = document.getElementById('postProcessingSelect');
+
+  const p = elP ? parseFloat(elP.value) : 280;
+  const v = elV ? parseFloat(elV.value) : 960;
+  const h = elH ? parseFloat(elH.value) : 110;
+  const t = elT ? parseFloat(elT.value) : 40;
+  const spot = elSpot ? parseFloat(elSpot.value) : 80;
+  const preheat = elPreheat ? parseFloat(elPreheat.value) : 200;
+  const post = elPost ? elPost.value : 'HIP';
+
+  // Null-safe DOM text & HTML setters
+  const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
+  const setHtm = (id, htm) => { const el = document.getElementById(id); if (el) el.innerHTML = htm; };
 
   // Synchronize displays
-  document.getElementById('val_p').innerText = p + ' W';
-  document.getElementById('val_v').innerText = v + ' mm/s';
-  document.getElementById('val_h').innerText = h + ' µm';
-  document.getElementById('val_t').innerText = t + ' µm';
-  document.getElementById('val_spot').innerText = spot + ' µm';
-  document.getElementById('val_preheat').innerText = preheat + ' °C';
+  setTxt('val_p', p + ' W');
+  setTxt('val_v', v + ' mm/s');
+  setTxt('val_h', h + ' µm');
+  setTxt('val_t', t + ' µm');
+  setTxt('val_spot', spot + ' µm');
+  setTxt('val_preheat', preheat + ' °C');
 
   // 1. Volumetric Energy Density (J/mm^3)
-  const ved = (p * 1e6) / (v * h * t);
-  document.getElementById('kpi_ved').innerText = ved.toFixed(1) + ' J/mm³';
+  const ved = (p * 1e6) / Math.max(1, v * h * t);
+  setTxt('kpi_ved', ved.toFixed(1) + ' J/mm³');
 
   // 2. Melt pool physics (Analytical Rosenthal 3D)
-  const vMs = v / 1000.0;
+  const vMs = Math.max(0.001, v / 1000.0);
   const eta = alloy.laserAbsorptivity;
   const effectivePower = p * eta;
   const deltaT = Math.max(50, alloy.liquidusC - preheat);
@@ -2843,7 +2859,7 @@ function calculatePhysics() {
   const elongationPct = Math.max(1.0, Math.min(22.0, baseElongation * poreKnockdown * lofDuctilityPenalty * keyholeDuctilityPenalty));
 
   // Dynamic Interstitial Oxygen Content (Grade 5: < 0.20 wt. %, Grade 23 ELI: < 0.13 wt. %)
-  const isEli = (currentAlloy === 'ti64_gr23' || (alloy.name && alloy.name.includes('ELI')));
+  const isEli = (currentAlloy === 'ti64_eli' || currentAlloy === 'ti64_gr23' || (alloy.name && alloy.name.includes('ELI')));
   const baseO2 = isEli ? 0.105 : 0.160;
   const o2Pickup = 0.00015 * Math.min(180, ved); // Thermal chamber pickup proportional to energy density
   const o2Content = parseFloat((baseO2 + o2Pickup).toFixed(3));
@@ -3161,12 +3177,25 @@ function generateAuditReport() {
 }
 
 // ==========================================
-// 4. TAB NAVIGATION
+// 4. TAB NAVIGATION & EVIDENCE HUB ROUTING
 // ==========================================
 function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+  
+  let targetBtn = btn;
+  if (!targetBtn) {
+    if (tabId === 'literature') {
+      targetBtn = document.getElementById('navBtnLit');
+    } else {
+      const tabOrder = ['predictions', 'process-map', 'defect-map', 'economics', 'digital-twin', 'qualification', 'melt-pool', 'literature'];
+      const idx = tabOrder.indexOf(tabId);
+      if (idx !== -1) {
+        targetBtn = document.querySelectorAll('.tab-btn')[idx];
+      }
+    }
+  }
+  if (targetBtn) targetBtn.classList.add('active');
   const targetView = document.getElementById('view_' + tabId);
   if (targetView) targetView.classList.add('active');
 
@@ -3175,7 +3204,13 @@ function switchTab(tabId, btn) {
   }
   if (tabId === 'melt-pool') {
     updateMeltPoolAndThermal();
+    ensureMpAnimationRunning();
   }
+}
+
+function openEvidenceHub() {
+  const litNavBtn = document.getElementById('navBtnLit') || document.querySelectorAll('.tab-btn')[7];
+  switchTab('literature', litNavBtn);
 }
 
 // ==========================================
@@ -3317,6 +3352,11 @@ function getColor(normalizedVal, mode) {
 }
 
 function renderTwin() {
+  const viewTwin = document.getElementById('view_digital-twin');
+  if (viewTwin && !viewTwin.classList.contains('active')) {
+    animFrameId = null;
+    return;
+  }
   const w = canvas.width;
   const h = canvas.height;
   ctx.clearRect(0, 0, w, h);
@@ -3489,6 +3529,7 @@ function populatePapersTable(papers) {
 
 let currentProcessFilter = 'ALL';
 let livePapersCatalog = [];
+let filteredPapers = [];
 
 function filterByProcess(proc, btn) {
   currentProcessFilter = proc;
@@ -3500,14 +3541,14 @@ function filterByProcess(proc, btn) {
 function filterPapersTable() {
   const q = (document.getElementById('paperSearchInput')?.value || '').toLowerCase();
   const sourceList = (livePapersCatalog && livePapersCatalog.length > 0) ? livePapersCatalog : PAPERS_DATABASE;
-  const filtered = sourceList.filter(p => {
+  filteredPapers = sourceList.filter(p => {
     const matchesText = !q || p.author.toLowerCase().includes(q) ||
       p.process.toLowerCase().includes(q) ||
       p.desc.toLowerCase().includes(q);
     const matchesProcess = (currentProcessFilter === 'ALL') || p.process.toUpperCase().includes(currentProcessFilter);
     return matchesText && matchesProcess;
   });
-  populatePapersTable(filtered);
+  populatePapersTable(filteredPapers);
 }
 
 // ==========================================
@@ -5252,6 +5293,7 @@ async function initSupabaseCloudSync() {
     const res = await fetch(`${SUPABASE_CLOUD_URL}/rest/v1/papers?select=id,paper_number,title,authors,year,am_process,material,abstract&paper_number=lte.154&order=paper_number.asc`, {
       headers: {
         'apikey': SUPABASE_CLOUD_KEY,
+        'Authorization': `Bearer ${SUPABASE_CLOUD_KEY}`,
         'Range': '0-199',
         'Prefer': 'count=exact'
       }
