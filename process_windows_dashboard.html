@@ -4148,9 +4148,14 @@ function updateMeltPoolAndThermal() {
       if (mpPyrometry && !isOpticalAborted) {
         const pathMs = createTeardropPath(poolLength * 1.82, poolWidth * 1.85, 0.35, 1.55, scale, xBeam, 210.0);
         svgHtml += `<path d="${pathMs}" fill="none" stroke="#a855f7" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.75"/>`;
-        const msLblX = Math.max(95, Math.min(xBeam - 120, rearMsX + 15));
-        const msLblY = Math.max(96, Math.round(210 - halfW * 1.85 - 6));
-        svgHtml += `<text x="${msLblX.toFixed(1)}" y="${msLblY.toFixed(1)}" fill="#c084fc" font-size="9" font-family="monospace">Ms (575°C) Martensite Start</text>`;
+        const msLblX = Math.max(95, Math.min(xBeam - 160, rearMsX + 16));
+        const msLblY = Math.max(102, Math.min(136, Math.round(210 - halfW * 1.85 - 8)));
+        svgHtml += `
+          <g class="ms-label">
+            <rect x="${(msLblX - 4).toFixed(1)}" y="${(msLblY - 10).toFixed(1)}" width="158" height="14" rx="3" fill="#070c14" fill-opacity="0.85" stroke="#a855f7" stroke-width="0.7"/>
+            <text x="${msLblX.toFixed(1)}" y="${msLblY.toFixed(1)}" fill="#c084fc" font-size="9" font-family="monospace">Ms (575°C) Martensite Start</text>
+          </g>
+        `;
 
         // t8/5 cooling pyrometry interval line (800°C to 500°C)
         const t85_X1 = xBeam - 0.72 * poolLength * scale;
@@ -4173,7 +4178,7 @@ function updateMeltPoolAndThermal() {
 
       // Marangoni thermocapillary radial surface flow vectors
       if (mpMarangoni && !isOpticalAborted) {
-        const arrowL = Math.max(12, Math.min(35, halfW * 0.7));
+        const arrowL = Math.max(12, Math.min(32, halfW * 0.7));
         svgHtml += `
           <g class="marangoni-vectors" opacity="0.85">
             <line x1="${xBeam}" y1="${210 - spotR - 2}" x2="${xBeam}" y2="${210 - spotR - arrowL}" stroke="#fbbf24" stroke-width="1.4"/>
@@ -4182,18 +4187,18 @@ function updateMeltPoolAndThermal() {
             <polygon points="${xBeam},${210 + spotR + arrowL} ${xBeam - 3},${210 + spotR + arrowL - 6} ${xBeam + 3},${210 + spotR + arrowL - 6}" fill="#fbbf24"/>
             <line x1="${xBeam - spotR - 2}" y1="210" x2="${xBeam - spotR - arrowL * 1.5}" y2="210" stroke="#fbbf24" stroke-width="1.4"/>
             <polygon points="${xBeam - spotR - arrowL * 1.5},210 ${xBeam - spotR - arrowL * 1.5 + 6},207 ${xBeam - spotR - arrowL * 1.5 + 6},213" fill="#fbbf24"/>
-            <rect x="${xBeam - 55}" y="${210 + spotR + arrowL + 4}" width="110" height="15" rx="4" fill="#070c14" stroke="#fbbf24" stroke-width="0.8"/>
+            <rect x="${xBeam - 52}" y="${210 + spotR + arrowL + 4}" width="104" height="15" rx="4" fill="#070c14" stroke="#fbbf24" stroke-width="0.8"/>
             <text x="${xBeam}" y="${210 + spotR + arrowL + 15}" fill="#fde68a" font-size="8" font-family="monospace" text-anchor="middle">Marangoni: ${vMarangoniMmS} mm/s</text>
           </g>
         `;
       }
 
-      // Optical Emitter Quenched Warning Overlay
+      // Optical Emitter Quenched Warning Overlay (Centered at top with guaranteed 30px gap to side callouts)
       if (isOpticalAborted) {
         svgHtml += `
           <g class="quench-banner">
-            <rect x="270" y="52" width="400" height="34" rx="8" fill="#450a0a" stroke="#ef4444" stroke-width="1.8"/>
-            <text x="470" y="73" fill="#fecaca" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">⚠️ OPTICAL EMITTER QUENCHED (T = 25°C AMBIENT)</text>
+            <rect x="295" y="52" width="370" height="32" rx="6" fill="#450a0a" stroke="#ef4444" stroke-width="1.8"/>
+            <text x="480" y="72" fill="#fecaca" font-size="10.5" font-weight="bold" font-family="monospace" text-anchor="middle">⚠️ OPTICAL EMITTER QUENCHED (T = 25°C AMBIENT)</text>
           </g>
         `;
       }
@@ -4221,56 +4226,80 @@ function updateMeltPoolAndThermal() {
       `;
 
       if (mpDims) {
-        // Width W dimension line (Badge positioned cleanly above the melt pool top boundary)
+        // Width W dimension line (Badge positioned cleanly above melt pool, strictly to the left of xBeam)
         const wY1 = 210 - halfW;
         const wY2 = 210 + halfW;
         const wX = midX;
-        const wBadgeY = Math.max(98, 210 - halfW - 14);
+        const wBadgeW = 118;
+        // Guarantee Width badge stays to the left of laser spot with safety clearance
+        const wBadgeX = Math.min(wX, xBeam - spotR - 8 - wBadgeW / 2);
+        const wBadgeY = Math.max(98, 210 - halfW - 12);
+        const wText = poolWidth >= 10000 ? (poolWidth/1000).toFixed(1) + ' mm' : poolWidth + ' µm';
         svgHtml += `
           <g class="dim-width">
             <line x1="${wX}" y1="${wY1}" x2="${wX}" y2="${wY2}" stroke="#00f7ff" stroke-width="1.5"/>
             <polygon points="${wX},${wY1} ${wX - 3.5},${wY1 + 7} ${wX + 3.5},${wY1 + 7}" fill="#00f7ff"/>
             <polygon points="${wX},${wY2} ${wX - 3.5},${wY2 - 7} ${wX + 3.5},${wY2 - 7}" fill="#00f7ff"/>
-            <rect x="${wX - 75}" y="${wBadgeY - 10}" width="150" height="20" rx="10" fill="#070c14" stroke="#00f7ff" stroke-width="1"/>
-            <text x="${wX}" y="${wBadgeY + 4}" fill="#00f7ff" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Width W = ${poolWidth >= 10000 ? (poolWidth/1000).toFixed(1) + ' mm' : poolWidth + ' µm'}</text>
+            <rect x="${wBadgeX - wBadgeW / 2}" y="${wBadgeY - 10}" width="${wBadgeW}" height="20" rx="10" fill="#070c14" stroke="#00f7ff" stroke-width="1"/>
+            <text x="${wBadgeX}" y="${wBadgeY + 4}" fill="#00f7ff" font-size="10.5" font-weight="bold" text-anchor="middle" font-family="monospace">Width W = ${wText}</text>
           </g>
         `;
 
-        // Length L dimension line (Dynamically placed below the bottom HAZ border)
+        // Length L dimension line (Guaranteed cleanly below Marangoni badge and HAZ boundary)
         const bottomHazY = 210 + halfWHaz;
-        const lY = Math.min(318, Math.max(265, bottomHazY + 20));
+        const marangoniMaxY = (mpMarangoni && !isOpticalAborted) ? (210 + spotR + 32 + 22) : (210 + halfW);
+        const lY = Math.min(320, Math.max(marangoniMaxY + 16, bottomHazY + 16));
+        const lText = poolLength >= 10000 ? (poolLength/1000).toFixed(1) + ' mm' : poolLength + ' µm';
         svgHtml += `
           <g class="dim-length">
             <line x1="${rearX}" y1="${lY}" x2="${frontX}" y2="${lY}" stroke="#50d8e9" stroke-width="1.5"/>
             <polygon points="${rearX},${lY} ${rearX + 7},${lY - 3.5} ${rearX + 7},${lY + 3.5}" fill="#50d8e9"/>
             <polygon points="${frontX},${lY} ${frontX - 7},${lY - 3.5} ${frontX - 7},${lY + 3.5}" fill="#50d8e9"/>
-            <rect x="${(rearX + frontX) / 2 - 110}" y="${lY - 11}" width="220" height="22" rx="11" fill="#070c14" stroke="#50d8e9" stroke-width="1.2"/>
-            <text x="${(rearX + frontX) / 2}" y="${lY + 4}" fill="#50d8e9" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">Length L = ${poolLength >= 10000 ? (poolLength/1000).toFixed(1) + ' mm' : poolLength + ' µm'} (${(poolLength/1000).toFixed(2)} mm)</text>
+            <rect x="${(rearX + frontX) / 2 - 105}" y="${lY - 11}" width="210" height="22" rx="11" fill="#070c14" stroke="#50d8e9" stroke-width="1.2"/>
+            <text x="${(rearX + frontX) / 2}" y="${lY + 4}" fill="#50d8e9" font-size="10.5" font-weight="bold" text-anchor="middle" font-family="monospace">Length L = ${lText} (${(poolLength/1000).toFixed(2)} mm)</text>
           </g>
         `;
       }
 
       if (mpCallouts) {
-        // 1. Incident Laser Beam Center Callout (Top Right, strictly inside frame y in [54, 86])
-        const beamCalloutX = Math.min(665, Math.max(490, Math.round(xBeam + 15)));
-        const poolCalloutX = Math.max(95, Math.min(320, Math.round(xBeam - 0.45 * span - 90)));
+        // 1. Incident Laser Beam Center Callout (Strictly pinned top-right at x = [675, 855], y in [52, 84])
+        const beamCalloutX = 675;
+        const beamCalloutW = 180;
+        // Pointer line connects from bottom of callout (x >= xBeam + 25) to top-right of laser spot circle
+        const beamLineX1 = Math.max(xBeam + 25, beamCalloutX + 25);
+        const beamLineX2 = xBeam + spotR * 0.707;
+        const beamLineY2 = 210 - spotR * 0.707;
+        const beamSubText = isOpticalAborted ? 'P = 0 W (Quenched) | Beam Off' : `Spot ∅ = ${effSpot} µm | P = ${effPDisplay}`;
+
         svgHtml += `
-          <rect x="${beamCalloutX}" y="54" width="185" height="32" rx="6" fill="#080e18" stroke="#38bdf8" stroke-width="1.2"/>
-          <text x="${beamCalloutX + 10}" y="67" fill="#ffffff" font-size="10.5" font-weight="bold">🎯 ${effSourceLabel} Center</text>
-          <text x="${beamCalloutX + 10}" y="79" fill="#38bdf8" font-size="9" font-family="monospace">Spot ∅ = ${effSpot} µm | P = ${effPDisplay}</text>
-          <line x1="${beamCalloutX + 20}" y1="86" x2="${xBeam}" y2="${210 - spotR - 4}" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect x="${beamCalloutX}" y="52" width="${beamCalloutW}" height="32" rx="6" fill="#080e18" stroke="#38bdf8" stroke-width="1.2"/>
+          <text x="${beamCalloutX + 10}" y="65" fill="#ffffff" font-size="10.5" font-weight="bold">🎯 ${effSourceLabel} Center</text>
+          <text x="${beamCalloutX + 10}" y="77" fill="#38bdf8" font-size="8.5" font-family="monospace">${beamSubText}</text>
+          <line x1="${beamLineX1}" y1="84" x2="${beamLineX2.toFixed(1)}" y2="${beamLineY2.toFixed(1)}" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3 3"/>
 
-          <!-- 2. Molten Pool (Liquid) Callout (Top Left, strictly inside frame y in [54, 86]) -->
-          <rect x="${poolCalloutX}" y="54" width="180" height="32" rx="6" fill="#080e18" stroke="#00f7ff" stroke-width="1.2"/>
-          <text x="${poolCalloutX + 10}" y="67" fill="#ffffff" font-size="10.5" font-weight="bold">💧 Molten Pool (Liquid)</text>
-          <text x="${poolCalloutX + 10}" y="79" fill="#00f7ff" font-size="9" font-family="monospace">T ≥ 1650°C | Fully Molten Metal</text>
-          <line x1="${poolCalloutX + 90}" y1="86" x2="${(xBeam - 0.28 * span).toFixed(1)}" y2="${(210 - halfW).toFixed(1)}" stroke="#00f7ff" stroke-width="1" stroke-dasharray="3 3"/>
+          <!-- 2. Molten Pool (Liquid) Callout (Strictly pinned top-left at x = [90, 265], y in [52, 84]) -->
+          <rect x="90" y="52" width="175" height="32" rx="6" fill="#080e18" stroke="#00f7ff" stroke-width="1.2"/>
+          <text x="100" y="65" fill="#ffffff" font-size="10.5" font-weight="bold">💧 Molten Pool (Liquid)</text>
+          <text x="100" y="77" fill="#00f7ff" font-size="8.5" font-family="monospace">${isOpticalAborted ? 'T = 25°C | Solidified Ambient' : 'T ≥ 1650°C | Fully Molten Metal'}</text>
+        `;
 
-          <!-- 3. Mushy Solidification Zone Callout (Bottom Left, strictly inside frame y in [330, 362]) -->
-          <rect x="95" y="330" width="195" height="32" rx="6" fill="#080e18" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="4 2"/>
-          <text x="105" y="343" fill="#ffffff" font-size="10.5" font-weight="bold">❄️ Mushy Solidification Zone</text>
-          <text x="105" y="355" fill="#cbd5e1" font-size="9" font-family="monospace">1600°C ≤ T < 1650°C | Dendrites</text>
-          <line x1="192" y1="330" x2="${(rearX - 0.08 * span).toFixed(1)}" y2="${Math.min(265, 210 + halfW * 0.4).toFixed(1)}" stroke="#ffffff" stroke-width="1" stroke-dasharray="3 3"/>
+        // Molten pool pointer line connects cleanly to rear-upper shoulder (well to the left of Width badge)
+        const poolTargetX = Math.max(95, Math.min(rearX + 0.3 * span, midX - 45));
+        const poolTargetY = 210 - halfW * 0.75;
+        svgHtml += `
+          <line x1="175" y1="84" x2="${poolTargetX.toFixed(1)}" y2="${poolTargetY.toFixed(1)}" stroke="#00f7ff" stroke-width="1" stroke-dasharray="3 3"/>
+
+          <!-- 3. Mushy Solidification Zone Callout (Strictly bottom-left at x = [90, 275], y in [330, 362]) -->
+          <rect x="90" y="330" width="185" height="32" rx="6" fill="#080e18" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="4 2"/>
+          <text x="100" y="343" fill="#ffffff" font-size="10.5" font-weight="bold">❄️ Mushy Solidification Zone</text>
+          <text x="100" y="355" fill="#cbd5e1" font-size="8.5" font-family="monospace">1600°C ≤ T < 1650°C | Dendrites</text>
+        `;
+
+        // Mushy zone pointer connects to the rear tail
+        const mushyTargetX = Math.max(95, rearX - 0.05 * span);
+        const mushyTargetY = Math.min(270, 210 + halfW * 0.35);
+        svgHtml += `
+          <line x1="175" y1="330" x2="${mushyTargetX.toFixed(1)}" y2="${mushyTargetY.toFixed(1)}" stroke="#ffffff" stroke-width="1" stroke-dasharray="3 3"/>
         `;
       }
     } else {
