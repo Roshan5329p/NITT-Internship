@@ -3515,9 +3515,9 @@ const mpPowderParticles = Array.from({ length: 42 }, (_, idx) => ({
 function renderMpAnimationStep(now) {
   mpAnimFrameId = null;
   if (!isMpSimulating) return;
-  if (!now) now = performance.now();
-  const dt = Math.min(0.05, (now - lastMpAnimTs) / 1000);
-  lastMpAnimTs = now;
+  const nowTs = now || performance.now();
+  const dt = Math.min(0.05, Math.max(0.001, (nowTs - (lastMpAnimTs || nowTs)) / 1000)) || 0.016;
+  lastMpAnimTs = nowTs;
 
   const animContainer = document.getElementById('mpAnimLayers');
   if (!animContainer) {
@@ -3532,154 +3532,167 @@ function renderMpAnimationStep(now) {
     return;
   }
 
-  const {
-    xBeam, span, halfW, depthPx, spotR, rearHazX, frontHazX, rearX, frontX, midX,
-    effV, effP, view, marangoni, pyrometry, isOpticalAborted: aborted
-  } = mpAnimState;
+  try {
+    const {
+      xBeam, span, halfW, depthPx, spotR, rearHazX, frontHazX, rearX, frontX, midX,
+      effV, effP, view, marangoni, pyrometry, isOpticalAborted: aborted
+    } = mpAnimState;
 
-  if (isMpSimulating && !aborted) {
-    mpAnimPhase += dt * (Math.max(50, effV) / 500);
-  }
+    const isDedRegime = (effV < 100.0 || effP >= 1000.0);
 
-  if (aborted) {
-    animContainer.innerHTML = '';
-    if (isMpSimulating) mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
-    return;
-  }
-
-  let animHtml = '';
-
-  if (view === 'surface') {
-    // 1. Shimmering Laser Beam Photon Aura & Center Bloom
-    const pulseR = Math.max(2, spotR * (1.0 + 0.12 * Math.sin(mpAnimPhase * 9)));
-    const auraR = pulseR * 1.65;
-    const auraOpacity = 0.25 + 0.18 * Math.cos(mpAnimPhase * 7);
-    animHtml += `
-      <g class="laser-photon-bloom" pointer-events="none">
-        <circle cx="${xBeam}" cy="210" r="${auraR.toFixed(1)}" fill="#ffeb3b" opacity="${auraOpacity.toFixed(2)}"/>
-        <circle cx="${xBeam}" cy="210" r="${pulseR.toFixed(1)}" fill="#ffffff" opacity="0.85"/>
-        <circle cx="${xBeam}" cy="210" r="${(pulseR * 0.45).toFixed(1)}" fill="#ffffff"/>
-      </g>
-    `;
-
-    // 2. Trailing Chevron Solidification Ripples (Advancing along the mushy wake)
-    const ripplePitch = 24;
-    const rippleOffset = (mpAnimPhase * 36) % ripplePitch;
-    const wakeStart = xBeam - 0.18 * span;
-    const wakeEnd = Math.max(90, rearX - 0.25 * span);
-
-    animHtml += `<g class="solidification-ripples" pointer-events="none">`;
-    for (let i = 0; i < 6; i++) {
-      const rx = wakeStart - (i * ripplePitch + rippleOffset);
-      if (rx > wakeEnd && rx > 90 && rx < 850) {
-        const progress = (wakeStart - rx) / Math.max(1, wakeStart - wakeEnd);
-        const ripW = halfW * Math.max(0.2, 1.0 - 0.7 * progress);
-        const ripOpacity = Math.max(0.1, (1.0 - progress) * 0.65);
-        const p1X = (rx + ripW * 0.35).toFixed(1);
-        const p1Y = (210 - ripW).toFixed(1);
-        const p2X = rx.toFixed(1);
-        const p2Y = '210';
-        const p3X = (rx + ripW * 0.35).toFixed(1);
-        const p3Y = (210 + ripW).toFixed(1);
-        animHtml += `<path d="M ${p1X} ${p1Y} Q ${p2X} ${p2Y} ${p3X} ${p3Y}" fill="none" stroke="#38bdf8" stroke-width="1.4" opacity="${ripOpacity.toFixed(2)}"/>`;
-      }
+    if (isMpSimulating && !aborted) {
+      // Dynamic fluid dynamics animation rate:
+      // When in DED regime (low travel speed ~8.47 mm/s), fluid Marangoni convection and beam shimmering
+      // remain active at 1.4-1.8 rad/s. In LPBF (500-1500 mm/s), scale gracefully with scan speed.
+      const animRate = isDedRegime ? 1.5 : Math.max(0.9, Math.min(2.5, effV / 500));
+      mpAnimPhase += dt * animRate;
     }
-    animHtml += `</g>`;
 
-    // 3. Circulating Marangoni Thermocapillary Convection Vectors (Radial Streamlines)
-    if (marangoni) {
-      animHtml += `<g class="marangoni-animated-streamlines" pointer-events="none">`;
-      const angles = [Math.PI * 0.25, Math.PI * 0.45, Math.PI * 0.75, Math.PI * 1.0, Math.PI * 1.25, Math.PI * 1.55, Math.PI * 1.75];
-      for (let aIdx = 0; aIdx < angles.length; aIdx++) {
-        const ang = angles[aIdx];
-        const streamPhase = (mpAnimPhase * 2.2 + aIdx * 0.8) % 1.0;
-        const maxRad = (aIdx === 3) ? (span * 0.6) : (halfW * 0.75);
-        const curRad = spotR + streamPhase * maxRad;
-        const px = xBeam - Math.cos(ang) * curRad;
-        const py = 210 - Math.sin(ang) * curRad * 0.85;
-        const ptOpacity = (1.0 - streamPhase) * 0.85;
-        animHtml += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2" fill="#fbbf24" opacity="${ptOpacity.toFixed(2)}"/>`;
+    if (aborted) {
+      animContainer.innerHTML = '';
+      if (isMpSimulating) mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
+      return;
+    }
+
+    let animHtml = '';
+
+    if (view === 'surface') {
+      // 1. Shimmering Laser/E-Beam Photon Aura & Center Bloom
+      const pulseR = Math.max(2, spotR * (1.0 + 0.12 * Math.sin(mpAnimPhase * 9)));
+      const auraR = pulseR * 1.65;
+      const auraOpacity = 0.25 + 0.18 * Math.cos(mpAnimPhase * 7);
+      animHtml += `
+        <g class="laser-photon-bloom" pointer-events="none">
+          <circle cx="${xBeam.toFixed(1)}" cy="210" r="${auraR.toFixed(1)}" fill="#ffeb3b" opacity="${auraOpacity.toFixed(2)}"/>
+          <circle cx="${xBeam.toFixed(1)}" cy="210" r="${pulseR.toFixed(1)}" fill="#ffffff" opacity="0.85"/>
+          <circle cx="${xBeam.toFixed(1)}" cy="210" r="${(pulseR * 0.45).toFixed(1)}" fill="#ffffff"/>
+        </g>
+      `;
+
+      // 2. Trailing Chevron Solidification Ripples (Advancing along the mushy wake)
+      const ripplePitch = 24;
+      const rippleOffset = (mpAnimPhase * 36) % ripplePitch;
+      const wakeStart = xBeam - 0.18 * span;
+      const wakeEnd = Math.max(90, rearX - 0.25 * span);
+      const wakeSpan = Math.max(10, wakeStart - wakeEnd);
+
+      animHtml += `<g class="solidification-ripples" pointer-events="none">`;
+      for (let i = 0; i < 6; i++) {
+        const rx = wakeStart - (i * ripplePitch + rippleOffset);
+        if (rx > wakeEnd && rx > 90 && rx < 850) {
+          const progress = Math.max(0, Math.min(1, (wakeStart - rx) / wakeSpan));
+          const ripW = halfW * Math.max(0.2, 1.0 - 0.7 * progress);
+          const ripOpacity = Math.max(0.1, (1.0 - progress) * 0.65);
+          const p1X = (rx + ripW * 0.35).toFixed(1);
+          const p1Y = (210 - ripW).toFixed(1);
+          const p2X = rx.toFixed(1);
+          const p2Y = '210';
+          const p3X = (rx + ripW * 0.35).toFixed(1);
+          const p3Y = (210 + ripW).toFixed(1);
+          animHtml += `<path d="M ${p1X} ${p1Y} Q ${p2X} ${p2Y} ${p3X} ${p3Y}" fill="none" stroke="#38bdf8" stroke-width="1.4" opacity="${ripOpacity.toFixed(2)}"/>`;
+        }
+      }
+      animHtml += `</g>`;
+
+      // 3. Circulating Marangoni Thermocapillary Convection Vectors (Radial Streamlines)
+      if (marangoni) {
+        animHtml += `<g class="marangoni-animated-streamlines" pointer-events="none">`;
+        const angles = [Math.PI * 0.25, Math.PI * 0.45, Math.PI * 0.75, Math.PI * 1.0, Math.PI * 1.25, Math.PI * 1.55, Math.PI * 1.75];
+        for (let aIdx = 0; aIdx < angles.length; aIdx++) {
+          const ang = angles[aIdx];
+          const streamPhase = (mpAnimPhase * 2.2 + aIdx * 0.8) % 1.0;
+          const maxRad = (aIdx === 3) ? (span * 0.6) : (halfW * 0.75);
+          const curRad = spotR + streamPhase * maxRad;
+          const px = xBeam - Math.cos(ang) * curRad;
+          const py = 210 - Math.sin(ang) * curRad * 0.85;
+          const ptOpacity = (1.0 - streamPhase) * 0.85;
+          animHtml += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2" fill="#fbbf24" opacity="${ptOpacity.toFixed(2)}"/>`;
+        }
+        animHtml += `</g>`;
+      }
+
+      // 4. Subtle Powder Bed Granule Relative Motion (Simulating scan velocity v)
+      animHtml += `<g class="powder-bed-granules" opacity="${isDedRegime ? '0.2' : '0.4'}" pointer-events="none">`;
+      const driftSpeed = isDedRegime ? 18 : 48;
+      for (let pIdx = 0; pIdx < mpPowderParticles.length; pIdx++) {
+        const p = mpPowderParticles[pIdx];
+        const gx = ((p.seedX * 780 - mpAnimPhase * driftSpeed) % 780 + 780) % 780 + 80;
+        const gy = 45 + p.seedY * 330;
+        const distFromBeamX = (gx - xBeam);
+        const distFromBeamY = (gy - 210);
+        if (Math.abs(distFromBeamX) < span * 0.65 && Math.abs(distFromBeamY) < halfW * 1.2) {
+          continue;
+        }
+        animHtml += `<circle cx="${gx.toFixed(1)}" cy="${gy.toFixed(1)}" r="${p.r}" fill="#475569"/>`;
+      }
+      animHtml += `</g>`;
+
+    } else {
+      // LONGITUDINAL (X-Z) VIEW ANIMATION
+      const zSurface = 145;
+
+      // 1. Shimmering Incident Photon Column & Vapor Depression
+      const beamPulse = Math.sin(mpAnimPhase * 8) * 2;
+      animHtml += `
+        <g class="incident-photon-rays" pointer-events="none">
+          <line x1="${(xBeam - 8 + beamPulse).toFixed(1)}" y1="48" x2="${(xBeam - 2).toFixed(1)}" y2="${zSurface}" stroke="#ffffff" stroke-width="1.2" opacity="0.75"/>
+          <line x1="${(xBeam + 8 - beamPulse).toFixed(1)}" y1="48" x2="${(xBeam + 2).toFixed(1)}" y2="${zSurface}" stroke="#ffffff" stroke-width="1.2" opacity="0.75"/>
+          <line x1="${xBeam.toFixed(1)}" y1="48" x2="${xBeam.toFixed(1)}" y2="${zSurface}" stroke="#fef08a" stroke-width="2" opacity="0.9"/>
+        </g>
+      `;
+
+      // 2. Oscillating Keyhole Vapor Depression Cavity
+      const cavityDepth = Math.max(12, depthPx * (0.82 + 0.14 * Math.sin(mpAnimPhase * 11)));
+      const cavityX = (xBeam - spotR * 0.3).toFixed(1);
+      animHtml += `
+        <g class="keyhole-cavity-anim" pointer-events="none">
+          <ellipse cx="${cavityX}" cy="${(zSurface + 4).toFixed(1)}" rx="${(spotR * 0.75).toFixed(1)}" ry="${(cavityDepth * 0.28).toFixed(1)}" fill="#020617" stroke="#38bdf8" stroke-width="1" opacity="0.8"/>
+        </g>
+      `;
+
+      // 3. Sub-surface Molten Circulation Eddies (Marangoni & Buoyancy vortices)
+      if (marangoni) {
+        animHtml += `<g class="subsurface-eddies" pointer-events="none">`;
+        const eddyPhase = (mpAnimPhase * 3) % (2 * Math.PI);
+        const eddyCenterX = midX;
+        const eddyCenterY = zSurface + depthPx * 0.52;
+        const eddyRx = span * 0.22;
+        const eddyRy = depthPx * 0.26;
+        for (let eIdx = 0; eIdx < 4; eIdx++) {
+          const phi = eddyPhase + (eIdx * Math.PI / 2);
+          const ex = eddyCenterX + Math.cos(phi) * eddyRx;
+          const ey = eddyCenterY + Math.sin(phi) * eddyRy;
+          animHtml += `<circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="2.2" fill="#fbbf24" opacity="0.7"/>`;
+        }
+        animHtml += `</g>`;
+      }
+
+      // 4. Trailing Solidification Chevron Waves in Depth (Z-direction)
+      const zRipplePitch = 22;
+      const zRippleOffset = (mpAnimPhase * 30) % zRipplePitch;
+      const zWakeStart = xBeam - 0.15 * span;
+      const zWakeEnd = Math.max(85, rearX - 0.2 * span);
+      const zWakeSpan = Math.max(10, zWakeStart - zWakeEnd);
+      animHtml += `<g class="z-solidification-ripples" pointer-events="none">`;
+      for (let i = 0; i < 5; i++) {
+        const rx = zWakeStart - (i * zRipplePitch + zRippleOffset);
+        if (rx > zWakeEnd && rx > 85 && rx < 855) {
+          const progress = Math.max(0, Math.min(1, (zWakeStart - rx) / zWakeSpan));
+          const ripDepth = depthPx * Math.max(0.2, 1.0 - 0.8 * progress);
+          const ripOpacity = Math.max(0.1, (1.0 - progress) * 0.6);
+          animHtml += `<path d="M ${rx.toFixed(1)} ${zSurface} Q ${rx.toFixed(1)} ${(zSurface + ripDepth * 0.7).toFixed(1)} ${(rx - 12).toFixed(1)} ${(zSurface + ripDepth).toFixed(1)}" fill="none" stroke="#38bdf8" stroke-width="1.3" opacity="${ripOpacity.toFixed(2)}"/>`;
+        }
       }
       animHtml += `</g>`;
     }
 
-    // 4. Subtle Powder Bed Granule Relative Motion (Simulating scan velocity v)
-    animHtml += `<g class="powder-bed-granules" opacity="0.4" pointer-events="none">`;
-    for (let pIdx = 0; pIdx < mpPowderParticles.length; pIdx++) {
-      const p = mpPowderParticles[pIdx];
-      const gx = ((p.seedX * 780 - mpAnimPhase * 48) % 780 + 780) % 780 + 80;
-      const gy = 45 + p.seedY * 330;
-      const distFromBeamX = (gx - xBeam);
-      const distFromBeamY = (gy - 210);
-      if (Math.abs(distFromBeamX) < span * 0.65 && Math.abs(distFromBeamY) < halfW * 1.2) {
-        continue;
-      }
-      animHtml += `<circle cx="${gx.toFixed(1)}" cy="${gy.toFixed(1)}" r="${p.r}" fill="#475569"/>`;
+    animContainer.innerHTML = animHtml;
+  } catch (err) {
+    console.error('Melt pool animation step error:', err);
+  } finally {
+    if (isMpSimulating) {
+      mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
     }
-    animHtml += `</g>`;
-
-  } else {
-    // LONGITUDINAL (X-Z) VIEW ANIMATION
-    const zSurface = 145;
-
-    // 1. Shimmering Incident Photon Column & Vapor Depression
-    const beamPulse = Math.sin(mpAnimPhase * 8) * 2;
-    animHtml += `
-      <g class="incident-photon-rays" pointer-events="none">
-        <line x1="${(xBeam - 8 + beamPulse).toFixed(1)}" y1="48" x2="${(xBeam - 2).toFixed(1)}" y2="${zSurface}" stroke="#ffffff" stroke-width="1.2" opacity="0.75"/>
-        <line x1="${(xBeam + 8 - beamPulse).toFixed(1)}" y1="48" x2="${(xBeam + 2).toFixed(1)}" y2="${zSurface}" stroke="#ffffff" stroke-width="1.2" opacity="0.75"/>
-        <line x1="${xBeam}" y1="48" x2="${xBeam}" y2="${zSurface}" stroke="#fef08a" stroke-width="2" opacity="0.9"/>
-      </g>
-    `;
-
-    // 2. Oscillating Keyhole Vapor Depression Cavity
-    const cavityDepth = Math.max(12, depthPx * (0.82 + 0.14 * Math.sin(mpAnimPhase * 11)));
-    const cavityX = (xBeam - spotR * 0.3).toFixed(1);
-    animHtml += `
-      <g class="keyhole-cavity-anim" pointer-events="none">
-        <ellipse cx="${cavityX}" cy="${(zSurface + 4).toFixed(1)}" rx="${(spotR * 0.75).toFixed(1)}" ry="${(cavityDepth * 0.28).toFixed(1)}" fill="#020617" stroke="#38bdf8" stroke-width="1" opacity="0.8"/>
-      </g>
-    `;
-
-    // 3. Sub-surface Molten Circulation Eddies (Marangoni & Buoyancy vortices)
-    if (marangoni) {
-      animHtml += `<g class="subsurface-eddies" pointer-events="none">`;
-      const eddyPhase = (mpAnimPhase * 3) % (2 * Math.PI);
-      const eddyCenterX = midX;
-      const eddyCenterY = zSurface + depthPx * 0.52;
-      const eddyRx = span * 0.22;
-      const eddyRy = depthPx * 0.26;
-      for (let eIdx = 0; eIdx < 4; eIdx++) {
-        const phi = eddyPhase + (eIdx * Math.PI / 2);
-        const ex = eddyCenterX + Math.cos(phi) * eddyRx;
-        const ey = eddyCenterY + Math.sin(phi) * eddyRy;
-        animHtml += `<circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="2.2" fill="#fbbf24" opacity="0.7"/>`;
-      }
-      animHtml += `</g>`;
-    }
-
-    // 4. Trailing Solidification Chevron Waves in Depth (Z-direction)
-    const zRipplePitch = 22;
-    const zRippleOffset = (mpAnimPhase * 30) % zRipplePitch;
-    const zWakeStart = xBeam - 0.15 * span;
-    const zWakeEnd = Math.max(85, rearX - 0.2 * span);
-    animHtml += `<g class="z-solidification-ripples" pointer-events="none">`;
-    for (let i = 0; i < 5; i++) {
-      const rx = zWakeStart - (i * zRipplePitch + zRippleOffset);
-      if (rx > zWakeEnd && rx > 85 && rx < 855) {
-        const progress = (zWakeStart - rx) / Math.max(1, zWakeStart - zWakeEnd);
-        const ripDepth = depthPx * Math.max(0.2, 1.0 - 0.8 * progress);
-        const ripOpacity = Math.max(0.1, (1.0 - progress) * 0.6);
-        animHtml += `<path d="M ${rx} ${zSurface} Q ${rx} ${(zSurface + ripDepth * 0.7).toFixed(1)} ${(rx - 12).toFixed(1)} ${(zSurface + ripDepth).toFixed(1)}" fill="none" stroke="#38bdf8" stroke-width="1.3" opacity="${ripOpacity.toFixed(2)}"/>`;
-      }
-    }
-    animHtml += `</g>`;
-  }
-
-  animContainer.innerHTML = animHtml;
-
-  if (isMpSimulating) {
-    mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
   }
 }
 
@@ -3846,18 +3859,43 @@ function setBonthaScale(s) {
   bonthaScale = s;
   const bSm = document.getElementById('btnBnSmall'); if (bSm) bSm.classList.toggle('active', s === 'small-scale');
   const bLg = document.getElementById('btnBnLarge'); if (bLg) bLg.classList.toggle('active', s === 'large-scale');
+  const sel = document.getElementById('bonthaPresetSelect');
   if (s === 'large-scale') {
     if (bonthaOverridePower === null || bonthaOverridePower < 1000) {
       bonthaOverridePower = 15000;
       bonthaOverrideSpeed = 8.47;
     }
+    bonthaPreset = 'fig4a-15kw';
+    if (sel) sel.value = 'fig4a-15kw';
   } else {
-    if (bonthaOverridePower !== null && bonthaOverridePower > 1000) {
+    if (bonthaOverridePower === null || bonthaOverridePower >= 1000) {
       bonthaOverridePower = 550;
       bonthaOverrideSpeed = 8.47;
     }
+    bonthaPreset = (bonthaDim === '2d-thin-wall') ? 'jmpt-550w-base' : 'fig3a-550w';
+    if (sel) sel.value = bonthaPreset;
   }
   updateMeltPoolAndThermal();
+  if (isMpSimulating && !mpAnimFrameId) {
+    lastMpAnimTs = performance.now();
+    mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
+  }
+}
+
+function resetToLiveSliders() {
+  bonthaOverridePower = null;
+  bonthaOverrideSpeed = null;
+  bonthaPreset = 'custom';
+  const sel = document.getElementById('bonthaPresetSelect');
+  if (sel) sel.value = 'custom';
+  const bSm = document.getElementById('btnBnSmall'); if (bSm) bSm.classList.toggle('active', bonthaScale === 'small-scale');
+  const bLg = document.getElementById('btnBnLarge'); if (bLg) bLg.classList.toggle('active', bonthaScale === 'large-scale');
+  calculatePhysics();
+  updateMeltPoolAndThermal();
+  if (isMpSimulating && !mpAnimFrameId) {
+    lastMpAnimTs = performance.now();
+    mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
+  }
 }
 
 function setBonthaModel(m) {
@@ -4032,13 +4070,19 @@ function updateMeltPoolAndThermal() {
   if (elCoupledBadge) {
     if (bonthaPreset === 'custom' && bonthaOverridePower === null && bonthaOverrideSpeed === null) {
       elCoupledBadge.innerText = `🔗 Coupled: LPBF Live Sliders (${effP} W @ ${effVDisplay})`;
+      elCoupledBadge.title = 'Coupled to live process sliders';
       elCoupledBadge.style.color = 'var(--accent-cyan)';
       elCoupledBadge.style.borderColor = 'rgba(80, 216, 233, 0.4)';
+      elCoupledBadge.style.cursor = 'default';
+      elCoupledBadge.onclick = null;
     } else {
       const modeName = (bonthaDim === '2d-thin-wall') ? 'Bontha 2D' : 'Bontha 3D';
-      elCoupledBadge.innerText = `🔗 Coupled: ${modeName} (${effPDisplay} @ ${effVDisplay})`;
+      elCoupledBadge.innerHTML = `🔗 Coupled: ${modeName} (${effPDisplay} @ ${effVDisplay}) <span style="text-decoration:underline; font-size:9.5px; margin-left:4px;">[Reset]</span>`;
+      elCoupledBadge.title = 'Click to uncouple and return to LPBF live sliders';
       elCoupledBadge.style.color = 'var(--accent-emerald)';
       elCoupledBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+      elCoupledBadge.style.cursor = 'pointer';
+      elCoupledBadge.onclick = resetToLiveSliders;
     }
   }
 
@@ -4248,17 +4292,28 @@ function updateMeltPoolAndThermal() {
 
       if (mpGrid) {
         svgHtml += `<g class="grid-lines" opacity="${mpHighGrid ? '0.9' : '0.5'}">`;
-        const gridStep = isDedRegime ? (effP >= 1000 ? 5000 : 500) : (mpHighGrid ? 100 : 200);
+        const targetPx = isDedRegime ? 75 : 65;
+        const rawStep = targetPx / Math.max(1e-5, scale);
+        const candidates = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
+        let gridStep = candidates[candidates.length - 1];
+        for (let c of candidates) {
+          if (c >= rawStep) { gridStep = c; break; }
+        }
+
         const maxReachLen = mpPyrometry ? (poolLength * 3.0) : (poolLength * 2.0);
         const minXGrid = -Math.ceil(maxReachLen / gridStep) * gridStep;
         const maxXGrid = Math.ceil((poolLength * 1.0) / gridStep) * gridStep;
-        for (let x = Math.max(-80000, minXGrid); x <= Math.min(80000, maxXGrid); x += gridStep) {
+        let lastLabelPx = -Infinity;
+        for (let x = Math.max(-200000, minXGrid); x <= Math.min(200000, maxXGrid); x += gridStep) {
           const px = xBeam + x * scale;
           if (px >= 85 && px <= 860) {
-            svgHtml += `<line x1="${px}" y1="45" x2="${px}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
+            svgHtml += `<line x1="${px.toFixed(1)}" y1="45" x2="${px.toFixed(1)}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
             if (px >= 105 && px <= 845) {
-              const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
-              svgHtml += `<text x="${px}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
+              if (Math.abs(px - lastLabelPx) >= 54 || x === 0) {
+                lastLabelPx = px;
+                const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(x % 1000 === 0 ? 0 : 1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
+                svgHtml += `<text x="${px.toFixed(1)}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
+              }
             }
           }
         }
@@ -4445,17 +4500,28 @@ function updateMeltPoolAndThermal() {
 
       if (mpGrid) {
         svgHtml += `<g class="grid-lines" opacity="${mpHighGrid ? '0.9' : '0.5'}">`;
-        const gridStep = isDedRegime ? (effP >= 1000 ? 5000 : 500) : (mpHighGrid ? 100 : 200);
+        const targetPx = isDedRegime ? 75 : 65;
+        const rawStep = targetPx / Math.max(1e-5, scale);
+        const candidates = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
+        let gridStep = candidates[candidates.length - 1];
+        for (let c of candidates) {
+          if (c >= rawStep) { gridStep = c; break; }
+        }
+
         const maxReachLen = mpPyrometry ? (poolLength * 3.0) : (poolLength * 2.0);
         const minXGrid = -Math.ceil(maxReachLen / gridStep) * gridStep;
         const maxXGrid = Math.ceil((poolLength * 1.0) / gridStep) * gridStep;
-        for (let x = Math.max(-80000, minXGrid); x <= Math.min(80000, maxXGrid); x += gridStep) {
+        let lastLabelPx = -Infinity;
+        for (let x = Math.max(-200000, minXGrid); x <= Math.min(200000, maxXGrid); x += gridStep) {
           const px = xBeam + x * scale;
           if (px >= 85 && px <= 860) {
-            svgHtml += `<line x1="${px}" y1="45" x2="${px}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
+            svgHtml += `<line x1="${px.toFixed(1)}" y1="45" x2="${px.toFixed(1)}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
             if (px >= 105 && px <= 845) {
-              const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
-              svgHtml += `<text x="${px}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
+              if (Math.abs(px - lastLabelPx) >= 54 || x === 0) {
+                lastLabelPx = px;
+                const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(x % 1000 === 0 ? 0 : 1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
+                svgHtml += `<text x="${px.toFixed(1)}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
+              }
             }
           }
         }
@@ -4575,6 +4641,12 @@ function updateMeltPoolAndThermal() {
       pyrometry: mpPyrometry,
       isOpticalAborted
     };
+
+    // Keep live simulation running seamlessly across parameter or scale updates
+    if (isMpSimulating && !mpAnimFrameId) {
+      lastMpAnimTs = performance.now();
+      mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
+    }
   }
 
   // 3. Render Subsection 2 (Bontha Solidification Map)
