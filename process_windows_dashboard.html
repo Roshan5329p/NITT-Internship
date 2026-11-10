@@ -4393,11 +4393,13 @@ function updateMeltPoolAndThermal() {
             svgHtml += `<line x1="${px.toFixed(1)}" y1="45" x2="${px.toFixed(1)}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
             if (px >= 105 && px <= 845) {
               const distFromBeamPx = Math.abs(px - xBeam);
-              const isNearBeam = (x !== 0 && distFromBeamPx < 48);
-              if (!isNearBeam && (Math.abs(px - lastLabelPx) >= 54 || x === 0)) {
+              const isNearBeam = (x !== 0 && distFromBeamPx < 52);
+              if (!isNearBeam && (Math.abs(px - lastLabelPx) >= 72 || x === 0)) {
                 lastLabelPx = px;
-                const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(x % 1000 === 0 ? 0 : 1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
-                svgHtml += `<text x="${px.toFixed(1)}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
+                const absX = Math.abs(x);
+                const sign = x > 0 ? '+' : (x < 0 ? '' : '');
+                const xLbl = (x === 0) ? '0' : (absX >= 1000 ? sign + (x / 1000).toFixed(absX % 1000 === 0 ? 0 : 1) + 'mm' : sign + x + 'µm');
+                svgHtml += `<text x="${px.toFixed(1)}" y="393" fill="${x === 0 ? '#38bdf8' : '#94a3b8'}" font-size="9" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
               }
             }
           }
@@ -4603,11 +4605,13 @@ function updateMeltPoolAndThermal() {
             svgHtml += `<line x1="${px.toFixed(1)}" y1="45" x2="${px.toFixed(1)}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
             if (px >= 105 && px <= 845) {
               const distFromBeamPx = Math.abs(px - xBeam);
-              const isNearBeam = (x !== 0 && distFromBeamPx < 48);
-              if (!isNearBeam && (Math.abs(px - lastLabelPx) >= 54 || x === 0)) {
+              const isNearBeam = (x !== 0 && distFromBeamPx < 52);
+              if (!isNearBeam && (Math.abs(px - lastLabelPx) >= 72 || x === 0)) {
                 lastLabelPx = px;
-                const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(x % 1000 === 0 ? 0 : 1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
-                svgHtml += `<text x="${px.toFixed(1)}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
+                const absX = Math.abs(x);
+                const sign = x > 0 ? '+' : (x < 0 ? '' : '');
+                const xLbl = (x === 0) ? '0' : (absX >= 1000 ? sign + (x / 1000).toFixed(absX % 1000 === 0 ? 0 : 1) + 'mm' : sign + x + 'µm');
+                svgHtml += `<text x="${px.toFixed(1)}" y="393" fill="${x === 0 ? '#38bdf8' : '#94a3b8'}" font-size="9" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
               }
             }
           }

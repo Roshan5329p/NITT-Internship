@@ -1,6 +1,10 @@
 export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   res.setHeader('Content-Type', 'application/json');
+  try {
 
   const model = req.query.model || 'coen';
   const p = parseFloat(req.query.power) || 200;
@@ -41,4 +45,7 @@ export default function handler(req, res) {
     aspect_ratio: parseFloat(r_aspect.toFixed(2)),
     peak_temp_c: peakTemp
   });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
 }

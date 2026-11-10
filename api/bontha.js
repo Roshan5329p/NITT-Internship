@@ -1,6 +1,10 @@
 export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   res.setHeader('Content-Type', 'application/json');
+  try {
 
   const dim = req.query.dim || '3d-bulky';
   const p = parseFloat(req.query.power) || 200;
@@ -36,4 +40,7 @@ export default function handler(req, res) {
     morphology: morph,
     depth_stations: 10
   });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
 }

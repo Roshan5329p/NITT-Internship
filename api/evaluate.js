@@ -1,6 +1,10 @@
 export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   res.setHeader('Content-Type', 'application/json');
+  try {
 
   const p = parseFloat(req.query.power) || 280;
   const v = parseFloat(req.query.speed) || 960;
@@ -38,4 +42,7 @@ export default function handler(req, res) {
     defect_indices: { regime: regime, keyhole_threshold: 0.80, balling_ratio: parseFloat((length / Math.max(1, width)).toFixed(2)) },
     astm_f2924: { compliant: aspect <= 0.80 && ved >= 55 && ved <= 85 }
   });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
 }
