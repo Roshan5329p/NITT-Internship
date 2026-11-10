@@ -146,33 +146,31 @@ public class DashboardVerifier {
             allPassed = false;
         }
 
-        // 4. Verify Titanium Additive Physics Workstation Files from Conversation 8949deb4-be5b-4756-ad1d-56803d3263a9
+        // 4. Verify Complete Decommission of Workstation Suite and System Decoupling
         totalChecks++;
-        Path tiPhysicsTs = Paths.get("dashboard", "src", "physics", "titaniumPhysics.ts");
-        Path tiCanvasTsx = Paths.get("dashboard", "src", "components", "titanium", "MeltPoolPyrometryCanvas.tsx");
-        Path tiViewTsx = Paths.get("dashboard", "src", "components", "titanium", "TitaniumWorkstationView.tsx");
+        try {
+            boolean dashUnlinked = !Files.readString(dashPath).contains("Workstation Suite")
+                    && !Files.readString(dashPath).contains("titanium-workstation");
+            boolean predictorUnlinked = !Files.readString(predictorTsx).contains("titanium-workstation");
+            Path appTsx = Paths.get("dashboard", "src", "App.tsx");
+            boolean appUnlinked = !Files.readString(appTsx).contains("titanium-workstation")
+                    && !Files.readString(appTsx).contains("TitaniumWorkstationView");
+            Path tiDir = Paths.get("dashboard", "src", "components", "titanium");
+            boolean dirRemoved = !Files.exists(tiDir);
 
-        if (Files.exists(tiPhysicsTs) && Files.exists(tiCanvasTsx) && Files.exists(tiViewTsx)) {
-            try {
-                String physContent = Files.readString(tiPhysicsTs);
-                String viewContent = Files.readString(tiViewTsx);
-                boolean tiOk = physContent.contains("computeMeltPoolDiagnostics")
-                        && physContent.contains("calculateVolumetricEnergyDensity")
-                        && viewContent.contains("Titanium Additive Physics Workstation");
-
-                if (tiOk) {
-                    System.out.println("[CHECK 4] PASSED: Verified 8949deb4-be5b-4756-ad1d-56803d3263a9 Titanium Workstation files.");
-                    passCount++;
-                } else {
-                    System.err.println("[CHECK 4] FAILED: Missing required workstation tokens in imported sources.");
-                    allPassed = false;
-                }
-            } catch (Exception e) {
-                System.err.println("[CHECK 4] FAILED: Error checking Titanium Workstation files: " + e.getMessage());
+            if (dashUnlinked && predictorUnlinked && appUnlinked && dirRemoved) {
+                System.out.println("[CHECK 4] PASSED: Workstation Suite and external linkage website completely removed.");
+                passCount++;
+            } else {
+                System.err.println("[CHECK 4] FAILED: Lingering workstation suite linkages or files detected!");
+                if (!dashUnlinked) System.err.println("  - process_windows_dashboard.html still has workstation link");
+                if (!predictorUnlinked) System.err.println("  - MatSciPredictor.tsx still has workstation link");
+                if (!appUnlinked) System.err.println("  - App.tsx still has workstation link/component");
+                if (!dirRemoved) System.err.println("  - dashboard/src/components/titanium directory still exists");
                 allPassed = false;
             }
-        } else {
-            System.err.println("[CHECK 4] FAILED: Required 8949deb4 workstation files not found!");
+        } catch (Exception e) {
+            System.err.println("[CHECK 4] FAILED: Error checking workstation decommission: " + e.getMessage());
             allPassed = false;
         }
 

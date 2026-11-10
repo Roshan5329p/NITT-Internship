@@ -3191,14 +3191,6 @@ export function MatSciPredictor({
                                 <span>{gridContrastMode === 'ultra' ? 'Ultra Grid' : 'High Grid'}</span>
                               </button>
                             )}
-                            <a
-                              href="#titanium-workstation"
-                              className="px-2 py-1 rounded text-[10px] font-mono flex items-center gap-1 bg-[#142334] hover:bg-[#1a3048] text-[#38bdf8] border border-[#38bdf8]/40 transition-all font-bold"
-                              title="Open Ti-6Al-4V Workstation 60 FPS Pyrometry Simulator"
-                            >
-                              <Flame className="w-3 h-3 text-[#38bdf8] animate-pulse" />
-                              <span>60 FPS Simulator</span>
-                            </a>
                           </div>
                         </div>
                       </div>

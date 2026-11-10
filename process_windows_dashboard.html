@@ -1929,7 +1929,7 @@
               <button type="button" class="mp-toggle-btn" id="btnMpHighGrid" onclick="toggleMpOverlay('highgrid')">High Grid</button>
             </div>
 
-            <!-- Live 60 FPS Fluid Simulation & Pyrometry Controls (from 8949deb4 Ti-6Al-4V Workstation) -->
+            <!-- Live 60 FPS Fluid Simulation & Pyrometry Controls -->
             <div class="mp-control-group" style="padding: 2px 6px;">
               <button type="button" class="mp-toggle-btn active" id="btnMpAnimate" onclick="toggleMpAnimation()" style="border-color: rgba(56,189,248,0.5); color: #38bdf8; font-weight: bold;">
                 <span id="icoMpAnim">⏸</span> <span id="lblMpAnim">Live Simulation (60 FPS)</span>
@@ -1943,9 +1943,6 @@
               <button type="button" class="mp-toggle-btn" id="btnMpAbort" onclick="toggleEmergencyAbort()" style="border-color: rgba(239,68,68,0.4); color: #fca5a5;">
                 <span id="txtMpAbort">⛔ Quench Emitter</span>
               </button>
-              <a href="/app#titanium-workstation" target="_blank" class="mp-toggle-btn" style="text-decoration: none; border-color: rgba(168,85,247,0.5); color: #c084fc;">
-                <span>🚀 Workstation Suite</span>
-              </a>
             </div>
           </div>
         </div>
@@ -2080,7 +2077,7 @@
           </div>
         </div>
 
-        <!-- Real-Time ASTM F2924 / F3001 Phase Kinetics & Pyrometry Telemetry Row (from 8949deb4 Workstation) -->
+        <!-- Real-Time ASTM F2924 / F3001 Phase Kinetics & Pyrometry Telemetry Row -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-top: 12px;">
           <div style="background: #0b111e; border: 1px solid rgba(80,216,233,0.3); border-radius: 8px; padding: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
             <div>
@@ -3347,13 +3344,13 @@ let mpDims = true;
 let mpCallouts = true;
 let mpGrid = true;
 let mpHighGrid = false;
-let mpPyrometry = true;      // 1650°C Liquidus, 995°C β-Transus, 575°C Ms (from 8949deb4 Workstation)
+let mpPyrometry = true;      // 1650°C Liquidus, 995°C β-Transus, 575°C Ms
 let mpMarangoni = true;      // Radial Marangoni surface flow vectors
 let isOpticalAborted = false;// Emergency optical beam quench simulation
 
 // ========================================================
 // 60 FPS LIVE FLUID DYNAMICS & PYROMETRY ANIMATION ENGINE
-// (Ported from 8949deb4 Ti-6Al-4V Workstation & MeltPoolPyrometryCanvas)
+// Melt Pool Pyrometry & Fluid Streamlines Canvas
 // ========================================================
 let isMpSimulating = true;
 let mpAnimPhase = 0;
@@ -3983,7 +3980,7 @@ function updateMeltPoolAndThermal() {
     peakTemp = 25;
   }
 
-  // 8949deb4 Ti-6Al-4V Workstation Telemetry (Pyrometry, Phase Kinetics, and ASTM F2924 Compliance)
+  // Melt Pool Telemetry (Pyrometry, Phase Kinetics, and ASTM F2924 Compliance)
   const t85Ms = isOpticalAborted ? 0 : Number((1.85 * (effP / Math.max(100, effV))).toFixed(1));
   const coolingRateK_S = (t85Ms > 0) ? Math.round(300 / (t85Ms / 1000.0)) : 0;
   const vMarangoniMmS = isOpticalAborted ? 0 : Math.round(180 * Math.pow(effP / 200.0, 0.5) * Math.pow(950 / Math.max(100, effV), 0.25));

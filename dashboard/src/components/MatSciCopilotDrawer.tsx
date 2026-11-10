@@ -26,8 +26,7 @@ export type CopilotRouteId =
   | 'datasets'
   | 'telemetry'
   | 'heat-treatment'
-  | 'phase-kinetics'
-  | 'titanium-workstation';
+  | 'phase-kinetics';
 
 export interface CopilotNavigationTarget {
   id: CopilotRouteId;

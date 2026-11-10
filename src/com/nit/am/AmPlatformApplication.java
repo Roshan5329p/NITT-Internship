@@ -18,6 +18,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
@@ -37,9 +38,10 @@ import java.util.*;
  */
 public class AmPlatformApplication {
 
-    private static final int PORT = 8080;
+    private static final int DEFAULT_PORT = 8080;
     private final List<AmRecord> paperDatabase = new ArrayList<>();
     private final String workspaceDir;
+    private final int port;
 
     // Integrated Material Science services
     private CsvMaterialRepository materialRepo;
@@ -48,6 +50,7 @@ public class AmPlatformApplication {
 
     public AmPlatformApplication(String workspaceDir) {
         this.workspaceDir = workspaceDir;
+        this.port = resolvePort();
     }
 
     public void init() throws IOException {
@@ -222,7 +225,7 @@ public class AmPlatformApplication {
     }
 
     public void startServer() throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
+        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
         // 1. Dashboard & Static Assets Handler
         server.createContext("/", new HttpHandler() {
@@ -444,15 +447,44 @@ public class AmPlatformApplication {
         server.start();
 
         System.out.println("==================================================================");
-        System.out.printf(">> Pure Java AM Platform Server is LIVE on: http://localhost:%d%n", PORT);
-        System.out.println("   - Interactive Dashboard:  http://localhost:8080/dashboard");
-        System.out.println("   - Physics Evaluation API: http://localhost:8080/api/evaluate?power=250&speed=1100");
-        System.out.println("   - Melt Pool Physics API:  http://localhost:8080/api/meltpool?model=coen&power=200");
-        System.out.println("   - Bontha Solidification:  http://localhost:8080/api/bontha?dim=3d-bulky&power=200");
-        System.out.println("   - Materials Registry API: http://localhost:8080/api/materials");
-        System.out.println("   - Recipe Synthesis API:   http://localhost:8080/api/recipe?variant=TIV-00001");
-        System.out.println("   - Global Stats API:       http://localhost:8080/api/stats");
+        System.out.printf(">> Pure Java AM Platform Server is LIVE on: http://localhost:%d%n", port);
+        System.out.printf("   - Interactive Dashboard:  http://localhost:%d/dashboard%n", port);
+        System.out.printf("   - Physics Evaluation API: http://localhost:%d/api/evaluate?power=250&speed=1100%n", port);
+        System.out.printf("   - Melt Pool Physics API:  http://localhost:%d/api/meltpool?model=coen&power=200%n", port);
+        System.out.printf("   - Bontha Solidification:  http://localhost:%d/api/bontha?dim=3d-bulky&power=200%n", port);
+        System.out.printf("   - Materials Registry API: http://localhost:%d/api/materials%n", port);
+        System.out.printf("   - Recipe Synthesis API:   http://localhost:%d/api/recipe?variant=TIV-00001%n", port);
+        System.out.printf("   - Global Stats API:       http://localhost:%d/api/stats%n", port);
         System.out.println("==================================================================");
+    }
+
+    private static int resolvePort() {
+        String envPort = System.getenv("PORT");
+        int preferredPort = DEFAULT_PORT;
+
+        if (envPort != null && !envPort.isBlank()) {
+            try {
+                preferredPort = Integer.parseInt(envPort);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("PORT must be a number between 1 and 65535", e);
+            }
+        }
+
+        if (preferredPort < 1 || preferredPort > 65535) {
+            throw new IllegalArgumentException("PORT must be a number between 1 and 65535");
+        }
+
+        for (int candidate = preferredPort; candidate <= 65535; candidate++) {
+            try (ServerSocket probe = new ServerSocket()) {
+                probe.setReuseAddress(true);
+                probe.bind(new InetSocketAddress(candidate));
+                return candidate;
+            } catch (IOException ignored) {
+                // Try the next port if the preferred one is already in use.
+            }
+        }
+
+        throw new IllegalStateException("No free TCP port found between " + preferredPort + " and 65535.");
     }
 
     private void serveFile(HttpExchange exchange, Path file, String contentType) throws IOException {
@@ -497,6 +529,7 @@ public class AmPlatformApplication {
             boolean runServer = args.length > 0 && args[0].equalsIgnoreCase("--serve");
             if (runServer) {
                 app.startServer();
+                Thread.currentThread().join();
             } else {
                 System.out.println(">> Batch evaluation complete. Run with '--serve' to start the interactive web server.");
             }

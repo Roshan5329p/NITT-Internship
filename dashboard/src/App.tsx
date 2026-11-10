@@ -27,7 +27,6 @@ import { MaterialCompareModal } from './components/MaterialCompareModal';
 import { ActiveTab, MatSciPredictor } from './components/MatSciPredictor';
 import type { CopilotNavigationTarget, CopilotRouteId } from './components/MatSciCopilotDrawer';
 import { SupplementaryDatasetsSection } from './components/SupplementaryDatasetsSection';
-import { TitaniumWorkstationView } from './components/titanium/TitaniumWorkstationView';
 
 const COPILOT_SECTION_TARGETS: Record<CopilotRouteId, { sectionId: string; tab?: ActiveTab }> = {
   predictions: { sectionId: 'physics-predictor', tab: 'predictions' },
@@ -41,8 +40,7 @@ const COPILOT_SECTION_TARGETS: Record<CopilotRouteId, { sectionId: string; tab?:
   datasets: { sectionId: 'supplementary-datasets' },
   telemetry: { sectionId: 'telemetry-section' },
   'heat-treatment': { sectionId: 'architecture-section' },
-  'phase-kinetics': { sectionId: 'insights-section' },
-  'titanium-workstation': { sectionId: 'titanium-workstation' }
+  'phase-kinetics': { sectionId: 'insights-section' }
 };
 
 export default function App() {
@@ -183,14 +181,6 @@ export default function App() {
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#50d8e9]/20 text-[#50d8e9] font-mono">6</span>
             </button>
 
-            <button
-              onClick={() => handleScrollToSection('titanium-workstation')}
-              className="px-2 xl:px-2.5 py-1.5 rounded-lg border border-[#00f7ff]/40 bg-[#00f7ff]/10 text-[#00f7ff] hover:bg-[#00f7ff]/20 transition-all whitespace-nowrap shrink-0 font-medium flex items-center gap-1.5 shadow-[0_0_12px_rgba(0,247,255,0.15)] cursor-pointer"
-            >
-              <Flame className="w-3.5 h-3.5 text-[#00f7ff]" />
-              <span>Ti-6Al-4V Workstation</span>
-            </button>
-
             {/* Interactive "Explore Sections ▾" Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button
@@ -216,19 +206,6 @@ export default function App() {
                   </div>
 
                   <div className="py-1 space-y-0.5">
-                    <button
-                      onClick={() => {
-                        handleScrollToSection('titanium-workstation');
-                        setIsSectionsDropdownOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-2 rounded-lg text-xs hover:bg-[#00f7ff]/10 hover:text-[#00f7ff] text-[#c6c5d8] transition-colors flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Flame className="w-3.5 h-3.5 text-[#00f7ff]" />
-                        <span className="font-medium">Ti-6Al-4V Physics Workstation</span>
-                      </div>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#00f7ff]/20 text-[#00f7ff]">L-PBF/EBM</span>
-                    </button>
                     <button
                       onClick={() => {
                         handleScrollToSection('supplementary-datasets');
@@ -486,13 +463,6 @@ export default function App() {
           onTabChange={setActivePredictorTab}
           onCopilotNavigate={handleCopilotNavigate}
         />
-
-        {/* Dedicated Titanium Additive Physics — Ti-6Al-4V L-PBF & EBM Workstation Section */}
-        <section id="titanium-workstation" className="max-w-[1640px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <TitaniumWorkstationView
-            onNavigateParentSection={handleScrollToSection}
-          />
-        </section>
 
         <MatSciWorkbench
           selectedMaterialId={selectedMaterialId}

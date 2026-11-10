@@ -10,7 +10,9 @@ import com.matsci.service.UsageStatsService;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.util.concurrent.Executors;
 
 /**
@@ -78,19 +80,30 @@ public class Main {
 
     private static int resolvePort() {
         String envPort = System.getenv("PORT");
-        if (envPort == null || envPort.isBlank()) {
-            return 8080;
+        int preferredPort = 8080;
+
+        if (envPort != null && !envPort.isBlank()) {
+            try {
+                preferredPort = Integer.parseInt(envPort);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("PORT must be a number between 1 and 65535", e);
+            }
         }
 
-        final int port;
-        try {
-            port = Integer.parseInt(envPort);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("PORT must be a number between 1 and 65535", e);
-        }
-        if (port < 1 || port > 65535) {
+        if (preferredPort < 0 || preferredPort > 65535) {
             throw new IllegalArgumentException("PORT must be a number between 1 and 65535");
         }
-        return port;
+
+        for (int candidate = preferredPort; candidate <= 65535; candidate++) {
+            try (ServerSocket probe = new ServerSocket()) {
+                probe.setReuseAddress(true);
+                probe.bind(new InetSocketAddress(candidate));
+                return candidate;
+            } catch (IOException ignored) {
+                // Try the next port if the current one is already occupied.
+            }
+        }
+
+        throw new IllegalStateException("No free TCP port found between " + preferredPort + " and 65535.");
     }
 }
