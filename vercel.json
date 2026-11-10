@@ -49,6 +49,10 @@
       "dest": "/api/papers.js"
     },
     {
+      "src": "/api/scopus",
+      "dest": "/api/scopus.js"
+    },
+    {
       "src": "/plots/(.*)",
       "dest": "/plots/$1"
     },
