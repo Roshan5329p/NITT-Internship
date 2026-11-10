@@ -2634,6 +2634,23 @@ function setTargetFromCurrent() {
 // ==========================================
 // 3. CORE PHYSICS & METALLURGY CALCULATION
 // ==========================================
+function hvToHrcStandard(hv) {
+  const conversion = [
+    [240, 20.3], [300, 29.8], [400, 40.8], [500, 49.1],
+    [600, 54.7], [700, 58.1], [800, 60.3]
+  ];
+  if (!Number.isFinite(hv) || hv < conversion[0][0] || hv > conversion[conversion.length - 1][0]) return 'N/A';
+
+  for (let i = 1; i < conversion.length; i++) {
+    const [upperHv, upperHrc] = conversion[i];
+    if (hv <= upperHv) {
+      const [lowerHv, lowerHrc] = conversion[i - 1];
+      return `${Math.round(lowerHrc + ((hv - lowerHv) / (upperHv - lowerHv)) * (upperHrc - lowerHrc))} HRC`;
+    }
+  }
+  return 'N/A';
+}
+
 function calculatePhysics() {
   const alloy = ALLOY_DATA[currentAlloy] || ALLOY_DATA.ti64_gr5;
   const p = parseFloat(document.getElementById('sl_p').value);
@@ -3884,12 +3901,15 @@ function updateMeltPoolAndThermal() {
   const elH = document.getElementById('sl_h');
   const elT = document.getElementById('sl_t');
   const elSpot = document.getElementById('sl_spot');
+  const elPreheat = document.getElementById('sl_preheat');
 
   const p = elP ? parseFloat(elP.value) : 200;
   const v = elV ? parseFloat(elV.value) : 950;
   const h = elH ? parseFloat(elH.value) : 80;
   const t = elT ? parseFloat(elT.value) : 40;
   const spot = elSpot ? parseFloat(elSpot.value) : 80;
+  const preheat = elPreheat ? parseFloat(elPreheat.value) : 25;
+  const alloy = (typeof ALLOY_DATA !== 'undefined' && typeof currentAlloy !== 'undefined' && ALLOY_DATA[currentAlloy]) ? ALLOY_DATA[currentAlloy] : { density: 4430, specificHeat: 526, thermalConductivity: 6.7, liquidusC: 1668, laserAbsorptivity: 0.448 };
 
   // Fully Coupled Cross-Subsection Operating Parameters
   const effP = (bonthaOverridePower !== null) ? bonthaOverridePower : p;
@@ -3948,6 +3968,10 @@ function updateMeltPoolAndThermal() {
     }
   } else {
     // LPBF Process Regime (V >= 100 mm/s)
+    const liquidus = alloy.liquidusC || 1650.0;
+    const deltaT = Math.max(50.0, liquidus - preheat);
+    const alloyDensity = alloy.density || 4189.0;
+    const alloyCp = alloy.specificHeat || 759.0;
     if (mpModel === 'coen') {
       // KU Leuven Semi-Analytical Hybrid Model (Coen et al. 2022 JMPT 304: 117547)
       const rho_l = 4189.0;
@@ -3957,11 +3981,11 @@ function updateMeltPoolAndThermal() {
       const d_diff = k_l / (rho_l * cp_l);
       const o_rad = (effSpot / 2.0) * 1e-6;
       const pe = (effVMs * o_rad) / d_diff;
-      const hs = rho_l * cp_l * 1625.0 + rho_l * 365000.0;
+      const hs = rho_l * cp_l * deltaT + rho_l * 365000.0;
       const normH = (Math.pow(2.0, 0.75) * eta * effP) / (hs * Math.sqrt(Math.PI * d_diff * effVMs * Math.pow(o_rad, 3)));
       const dimW = 0.6536 * Math.pow(Math.max(0.1, normH), 0.42) * Math.pow(Math.max(0.01, pe), -0.18);
       poolWidth = Math.round(Math.max(effSpot * 0.4, 2.0 * o_rad * dimW * 1e6));
-      const y_recoil = (eta * effP) / (2.0 * o_rad * k_l * Math.max(50.0, 3573.0 - 298.15));
+      const y_recoil = (eta * effP) / (2.0 * o_rad * k_l * Math.max(50.0, 3573.0 - (preheat + 273.15)));
       const b_fabbro = 0.1488 * Math.pow(Math.max(0.05, pe), -0.79);
       const r_aspect = Math.max(0.2, y_recoil * b_fabbro);
       poolDepth = Math.round(poolWidth * r_aspect);
@@ -3969,7 +3993,7 @@ function updateMeltPoolAndThermal() {
       aspect = r_aspect.toFixed(2);
     } else {
       // Rosenthal (1946) Classical Analytical 3D Moving Point Source
-      const wEst = Math.sqrt((8.0 * effP * effAlpha) / (Math.PI * Math.E * 4189.0 * 526.0 * 1625.0 * Math.max(0.01, effVMs)));
+      const wEst = Math.sqrt((8.0 * effP * effAlpha) / (Math.PI * Math.E * alloyDensity * alloyCp * deltaT * Math.max(0.01, effVMs)));
       poolWidth = Math.round(Math.max(effSpot * 0.8, wEst * 1e6 * 0.765 + effSpot * 0.39));
       const r_aspect = 0.51;
       poolDepth = Math.round(poolWidth * r_aspect);
@@ -3977,12 +4001,12 @@ function updateMeltPoolAndThermal() {
       aspect = r_aspect.toFixed(2);
     }
     aspect = (poolDepth / Math.max(1, poolWidth)).toFixed(2);
-    peakTemp = Math.min(3200, Math.round(25 + (effP * effAlpha * 1e6) / (Math.PI * 6.7 * effSpot)));
+    peakTemp = Math.min(3200, Math.round(preheat + (effP * effAlpha * 1e6) / (Math.PI * 6.7 * effSpot)));
   }
 
   growthRate = isOpticalAborted ? '0.00' : (effVMs * 100.0).toFixed(2);
   if (isOpticalAborted) {
-    peakTemp = 25;
+    peakTemp = preheat;
   }
 
   // Melt Pool Telemetry (Pyrometry, Phase Kinetics, and ASTM F2924 Compliance)
@@ -4202,8 +4226,8 @@ function updateMeltPoolAndThermal() {
       if (isOpticalAborted) {
         svgHtml += `
           <g class="quench-banner">
-            <rect x="295" y="52" width="370" height="32" rx="6" fill="#450a0a" stroke="#ef4444" stroke-width="1.8"/>
-            <text x="480" y="72" fill="#fecaca" font-size="10.5" font-weight="bold" font-family="monospace" text-anchor="middle">⚠️ OPTICAL EMITTER QUENCHED (T = 25°C AMBIENT)</text>
+            <rect x="280" y="52" width="240" height="32" rx="6" fill="#450a0a" stroke="#ef4444" stroke-width="1.8"/>
+            <text x="400" y="72" fill="#fecaca" font-size="9.5" font-weight="bold" font-family="monospace" text-anchor="middle">⚠️ EMITTER QUENCHED (T = ${preheat}°C)</text>
           </g>
         `;
       }
@@ -4285,7 +4309,7 @@ function updateMeltPoolAndThermal() {
           <!-- 2. Molten Pool (Liquid) Callout (Strictly pinned top-left at x = [90, 265], y in [52, 84]) -->
           <rect x="90" y="52" width="175" height="32" rx="6" fill="#080e18" stroke="#00f7ff" stroke-width="1.2"/>
           <text x="100" y="65" fill="#ffffff" font-size="10.5" font-weight="bold">💧 Molten Pool (Liquid)</text>
-          <text x="100" y="77" fill="#00f7ff" font-size="8.5" font-family="monospace">${isOpticalAborted ? 'T = 25°C | Solidified Ambient' : 'T ≥ 1650°C | Fully Molten Metal'}</text>
+          <text x="100" y="77" fill="#00f7ff" font-size="8.5" font-family="monospace">${isOpticalAborted ? `T = ${preheat}°C | ${preheat > 25 ? 'Preheated' : 'Ambient'}` : `T ≥ ${Math.round(alloy.liquidusC || 1650)}°C | Fully Molten Metal`}</text>
         `;
 
         // Molten pool pointer line connects cleanly to rear-upper shoulder (well to the left of Width badge)
@@ -4449,7 +4473,7 @@ function updateMeltPoolAndThermal() {
   }
 
   // 3. Render Subsection 2 (Bontha Solidification Map)
-  renderBonthaSolidificationPhysics(effP, effVMs, effSpot, t);
+  renderBonthaSolidificationPhysics(effP, effVMs, effSpot, t, preheat);
 }
 
 // ========================================================
@@ -4525,8 +4549,9 @@ function classifyMorphology(G_Kcm, R_cms) {
   return 'Columnar';
 }
 
-function calculateBontha2D(P_W, V_mms, alpha, b_mm) {
-  const Tm = 1654, Ts = 1604, T0 = 25;
+function calculateBontha2D(P_W, V_mms, alpha, b_mm, T0 = 25) {
+  const Tm = (typeof ALLOY_DATA !== 'undefined' && typeof currentAlloy !== 'undefined' && ALLOY_DATA[currentAlloy] && ALLOY_DATA[currentAlloy].liquidusC) ? ALLOY_DATA[currentAlloy].liquidusC : 1654;
+  const Ts = Tm - 50;
   const rho = 4420, c = 526, k = 27.0;
   const V_ms = V_mms / 1000.0;
   const b_m = (b_mm || 2.26) / 1000.0;
@@ -4612,8 +4637,8 @@ function calculateBontha2D(P_W, V_mms, alpha, b_mm) {
   };
 }
 
-function calculateBontha3D(P_W, V_mms, alpha, physicsMode) {
-  const Tm = 1654, T0 = 25;
+function calculateBontha3D(P_W, V_mms, alpha, physicsMode, T0 = 25) {
+  const Tm = (typeof ALLOY_DATA !== 'undefined' && typeof currentAlloy !== 'undefined' && ALLOY_DATA[currentAlloy] && ALLOY_DATA[currentAlloy].liquidusC) ? ALLOY_DATA[currentAlloy].liquidusC : 1654;
   const rho = 4420, c = 526, k = 27.0;
   const V_ms = V_mms / 1000.0;
   const alpha_Q = alpha * P_W;
@@ -4717,19 +4742,20 @@ function calculateBontha3D(P_W, V_mms, alpha, physicsMode) {
   };
 }
 
-function renderBonthaSolidificationPhysics(pLive, vLiveMs, spot, t) {
+function renderBonthaSolidificationPhysics(pLive, vLiveMs, spot, t, preheatLive) {
   const gContainer = document.getElementById('bonthaLargeLayers');
   if (!gContainer) return;
 
   const P = (bonthaOverridePower !== null) ? bonthaOverridePower : pLive;
   const V_mms = (bonthaOverrideSpeed !== null) ? bonthaOverrideSpeed : (vLiveMs * 1000.0);
   const alpha = (bonthaSource === 'ebeam') ? 0.88 : 0.35;
+  const T0 = (preheatLive !== undefined) ? preheatLive : 25;
 
   let res;
   if (bonthaDim === '2d-thin-wall') {
-    res = calculateBontha2D(P, V_mms, alpha, bonthaCustomWallThicknessMm);
+    res = calculateBontha2D(P, V_mms, alpha, bonthaCustomWallThicknessMm, T0);
   } else {
-    res = calculateBontha3D(P, V_mms, alpha, bonthaModel);
+    res = calculateBontha3D(P, V_mms, alpha, bonthaModel, T0);
   }
   lastBonthaResult = res;
   lastBonthaProfile = res.depthProfile;
