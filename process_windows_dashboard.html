@@ -1064,6 +1064,7 @@
     </div>
     <div style="display: flex; align-items: center; gap: 10px;">
       <span class="counter-pill" id="liveStatusBadge">● Java Core Active (Port 8080)</span>
+      <span class="counter-pill" id="supabaseStatusBadge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">⚡ Supabase Cloud (Syncing...)</span>
       <a href="/api/stats" target="_blank" class="counter-pill" style="text-decoration: none;">REST API</a>
     </div>
   </div>
@@ -4967,7 +4968,39 @@ function renderBonthaProfileTable() {
 
 // 7. INITIALIZATION
 // ==========================================
+const SUPABASE_CLOUD_URL = 'https://iismzfileyuvqgdpivgx.supabase.co';
+const SUPABASE_CLOUD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpc216ZmlsZXl1dnFnZHBpdmd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3ODAwMjYsImV4cCI6MjEwOTM1NjAyNn0.v__OCG79B-NyMKmyb_W7Lp_Lw0xcoWUggEuONMECmGo';
+
+async function initSupabaseCloudSync() {
+  const badge = document.getElementById('supabaseStatusBadge');
+  try {
+    const res = await fetch(`${SUPABASE_CLOUD_URL}/rest/v1/papers?select=id,paper_number,title,authors,year,am_process,material&order=paper_number.asc`, {
+      headers: {
+        'apikey': SUPABASE_CLOUD_KEY,
+        'Range': '0-53',
+        'Prefer': 'count=exact'
+      }
+    });
+    if (res.ok) {
+      const papers = await res.json();
+      if (Array.isArray(papers) && papers.length > 0) {
+        if (badge) {
+          badge.innerText = `⚡ Supabase Cloud (${papers.length} Papers)`;
+          badge.style.color = '#34d399';
+          badge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+          badge.style.background = 'rgba(16, 185, 129, 0.15)';
+        }
+      }
+    } else {
+      if (badge) badge.innerText = '⚡ Supabase (Local Mode)';
+    }
+  } catch (e) {
+    if (badge) badge.innerText = '⚡ Supabase (Local Mode)';
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
+  initSupabaseCloudSync();
   populatePapersTable(PAPERS_DATABASE);
   updateVedSolver(72);
   calculatePhysics();

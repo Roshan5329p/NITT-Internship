@@ -1,0 +1,72 @@
+{
+  "version": 2,
+  "name": "nit-titanium-am-platform",
+  "builds": [
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "process_windows_dashboard.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "plots/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "data/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "docs/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/stats",
+      "dest": "/api/stats.js"
+    },
+    {
+      "src": "/api/evaluate",
+      "dest": "/api/evaluate.js"
+    },
+    {
+      "src": "/api/meltpool",
+      "dest": "/api/meltpool.js"
+    },
+    {
+      "src": "/api/bontha",
+      "dest": "/api/bontha.js"
+    },
+    {
+      "src": "/api/materials",
+      "dest": "/api/materials.js"
+    },
+    {
+      "src": "/api/papers",
+      "dest": "/api/papers.js"
+    },
+    {
+      "src": "/plots/(.*)",
+      "dest": "/plots/$1"
+    },
+    {
+      "src": "/data/(.*)",
+      "dest": "/data/$1"
+    },
+    {
+      "src": "/docs/(.*)",
+      "dest": "/docs/$1"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/process_windows_dashboard.html"
+    },
+    {
+      "src": "/",
+      "dest": "/process_windows_dashboard.html"
+    }
+  ]
+}
