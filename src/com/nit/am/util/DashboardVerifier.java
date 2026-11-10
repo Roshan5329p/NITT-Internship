@@ -171,7 +171,8 @@ public class DashboardVerifier {
             "http://localhost:8080/api/evaluate?power=200&speed=950",
             "http://localhost:8080/api/meltpool?model=coen&power=200&speed=950",
             "http://localhost:8080/api/bontha?dim=3d-bulky&power=200&speed=950",
-            "http://localhost:8080/api/materials"
+            "http://localhost:8080/api/materials",
+            "http://localhost:8080/api/scopus?count=2"
         };
 
         for (String urlStr : testUrls200) {
