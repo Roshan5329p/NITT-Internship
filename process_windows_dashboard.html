@@ -3374,9 +3374,12 @@ function toggleMpAnimation() {
   if (lbl) lbl.innerText = isMpSimulating ? 'Live Simulation (60 FPS)' : 'Simulation Paused';
   if (isMpSimulating) {
     lastMpAnimTs = performance.now();
-    if (!mpAnimFrameId) {
+    if (mpAnimFrameId === null) {
       mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
     }
+  } else if (mpAnimFrameId !== null) {
+    cancelAnimationFrame(mpAnimFrameId);
+    mpAnimFrameId = null;
   }
 }
 
@@ -3388,6 +3391,8 @@ const mpPowderParticles = Array.from({ length: 42 }, (_, idx) => ({
 }));
 
 function renderMpAnimationStep(now) {
+  mpAnimFrameId = null;
+  if (!isMpSimulating) return;
   if (!now) now = performance.now();
   const dt = Math.min(0.05, (now - lastMpAnimTs) / 1000);
   lastMpAnimTs = now;

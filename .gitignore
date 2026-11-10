@@ -33,3 +33,7 @@ Thumbs.db
 
 dvros_assets/
 dvros_dump.html
+
+# AI Studio & Tool metadata
+.aistudio/
+.qodo/
