@@ -7,6 +7,8 @@ import com.matsci.repository.CsvMaterialRepository;
 import com.matsci.service.MaterialService;
 import com.matsci.service.ParameterInferenceService;
 import com.matsci.util.JsonUtil;
+import com.nit.am.literature.ScopusPaperFetcher;
+import com.nit.am.literature.ScopusPaperFetcher.ScopusPaper;
 import com.nit.am.model.AmRecord;
 import com.nit.am.physics.BonthaSolidificationModel;
 import com.nit.am.physics.MeltPoolPhysicsEngine;
@@ -408,6 +410,41 @@ public class AmPlatformApplication {
             }
         });
 
+        server.createContext("/api/scopus", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                String query = exchange.getRequestURI().getQuery();
+                String searchQuery = "TITLE-ABS-KEY(\"Ti-6Al-4V\" AND (\"selective laser melting\" OR \"LPBF\" OR \"additive manufacturing\") AND (\"solidification\" OR \"melt pool\"))";
+                int count = 10;
+                String sort = "citedby-count";
+
+                if (query != null) {
+                    for (String pair : query.split("&")) {
+                        String[] kv = pair.split("=", 2);
+                        if (kv.length == 2) {
+                            if (kv[0].equalsIgnoreCase("query")) searchQuery = java.net.URLDecoder.decode(kv[1], StandardCharsets.UTF_8);
+                            if (kv[0].equalsIgnoreCase("count")) count = Math.min(parsePositiveI(kv[1], count), 25);
+                            if (kv[0].equalsIgnoreCase("sort")) sort = java.net.URLDecoder.decode(kv[1], StandardCharsets.UTF_8);
+                        }
+                    }
+                }
+
+                String apiKey = ScopusPaperFetcher.getApiKey();
+                if (apiKey == null || apiKey.isEmpty()) {
+                    sendJsonResponse(exchange, 500, "{\"status\":\"error\",\"message\":\"SCOPUS_API_KEY is not defined in .env or environment\"}");
+                    return;
+                }
+
+                try {
+                    List<ScopusPaper> papers = ScopusPaperFetcher.searchPapers(apiKey, searchQuery, count, sort);
+                    String json = ScopusPaperFetcher.toJson(papers, searchQuery);
+                    sendJsonResponse(exchange, 200, json);
+                } catch (Exception e) {
+                    sendJsonResponse(exchange, 502, "{\"status\":\"error\",\"message\":\"" + e.getMessage().replace("\"", "\\\"") + "\"}");
+                }
+            }
+        });
+
         server.setExecutor(null);
         server.start();
 
@@ -464,6 +501,15 @@ public class AmPlatformApplication {
     private double parsePositiveD(String value, double fallback) {
         double parsed = parseFiniteD(value, fallback);
         return parsed > 0 ? parsed : fallback;
+    }
+
+    private int parsePositiveI(String value, int fallback) {
+        try {
+            int parsed = Integer.parseInt(value);
+            return parsed > 0 ? parsed : fallback;
+        } catch (Exception e) {
+            return fallback;
+        }
     }
 
     private Path resolveStaticFile(Path root, String relativePath) {

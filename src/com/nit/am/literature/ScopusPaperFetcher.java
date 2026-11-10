@@ -236,6 +236,37 @@ public class ScopusPaperFetcher {
         return str.replace("\"", "\"\"");
     }
 
+    public static String toJson(List<ScopusPaper> papers, String query) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n");
+        sb.append("  \"status\": \"success\",\n");
+        sb.append("  \"source\": \"Elsevier Scopus Search API\",\n");
+        sb.append("  \"query\": \"").append(escapeJson(query)).append("\",\n");
+        sb.append("  \"count\": ").append(papers.size()).append(",\n");
+        sb.append("  \"papers\": [\n");
+        for (int i = 0; i < papers.size(); i++) {
+            ScopusPaper p = papers.get(i);
+            sb.append("    {\n");
+            sb.append("      \"scopusId\": \"").append(escapeJson(p.scopusId)).append("\",\n");
+            sb.append("      \"title\": \"").append(escapeJson(p.title)).append("\",\n");
+            sb.append("      \"creator\": \"").append(escapeJson(p.creator)).append("\",\n");
+            sb.append("      \"publicationName\": \"").append(escapeJson(p.publicationName)).append("\",\n");
+            sb.append("      \"year\": \"").append(escapeJson(p.year)).append("\",\n");
+            sb.append("      \"doi\": \"").append(escapeJson(p.doi)).append("\",\n");
+            sb.append("      \"citedByCount\": ").append(p.citedByCount).append(",\n");
+            sb.append("      \"openAccess\": ").append(p.openAccess).append("\n");
+            sb.append("    }").append(i < papers.size() - 1 ? "," : "").append("\n");
+        }
+        sb.append("  ]\n");
+        sb.append("}");
+        return sb.toString();
+    }
+
+    private static String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " ").replace("\r", "");
+    }
+
     public static void main(String[] args) {
         System.out.println("==================================================================");
         System.out.println("  ELSEVIER SCOPUS RESEARCH PAPER HARVESTER (PURE JAVA)            ");
