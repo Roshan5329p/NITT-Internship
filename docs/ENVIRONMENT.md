@@ -1,32 +1,34 @@
-# Environment Configuration
+# Environment & Configuration
 
-## Purpose
-Document every environment variable across local development and production.
+## 1. Embedded Server Configuration
+
+The pure Java AM platform server is configured via runtime flags or default constants in `AmPlatformApplication.java`:
+
+| Parameter | Default Value | CLI Flag Override | Description |
+| :--- | :--- | :--- | :--- |
+| **HTTP Port** | `8080` | `--port <num>` | Network port for the embedded HTTP server |
+| **Server Mode**| Foreground | `--serve` | Starts the persistent background HTTP server |
+| **Verify Mode**| Standard | `--verify` | Executes the self-diagnostic test runner |
 
 ---
 
-## Public Variables
+## 2. Cloud Database Credentials (Supabase)
+
+Environment variables loaded at runtime for cloud database synchronization:
 
 ```bash
-NEXT_PUBLIC_APP_URL=
-NEXT_PUBLIC_API_URL=
+# Supabase Cloud Project Configuration
+SUPABASE_URL=https://iismzfileyuvqgdpivgx.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 ---
 
-## Private Variables
+## 3. Local File Paths
 
-```bash
-DATABASE_URL=
-AUTH_SECRET=
-STRIPE_SECRET_KEY=
-```
-
----
-
-## Rules
-
-- Never commit real secrets
-- Never expose private variables to client-side code
-- Keep local and production configuration separate
-- Document newly introduced variables
+The platform utilizes relative filesystem paths rooted at the working directory:
+- **Dashboard Source**: `process_windows_dashboard.html`
+- **CSV Datasets**: `data/*.csv`
+- **Generated Plots**: `plots/*.png`
+- **Documentation**: `docs/*.md`
+- **Compiled Binaries**: `bin/com/nit/am/**/*.class`

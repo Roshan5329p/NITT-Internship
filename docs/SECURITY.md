@@ -1,134 +1,52 @@
 # Security Guidelines
 
-## 1. Authentication
+## 1. Security Architecture & Threat Model
 
-Authentication Provider:
-[Provider]
+The platform operates as a specialized engineering calculation tool running on trusted internal networks or standalone workstations.
 
-Methods:
-- Email/password
-- OAuth
-- Magic link
-- [Other]
+### Key Assets to Protect:
+- Proprietary AM build recipes and experimental parameter sets.
+- Supabase cloud database credentials and API service tokens.
+- Integrity of mathematical calculations and ASTM qualification audit reports.
 
 ---
 
-## 2. Authorization
+## 2. Secrets Management & Environment Variables
 
-Roles:
-- Admin
-- User
-- [Role]
-
-Permissions:
-
-### Admin
-- [Permission]
-
-### User
-- [Permission]
-
-Authorization must be enforced server-side.
+### Rules:
+1. **Zero Secret Hardcoding**: API keys, database passwords, and private tokens must never be embedded in source code, committed to Git, or exposed in client-side HTML.
+2. **Environment Variable Injection**: Cloud keys must be loaded via system environment variables:
+   - `SUPABASE_URL`: Endpoint URL for the Supabase project.
+   - `SUPABASE_ANON_KEY`: Public anonymous client key (read/write row-level authorized).
+   - `SUPABASE_SERVICE_ROLE_KEY`: Admin service key (never exposed to client).
+3. **Repository Protection**: `.env`, `.env.local`, `.vscode/`, `.aistudio/`, and `.qodo/` are strictly tracked in `.gitignore`.
 
 ---
 
-## 3. Secrets
+## 3. Server & Network Security
 
-Rules:
-- Never hard-code credentials
-- Never commit production secrets
-- Never expose private secrets to the client
-- Use environment variables
-- Rotate compromised credentials
-- Use appropriate secret storage
+### A. Bound Interface
+The embedded Java HTTP server binds to `localhost` (loopback `127.0.0.1`) or explicitly configured host addresses. External exposing should be proxied through an authenticated reverse proxy (e.g., Nginx with TLS 1.3).
 
----
-
-## 4. Environment Variables
-
-Public:
-[Variables]
-
-Private:
-[Variables]
+### B. Input Validation & Defense in Depth
+- All query string arguments (`power`, `speed`, `hatch`, etc.) are parsed via strict numerical types (`Double.parseDouble`).
+- Out-of-bounds inputs are clamped or rejected with HTTP 400 Bad Request to prevent Denial of Service (DoS) through CPU exhaustion in iterative Bessel convergence loops.
+- No shell command execution or dynamic class loading is performed on user inputs.
 
 ---
 
-## 5. API Security
+## 4. Database Security & Row-Level Security (RLS)
 
-Input validation:
-[Rules]
-
-Rate limiting:
-[Rules]
-
-CORS:
-[Rules]
-
-Authentication:
-[Rules]
-
-Authorization:
-[Rules]
+- **Supabase Cloud**: Protected by Row-Level Security (RLS) policies.
+- Public read access is restricted to authenticated or whitelisted academic clients.
+- Mutations (inserts/updates to the 54 papers and 289 variants) require authenticated service tokens.
 
 ---
 
-## 6. Data Protection
+## 5. Security Verification Checklist
 
-Sensitive data:
-[List]
-
-Encryption:
-[Rules]
-
-Retention:
-[Rules]
-
-Deletion:
-[Rules]
-
----
-
-## 7. Logging
-
-Never log:
-- Passwords
-- API keys
-- Tokens
-- Sensitive personal information
-
-Log:
-- Authentication events
-- Important actions
-- Errors
-- Security events
-
----
-
-## 8. File Uploads
-
-Allowed file types:
-[List]
-
-Maximum size:
-[Limit]
-
-Validation:
-[Rules]
-
-Storage:
-[Location]
-
----
-
-## 9. Security Checklist
-
-- [ ] Authentication implemented
-- [ ] Authorization implemented
-- [ ] Server-side validation
-- [ ] Secrets protected
-- [ ] Sensitive data protected
-- [ ] Rate limiting considered
-- [ ] File uploads validated
-- [ ] Errors do not expose sensitive details
-- [ ] Dependencies reviewed
+- [x] No plaintext credentials or secrets in Git repository history.
+- [x] Numerical input parameters validated against bounds ($P \le 5000\text{ W}$, $v \ge 1\text{ mm/s}$).
+- [x] Static file server prevents directory traversal attacks (path sanitization in `AmPlatformApplication.java`).
+- [x] Supabase API requests conducted strictly over HTTPS with TLS 1.3.
+- [x] Verification runner (`DashboardVerifier.java`) confirms external dev servers (Vite) are decoupled.

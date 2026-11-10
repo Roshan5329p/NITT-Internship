@@ -1,113 +1,44 @@
-# AI Coding Agent Instructions
+# AI Coding Agent Instructions & Guardrails
 
 ## 1. Project Context
 
-Project:
-[Name]
-
-Purpose:
-[Description]
-
-Primary Users:
-[Users]
+- **Project**: NIT Trichy Titanium Additive Manufacturing (Ti-6Al-4V) Platform
+- **Mission**: Deliver a zero-dependency, pure-Java scientific platform for AM process optimization and ASTM qualification.
+- **Primary Users**: Additive manufacturing research scholars, metallurgical engineers, and certification auditors.
 
 ---
 
-## 2. Source of Truth
+## 2. Hard Architectural Rules (Non-Negotiable)
 
-Before making significant changes, read the relevant documentation inside /docs.
-
-Core documentation:
-- PRD.md
-- DESIGN_SYSTEM.md
-- ARCHITECTURE.md
-- DATABASE.md
-- SECURITY.md
-- CODE_STYLE.md
-- TESTING.md
-
-Do not contradict these documents without first identifying the conflict.
+1. **NO PYTHON**: The backend must remain 100% pure Java standard library. Never add Python scripts, NumPy/SciPy wrappers, or Python HTTP microservices.
+2. **NO VITE / REACT HMR SERVER**: The separate Vite frontend was completely excised. All UI code resides in `process_windows_dashboard.html`. Do not recreate or attempt to start a separate Node.js dev server.
+3. **PRESERVE ALL PHYSICAL EQUATIONS**: Do not modify or simplify the KU Leuven (Coen et al. 2022) hybrid equations, Rosenthal point-source equations, or Bontha Bessel function calculations without rigorous citation.
+4. **MAINTAIN ZERO COLLISION LAYOUT**: Ensure all SVG badges, dimension arrows, and banners maintain adequate margin buffers (>15 px) across all parameter combinations ($P \in [80, 450]\text{ W}$, $v \in [300, 2200]\text{ mm/s}$).
+5. **AUTOMATED VERIFICATION**: Always execute `java -cp bin com.nit.am.util.DashboardVerifier` before declaring a task complete.
 
 ---
 
-## 3. General Rules
+## 3. Workflow for Non-Trivial Changes
 
-- Understand existing code before modifying it
-- Reuse existing components and utilities
-- Follow the design system
-- Follow the architecture
-- Follow database conventions
-- Follow security requirements
-- Follow coding conventions
-- Do not invent business requirements
-- Do not expose secrets
-- Avoid unnecessary dependencies
-- Avoid unrelated changes
-
----
-
-## 4. Planning
-
-Before implementing a non-trivial task:
-1. Inspect relevant documentation
-2. Inspect relevant code
-3. Identify affected files
-4. Identify dependencies
-5. Identify database/API changes
-6. Identify tests required
-7. Create a concise implementation plan
+```text
+1. Inspect /docs (PRD.md, ARCHITECTURE.md, etc.)
+   ↓
+2. Inspect Relevant Source Code (AmPlatformApplication.java, process_windows_dashboard.html)
+   ↓
+3. Create Concise Implementation Plan
+   ↓
+4. Make Minimal Focused Edits
+   ↓
+5. Run java -cp bin com.nit.am.util.DashboardVerifier
+   ↓
+6. Update /docs If System Behavior Altered
+```
 
 ---
 
-## 5. Implementation
+## 4. Conflict Resolution
 
-During implementation:
-- Make focused changes
-- Reuse established patterns
-- Preserve existing behavior
-- Avoid unnecessary rewrites
-- Keep code maintainable
-
----
-
-## 6. Validation
-
-After implementation:
-1. Run tests
-2. Run linting
-3. Run type checking
-4. Run the build
-5. Review changed files
-6. Check for unintended changes
-
----
-
-## 7. Documentation
-
-Update documentation when implementation changes:
-- Product behavior
-- Architecture
-- Database schema
-- API contracts
-- Security rules
-- Coding conventions
-
----
-
-## 8. Conflict Handling
-
-If requirements conflict:
-Do not guess.
-Identify the conflict and ask for clarification.
-
----
-
-## 9. Completion Criteria
-
-A task is complete only when:
-- Requirements are satisfied
-- Tests pass
-- Build succeeds
-- No unintended files changed
-- Security rules are respected
-- Documentation is updated when necessary
+If a user request appears to contradict physical laws (e.g., asking for 100% density under $10\text{ W}$ power) or architectural rules (e.g., asking to install Python packages):
+1. **Do not guess or silently degrade the architecture.**
+2. **Explain the physical/architectural constraint clearly to the user.**
+3. **Provide the compliant, physically valid solution.**

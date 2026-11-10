@@ -1,117 +1,52 @@
-# Testing Strategy
+# Testing & System Verification Strategy
 
-## 1. Testing Goals
+## 1. Testing Philosophy
 
-Critical functionality:
-- [Feature]
-- [Feature]
-- [Feature]
+The platform relies on an automated, self-contained verification suite (`com.nit.am.util.DashboardVerifier`). 
 
----
-
-## 2. Test Types
-
-### Unit Testing
-Test:
-- Utility functions
-- Business logic
-- Components where appropriate
+Testing validates four foundational pillars:
+1. **Physical Soundness**: Analytical equations match published peer-reviewed benchmarks (Coen 2022, Rosenthal 1946, Bontha 2006/2009).
+2. **Dataset Integrity**: All 6 core CSV files are intact, non-empty, and conform to the schema.
+3. **Endpoint Reliability**: The embedded HTTP server handles all REST routes with HTTP 200 OK responses and valid JSON payloads.
+4. **Architectural Decoupling**: Vite React development routes (`/app`) must strictly return HTTP 404 to guarantee the standalone status of the platform.
 
 ---
 
-### Integration Testing
-Test:
-- APIs
-- Database interactions
-- Authentication flows
-- Service integrations
+## 2. Test Execution Command
 
----
+Run the automated 14-point regression runner from the workspace root:
 
-### End-to-End Testing
-Test critical user journeys:
-- Sign up
-- Sign in
-- Create project
-- Complete checkout
-- [Other critical flows]
-
----
-
-## 3. Testing Tools
-
-Unit:
-[Tool]
-
-Integration:
-[Tool]
-
-E2E:
-[Tool]
-
----
-
-## 4. Test File Structure
-
-```text
-tests/
-├── unit/
-├── integration/
-└── e2e/
+```powershell
+java -cp bin com.nit.am.util.DashboardVerifier
 ```
 
 ---
 
-## 5. Critical User Flows
+## 3. The 14 Verification Checkpoints
 
-Flow:
-[Name]
-
-Steps:
-1. [Step]
-2. [Step]
-3. [Step]
-
-Expected result:
-[Result]
-
----
-
-## 6. Coverage
-
-Target:
-[Practical target]
-
-Prioritize:
-- Critical business logic
-- Authentication
-- Payments
-- Data mutations
-- Important user journeys
+| Check # | Scope | Description | Success Criteria |
+| :--- | :--- | :--- | :--- |
+| **CHECK 1** | HTML Integrity | Verifies `process_windows_dashboard.html` exists and is non-empty (>200 KB) | File exists, contains Melt Pool, Bontha, and Rosenthal elements |
+| **CHECK 2** | Datasets | Checks all 5 core CSV files in `data/` | Files exist and contain headers + data rows |
+| **CHECK 3** | Java Plots | Verifies Java2D publication plot outputs in `plots/` | PNG files exist and are valid images |
+| **CHECK 4** | Vite Excised | Verifies Vite React HMR server is completely decoupled | `dashboard/` directory absent or decommissioned |
+| **HTTP 1** | Route `/dashboard` | Main interactive dashboard web route | HTTP 200 OK |
+| **HTTP 2** | Route `/` | Root redirect / index route | HTTP 200 OK |
+| **HTTP 3** | Route `/plots/*.png` | Defect processing window static image | HTTP 200 OK (image/png) |
+| **HTTP 4** | Route `/plots/*.png` | ASTM qualification Ashby map image | HTTP 200 OK (image/png) |
+| **HTTP 5** | API `/api/stats` | Global platform metrics | HTTP 200 OK (valid JSON) |
+| **HTTP 6** | API `/api/evaluate` | Dynamic thermo-kinetic physics solver | HTTP 200 OK (valid JSON) |
+| **HTTP 7** | API `/api/meltpool` | Melt pool geometry endpoint | HTTP 200 OK (valid JSON) |
+| **HTTP 8** | API `/api/bontha` | Solidification microstructural map API | HTTP 200 OK (valid JSON) |
+| **HTTP 9** | API `/api/materials`| Alloy thermophysical registry | HTTP 200 OK (valid JSON) |
+| **HTTP 10**| Route `/app` | Verifies old Vite development route is inactive | HTTP 404 Not Found |
 
 ---
 
-## 7. Commands
+## 4. Definition of Done (DoD)
 
-Test:
-[test command]
-
-Lint:
-[lint command]
-
-Build:
-[build command]
-
-Type Check:
-[typecheck command]
-
----
-
-## 8. Definition of Done
-
-- [ ] Tests pass
-- [ ] Build passes
-- [ ] Lint passes
-- [ ] Type checking passes
-- [ ] Critical flow verified
-- [ ] No blocking errors
+A code change is accepted only when:
+- [x] `java -cp bin com.nit.am.util.DashboardVerifier` passes **14 / 14 checks (100%)**.
+- [x] Zero JavaScript console errors occur upon slider movement in the browser.
+- [x] No label or badge collision occurs on the SVG simulation canvas.
+- [x] Working tree is clean and synchronized with the remote Git repository.

@@ -1,64 +1,80 @@
-# UX Flows
+# UX Flows & User Journeys
 
-## Purpose
-This document defines the actual user journeys across the application.
-
----
-
-## Core Journey Overview
+## 1. Primary User Journey: Parameter Tuning & Process Window Exploration
 
 ```text
-Landing Page
+Open Dashboard (http://localhost:8080/dashboard)
     ↓
- Sign Up
+Select Alloy (Ti-6Al-4V Grade 5 or ELI Grade 23)
     ↓
-Onboarding
+Select AM Route (LPBF / SLM, L-DED, WAAM, Binder Jetting)
     ↓
-Dashboard
+Adjust Live Sliders (Laser Power P, Scan Speed v, Spot Ø, Preheat T0)
     ↓
-Create Project
-    ↓
-Project Details
-    ↓
-Invite Team
-    ↓
-Complete Project
+Observe Immediate Visual Responses:
+├─ Top KPI Cards (Hardness HV/HRC, Est. UTS, Relative Density, VED)
+├─ Defect Status Badge (Conduction Mode vs Lack of Fusion vs Keyhole)
+├─ Dynamic SVG Melt Pool Canvas (Width W, Length L, Depth D, Isotherms)
+├─ Telemetry Stream (t8/5 cooling time, cooling rate, Marangoni velocity)
+└─ Bontha Solidification Map (Pulsating Radar cursor at [R, G], Grain Morphology)
 ```
 
 ---
 
-## Flow 1 — User Registration
+## 2. Secondary User Journey: Target Property Reverse Solving
 
-1. User opens signup page
-2. User enters email
-3. User creates password
-4. Validation runs
-5. Account is created
-6. User is redirected to onboarding
-
-Success:
-[Expected result]
-
-Failure:
-[Expected behavior]
+```text
+Navigate to VED & Property Solver
+    ↓
+Enter Target Hardness (e.g. 400 HV) or Target VED (e.g. 72 J/mm³)
+    ↓
+Select Optimization Strategy (Fine Quality, Balanced, Productivity)
+    ↓
+Click "Auto-Tune Safe Window"
+    ↓
+System automatically calculates:
+├─ Optimal Laser Power P
+├─ Optimal Scan Speed v
+└─ Safe Hatch Spacing & Layer Thickness
+    ↓
+Sliders smoothly animate to target coordinates with zero collision
+```
 
 ---
 
-## Flow 2 — Create Project
+## 3. Tertiary User Journey: Solidification Map & Microstructural Profiling
 
-1. User clicks Create Project
-2. Modal opens
-3. User enters name
-4. User submits
-5. API validates data
-6. Project is created
-7. User is redirected
+```text
+Navigate to Subsection 2 (Bontha Solidification Map)
+    ↓
+Toggle Dimension Mode (Bulky 3D Half-Space vs Thin-Wall 2D)
+    ↓
+Toggle Scale Mode (Small-Scale LENS™ vs Large-Scale 5–30 kW)
+    ↓
+Toggle Beam Source (Laser α=0.35 vs Electron Beam EBAM α=0.88)
+    ↓
+Review Sub-Views:
+├─ Microstructure Map (Ashby-style log-log G vs R chart)
+├─ Dimensionless Process Maps (Bontha 2009 Fig. 2a & 2b)
+├─ Through-Depth Solidification Profile (10 Depth Stations table)
+└─ Size-Scale & Kinetics comparison
+```
 
-Loading State:
-[Behavior]
+---
 
-Error State:
-[Behavior]
+## 4. Quench & Emergency Abort Flow
 
-Empty State:
-[Behavior]
+```text
+User clicks "Quench Emitter"
+    ↓
+System triggers isOpticalAborted = true
+    ↓
+Visual Updates:
+├─ Laser center turns to dashed gray reticle (Power P = 0 W)
+├─ Centered Quench Notification Banner appears (⚠️ EMITTER QUENCHED [T = Preheat °C])
+├─ Isotherms collapse to ambient / preheat baseline
+├─ Marangoni convection drops to 0 mm/s
+└─ Status badge shifts to "EMITTER QUENCHED" in red (#f87171)
+    ↓
+User clicks "Live Simulation" to re-ignite laser beam
+```
