@@ -2,17 +2,17 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
 
-  let supabaseCount = 54;
+  let supabaseCount = 154;
   let supabaseStatus = 'connected';
   try {
     const supabaseUrl = process.env.SUPABASE_URL || 'https://iismzfileyuvqgdpivgx.supabase.co';
     const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpc216ZmlsZXl1dnFnZHBpdmd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3ODAwMjYsImV4cCI6MjEwOTM1NjAyNn0.v__OCG79B-NyMKmyb_W7Lp_Lw0xcoWUggEuONMECmGo';
-    const r = await fetch(`${supabaseUrl}/rest/v1/papers?select=count`, {
+    const r = await fetch(`${supabaseUrl}/rest/v1/papers?select=count&paper_number=lte.154`, {
       headers: { apikey: supabaseKey, Range: '0-0', Prefer: 'count=exact' }
     });
     const cr = r.headers.get('content-range');
     if (cr && cr.includes('/')) {
-      supabaseCount = parseInt(cr.split('/')[1]) || 54;
+      supabaseCount = parseInt(cr.split('/')[1]) || 154;
     }
   } catch (e) {
     supabaseStatus = 'offline_fallback';
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
   res.status(200).json({
     platform: 'NIT Trichy Titanium AM Platform',
-    version: '2.4.0',
+    version: '2.5.0',
     deployment: 'Vercel Cloud Serverless',
     supabase_status: supabaseStatus,
     supabase_project: 'iismzfileyuvqgdpivgx',
