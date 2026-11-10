@@ -8,17 +8,17 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 /**
  * Pure Java Verification & Quality Assurance Tool.
- * Replaces all Python testing scripts with 100% native Java code.
+ * 100% native Java verification for the Unified Additive Manufacturing Platform.
  *
  * Verifies:
- * 1. process_windows_dashboard.html structure, SVG elements, CSS, and controllers
- * 2. HTTP Server status on http://localhost:8080
- * 3. REST endpoints: /dashboard, /api/stats, /api/evaluate, /api/meltpool, /api/bontha
- * 4. Data CSVs and SQLite database integrity
+ * 1. process_windows_dashboard.html (Main Website) structure, SVG visualizers, and interactive models
+ * 2. Data directory CSVs and material repositories
+ * 3. Pure Java2D scientific plotting engine and analytical physics models
+ * 4. Complete decommission and excision of the separate Vite React dashboard
+ * 5. Native HTTP Server endpoints and REST APIs on http://localhost:8080
  */
 public class DashboardVerifier {
 
@@ -31,13 +31,13 @@ public class DashboardVerifier {
         int passCount = 0;
         int totalChecks = 0;
 
-        // 1. Verify Dashboard HTML File Content
+        // 1. Verify Main Website Dashboard HTML File Content
         totalChecks++;
         Path dashPath = Paths.get("process_windows_dashboard.html");
         if (Files.exists(dashPath)) {
             try {
                 String html = Files.readString(dashPath);
-                System.out.printf("[CHECK 1] Dashboard HTML exists (%d bytes).%n", html.length());
+                System.out.printf("[CHECK 1] Main Website Dashboard HTML exists (%d bytes).%n", html.length());
 
                 String[] requiredTokens = {
                     "switchTab('melt-pool'",
@@ -65,8 +65,13 @@ public class DashboardVerifier {
                     }
                 }
 
+                if (html.contains("/app#titanium-workstation") || html.contains("Workstation Suite")) {
+                    System.err.println("  FAILED: process_windows_dashboard.html still has chained workstation suite link!");
+                    htmlOk = false;
+                }
+
                 if (htmlOk) {
-                    System.out.println("  PASSED: All required Melt Pool & Bontha UI elements verified in HTML.");
+                    System.out.println("  PASSED: All required Melt Pool, Bontha, and Rosenthal elements verified in Main Website HTML.");
                     passCount++;
                 } else {
                     allPassed = false;
@@ -112,94 +117,64 @@ public class DashboardVerifier {
             allPassed = false;
         }
 
-        // 3. Verify Melt Pool & Thermal Source Files from Conversation 26558942-1cb2-4119-904e-bc3c393511a3
+        // 3. Verify Pure Java AM Platform & Scientific Plotter Architecture
         totalChecks++;
-        Path predictorTsx = Paths.get("dashboard", "src", "components", "MatSciPredictor.tsx");
-        Path physicsEngineTs = Paths.get("dashboard", "src", "utils", "amPhysicsEngine.ts");
-        Path distIndex = Paths.get("dashboard", "dist", "index.html");
+        Path plotterSrc = Paths.get("src", "com", "nit", "am", "ProcessWindowPlotter.java");
+        Path appSrc = Paths.get("src", "com", "nit", "am", "AmPlatformApplication.java");
+        Path mainSrc = Paths.get("src", "com", "matsci", "Main.java");
+        Path plotDir = Paths.get("plots");
 
-        if (Files.exists(predictorTsx) && Files.exists(physicsEngineTs) && Files.exists(distIndex)) {
-            try {
-                String predictorSrc = Files.readString(predictorTsx);
-                String physicsSrc = Files.readString(physicsEngineTs);
+        boolean sourcesOk = Files.exists(plotterSrc) && Files.exists(appSrc) && Files.exists(mainSrc);
+        boolean plotsOk = Files.exists(plotDir.resolve("ti64_lpbf_defect_processing_window.png"))
+                && Files.exists(plotDir.resolve("ti64_astm_qualification_ashby_map.png"));
 
-                boolean tsxOk = predictorSrc.contains("MELT POOL & THERMAL KINETICS")
-                        && predictorSrc.contains("KU Leuven Hybrid Melt Pool (Coen et al. 2022)")
-                        && predictorSrc.contains("Solidification Microstructure Maps");
-                boolean physicsOk = physicsSrc.contains("calculateCoenHybridMeltPool")
-                        && physicsSrc.contains("calculateBonthaThermalModel")
-                        && physicsSrc.contains("getBonthaDimensionlessProcessMapData");
-
-                if (tsxOk && physicsOk) {
-                    System.out.println("[CHECK 3] PASSED: Verified 26558942-1cb2-4119-904e-bc3c393511a3 Melt Pool & Thermal section files.");
-                    passCount++;
-                } else {
-                    System.err.println("[CHECK 3] FAILED: Missing required physics tokens in imported TypeScript sources.");
-                    allPassed = false;
-                }
-            } catch (Exception e) {
-                System.err.println("[CHECK 3] FAILED: Error checking TSX files: " + e.getMessage());
-                allPassed = false;
-            }
+        if (sourcesOk && plotsOk) {
+            System.out.println("[CHECK 3] PASSED: Pure Java platform sources and generated Java2D publication plots verified.");
+            passCount++;
         } else {
-            System.err.println("[CHECK 3] FAILED: Required dashboard files from 26558942-1cb2-4119-904e-bc3c393511a3 not found!");
+            System.err.println("[CHECK 3] FAILED: Missing Java platform sources or generated plots.");
             allPassed = false;
         }
 
-        // 4. Verify Complete Decommission of Workstation Suite and System Decoupling
+        // 4. Verify Complete Decommission of Separate Vite React Dashboard
         totalChecks++;
         try {
-            boolean dashUnlinked = !Files.readString(dashPath).contains("Workstation Suite")
-                    && !Files.readString(dashPath).contains("titanium-workstation");
-            boolean predictorUnlinked = !Files.readString(predictorTsx).contains("titanium-workstation");
-            Path appTsx = Paths.get("dashboard", "src", "App.tsx");
-            boolean appUnlinked = !Files.readString(appTsx).contains("titanium-workstation")
-                    && !Files.readString(appTsx).contains("TitaniumWorkstationView");
-            Path tiDir = Paths.get("dashboard", "src", "components", "titanium");
-            boolean dirRemoved = !Files.exists(tiDir);
+            Path dashboardDir = Paths.get("dashboard");
+            boolean dirRemoved = !Files.exists(dashboardDir);
+            boolean dashUnlinked = !Files.readString(dashPath).contains("/app")
+                    && !Files.readString(dashPath).contains("vite");
+            Path appJava = Paths.get("src", "com", "nit", "am", "AmPlatformApplication.java");
+            boolean serverClean = !Files.readString(appJava).contains("dashboard/dist");
 
-            if (dashUnlinked && predictorUnlinked && appUnlinked && dirRemoved) {
-                System.out.println("[CHECK 4] PASSED: Workstation Suite and external linkage website completely removed.");
+            if (dirRemoved && dashUnlinked && serverClean) {
+                System.out.println("[CHECK 4] PASSED: Separate Vite React dashboard completely excised. Main website is 100% standalone.");
                 passCount++;
             } else {
-                System.err.println("[CHECK 4] FAILED: Lingering workstation suite linkages or files detected!");
-                if (!dashUnlinked) System.err.println("  - process_windows_dashboard.html still has workstation link");
-                if (!predictorUnlinked) System.err.println("  - MatSciPredictor.tsx still has workstation link");
-                if (!appUnlinked) System.err.println("  - App.tsx still has workstation link/component");
-                if (!dirRemoved) System.err.println("  - dashboard/src/components/titanium directory still exists");
+                System.err.println("[CHECK 4] FAILED: Lingering Vite dashboard traces detected!");
+                if (!dirRemoved) System.err.println("  - dashboard/ directory still exists on disk");
+                if (!dashUnlinked) System.err.println("  - process_windows_dashboard.html contains links to Vite app");
+                if (!serverClean) System.err.println("  - AmPlatformApplication.java still routes to dashboard/dist");
                 allPassed = false;
             }
         } catch (Exception e) {
-            System.err.println("[CHECK 4] FAILED: Error checking workstation decommission: " + e.getMessage());
+            System.err.println("[CHECK 4] FAILED: Error checking Vite decommission: " + e.getMessage());
             allPassed = false;
         }
 
-        // 5. Test HTTP Server Endpoints (Pure Java Server)
-        String currentJsAsset = "index-Cy1u7cQU.js";
-        String currentCssAsset = "index-CUbhpxe1.css";
-        Path distIndexPath = Paths.get("dashboard/dist/index.html");
-        if (Files.exists(distIndexPath)) {
-            try {
-                String distHtml = Files.readString(distIndexPath);
-                java.util.regex.Matcher mJs = java.util.regex.Pattern.compile("/assets/(index-[A-Za-z0-9_-]+\\.js)").matcher(distHtml);
-                if (mJs.find()) currentJsAsset = mJs.group(1);
-                java.util.regex.Matcher mCss = java.util.regex.Pattern.compile("/assets/(index-[A-Za-z0-9_-]+\\.css)").matcher(distHtml);
-                if (mCss.find()) currentCssAsset = mCss.group(1);
-            } catch (Exception ignored) {}
-        }
-
-        String[] testUrls = {
+        // 5. Test Live HTTP Server Endpoints (Pure Java AM Platform Server)
+        String[] testUrls200 = {
             "http://localhost:8080/dashboard",
-            "http://localhost:8080/app",
-            "http://localhost:8080/assets/" + currentJsAsset,
-            "http://localhost:8080/assets/" + currentCssAsset,
+            "http://localhost:8080/",
+            "http://localhost:8080/plots/ti64_lpbf_defect_processing_window.png",
+            "http://localhost:8080/plots/ti64_astm_qualification_ashby_map.png",
             "http://localhost:8080/api/stats",
             "http://localhost:8080/api/evaluate?power=200&speed=950",
             "http://localhost:8080/api/meltpool?model=coen&power=200&speed=950",
-            "http://localhost:8080/api/bontha?dim=3d-bulky&power=200&speed=950"
+            "http://localhost:8080/api/bontha?dim=3d-bulky&power=200&speed=950",
+            "http://localhost:8080/api/materials"
         };
 
-        for (String urlStr : testUrls) {
+        for (String urlStr : testUrls200) {
             totalChecks++;
             try {
                 URL url = URI.create(urlStr).toURL();
@@ -224,8 +199,28 @@ public class DashboardVerifier {
                 }
             } catch (Exception e) {
                 System.err.printf("[HTTP CHECK] %s -> Connection error: %s (Server may be restarting)%n", urlStr, e.getMessage());
-                // Non-fatal if server not running yet
             }
+        }
+
+        // Verify decommissioned route returns 404
+        totalChecks++;
+        try {
+            URL url = URI.create("http://localhost:8080/app").toURL();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(3000);
+            conn.setReadTimeout(3000);
+            int code = conn.getResponseCode();
+
+            if (code == 404) {
+                System.out.println("[HTTP CHECK] http://localhost:8080/app -> 404 Not Found (PASSED: Vite dashboard route correctly deactivated)");
+                passCount++;
+            } else {
+                System.err.printf("[HTTP CHECK] http://localhost:8080/app -> Expected 404 but got HTTP %d%n", code);
+                allPassed = false;
+            }
+        } catch (Exception e) {
+            System.err.printf("[HTTP CHECK] http://localhost:8080/app -> Error: %s%n", e.getMessage());
         }
 
         System.out.println("------------------------------------------------------------------");

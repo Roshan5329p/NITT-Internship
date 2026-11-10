@@ -1,1 +1,0 @@
-export{t as Cell,n as CellHookData,r as Column,i as HookData,a as Row,o as Table,s as __createTable,c as __drawTable,l as applyPlugin,u as autoTable,u as default}from"./jspdf.plugin.autotable-C5_WfDh3.js";
