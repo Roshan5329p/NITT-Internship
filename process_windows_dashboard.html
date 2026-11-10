@@ -3541,6 +3541,20 @@ let mpAnimState = {
   isOpticalAborted: false
 };
 
+function ensureMpAnimationRunning() {
+  if (isMpSimulating && mpAnimFrameId === null) {
+    lastMpAnimTs = performance.now();
+    mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
+  }
+}
+
+function cancelMpAnimation() {
+  if (mpAnimFrameId !== null) {
+    cancelAnimationFrame(mpAnimFrameId);
+    mpAnimFrameId = null;
+  }
+}
+
 function toggleMpAnimation() {
   isMpSimulating = !isMpSimulating;
   const btn = document.getElementById('btnMpAnimate');
@@ -3550,13 +3564,9 @@ function toggleMpAnimation() {
   if (ico) ico.innerText = isMpSimulating ? '⏸' : '▶';
   if (lbl) lbl.innerText = isMpSimulating ? 'Live Simulation (60 FPS)' : 'Simulation Paused';
   if (isMpSimulating) {
-    lastMpAnimTs = performance.now();
-    if (mpAnimFrameId === null) {
-      mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
-    }
-  } else if (mpAnimFrameId !== null) {
-    cancelAnimationFrame(mpAnimFrameId);
-    mpAnimFrameId = null;
+    ensureMpAnimationRunning();
+  } else {
+    cancelMpAnimation();
   }
 }
 
@@ -3583,18 +3593,18 @@ function getMpDomNodes() {
 function renderMpAnimationStep(now) {
   mpAnimFrameId = null;
   if (!isMpSimulating) return;
-  const nowTs = now || performance.now();
-  const dt = Math.min(0.05, Math.max(0.001, (nowTs - (lastMpAnimTs || nowTs)) / 1000)) || 0.016;
-  lastMpAnimTs = nowTs;
-
-  // Throttle animation when Melt Pool tab is not active to conserve CPU
-  const viewMeltPool = document.getElementById('view_melt-pool');
-  if (viewMeltPool && !viewMeltPool.classList.contains('active')) {
-    if (isMpSimulating) mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
-    return;
-  }
 
   try {
+    const nowTs = now || performance.now();
+    const dt = Math.min(0.05, Math.max(0.001, (nowTs - (lastMpAnimTs || nowTs)) / 1000)) || 0.016;
+    lastMpAnimTs = nowTs;
+
+    // Throttle animation when Melt Pool tab is not active to conserve CPU
+    const viewMeltPool = document.getElementById('view_melt-pool');
+    if (viewMeltPool && !viewMeltPool.classList.contains('active')) {
+      return;
+    }
+
     const {
       xBeam, span, halfW, depthPx, spotR, rearHazX, frontHazX, rearX, frontX, midX,
       effV, effP, view, marangoni, pyrometry, isOpticalAborted: aborted
@@ -3602,7 +3612,7 @@ function renderMpAnimationStep(now) {
 
     const isDedRegime = (effV < 100.0 || effP >= 1000.0);
 
-    if (isMpSimulating && !aborted) {
+    if (!aborted) {
       // Dynamic fluid dynamics animation rate:
       // In DED regime, fluid Marangoni convection and beam shimmering remain active at 1.5 rad/s.
       // In LPBF (500-1500 mm/s), scale gracefully with scan speed.
@@ -3612,14 +3622,12 @@ function renderMpAnimationStep(now) {
 
     const nodes = getMpDomNodes();
     if (!nodes || !nodes.surfaceGroup || !nodes.xzGroup) {
-      if (isMpSimulating) mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
       return;
     }
 
     if (aborted) {
       nodes.surfaceGroup.style.display = 'none';
       nodes.xzGroup.style.display = 'none';
-      if (isMpSimulating) mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
       return;
     }
 
@@ -3766,7 +3774,7 @@ function renderMpAnimationStep(now) {
   } catch (err) {
     console.error('Melt pool animation step error:', err);
   } finally {
-    if (isMpSimulating) {
+    if (isMpSimulating && mpAnimFrameId === null) {
       mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
     }
   }
@@ -3871,26 +3879,33 @@ function toggleMpOverlay(k) {
   updateMeltPoolAndThermal();
 }
 
+let isTogglingAbort = false;
 function toggleEmergencyAbort() {
-  isOpticalAborted = !isOpticalAborted;
-  const b = document.getElementById('btnMpAbort');
-  const t = document.getElementById('txtMpAbort');
-  if (b && t) {
-    if (isOpticalAborted) {
-      b.classList.add('active');
-      b.style.background = 'rgba(239, 68, 68, 0.25)';
-      b.style.borderColor = '#ef4444';
-      b.style.color = '#fecaca';
-      t.innerText = '⚡ Arm Optical Emitter';
-    } else {
-      b.classList.remove('active');
-      b.style.background = 'transparent';
-      b.style.borderColor = 'rgba(239, 68, 68, 0.4)';
-      b.style.color = '#fca5a5';
-      t.innerText = '⛔ Quench Emitter';
+  if (isTogglingAbort) return;
+  isTogglingAbort = true;
+  try {
+    isOpticalAborted = !isOpticalAborted;
+    const b = document.getElementById('btnMpAbort');
+    const t = document.getElementById('txtMpAbort');
+    if (b && t) {
+      if (isOpticalAborted) {
+        b.classList.add('active');
+        b.style.background = 'rgba(239, 68, 68, 0.25)';
+        b.style.borderColor = '#ef4444';
+        b.style.color = '#fecaca';
+        t.innerText = '⚡ Arm Optical Emitter';
+      } else {
+        b.classList.remove('active');
+        b.style.background = 'transparent';
+        b.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+        b.style.color = '#fca5a5';
+        t.innerText = '⛔ Quench Emitter';
+      }
     }
+    updateMeltPoolAndThermal();
+  } finally {
+    isTogglingAbort = false;
   }
-  updateMeltPoolAndThermal();
 }
 
 function setBonthaDim(d) {
@@ -3950,10 +3965,7 @@ function setBonthaScale(s) {
   }
   calculatePhysics();
   updateMeltPoolAndThermal();
-  if (isMpSimulating && !mpAnimFrameId) {
-    lastMpAnimTs = performance.now();
-    mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
-  }
+  ensureMpAnimationRunning();
 }
 
 function resetToLiveSliders() {
@@ -3966,10 +3978,7 @@ function resetToLiveSliders() {
   const bLg = document.getElementById('btnBnLarge'); if (bLg) bLg.classList.toggle('active', bonthaScale === 'large-scale');
   calculatePhysics();
   updateMeltPoolAndThermal();
-  if (isMpSimulating && !mpAnimFrameId) {
-    lastMpAnimTs = performance.now();
-    mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
-  }
+  ensureMpAnimationRunning();
 }
 
 function setBonthaModel(m) {
@@ -4383,7 +4392,9 @@ function updateMeltPoolAndThermal() {
           if (px >= 85 && px <= 860) {
             svgHtml += `<line x1="${px.toFixed(1)}" y1="45" x2="${px.toFixed(1)}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
             if (px >= 105 && px <= 845) {
-              if (Math.abs(px - lastLabelPx) >= 54 || x === 0) {
+              const distFromBeamPx = Math.abs(px - xBeam);
+              const isNearBeam = (x !== 0 && distFromBeamPx < 48);
+              if (!isNearBeam && (Math.abs(px - lastLabelPx) >= 54 || x === 0)) {
                 lastLabelPx = px;
                 const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(x % 1000 === 0 ? 0 : 1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
                 svgHtml += `<text x="${px.toFixed(1)}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
@@ -4591,7 +4602,9 @@ function updateMeltPoolAndThermal() {
           if (px >= 85 && px <= 860) {
             svgHtml += `<line x1="${px.toFixed(1)}" y1="45" x2="${px.toFixed(1)}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
             if (px >= 105 && px <= 845) {
-              if (Math.abs(px - lastLabelPx) >= 54 || x === 0) {
+              const distFromBeamPx = Math.abs(px - xBeam);
+              const isNearBeam = (x !== 0 && distFromBeamPx < 48);
+              if (!isNearBeam && (Math.abs(px - lastLabelPx) >= 54 || x === 0)) {
                 lastLabelPx = px;
                 const xLbl = (x === 0) ? '0 (Beam)' : (Math.abs(x) >= 1000 ? (x > 0 ? '+' : '') + (x / 1000).toFixed(x % 1000 === 0 ? 0 : 1) + ' mm' : (x > 0 ? '+' : '') + x + ' µm');
                 svgHtml += `<text x="${px.toFixed(1)}" y="393" fill="${x === 0 ? '#38bdf8' : '#cbd5e1'}" font-size="10" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
@@ -4623,16 +4636,27 @@ function updateMeltPoolAndThermal() {
 
       svgHtml += `<path d="${pathHazZ}" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.6"/>`;
       svgHtml += `<path d="${pathMushyZ}" fill="rgba(239, 68, 68, 0.22)" stroke="#ffffff" stroke-width="1.8" stroke-dasharray="5 3"/>`;
-      svgHtml += `<path d="${pathLiquidZ}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.5" filter="url(#cyanGlow)"/>`;
+      svgHtml += isOpticalAborted
+        ? `<path d="${pathLiquidZ}" fill="#1e293b" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="4 2"/>`
+        : `<path d="${pathLiquidZ}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.5" filter="url(#cyanGlow)"/>`;
 
       // Incident Beam Column
-      svgHtml += `
-        <g class="incident-laser">
-          <polygon points="${xBeam - 24},48 ${xBeam + 24},48 ${xBeam + spotR},${zSurface} ${xBeam - spotR},${zSurface}" fill="url(#laserBeamIncident)" opacity="0.85"/>
-          <circle cx="${xBeam}" cy="${zSurface}" r="${spotR * 1.2}" fill="#ffffff" stroke="#ffeb3b" stroke-width="2"/>
-          <text x="${xBeam}" y="32" fill="#ffeb3b" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">${effSourceLabel} (P = ${effPDisplay})</text>
-        </g>
-      `;
+      if (isOpticalAborted) {
+        svgHtml += `
+          <g class="incident-laser-quenched">
+            <rect x="${xBeam - 120}" y="20" width="240" height="26" rx="6" fill="#450a0a" stroke="#ef4444" stroke-width="1.6"/>
+            <text x="${xBeam}" y="37" fill="#fecaca" font-size="9.5" font-weight="bold" font-family="monospace" text-anchor="middle">⚠️ BEAM QUENCHED (P = 0 W)</text>
+          </g>
+        `;
+      } else {
+        svgHtml += `
+          <g class="incident-laser">
+            <polygon points="${xBeam - 24},48 ${xBeam + 24},48 ${xBeam + spotR},${zSurface} ${xBeam - spotR},${zSurface}" fill="url(#laserBeamIncident)" opacity="0.85"/>
+            <circle cx="${xBeam}" cy="${zSurface}" r="${spotR * 1.2}" fill="#ffffff" stroke="#ffeb3b" stroke-width="2"/>
+            <text x="${xBeam}" y="32" fill="#ffeb3b" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">${effSourceLabel} (P = ${effPDisplay})</text>
+          </g>
+        `;
+      }
 
       // Scan Direction Arrow in X-Z view (To the right of the laser beam - zero collision!)
       const scanZ_X1 = Math.min(760, xBeam + Math.max(spotR + 15, 36));
@@ -4717,10 +4741,7 @@ function updateMeltPoolAndThermal() {
     };
 
     // Keep live simulation running seamlessly across parameter or scale updates
-    if (isMpSimulating && !mpAnimFrameId) {
-      lastMpAnimTs = performance.now();
-      mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
-    }
+    ensureMpAnimationRunning();
   }
 
   // 3. Render Subsection 2 (Bontha Solidification Map)
@@ -5278,9 +5299,7 @@ window.addEventListener('DOMContentLoaded', () => {
   calculatePhysics();
   startTwinAnimation();
   // Start 60 FPS Live Melt Pool Fluid Dynamics Animation Loop
-  if (!mpAnimFrameId) {
-    mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
-  }
+  ensureMpAnimationRunning();
 });
 </script>
 
