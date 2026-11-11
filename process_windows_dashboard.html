@@ -394,22 +394,47 @@
     background: var(--accent-blue);
   }
 
-  /* Select Inputs */
-  select.dark-select {
-    width: 100%;
+  /* Form Inputs & Selects (SnowUI Form Controls) */
+  .dark-select,
+  select.dark-select,
+  input.dark-select,
+  input[type="text"]:not(.raw-input),
+  input[type="number"]:not(.raw-input) {
     background: var(--bg-subcard);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
-    padding: 10px 14px;
+    padding: 9px 14px;
     border-radius: 10px;
     font-size: 13px;
+    font-family: inherit;
     outline: none;
-    cursor: pointer;
-    transition: all 0.2s;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
   }
-  select.dark-select:focus {
+  .dark-select:focus,
+  select.dark-select:focus,
+  input.dark-select:focus,
+  input[type="text"]:focus,
+  input[type="number"]:focus {
     border-color: var(--border-focus);
     box-shadow: 0 0 0 3px rgba(24, 134, 254, 0.15);
+  }
+  .dark-select::placeholder,
+  input::placeholder {
+    color: var(--text-muted);
+  }
+  select.dark-select {
+    width: 100%;
+    cursor: pointer;
+  }
+  /* Remove number spinner arrows for sleek clean inputs */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
   }
 
   /* VED Solver Box */
@@ -1258,6 +1283,69 @@
   .bontha-sub-view.active {
     display: block;
   }
+  @keyframes tab-view-enter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes control-select {
+    0% { transform: scale(0.96); }
+    65% { transform: scale(1.025); }
+    100% { transform: scale(1); }
+  }
+  @keyframes action-feedback {
+    0% { transform: scale(1); }
+    45% { transform: scale(0.96); }
+    100% { transform: scale(1); }
+  }
+  .tab-view.active,
+  .bontha-sub-view.active {
+    animation: tab-view-enter 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .tab-btn.active,
+  .process-pill.active,
+  .preset-pill.active,
+  .profile-btn.active,
+  .mp-pill-btn.active,
+  .mp-preset-btn.active,
+  .mp-toggle-btn.active,
+  .twin-btn.active {
+    animation: control-select 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  button.ui-action-feedback:not(:disabled) {
+    animation: action-feedback 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 3px;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--accent-blue);
+    transition: transform 160ms ease;
+  }
+  input[type="checkbox"]:active,
+  input[type="radio"]:active {
+    transform: scale(0.88);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
   @media (max-width: 1100px) {
     .mp-metric-grid { grid-template-columns: repeat(3, 1fr); }
   }
@@ -1562,9 +1650,9 @@
         <span style="color: var(--accent-cyan); font-family: monospace;">HV 0.3</span>
       </div>
       <div style="display: flex; gap: 8px; align-items: center;">
-        <input type="number" id="targetHvInput" value="345" min="200" max="550" class="dark-select" style="font-family: monospace; font-size: 14px; font-weight: bold; color: var(--accent-cyan);" onchange="updateAll()">
-        <button class="step-btn" style="padding: 9px 12px;" onclick="adjustTargetHv(-10)">-10</button>
-        <button class="step-btn" style="padding: 9px 12px;" onclick="adjustTargetHv(10)">+10</button>
+        <input type="number" id="targetHvInput" value="345" min="200" max="550" class="dark-select" style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: var(--accent-cyan); width: 90px; text-align: center; padding: 9px 10px;" onchange="updateAll()">
+        <button class="step-btn" style="padding: 9px 14px; border-radius: 10px;" onclick="adjustTargetHv(-10)">-10</button>
+        <button class="step-btn" style="padding: 9px 14px; border-radius: 10px;" onclick="adjustTargetHv(10)">+10</button>
       </div>
     </div>
 
@@ -1584,16 +1672,16 @@
         <div class="kpi-sub" id="kpi_ci">± 18 HV [95% CI]</div>
       </div>
 
-      <div class="kpi-card">
+      <div class="kpi-card kpi-card-2">
         <div class="kpi-label">
           <span>~ Rockwell C</span>
-          <span class="kpi-badge" style="background: #1e293b; color: #94a3b8;">ASTM E140</span>
+          <span class="kpi-badge" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8;">ASTM E140</span>
         </div>
         <div class="kpi-value" id="kpi_hrc">47 HRC</div>
         <div class="kpi-sub">Calculated Rockwell C Equivalent</div>
       </div>
 
-      <div class="kpi-card">
+      <div class="kpi-card kpi-card-3">
         <div class="kpi-label">
           <span>Est. UTS</span>
           <span class="kpi-badge tag-emerald">TABOR</span>
@@ -2735,7 +2823,10 @@
               <button type="button" class="mp-toggle-btn" id="btnFilterWaam" onclick="filterByProcess('WAAM', this)">WAAM</button>
               <button type="button" class="mp-toggle-btn" id="btnFilterBj" onclick="filterByProcess('BINDER', this)">Binder Jetting</button>
             </div>
-            <input type="text" id="paperSearchInput" placeholder="Search author, process, or title..." class="dark-select" style="max-width: 240px; padding: 6px 10px; font-size: 12px;" oninput="filterPapersTable()">
+            <div class="snow-search-box" style="width: 290px; padding: 6px 12px; border-radius: 10px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color: var(--text-muted); flex-shrink: 0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="paperSearchInput" placeholder="Search author, process, or title..." oninput="filterPapersTable()" style="background: transparent; border: none; outline: none; color: var(--text-primary); font-size: 12px; width: 100%;">
+            </div>
           </div>
         </div>
 
@@ -5606,6 +5697,18 @@ function updateThemeIcon() {
     iconMoon.style.display = isDark ? 'none' : 'block';
   }
 }
+
+document.addEventListener('click', (event) => {
+  if (!(event.target instanceof Element)) return;
+  const button = event.target.closest('button:not(:disabled)');
+  if (!button) return;
+
+  button.classList.remove('ui-action-feedback');
+  requestAnimationFrame(() => button.classList.add('ui-action-feedback'));
+  button.addEventListener('animationend', () => {
+    button.classList.remove('ui-action-feedback');
+  }, { once: true });
+});
 
 function handleSearchKeydown(e) {
   if (e.key === 'Escape') {
