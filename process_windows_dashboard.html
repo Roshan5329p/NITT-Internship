@@ -182,38 +182,85 @@
     background: var(--bg-subcard);
     border: 1px solid var(--border-color);
     border-radius: 10px;
-    padding: 7px 12px;
+    padding: 0 14px;
+    height: 38px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    width: 310px;
-    transition: all 0.2s;
+    gap: 10px;
+    width: 380px;
+    max-width: 440px;
+    cursor: text;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    position: relative;
+  }
+  .snow-search-box:hover {
+    border-color: rgba(24, 134, 254, 0.4);
+    background: var(--bg-card-hover);
   }
   .snow-search-box:focus-within {
     border-color: var(--border-focus);
-    box-shadow: 0 0 0 3px rgba(24, 134, 254, 0.15);
+    box-shadow: 0 0 0 3px rgba(24, 134, 254, 0.18);
+    background: var(--bg-card);
   }
-  .snow-search-box input {
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--text-primary);
-    font-size: 12.5px;
-    font-family: inherit;
-    width: 100%;
-  }
-  .snow-search-box input::placeholder {
+  .snow-search-box svg {
     color: var(--text-muted);
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+  }
+  .snow-search-box:focus-within svg {
+    color: var(--accent-blue);
+  }
+  .snow-search-box input,
+  .snow-search-box input[type="text"],
+  input.snow-search-input {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: var(--text-primary) !important;
+    font-size: 13px !important;
+    font-family: inherit !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .snow-search-box input:focus,
+  .snow-search-box input[type="text"]:focus,
+  input.snow-search-input:focus {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+  .snow-search-box input::placeholder,
+  input.snow-search-input::placeholder {
+    color: var(--text-muted) !important;
+    font-size: 12.5px;
   }
   .snow-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 1px 6px;
-    font-size: 10px;
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 600;
     font-family: 'JetBrains Mono', monospace;
     color: var(--text-muted);
-    font-weight: 600;
+    line-height: 1;
+    flex-shrink: 0;
+    user-select: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    transition: all 0.2s ease;
+  }
+  .snow-search-box:focus-within .snow-kbd {
+    border-color: var(--border-focus);
+    color: var(--accent-blue);
   }
 
   /* SnowUI Header Actions & Theme Toggle */
@@ -398,8 +445,8 @@
   .dark-select,
   select.dark-select,
   input.dark-select,
-  input[type="text"]:not(.raw-input),
-  input[type="number"]:not(.raw-input) {
+  input[type="number"]:not(.raw-input),
+  input[type="text"]:not(.snow-search-input):not(.raw-input) {
     background: var(--bg-subcard);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
@@ -414,8 +461,8 @@
   .dark-select:focus,
   select.dark-select:focus,
   input.dark-select:focus,
-  input[type="text"]:focus,
-  input[type="number"]:focus {
+  input[type="number"]:focus,
+  input[type="text"]:not(.snow-search-input):focus {
     border-color: var(--border-focus);
     box-shadow: 0 0 0 3px rgba(24, 134, 254, 0.15);
   }
@@ -1360,9 +1407,6 @@
 <header class="top-nav">
   <div class="header-inner">
     <div class="brand-group">
-      <div class="brand-logo" title="NIT Trichy Additive Manufacturing Center">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-      </div>
       <div>
         <div class="snow-breadcrumbs">
           <span class="bc-crumb">Dashboards</span>
@@ -1377,9 +1421,9 @@
     </div>
 
     <!-- SnowUI Center Search Bar -->
-    <div class="snow-search-box">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" placeholder="Search parameters, papers, models... (⌘K)" id="globalSearchInput" onkeydown="handleSearchKeydown(event)" oninput="handleGlobalSearch(this.value)">
+    <div class="snow-search-box" onclick="document.getElementById('globalSearchInput')?.focus()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" class="snow-search-input" placeholder="Search parameters, papers, models..." id="globalSearchInput" onkeydown="handleSearchKeydown(event)" oninput="handleGlobalSearch(this.value)">
       <span class="snow-kbd">⌘K</span>
     </div>
 
@@ -2823,9 +2867,9 @@
               <button type="button" class="mp-toggle-btn" id="btnFilterWaam" onclick="filterByProcess('WAAM', this)">WAAM</button>
               <button type="button" class="mp-toggle-btn" id="btnFilterBj" onclick="filterByProcess('BINDER', this)">Binder Jetting</button>
             </div>
-            <div class="snow-search-box" style="width: 290px; padding: 6px 12px; border-radius: 10px;">
+            <div class="snow-search-box" style="width: 290px; height: 34px; padding: 0 12px; border-radius: 10px;" onclick="document.getElementById('paperSearchInput')?.focus()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color: var(--text-muted); flex-shrink: 0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-              <input type="text" id="paperSearchInput" placeholder="Search author, process, or title..." oninput="filterPapersTable()" style="background: transparent; border: none; outline: none; color: var(--text-primary); font-size: 12px; width: 100%;">
+              <input type="text" id="paperSearchInput" class="snow-search-input" placeholder="Search author, process, or title..." oninput="filterPapersTable()" style="font-size: 12px;">
             </div>
           </div>
         </div>
