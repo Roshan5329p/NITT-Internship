@@ -2323,7 +2323,8 @@
 
         <!-- SVG Visualizer Canvas Container -->
         <div style="background: #06080d; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; position: relative; overflow-x: auto;">
-          <svg id="mpSvg" viewBox="0 0 960 440" style="width: 100%; height: auto; min-width: 650px; display: block;" preserveAspectRatio="xMidYMid meet">
+          <div id="mpCanvasStage" style="position: relative; min-width: 650px; contain: layout paint;">
+          <svg id="mpSvg" viewBox="0 0 960 440" style="width: 100%; height: auto; display: block;" preserveAspectRatio="xMidYMid meet">
             <defs>
               <!-- Molten Liquid Core Radial Gradient -->
               <radialGradient id="moltenCoreGradient" cx="72%" cy="50%" r="55%">
@@ -2383,8 +2384,8 @@
             <!-- Dynamic SVG Layers Container (injected by updateMeltPoolAndThermal()) -->
             <g id="mpPlotLayers"></g>
 
-            <!-- Dynamic 60 FPS Live Fluid Dynamics Layer (Persistent DOM elements: zero layout thrashing, zero GC) -->
-            <g id="mpAnimLayers" clip-path="url(#mpFrameClip)" pointer-events="none">
+            <!-- Dynamic 60 FPS Live Fluid Dynamics SVG Fallback Nodes (hidden; rendered on GPU-composited #mpAnimCanvas) -->
+            <g id="mpAnimLayers" clip-path="url(#mpFrameClip)" pointer-events="none" style="display: none;">
               <!-- Top Surface (X-Y) Animation Elements -->
               <g id="mpAnimSurfaceGroup">
                 <!-- Laser / E-Beam Bloom & Core -->
@@ -2470,6 +2471,8 @@
               <text x="915" y="410" fill="#64748b" font-size="9" font-family="monospace" text-anchor="middle">Analytical</text>
             </g>
           </svg>
+          <canvas id="mpAnimCanvas" width="960" height="440" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: block; will-change: transform;"></canvas>
+          </div>
         </div>
 
         <!-- 6 Outcome Metric Cards (Screenshots 1-4) -->
@@ -3978,6 +3981,8 @@ function switchTab(tabId, btn) {
   if (tabId === 'melt-pool') {
     updateMeltPoolAndThermal();
     ensureMpAnimationRunning();
+  } else {
+    cancelMpAnimation();
   }
 }
 
@@ -4359,7 +4364,7 @@ let isOpticalAborted = false;// Emergency optical beam quench simulation
 
 // ========================================================
 // 60 FPS LIVE FLUID DYNAMICS & PYROMETRY ANIMATION ENGINE
-// Melt Pool Pyrometry & Fluid Streamlines Canvas
+// GPU-Composited HiDPI Canvas Overlay (#mpAnimCanvas)
 // ========================================================
 let isMpSimulating = true;
 let mpAnimPhase = 0;
@@ -4373,8 +4378,70 @@ let mpAnimState = {
   isOpticalAborted: false
 };
 
+const mpCanvasMetrics = {
+  canvas: null,
+  stage: null,
+  ctx: null,
+  needsResize: true,
+  observerBound: false,
+  logicalW: 960,
+  logicalH: 440,
+  scaleX: 1,
+  scaleY: 1
+};
+
+function markMpCanvasResize() {
+  mpCanvasMetrics.needsResize = true;
+}
+
+function getMpCanvasContext() {
+  const canvas = mpCanvasMetrics.canvas || document.getElementById('mpAnimCanvas');
+  const stage = mpCanvasMetrics.stage || document.getElementById('mpCanvasStage');
+  if (!canvas || !canvas.getContext) return null;
+
+  mpCanvasMetrics.canvas = canvas;
+  mpCanvasMetrics.stage = stage;
+  if (!mpCanvasMetrics.ctx) {
+    mpCanvasMetrics.ctx = canvas.getContext('2d', { alpha: true });
+  }
+  if (!mpCanvasMetrics.ctx) return null;
+
+  if (!mpCanvasMetrics.observerBound && stage && typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(markMpCanvasResize);
+    ro.observe(stage);
+    mpCanvasMetrics.observerBound = true;
+  }
+
+  if (mpCanvasMetrics.needsResize || canvas.width === 0) {
+    const refEl = stage || canvas;
+    const cssW = refEl.clientWidth || 960;
+    const cssH = refEl.clientHeight || Math.round(cssW * 440 / 960);
+    if (cssW > 0 && cssH > 0) {
+      const dpr = Math.min(2, Math.max(1, (typeof window !== 'undefined' && window.devicePixelRatio) || 1));
+      const targetW = Math.round(cssW * dpr);
+      const targetH = Math.round(cssH * dpr);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      }
+      mpCanvasMetrics.scaleX = targetW / 960;
+      mpCanvasMetrics.scaleY = targetH / 440;
+      mpCanvasMetrics.needsResize = false;
+    }
+  }
+  return mpCanvasMetrics;
+}
+
+function isMpTabActiveAndVisible() {
+  if (typeof document === 'undefined') return false;
+  if (document.visibilityState === 'hidden') return false;
+  const viewMeltPool = document.getElementById('view_melt-pool');
+  return !viewMeltPool || viewMeltPool.classList.contains('active');
+}
+
 function ensureMpAnimationRunning() {
-  if (isMpSimulating && mpAnimFrameId === null) {
+  if (isMpSimulating && mpAnimFrameId === null && isMpTabActiveAndVisible()) {
+    markMpCanvasResize();
     lastMpAnimTs = performance.now();
     mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
   }
@@ -4402,213 +4469,266 @@ function toggleMpAnimation() {
   }
 }
 
-let mpDomNodes = null;
-function getMpDomNodes() {
-  if (!mpDomNodes) {
-    mpDomNodes = {
-      surfaceGroup: document.getElementById('mpAnimSurfaceGroup'),
-      xzGroup: document.getElementById('mpAnimXzGroup'),
-      bloomAura: document.getElementById('mpBloomAura'),
-      bloomPulse: document.getElementById('mpBloomPulse'),
-      bloomCore: document.getElementById('mpBloomCore'),
-      ripples: [0, 1, 2, 3, 4, 5].map(i => document.getElementById('mpRip' + i)),
-      marangoni: [0, 1, 2, 3, 4, 5, 6].map(i => document.getElementById('mpMar' + i)),
-      rays: [0, 1, 2].map(i => document.getElementById('mpRay' + i)),
-      cavity: document.getElementById('mpKeyholeCavity'),
-      eddies: [0, 1, 2, 3].map(i => document.getElementById('mpEddy' + i)),
-      zRipples: [0, 1, 2, 3, 4].map(i => document.getElementById('mpZRip' + i))
-    };
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      ensureMpAnimationRunning();
+    } else {
+      cancelMpAnimation();
+    }
+  });
+}
+
+function clipMpFrameRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  ctx.clip();
+}
+
+const MP_STREAM_ANGLES = [
+  Math.PI * 0.25, Math.PI * 0.45, Math.PI * 0.75, Math.PI * 1.0,
+  Math.PI * 1.25, Math.PI * 1.55, Math.PI * 1.75
+];
+
+function drawMpAnimationFrame() {
+  const meta = getMpCanvasContext();
+  if (!meta || !meta.ctx) return;
+  const { canvas, ctx, scaleX, scaleY } = meta;
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const {
+    xBeam, span, halfW, depthPx, spotR, rearX, midX,
+    view, marangoni, isOpticalAborted: aborted
+  } = mpAnimState;
+
+  if (aborted) return;
+
+  ctx.save();
+  ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+  clipMpFrameRect(ctx, 80, 45, 780, 330, 6);
+
+  if (view === 'surface') {
+    // 1. Shimmering Laser/E-Beam Photon Aura & Center Bloom
+    const pulseR = Math.max(2, spotR * (1.0 + 0.12 * Math.sin(mpAnimPhase * 9)));
+    const auraR = pulseR * 1.65;
+    const auraOpacity = 0.24 + 0.16 * Math.cos(mpAnimPhase * 7);
+
+    ctx.fillStyle = '#ffeb3b';
+    ctx.globalAlpha = auraOpacity;
+    ctx.beginPath();
+    ctx.arc(xBeam, 210, auraR, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.globalAlpha = 0.85;
+    ctx.beginPath();
+    ctx.arc(xBeam, 210, pulseR, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 1.0;
+    ctx.beginPath();
+    ctx.arc(xBeam, 210, pulseR * 0.45, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. Trailing Chevron Solidification Ripples (full wake coverage + smooth fade)
+    const wakeStart = xBeam - 0.16 * span;
+    const wakeEnd = Math.max(90, rearX - 0.18 * span);
+    const wakeSpan = Math.max(12, wakeStart - wakeEnd);
+    const ripplePitch = Math.max(18, Math.min(26, wakeSpan / 7.5));
+    const rippleCount = Math.min(18, Math.ceil(wakeSpan / ripplePitch) + 1);
+    const rippleOffset = (mpAnimPhase * 44) % ripplePitch;
+
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.45;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < rippleCount; i++) {
+      const rx = wakeStart - (i * ripplePitch + rippleOffset);
+      if (rx <= wakeEnd || rx <= 90 || rx >= 850) continue;
+      const progress = Math.max(0, Math.min(1, (wakeStart - rx) / wakeSpan));
+      const ripW = halfW * Math.max(0.18, 1.0 - 0.72 * progress);
+      const ripOpacity = Math.sin(Math.PI * Math.pow(progress, 0.72)) * 0.68;
+      if (ripOpacity <= 0.01) continue;
+
+      const tipX = rx + ripW * 0.35;
+      ctx.globalAlpha = ripOpacity;
+      ctx.beginPath();
+      ctx.moveTo(tipX, 210 - ripW);
+      ctx.quadraticCurveTo(rx, 210, tipX, 210 + ripW);
+      ctx.stroke();
+    }
+
+    // 3. Circulating Marangoni Thermocapillary Convection Tracers (continuous staggered fade)
+    if (marangoni) {
+      for (let aIdx = 0; aIdx < MP_STREAM_ANGLES.length; aIdx++) {
+        const ang = MP_STREAM_ANGLES[aIdx];
+        const cosA = Math.cos(ang);
+        const sinA = Math.sin(ang) * 0.85;
+        const maxRad = (aIdx === 3) ? (span * 0.6) : (halfW * 0.75);
+
+        for (let s = 0; s < 2; s++) {
+          const streamPhase = (mpAnimPhase * 1.9 + aIdx * 0.37 + s * 0.5) % 1.0;
+          const ptOpacity = Math.sin(Math.PI * streamPhase) * 0.88;
+          if (ptOpacity <= 0.02) continue;
+
+          const curRad = spotR + streamPhase * maxRad;
+          const tailRad = Math.max(spotR * 0.8, curRad - 7.5);
+          const px = xBeam - cosA * curRad;
+          const py = 210 - sinA * curRad;
+          const tx = xBeam - cosA * tailRad;
+          const ty = 210 - sinA * tailRad;
+
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = 1.3;
+          ctx.globalAlpha = ptOpacity * 0.42;
+          ctx.beginPath();
+          ctx.moveTo(tx, ty);
+          ctx.lineTo(px, py);
+          ctx.stroke();
+
+          ctx.fillStyle = '#fbbf24';
+          ctx.globalAlpha = ptOpacity;
+          ctx.beginPath();
+          ctx.arc(px, py, 2.25, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+  } else {
+    // LONGITUDINAL (X-Z) VIEW
+    const zSurface = 145;
+    const beamPulse = Math.sin(mpAnimPhase * 8) * 2;
+
+    // 1. Incident Photon Rays
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.25;
+    ctx.globalAlpha = 0.75;
+    ctx.beginPath();
+    ctx.moveTo(xBeam - 8 + beamPulse, 48);
+    ctx.lineTo(xBeam - 2, zSurface);
+    ctx.moveTo(xBeam + 8 - beamPulse, 48);
+    ctx.lineTo(xBeam + 2, zSurface);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 2.0;
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(xBeam, 48);
+    ctx.lineTo(xBeam, zSurface);
+    ctx.stroke();
+
+    // 2. Keyhole Vapor Cavity Depression
+    const cavityDepth = Math.max(12, depthPx * (0.82 + 0.14 * Math.sin(mpAnimPhase * 11)));
+    const cavityX = xBeam - spotR * 0.3;
+    const rxC = Math.max(2, spotR * 0.75);
+    const ryC = Math.max(2, cavityDepth * 0.28);
+
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = '#020617';
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.ellipse(cavityX, 149, rxC, ryC, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // 3. Sub-surface Marangoni Circulation Eddies
+    if (marangoni) {
+      const eddyPhase = (mpAnimPhase * 3.0) % (Math.PI * 2);
+      const eddyCenterX = midX;
+      const eddyCenterY = zSurface + depthPx * 0.52;
+      const eddyRx = span * 0.22;
+      const eddyRy = depthPx * 0.26;
+      for (let eIdx = 0; eIdx < 4; eIdx++) {
+        const phi = eddyPhase + (eIdx * Math.PI / 2);
+        const tailPhi = phi - 0.28;
+        const ex = eddyCenterX + Math.cos(phi) * eddyRx;
+        const ey = eddyCenterY + Math.sin(phi) * eddyRy;
+        const tx = eddyCenterX + Math.cos(tailPhi) * eddyRx;
+        const ty = eddyCenterY + Math.sin(tailPhi) * eddyRy;
+
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 1.25;
+        ctx.globalAlpha = 0.35;
+        ctx.beginPath();
+        ctx.moveTo(tx, ty);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+
+        ctx.fillStyle = '#fbbf24';
+        ctx.globalAlpha = 0.8;
+        ctx.beginPath();
+        ctx.arc(ex, ey, 2.25, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 4. Depth Solidification Waves
+    const zWakeStart = xBeam - 0.14 * span;
+    const zWakeEnd = Math.max(85, rearX - 0.16 * span);
+    const zWakeSpan = Math.max(12, zWakeStart - zWakeEnd);
+    const zRipplePitch = Math.max(16, Math.min(24, zWakeSpan / 7));
+    const zRippleCount = Math.min(16, Math.ceil(zWakeSpan / zRipplePitch) + 1);
+    const zRippleOffset = (mpAnimPhase * 36) % zRipplePitch;
+
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.35;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < zRippleCount; i++) {
+      const rx = zWakeStart - (i * zRipplePitch + zRippleOffset);
+      if (rx <= zWakeEnd || rx <= 85 || rx >= 855) continue;
+      const progress = Math.max(0, Math.min(1, (zWakeStart - rx) / zWakeSpan));
+      const ripDepth = depthPx * Math.max(0.2, 1.0 - 0.8 * progress);
+      const ripOpacity = Math.sin(Math.PI * Math.pow(progress, 0.72)) * 0.65;
+      if (ripOpacity <= 0.01) continue;
+
+      ctx.globalAlpha = ripOpacity;
+      ctx.beginPath();
+      ctx.moveTo(rx, zSurface);
+      ctx.quadraticCurveTo(rx, zSurface + ripDepth * 0.7, rx - 12, zSurface + ripDepth);
+      ctx.stroke();
+    }
   }
-  return mpDomNodes;
+
+  ctx.restore();
 }
 
 function renderMpAnimationStep(now) {
   mpAnimFrameId = null;
-  if (!isMpSimulating) return;
+  if (!isMpSimulating || !isMpTabActiveAndVisible()) return;
 
   try {
     const nowTs = now || performance.now();
     const dt = Math.min(0.05, Math.max(0.001, (nowTs - (lastMpAnimTs || nowTs)) / 1000)) || 0.016;
     lastMpAnimTs = nowTs;
 
-    // Throttle animation when Melt Pool tab is not active to conserve CPU
-    const viewMeltPool = document.getElementById('view_melt-pool');
-    if (viewMeltPool && !viewMeltPool.classList.contains('active')) {
-      return;
-    }
-
-    const {
-      xBeam, span, halfW, depthPx, spotR, rearHazX, frontHazX, rearX, frontX, midX,
-      effV, effP, view, marangoni, pyrometry, isOpticalAborted: aborted
-    } = mpAnimState;
-
+    const { effV, effP, isOpticalAborted: aborted } = mpAnimState;
     const isDedRegime = (effV < 100.0 || effP >= 1000.0);
 
     if (!aborted) {
-      // Dynamic fluid dynamics animation rate:
-      // In DED regime, fluid Marangoni convection and beam shimmering remain active at 1.5 rad/s.
-      // In LPBF (500-1500 mm/s), scale gracefully with scan speed.
-      const animRate = isDedRegime ? 1.5 : Math.max(0.9, Math.min(2.5, effV / 500));
+      const animRate = isDedRegime ? 1.85 : Math.max(1.15, Math.min(2.6, effV / 450));
       mpAnimPhase += dt * animRate;
     }
 
-    const nodes = getMpDomNodes();
-    if (!nodes || !nodes.surfaceGroup || !nodes.xzGroup) {
-      return;
-    }
-
-    if (aborted) {
-      nodes.surfaceGroup.style.display = 'none';
-      nodes.xzGroup.style.display = 'none';
-      return;
-    }
-
-    if (view === 'surface') {
-      nodes.surfaceGroup.style.display = 'inline';
-      nodes.xzGroup.style.display = 'none';
-
-      // 1. Shimmering Laser/E-Beam Photon Aura & Center Bloom
-      const pulseR = Math.max(2, spotR * (1.0 + 0.12 * Math.sin(mpAnimPhase * 9)));
-      const auraR = pulseR * 1.65;
-      const auraOpacity = 0.25 + 0.18 * Math.cos(mpAnimPhase * 7);
-
-      if (nodes.bloomAura) {
-        nodes.bloomAura.setAttribute('cx', xBeam.toFixed(1));
-        nodes.bloomAura.setAttribute('r', auraR.toFixed(1));
-        nodes.bloomAura.setAttribute('opacity', auraOpacity.toFixed(2));
-      }
-      if (nodes.bloomPulse) {
-        nodes.bloomPulse.setAttribute('cx', xBeam.toFixed(1));
-        nodes.bloomPulse.setAttribute('r', pulseR.toFixed(1));
-      }
-      if (nodes.bloomCore) {
-        nodes.bloomCore.setAttribute('cx', xBeam.toFixed(1));
-        nodes.bloomCore.setAttribute('r', (pulseR * 0.45).toFixed(1));
-      }
-
-      // 2. Trailing Chevron Solidification Ripples
-      const ripplePitch = 24;
-      const rippleOffset = (mpAnimPhase * 36) % ripplePitch;
-      const wakeStart = xBeam - 0.18 * span;
-      const wakeEnd = Math.max(90, rearX - 0.25 * span);
-      const wakeSpan = Math.max(10, wakeStart - wakeEnd);
-
-      for (let i = 0; i < 6; i++) {
-        const el = nodes.ripples[i];
-        if (!el) continue;
-        const rx = wakeStart - (i * ripplePitch + rippleOffset);
-        if (rx > wakeEnd && rx > 90 && rx < 850) {
-          const progress = Math.max(0, Math.min(1, (wakeStart - rx) / wakeSpan));
-          const ripW = halfW * Math.max(0.2, 1.0 - 0.7 * progress);
-          const ripOpacity = Math.max(0.08, (1.0 - progress) * 0.65);
-          const p1X = (rx + ripW * 0.35).toFixed(1);
-          const p1Y = (210 - ripW).toFixed(1);
-          const p2X = rx.toFixed(1);
-          const p3X = (rx + ripW * 0.35).toFixed(1);
-          const p3Y = (210 + ripW).toFixed(1);
-          el.setAttribute('d', `M ${p1X} ${p1Y} Q ${p2X} 210 ${p3X} ${p3Y}`);
-          el.setAttribute('opacity', ripOpacity.toFixed(2));
-        } else {
-          el.setAttribute('opacity', '0');
-        }
-      }
-
-      // 3. Circulating Marangoni Thermocapillary Convection Vectors
-      const angles = [Math.PI * 0.25, Math.PI * 0.45, Math.PI * 0.75, Math.PI * 1.0, Math.PI * 1.25, Math.PI * 1.55, Math.PI * 1.75];
-      for (let aIdx = 0; aIdx < 7; aIdx++) {
-        const el = nodes.marangoni[aIdx];
-        if (!el) continue;
-        if (marangoni) {
-          const ang = angles[aIdx];
-          const streamPhase = (mpAnimPhase * 2.2 + aIdx * 0.8) % 1.0;
-          const maxRad = (aIdx === 3) ? (span * 0.6) : (halfW * 0.75);
-          const curRad = spotR + streamPhase * maxRad;
-          const px = xBeam - Math.cos(ang) * curRad;
-          const py = 210 - Math.sin(ang) * curRad * 0.85;
-          const ptOpacity = (1.0 - streamPhase) * 0.85;
-          el.setAttribute('cx', px.toFixed(1));
-          el.setAttribute('cy', py.toFixed(1));
-          el.setAttribute('opacity', ptOpacity.toFixed(2));
-        } else {
-          el.setAttribute('opacity', '0');
-        }
-      }
-
-    } else {
-      // LONGITUDINAL (X-Z) VIEW
-      nodes.surfaceGroup.style.display = 'none';
-      nodes.xzGroup.style.display = 'inline';
-
-      const zSurface = 145;
-      const beamPulse = Math.sin(mpAnimPhase * 8) * 2;
-
-      if (nodes.rays[0]) {
-        nodes.rays[0].setAttribute('x1', (xBeam - 8 + beamPulse).toFixed(1));
-        nodes.rays[0].setAttribute('x2', (xBeam - 2).toFixed(1));
-      }
-      if (nodes.rays[1]) {
-        nodes.rays[1].setAttribute('x1', (xBeam + 8 - beamPulse).toFixed(1));
-        nodes.rays[1].setAttribute('x2', (xBeam + 2).toFixed(1));
-      }
-      if (nodes.rays[2]) {
-        nodes.rays[2].setAttribute('x1', xBeam.toFixed(1));
-        nodes.rays[2].setAttribute('x2', xBeam.toFixed(1));
-      }
-
-      const cavityDepth = Math.max(12, depthPx * (0.82 + 0.14 * Math.sin(mpAnimPhase * 11)));
-      const cavityX = (xBeam - spotR * 0.3).toFixed(1);
-      if (nodes.cavity) {
-        nodes.cavity.setAttribute('cx', cavityX);
-        nodes.cavity.setAttribute('rx', (spotR * 0.75).toFixed(1));
-        nodes.cavity.setAttribute('ry', (cavityDepth * 0.28).toFixed(1));
-      }
-
-      if (marangoni) {
-        const eddyPhase = (mpAnimPhase * 3) % (2 * Math.PI);
-        const eddyCenterX = midX;
-        const eddyCenterY = zSurface + depthPx * 0.52;
-        const eddyRx = span * 0.22;
-        const eddyRy = depthPx * 0.26;
-        for (let eIdx = 0; eIdx < 4; eIdx++) {
-          const el = nodes.eddies[eIdx];
-          if (!el) continue;
-          const phi = eddyPhase + (eIdx * Math.PI / 2);
-          const ex = eddyCenterX + Math.cos(phi) * eddyRx;
-          const ey = eddyCenterY + Math.sin(phi) * eddyRy;
-          el.setAttribute('cx', ex.toFixed(1));
-          el.setAttribute('cy', ey.toFixed(1));
-          el.setAttribute('opacity', '0.7');
-        }
-      } else {
-        nodes.eddies.forEach(el => el && el.setAttribute('opacity', '0'));
-      }
-
-      const zRipplePitch = 22;
-      const zRippleOffset = (mpAnimPhase * 30) % zRipplePitch;
-      const zWakeStart = xBeam - 0.15 * span;
-      const zWakeEnd = Math.max(85, rearX - 0.2 * span);
-      const zWakeSpan = Math.max(10, zWakeStart - zWakeEnd);
-      for (let i = 0; i < 5; i++) {
-        const el = nodes.zRipples[i];
-        if (!el) continue;
-        const rx = zWakeStart - (i * zRipplePitch + zRippleOffset);
-        if (rx > zWakeEnd && rx > 85 && rx < 855) {
-          const progress = Math.max(0, Math.min(1, (zWakeStart - rx) / zWakeSpan));
-          const ripDepth = depthPx * Math.max(0.2, 1.0 - 0.8 * progress);
-          const ripOpacity = Math.max(0.1, (1.0 - progress) * 0.6);
-          el.setAttribute('d', `M ${rx.toFixed(1)} ${zSurface} Q ${rx.toFixed(1)} ${(zSurface + ripDepth * 0.7).toFixed(1)} ${(rx - 12).toFixed(1)} ${(zSurface + ripDepth).toFixed(1)}`);
-          el.setAttribute('opacity', ripOpacity.toFixed(2));
-        } else {
-          el.setAttribute('opacity', '0');
-        }
-      }
-    }
+    drawMpAnimationFrame();
   } catch (err) {
     console.error('Melt pool animation step error:', err);
-  } finally {
-    if (isMpSimulating && mpAnimFrameId === null) {
-      mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
-    }
+  }
+
+  if (isMpSimulating && mpAnimFrameId === null && isMpTabActiveAndVisible()) {
+    mpAnimFrameId = requestAnimationFrame(renderMpAnimationStep);
   }
 }
 
@@ -5336,7 +5456,7 @@ function updateMeltPoolAndThermal() {
       svgHtml += `<path d="${pathMushy}" fill="url(#mushyHatch)" opacity="0.8"/>`;
       svgHtml += isOpticalAborted
         ? `<path d="${pathLiquid}" fill="#1e293b" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="4 2"/>`
-        : `<path d="${pathLiquid}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.5" filter="url(#cyanGlow)"/>`;
+        : `<path d="${pathLiquid}" fill="none" stroke="rgba(0, 247, 255, 0.24)" stroke-width="7" stroke-linejoin="round"/><path d="${pathLiquid}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.4"/>`;
 
       svgHtml += `</g>`; // End thermal-shapes
 
@@ -5530,7 +5650,7 @@ function updateMeltPoolAndThermal() {
       svgHtml += `<path d="${pathMushyZ}" fill="rgba(239, 68, 68, 0.22)" stroke="#ffffff" stroke-width="1.8" stroke-dasharray="5 3"/>`;
       svgHtml += isOpticalAborted
         ? `<path d="${pathLiquidZ}" fill="#1e293b" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="4 2"/>`
-        : `<path d="${pathLiquidZ}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.5" filter="url(#cyanGlow)"/>`;
+        : `<path d="${pathLiquidZ}" fill="none" stroke="rgba(0, 247, 255, 0.24)" stroke-width="7" stroke-linejoin="round"/><path d="${pathLiquidZ}" fill="url(#moltenCoreGradient)" stroke="#00f7ff" stroke-width="2.4"/>`;
 
       // Incident Beam Column
       if (isOpticalAborted) {
@@ -5632,7 +5752,8 @@ function updateMeltPoolAndThermal() {
       isOpticalAborted
     };
 
-    // Keep live simulation running seamlessly across parameter or scale updates
+    // Sync GPU canvas overlay immediately & keep live simulation running across updates
+    drawMpAnimationFrame();
     ensureMpAnimationRunning();
   }
 
