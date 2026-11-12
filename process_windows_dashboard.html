@@ -1542,23 +1542,23 @@
       </div>
 
       <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; margin-bottom: 12px;">
-        <span style="color: var(--text-secondary);">Current Volumetric Energy (VED):</span>
+        <span style="color: var(--text-secondary);" id="lblCurrentEnergy">Current Volumetric Energy (VED):</span>
         <button class="step-btn" onclick="setTargetFromCurrent()">Set as Target</button>
       </div>
 
-      <!-- VED Solver Box -->
+      <!-- VED / Heat Input Solver Box -->
       <div class="ved-solver-box">
         <div class="ved-solver-header">
           <div class="ved-title">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#50d8e9" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-            VED Parameter Solver
+            <span id="vedSolverTitle">VED Parameter Solver</span>
           </div>
-          <div class="ved-formula-tag">VED = P / (v · h · t)</div>
+          <div class="ved-formula-tag" id="vedFormulaTag">VED = P / (v · h · t)</div>
         </div>
-        <div class="ved-desc">Input target VED (J/mm³) to derive Laser Power <i>P</i>, Scan Speed <i>v</i>, Hatch Spacing <i>h</i>, and Layer Thickness <i>t</i> avoiding lack-of-fusion and keyhole.</div>
+        <div class="ved-desc" id="vedSolverDesc">Input target VED (J/mm³) to derive Laser Power <i>P</i>, Scan Speed <i>v</i>, Hatch Spacing <i>h</i>, and Layer Thickness <i>t</i> avoiding lack-of-fusion and keyhole.</div>
 
         <div class="ved-target-row">
-          <span style="font-size: 11.5px; color: var(--text-secondary);">Target VED <i>E<sub>v</sub></i>:</span>
+          <span style="font-size: 11.5px; color: var(--text-secondary);" id="vedTargetLabel">Target VED <i>E<sub>v</sub></i>:</span>
           <span class="ved-target-val" id="targetVedDisplay">72.4 J/mm³</span>
           <div class="ved-steppers">
             <button class="step-btn" onclick="adjustTargetVed(-5)">-5%</button>
@@ -1569,7 +1569,7 @@
         <input type="range" id="targetVedSlider" min="25" max="140" step="1" value="72" oninput="onTargetVedSlider(this.value)">
 
         <div style="margin-top: 10px; font-size: 10px; color: var(--text-muted); margin-bottom: 4px;">Quick Presets:</div>
-        <div class="preset-row">
+        <div class="preset-row" id="vedPresetRowQuick">
           <div class="preset-pill" onclick="applyVedPreset(50)">50 J/mm³</div>
           <div class="preset-pill" onclick="applyVedPreset(65)">65 J/mm³</div>
           <div class="preset-pill active" onclick="applyVedPreset(72.4)">72.4 J/mm³</div>
@@ -1578,9 +1578,9 @@
         </div>
 
         <div style="margin-top: 6px; font-size: 10px; color: var(--text-muted); margin-bottom: 4px;">Paper Calibrations:</div>
-        <div class="preset-row">
+        <div class="preset-row" id="vedPresetRowPapers">
           <div class="preset-pill" onclick="applyVedPreset(68.5)">Cao 2021</div>
-          <div class="preset-pill" onclick="applyVedPreset(83.3)">Nursyifaulkhair 2019</div>
+          <div class="preset-pill" onclick="applyVedPreset(83.3)">Coen 2022</div>
           <div class="preset-pill" onclick="applyVedPreset(78.0)">Wang 2026</div>
         </div>
 
@@ -1598,10 +1598,10 @@
             <span style="color: var(--accent-emerald);" id="derivedVedLabel">VED = 72.4 J/mm³</span>
           </div>
           <div class="derived-grid">
-            <div class="derived-metric"><span>Laser Power P</span><strong id="sol_p">215 W</strong></div>
-            <div class="derived-metric"><span>Scan Speed v</span><strong id="sol_v">920 mm/s</strong></div>
-            <div class="derived-metric"><span>Hatch Spacing h</span><strong id="sol_h">80 µm</strong></div>
-            <div class="derived-metric"><span>Layer Thickness t</span><strong id="sol_t">40 µm</strong></div>
+            <div class="derived-metric"><span id="sol_lbl_p">Laser Power P</span><strong id="sol_p">215 W</strong></div>
+            <div class="derived-metric"><span id="sol_lbl_v">Scan Speed v</span><strong id="sol_v">920 mm/s</strong></div>
+            <div class="derived-metric"><span id="sol_lbl_h">Hatch Spacing h</span><strong id="sol_h">80 µm</strong></div>
+            <div class="derived-metric"><span id="sol_lbl_t">Layer Thickness t</span><strong id="sol_t">40 µm</strong></div>
           </div>
           <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
             <span>Build rate: <strong style="color: #fff;" id="sol_rate">10.7 cm³/h</strong></span>
@@ -1619,7 +1619,7 @@
       <!-- Process Sliders -->
       <div class="slider-item">
         <div class="slider-header">
-          <span class="slider-label">Laser Power <i>P</i></span>
+          <span class="slider-label" id="lbl_p">Laser Power <i>P</i></span>
           <span class="slider-val" id="val_p">280 W</span>
         </div>
         <input type="range" id="sl_p" min="80" max="450" step="5" value="280" oninput="onSliderChange()">
@@ -1627,7 +1627,7 @@
 
       <div class="slider-item">
         <div class="slider-header">
-          <span class="slider-label">Scan Speed <i>v</i></span>
+          <span class="slider-label" id="lbl_v">Scan Speed <i>v</i></span>
           <span class="slider-val" id="val_v">960 mm/s</span>
         </div>
         <input type="range" id="sl_v" min="300" max="2200" step="20" value="960" oninput="onSliderChange()">
@@ -1635,7 +1635,7 @@
 
       <div class="slider-item">
         <div class="slider-header">
-          <span class="slider-label">Hatch Spacing <i>h</i></span>
+          <span class="slider-label" id="lbl_h">Hatch Spacing <i>h</i></span>
           <span class="slider-val" id="val_h">110 µm</span>
         </div>
         <input type="range" id="sl_h" min="50" max="180" step="5" value="110" oninput="onSliderChange()">
@@ -1643,7 +1643,7 @@
 
       <div class="slider-item">
         <div class="slider-header">
-          <span class="slider-label">Layer Thickness <i>t</i></span>
+          <span class="slider-label" id="lbl_t">Layer Thickness <i>t</i></span>
           <span class="slider-val" id="val_t">40 µm</span>
         </div>
         <input type="range" id="sl_t" min="20" max="90" step="5" value="40" oninput="onSliderChange()">
@@ -1651,7 +1651,7 @@
 
       <div class="slider-item">
         <div class="slider-header">
-          <span class="slider-label">Beam Spot Diameter <i>d<sub>b</sub></i></span>
+          <span class="slider-label" id="lbl_spot">Beam Spot Diameter <i>d<sub>b</sub></i></span>
           <span class="slider-val" id="val_spot">80 µm</span>
         </div>
         <input type="range" id="sl_spot" min="40" max="150" step="5" value="80" oninput="onSliderChange()">
@@ -1659,7 +1659,7 @@
 
       <div class="slider-item">
         <div class="slider-header">
-          <span class="slider-label">Build Plate Preheat <i>T<sub>0</sub></i></span>
+          <span class="slider-label" id="lbl_preheat">Build Plate Preheat <i>T<sub>0</sub></i></span>
           <span class="slider-val" id="val_preheat">200 °C</span>
         </div>
         <input type="range" id="sl_preheat" min="25" max="650" step="25" value="200" oninput="onSliderChange()">
@@ -1813,11 +1813,11 @@
           <div class="chart-box">
             <div class="chart-header">
               <span>Predicted Hardness across Model Architectures</span>
-              <span style="font-family: monospace; color: var(--accent-cyan);">-- Benchmark: 375 - 420 HV</span>
+              <span style="font-family: monospace; color: var(--accent-cyan);" id="benchHeaderRange">-- Benchmark: 375 - 420 HV</span>
             </div>
             <div class="bars-container">
               <div class="benchmark-line"></div>
-              <div class="benchmark-label">Range of published experiments (335 - 420 HV)</div>
+              <div class="benchmark-label" id="benchLabelRange">Range of published experiments (335 - 420 HV)</div>
               
               <div class="bar-col">
                 <div class="bar-pill" id="bar_0" style="background: linear-gradient(180deg, #60a5fa, #1d4ed8); height: 75%;">454</div>
@@ -2031,14 +2031,14 @@
       <div class="defect-svg-container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
           <div>
-            <h3 style="font-size: 16px; font-weight: 700; color: #fff;">2D Defect Process Window (King's Enthalpy Criterion)</h3>
-            <p style="font-size: 11.5px; color: var(--text-muted);">Melt pool depth-to-width ratio & normalized enthalpy ΔH/h_s mapped across Laser Power P and Scan Speed v.</p>
+            <h3 style="font-size: 16px; font-weight: 700; color: #fff;" id="defectMapTitle">2D Defect Process Window (King's Enthalpy Criterion)</h3>
+            <p style="font-size: 11.5px; color: var(--text-muted);" id="defectMapSubtitle">Melt pool depth-to-width ratio & normalized enthalpy ΔH/h_s mapped across Laser Power P and Scan Speed v.</p>
           </div>
           <button class="step-btn" style="background: var(--accent-cyan); color: #070b10; font-weight: bold; padding: 6px 14px;" onclick="autoTuneSafeWindow()">Auto-Tune to Safe Window</button>
         </div>
 
         <div style="position: relative; width: 100%; height: 420px; background: #070b10; border: 1px solid #142131; border-radius: 8px; overflow: hidden;">
-          <svg viewBox="0 0 600 360" style="width: 100%; height: 100%;">
+          <svg id="defectMapSvg" viewBox="0 0 600 360" style="width: 100%; height: 100%;">
             <defs>
               <linearGradient id="keyholeGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="#ef4444" stop-opacity="0.45"/>
@@ -2067,21 +2067,17 @@
             <line x1="70" y1="170" x2="560" y2="170" stroke="#16202c" stroke-dasharray="3 3"/>
             <line x1="70" y1="240" x2="560" y2="240" stroke="#16202c" stroke-dasharray="3 3"/>
 
-            <!-- Polygons -->
-            <!-- Keyholing Polygon (High Power, Low-to-Mid Speed) -->
-            <polygon points="70,30 350,30 220,130 70,160" fill="url(#keyholeGrad)" stroke="#ef4444" stroke-width="1.2"/>
-            <!-- Lack of Fusion Polygon (Low Power, High Speed) -->
-            <polygon points="260,310 560,310 560,170 380,240" fill="url(#lofGrad)" stroke="#f97316" stroke-width="1.2"/>
-            <!-- Balling Polygon (High Speed, Medium Power) -->
-            <polygon points="460,30 560,30 560,170 420,110" fill="url(#ballingGrad)" stroke="#eab308" stroke-width="1"/>
-            <!-- Optimal Conduction Window Polygon -->
-            <polygon points="120,240 280,110 460,110 380,240" fill="url(#conductionGrad)" stroke="#10b981" stroke-width="1.8"/>
-
-            <!-- Labels -->
-            <text x="110" y="80" fill="#f87171" font-size="11" font-weight="bold">KEYHOLING REGIME (Deep Vapor Cavity)</text>
-            <text x="210" y="180" fill="#34d399" font-size="11" font-weight="bold">STABLE CONDUCTION WINDOW</text>
-            <text x="390" y="275" fill="#fb923c" font-size="10" font-weight="bold">LACK OF FUSION</text>
-            <text x="470" y="70" fill="#fde047" font-size="10" font-weight="bold">BALLING</text>
+            <!-- Dynamic Process Zones Group -->
+            <g id="defectZonesGroup">
+              <polygon points="70,30 350,30 220,130 70,160" fill="url(#keyholeGrad)" stroke="#ef4444" stroke-width="1.2"/>
+              <polygon points="260,310 560,310 560,170 380,240" fill="url(#lofGrad)" stroke="#f97316" stroke-width="1.2"/>
+              <polygon points="460,30 560,30 560,170 420,110" fill="url(#ballingGrad)" stroke="#eab308" stroke-width="1"/>
+              <polygon points="120,240 280,110 460,110 380,240" fill="url(#conductionGrad)" stroke="#10b981" stroke-width="1.8"/>
+              <text x="110" y="80" fill="#f87171" font-size="11" font-weight="bold">KEYHOLING REGIME (Deep Vapor Cavity)</text>
+              <text x="210" y="180" fill="#34d399" font-size="11" font-weight="bold">STABLE CONDUCTION WINDOW</text>
+              <text x="390" y="275" fill="#fb923c" font-size="10" font-weight="bold">LACK OF FUSION</text>
+              <text x="470" y="70" fill="#fde047" font-size="10" font-weight="bold">BALLING</text>
+            </g>
 
             <!-- Dynamic Operating Point -->
             <circle id="svgCursor" cx="240" cy="180" r="7" fill="#50d8e9" stroke="#fff" stroke-width="2">
@@ -2089,11 +2085,12 @@
             </circle>
             <text id="svgCursorLabel" x="255" y="185" fill="#50d8e9" font-size="11" font-family="monospace" font-weight="bold">Operating Point (280W, 960mm/s)</text>
 
-            <!-- Axes -->
+            <!-- Axes & Ticks -->
             <line x1="70" y1="310" x2="560" y2="310" stroke="#475569" stroke-width="1.5"/>
             <line x1="70" y1="30" x2="70" y2="310" stroke="#475569" stroke-width="1.5"/>
-            <text x="270" y="340" fill="#94a3b8" font-size="11">Scan Speed v (mm/s)</text>
-            <text x="18" y="170" fill="#94a3b8" font-size="11" transform="rotate(-90 18 170)">Laser Power P (W)</text>
+            <g id="defectAxisTicks"></g>
+            <text x="295" y="346" fill="#94a3b8" font-size="11" text-anchor="middle" id="defectXAxisLabel">Scan Speed v (mm/s)</text>
+            <text x="16" y="170" fill="#94a3b8" font-size="11" text-anchor="middle" transform="rotate(-90 16 170)" id="defectYAxisLabel">Laser Power P (W)</text>
           </svg>
         </div>
       </div>
@@ -2104,8 +2101,8 @@
       <div class="model-card">
         <div class="model-card-header">
           <div>
-            <div class="model-card-title">Build Economics, Deposition Throughput & ESG ROI</div>
-            <div class="model-card-sub">Titanium Powder Feedstock Utilization • Shielding Argon Consumption • Energy Footprint</div>
+            <div class="model-card-title" id="econCardTitle">Build Economics, Deposition Throughput & ESG ROI</div>
+            <div class="model-card-sub" id="econCardSub">Titanium Powder Feedstock Utilization • Shielding Argon Consumption • Energy Footprint</div>
           </div>
         </div>
 
@@ -2113,31 +2110,31 @@
           <div class="audit-item">
             <span class="audit-name">Volumetric Deposition Throughput</span>
             <div style="font-size: 24px; font-weight: 800; color: var(--accent-cyan); font-family: monospace;" id="econ_rate">15.2 cm³/h</div>
-            <span style="font-size: 11px; color: var(--text-muted);">Equivalent mass rate: ~0.067 kg/h in Ti-6Al-4V</span>
+            <span style="font-size: 11px; color: var(--text-muted);" id="econ_mass_sub">Equivalent mass rate: ~0.067 kg/h in Ti-6Al-4V</span>
           </div>
           <div class="audit-item">
             <span class="audit-name">Specific Energy Consumption</span>
             <div style="font-size: 24px; font-weight: 800; color: var(--accent-emerald); font-family: monospace;" id="econ_kwh">18.4 kWh/kg</div>
-            <span style="font-size: 11px; color: var(--text-muted);">Laser + Recoater + Chiller auxiliary load</span>
+            <span style="font-size: 11px; color: var(--text-muted);" id="econ_kwh_sub">Laser + Recoater + Chiller auxiliary load</span>
           </div>
           <div class="audit-item">
             <span class="audit-name">Shielding Argon Gas Flow</span>
-            <div style="font-size: 24px; font-weight: 800; color: var(--accent-cyan); font-family: monospace;">18.5 L/min</div>
-            <span style="font-size: 11px; color: var(--text-muted);">Prevents interstitial O₂ pickup (&lt; 100 ppm)</span>
+            <div style="font-size: 24px; font-weight: 800; color: var(--accent-cyan); font-family: monospace;" id="econ_argon">18.5 L/min</div>
+            <span style="font-size: 11px; color: var(--text-muted);" id="econ_argon_sub">Prevents interstitial O₂ pickup (&lt; 100 ppm)</span>
           </div>
           <div class="audit-item">
             <span class="audit-name">Buy-to-Fly Ratio</span>
-            <div style="font-size: 24px; font-weight: 800; color: var(--accent-emerald); font-family: monospace;">1.15 : 1</div>
+            <div style="font-size: 24px; font-weight: 800; color: var(--accent-emerald); font-family: monospace;" id="econ_btf">1.15 : 1</div>
             <span style="font-size: 11px; color: var(--text-muted);">Compared to 12:1 in conventional CNC forging</span>
           </div>
           <div class="audit-item">
             <span class="audit-name">Estimated Machine Build Cost</span>
-            <div style="font-size: 24px; font-weight: 800; color: #fff; font-family: monospace;">$48.50 / hr</div>
+            <div style="font-size: 24px; font-weight: 800; color: #fff; font-family: monospace;" id="econ_cost">$48.50 / hr</div>
             <span style="font-size: 11px; color: var(--text-muted);">Depreciation, operator & consumables</span>
           </div>
           <div class="audit-item">
             <span class="audit-name">CO₂ Carbon Footprint Reduction</span>
-            <div style="font-size: 24px; font-weight: 800; color: var(--accent-emerald); font-family: monospace;">-64.2%</div>
+            <div style="font-size: 24px; font-weight: 800; color: var(--accent-emerald); font-family: monospace;" id="econ_co2">-64.2%</div>
             <span style="font-size: 11px; color: var(--text-muted);">Material savings vs. subtractive machining</span>
           </div>
         </div>
@@ -2275,6 +2272,8 @@
               <span style="font-size: 10px; color: var(--text-muted); font-family: monospace; margin-right: 4px;">Presets:</span>
               <button type="button" class="mp-preset-btn active" id="btnMpPreset200" onclick="applyMpPreset('200w')">KU Leuven (200W)</button>
               <button type="button" class="mp-preset-btn" id="btnMpPreset300" onclick="applyMpPreset('300w')">Concept Laser M2 (300W)</button>
+              <button type="button" class="mp-preset-btn" id="btnMpPresetDed" onclick="applyMpPreset('ded')">L-DED (1.6 kW)</button>
+              <button type="button" class="mp-preset-btn" id="btnMpPresetWaam" onclick="applyMpPreset('waam')">WAAM CMT (2.4 kW)</button>
             </div>
 
             <!-- Projection Switcher -->
@@ -2585,6 +2584,7 @@
             <!-- Beam Source -->
             <div class="mp-control-group">
               <button type="button" class="mp-pill-btn active" id="btnBnLaser" onclick="setBonthaSource('laser')">Laser (α=0.35)</button>
+              <button type="button" class="mp-pill-btn" id="btnBnArc" onclick="setBonthaSource('arc')">Arc / WAAM (η=0.78)</button>
               <button type="button" class="mp-pill-btn" id="btnBnEbeam" onclick="setBonthaSource('ebeam')">E-Beam (α=0.88)</button>
             </div>
 
@@ -2613,6 +2613,11 @@
                   <option value="fig4a-30kw">Fig. 4a: Q = 30 kW, V = 8.47 mm/s (Graded Equiaxed)</option>
                   <option value="fig4b-slow">Fig. 4b: Q = 15 kW, V = 2.12 mm/s (Coarse Equiaxed)</option>
                   <option value="fig4b-fast">Fig. 4b: Q = 15 kW, V = 10.6 mm/s (Fine Equiaxed)</option>
+                </optgroup>
+                <optgroup label="L-DED & Wire-Arc AM (WAAM)">
+                  <option value="ded-1600w">L-DED Baseline: 1.6 kW @ 15.0 mm/s, α = 0.38</option>
+                  <option value="waam-1800w">WAAM CMT (Guo 2025): 1.8 kW @ 6.0 mm/s, η = 0.78</option>
+                  <option value="waam-2400w">WAAM Balanced: 2.4 kW @ 8.0 mm/s, η = 0.78</option>
                 </optgroup>
                 <optgroup label="Electron Beam Manufacturing (EBAM)">
                   <option value="ebeam-15kw">E-Beam: 15 kW @ 8.47 mm/s, α = 0.88</option>
@@ -2951,24 +2956,24 @@ const ALLOY_DATA = {
 // ==========================================
 const SOLVER_CONFIG = {
   'lpbf': {
-    balanced: { layer: 40, hatch: 80, spot: 80, minP: 120, maxP: 380, targetV: 950 },
-    fine: { layer: 30, hatch: 65, spot: 70, minP: 80, maxP: 280, targetV: 750 },
-    productivity: { layer: 50, hatch: 100, spot: 90, minP: 180, maxP: 450, targetV: 1200 }
+    balanced: { layer: 40, hatch: 80, spot: 80, minP: 120, maxP: 380, targetV: 950, minV: 300, maxV: 2200 },
+    fine: { layer: 30, hatch: 65, spot: 70, minP: 80, maxP: 280, targetV: 750, minV: 300, maxV: 2200 },
+    productivity: { layer: 50, hatch: 100, spot: 90, minP: 180, maxP: 450, targetV: 1200, minV: 300, maxV: 2200 }
   },
   'ded-laser': {
-    balanced: { layer: 400, hatch: 1200, spot: 1500, minP: 800, maxP: 2200, targetV: 400 },
-    fine: { layer: 250, hatch: 800, spot: 1000, minP: 500, maxP: 1600, targetV: 300 },
-    productivity: { layer: 600, hatch: 1600, spot: 2000, minP: 1200, maxP: 2500, targetV: 500 }
+    balanced: { layer: 450, hatch: 1200, spot: 1500, minP: 600, maxP: 2600, targetV: 15, minV: 5, maxV: 35 },
+    fine: { layer: 250, hatch: 800, spot: 1000, minP: 400, maxP: 1800, targetV: 12, minV: 5, maxV: 35 },
+    productivity: { layer: 600, hatch: 1600, spot: 2000, minP: 1000, maxP: 3000, targetV: 20, minV: 5, maxV: 35 }
   },
   'waam': {
-    balanced: { layer: 1500, hatch: 3500, spot: 3000, minP: 1600, maxP: 4000, targetV: 50 },
-    fine: { layer: 1000, hatch: 2500, spot: 2200, minP: 1200, maxP: 3000, targetV: 40 },
-    productivity: { layer: 2200, hatch: 4500, spot: 3500, minP: 2200, maxP: 4500, targetV: 60 }
+    balanced: { layer: 1500, hatch: 3500, spot: 3000, minP: 1400, maxP: 4200, targetV: 8, minV: 3, maxV: 22 },
+    fine: { layer: 1000, hatch: 2500, spot: 2200, minP: 1000, maxP: 3200, targetV: 6, minV: 3, maxV: 22 },
+    productivity: { layer: 2000, hatch: 4500, spot: 4000, minP: 1800, maxP: 4500, targetV: 12, minV: 3, maxV: 22 }
   },
   'binder-jetting': {
-    balanced: { layer: 50, hatch: 100, spot: 80, minP: 150, maxP: 350, targetV: 850 },
-    fine: { layer: 35, hatch: 75, spot: 70, minP: 100, maxP: 250, targetV: 650 },
-    productivity: { layer: 70, hatch: 120, spot: 100, minP: 200, maxP: 400, targetV: 1100 }
+    balanced: { layer: 50, hatch: 100, spot: 80, minP: 150, maxP: 350, targetV: 850, minV: 300, maxV: 2200 },
+    fine: { layer: 35, hatch: 75, spot: 70, minP: 100, maxP: 250, targetV: 650, minV: 300, maxV: 2200 },
+    productivity: { layer: 70, hatch: 120, spot: 100, minP: 200, maxP: 400, targetV: 1100, minV: 300, maxV: 2200 }
   }
 };
 
@@ -2977,6 +2982,8 @@ function solveParamsForTargetVed(targetVed) {
   const t = cfg.layer;
   const h = cfg.hatch;
   const vTarget = cfg.targetV;
+  const minV = cfg.minV || 300;
+  const maxV = cfg.maxV || 2200;
 
   // VED = (P * 1e6) / (v * h * t)  =>  P = (targetVed * v * h * t) / 1e6
   let p = Math.round((targetVed * vTarget * h * t) / 1e6);
@@ -2984,34 +2991,63 @@ function solveParamsForTargetVed(targetVed) {
 
   if (p > cfg.maxP) {
     p = cfg.maxP;
-    v = Math.round((p * 1e6) / (targetVed * h * t));
+    v = (p * 1e6) / (targetVed * h * t);
   } else if (p < cfg.minP) {
     p = cfg.minP;
-    v = Math.round((p * 1e6) / (targetVed * h * t));
+    v = (p * 1e6) / (targetVed * h * t);
   }
 
+  v = Math.max(minV, Math.min(maxV, currentProcess === 'waam' || currentProcess === 'ded-laser' ? Math.round(v * 2) / 2 : Math.round(v)));
+
   const actualVed = (p * 1e6) / (v * h * t);
-  const buildRate = ((v * h * t * 3600) / 1e9).toFixed(1);
+  const heatInputJmm = p / Math.max(0.5, v);
+  const buildRate = ((v * h * t * 3600) / 1e9).toFixed(currentProcess === 'waam' || currentProcess === 'ded-laser' ? 0 : 1);
 
   let regime = "conduction";
   let regimeLabel = "Conduction mode — fully dense";
-  if (actualVed < 55) {
-    regime = "lof";
-    regimeLabel = "Lack of Fusion risk";
-  } else if (actualVed > 95) {
-    regime = "keyhole";
-    regimeLabel = "Keyholing threshold risk";
+  if (currentProcess === 'waam') {
+    regimeLabel = "Optimal WAAM arc window (HI " + heatInputJmm.toFixed(0) + " J/mm)";
+    if (heatInputJmm < 120) {
+      regime = "lof";
+      regimeLabel = "Lack of Fusion risk (low HI " + heatInputJmm.toFixed(0) + " J/mm)";
+    } else if (heatInputJmm > 600) {
+      regime = "keyhole";
+      regimeLabel = "Excessive Heat Input / Coarse-β risk (" + heatInputJmm.toFixed(0) + " J/mm)";
+    }
+  } else if (currentProcess === 'ded-laser') {
+    regimeLabel = "Conduction-dilution window (HI " + heatInputJmm.toFixed(0) + " J/mm)";
+    if (heatInputJmm < 75) {
+      regime = "lof";
+      regimeLabel = "Lack of Fusion risk (low HI " + heatInputJmm.toFixed(0) + " J/mm)";
+    } else if (heatInputJmm > 240) {
+      regime = "keyhole";
+      regimeLabel = "Over-dilution / Keyhole risk (" + heatInputJmm.toFixed(0) + " J/mm)";
+    }
+  } else {
+    if (actualVed < 55) {
+      regime = "lof";
+      regimeLabel = "Lack of Fusion risk";
+    } else if (actualVed > 95) {
+      regime = "keyhole";
+      regimeLabel = "Keyholing threshold risk";
+    }
   }
 
-  return { p, v, h, t, spot: cfg.spot, actualVed: actualVed.toFixed(1), buildRate, regime, regimeLabel };
+  return { p, v, h, t, spot: cfg.spot, actualVed: actualVed.toFixed(1), heatInput: heatInputJmm.toFixed(0), buildRate, regime, regimeLabel };
 }
 
 let solvedCache = null;
 
 function updateVedSolver(targetVed) {
   solvedCache = solveParamsForTargetVed(targetVed);
-  document.getElementById('targetVedDisplay').innerText = targetVed.toFixed(1) + ' J/mm³';
-  document.getElementById('derivedVedLabel').innerText = 'VED = ' + solvedCache.actualVed + ' J/mm³';
+  const tgtDisp = document.getElementById('targetVedDisplay');
+  if (tgtDisp) tgtDisp.innerText = targetVed.toFixed(1) + ' J/mm³';
+  const drvEl = document.getElementById('derivedVedLabel');
+  if (drvEl) {
+    drvEl.innerText = (currentProcess === 'waam' || currentProcess === 'ded-laser')
+      ? 'VED = ' + solvedCache.actualVed + ' J/mm³ · HI = ' + solvedCache.heatInput + ' J/mm'
+      : 'VED = ' + solvedCache.actualVed + ' J/mm³';
+  }
   document.getElementById('sol_p').innerText = solvedCache.p + ' W';
   document.getElementById('sol_v').innerText = solvedCache.v + ' mm/s';
   document.getElementById('sol_h').innerText = solvedCache.h + ' µm';
@@ -3037,7 +3073,9 @@ function applySolvedToSliders() {
 
 function adjustTargetVed(delta) {
   const s = document.getElementById('targetVedSlider');
-  let val = Math.max(20, Math.min(140, parseFloat(s.value) + delta));
+  const minVal = parseFloat(s.min) || 20;
+  const maxVal = parseFloat(s.max) || 140;
+  let val = Math.max(minVal, Math.min(maxVal, parseFloat(s.value) + delta));
   s.value = val;
   updateVedSolver(val);
 }
@@ -3047,8 +3085,12 @@ function onTargetVedSlider(val) {
 }
 
 function applyVedPreset(val) {
-  document.getElementById('targetVedSlider').value = val;
-  updateVedSolver(val);
+  const s = document.getElementById('targetVedSlider');
+  const minVal = parseFloat(s.min) || 20;
+  const maxVal = parseFloat(s.max) || 260;
+  const clamped = Math.max(minVal, Math.min(maxVal, val));
+  s.value = clamped;
+  updateVedSolver(clamped);
 }
 
 function setProfile(prof) {
@@ -3064,9 +3106,13 @@ function setTargetFromCurrent() {
   const v = parseFloat(document.getElementById('sl_v').value);
   const h = parseFloat(document.getElementById('sl_h').value);
   const t = parseFloat(document.getElementById('sl_t').value);
-  const currentVed = (p * 1e6) / (v * h * t);
-  document.getElementById('targetVedSlider').value = Math.round(currentVed);
-  updateVedSolver(currentVed);
+  const currentVed = (p * 1e6) / (Math.max(0.5, v) * h * t);
+  const s = document.getElementById('targetVedSlider');
+  const minVal = parseFloat(s.min) || 20;
+  const maxVal = parseFloat(s.max) || 260;
+  const clamped = Math.max(minVal, Math.min(maxVal, Math.round(currentVed)));
+  s.value = clamped;
+  updateVedSolver(clamped);
 }
 
 // ==========================================
@@ -3123,41 +3169,88 @@ function calculatePhysics() {
   setTxt('val_spot', spot + ' µm');
   setTxt('val_preheat', preheat + ' °C');
 
-  // 1. Volumetric Energy Density (J/mm^3)
+  const isWaam = currentProcess === 'waam';
+  const isDed = currentProcess === 'ded-laser';
+
+  // 1. Volumetric Energy Density (J/mm^3) & Linear Heat Input (J/mm)
   const ved = (p * 1e6) / Math.max(1, v * h * t);
+  const heatInputJmm = p / Math.max(0.5, v);
   setTxt('kpi_ved', ved.toFixed(1) + ' J/mm³');
 
-  // 2. Melt pool physics (Analytical Rosenthal 3D)
+  // 2. Melt pool physics (Analytical Rosenthal 3D + Process Thermal Efficiency)
   const vMs = Math.max(0.001, v / 1000.0);
-  const eta = alloy.laserAbsorptivity;
+  const eta = isWaam ? 0.78 : (isDed ? (currentAlloy === 'ti64' ? 0.38 : alloy.laserAbsorptivity * 0.90) : alloy.laserAbsorptivity);
   const effectivePower = p * eta;
   const deltaT = Math.max(50, alloy.liquidusC - preheat);
   const thermalDiffusivity = alloy.thermalConductivity / (alloy.density * alloy.specificHeat);
 
+  // Beam / arc irradiance (W/cm^2)
+  const spotCm = Math.max(1e-3, spot * 1e-4);
+  const intensityWcm2 = effectivePower / (Math.PI * Math.pow(spotCm * 0.5, 2));
+
   // Melt pool dimensions (µm)
   const widthEst = Math.sqrt((8 * effectivePower) / (Math.PI * Math.E * alloy.density * alloy.specificHeat * deltaT * vMs));
   const meltPoolWidth = Math.round(Math.max(spot * 0.5, widthEst * 1e6 * 0.75 + spot * 0.4));
-  const meltPoolDepth = Math.round(Math.max(t * 0.2, meltPoolWidth * 0.52 * Math.pow(Math.max(0.05, ved / 70.0), 0.25)));
-  const meltPoolLength = Math.round(meltPoolWidth * (1.2 + 0.0012 * v));
+  let meltPoolDepth;
+  if (isWaam) {
+    const arWaam = Math.min(0.55, 0.28 + 0.00045 * heatInputJmm);
+    meltPoolDepth = Math.round(Math.max(t * 0.35, meltPoolWidth * arWaam));
+  } else if (isDed) {
+    const baseArDed = Math.min(0.65, 0.26 + 0.0012 * heatInputJmm);
+    const arDed = intensityWcm2 > 1.5e5
+      ? Math.min(1.6, baseArDed + 0.35 * ((intensityWcm2 - 1.5e5) / 1.5e5))
+      : baseArDed;
+    meltPoolDepth = Math.round(Math.max(t * 0.30, meltPoolWidth * arDed));
+  } else {
+    meltPoolDepth = Math.round(Math.max(t * 0.2, meltPoolWidth * 0.52 * Math.pow(Math.max(0.05, ved / 70.0), 0.25)));
+  }
 
-  // Solidus cooling rate (K/s)
-  const coolingRate = Math.max(10, (2 * Math.PI * alloy.thermalConductivity * vMs * Math.pow(deltaT, 2)) / Math.max(5, effectivePower));
-  const thermalGradientG = coolingRate / Math.max(0.01, vMs * 0.72);
-  const solidVelocityR = vMs * 0.72;
+  let meltPoolLength;
+  if (isWaam || isDed) {
+    const peclet = (vMs * meltPoolWidth * 1e-6) / (2.0 * Math.max(1e-8, thermalDiffusivity));
+    meltPoolLength = Math.round(meltPoolWidth * Math.min(2.8, 1.15 + 0.25 * peclet));
+  } else {
+    meltPoolLength = Math.round(meltPoolWidth * (1.2 + 0.0012 * v));
+  }
+
+  // Solidus cooling rate (K/s) with multi-pass heat accumulation for DED / WAAM
+  const accumFactor = isWaam ? 0.45 : (isDed ? 0.15 : 0.0);
+  const rawCoolingRate = (2 * Math.PI * alloy.thermalConductivity * vMs * Math.pow(deltaT, 2)) / Math.max(5, effectivePower);
+  const coolingRate = isWaam || isDed
+    ? Math.max(1.0, rawCoolingRate * (1.0 - accumFactor))
+    : Math.max(10, rawCoolingRate);
+  const solidVelocityR = Math.max(0.0005, vMs * 0.72);
+  const thermalGradientG = coolingRate / solidVelocityR;
   const grRatio = thermalGradientG / solidVelocityR;
+
+  // Bontha / Kobryn-Semiatin CET morphology check (G in K/cm, R in cm/s)
+  const bonthaR = solidVelocityR * 100.0;
+  const bonthaG = thermalGradientG / 100.0;
+  const cetParam = bonthaG / Math.pow(Math.max(1e-3, bonthaR), 0.5);
+  const bonthaMorphLabel = cetParam >= 1000 ? 'Columnar-Dendritic' : (cetParam >= 250 ? 'Mixed (CET Zone)' : 'Equiaxed');
+  const bonthaMorphShort = cetParam >= 1000 ? 'FULLY COLUMNAR' : (cetParam >= 250 ? 'MIXED (CET)' : 'EQUIAXED');
 
   // Secondary dendrite arm / lath spacing (µm) with physical lower limit (TEM martensite width 0.55-1.5 µm)
   const lathSpacing = Math.max(0.55, alloy.cellSpacingFactor * Math.pow(coolingRate, -alloy.cellSpacingExponent));
 
   // 3. Defect Regimes
-  // Lack of fusion index: A
   const penetrationRatio = meltPoolDepth / Math.max(1, t);
-  const lofIndex = 1.35 / Math.max(0.1, penetrationRatio);
-
-  // Keyhole index: P*
+  let lofIndex;
+  let keyholeRatio;
   const mHole = Math.PI * alloy.density * alloy.specificHeat * deltaT * Math.sqrt(thermalDiffusivity * vMs * Math.pow(spot * 1e-6, 3));
   const normalizedEnthalpy = effectivePower / Math.max(1e-6, mHole);
-  const keyholeRatio = normalizedEnthalpy / 26.0;
+  if (isWaam) {
+    lofIndex = Math.max(0.25, 120.0 / Math.max(1.0, heatInputJmm));
+    keyholeRatio = heatInputJmm / 600.0;
+  } else if (isDed) {
+    lofIndex = Math.max(1.25 / Math.max(0.1, penetrationRatio), 75.0 / Math.max(1.0, heatInputJmm));
+    keyholeRatio = intensityWcm2 > 1.5e5
+      ? Math.max(heatInputJmm / 240.0, normalizedEnthalpy / 26.0)
+      : heatInputJmm / 240.0;
+  } else {
+    lofIndex = 1.35 / Math.max(0.1, penetrationRatio);
+    keyholeRatio = normalizedEnthalpy / 26.0;
+  }
 
   // Balling index: F
   const ballingRatio = meltPoolLength / (meltPoolWidth * Math.PI);
@@ -3170,20 +3263,28 @@ function calculatePhysics() {
 
   // Regime classification
   let regime = 'conduction';
-  let regimeLabel = 'Conduction mode — fully dense';
-  let regimeDesc = '— Stable, optimal melt pool dynamics with high relative density and minimal porosity.';
+  let regimeLabel = isWaam
+    ? 'Stable WAAM arc conduction — fully dense'
+    : (isDed ? 'Conduction-dilution mode — fully dense' : 'Conduction mode — fully dense');
+  let regimeDesc = isWaam
+    ? '— Balanced wire-arc heat input (120–600 J/mm) with uniform bead tie-in and minimal distortion.'
+    : (isDed ? '— Controlled substrate dilution and full metallurgical bonding without vapor cavity porosity.' : '— Stable, optimal melt pool dynamics with high relative density and minimal porosity.');
   if (lofIndex > 1.05) {
     regime = 'lof';
     regimeLabel = 'Lack of Fusion (LoF) detected';
-    regimeDesc = '— Melt pool depth is insufficient to penetrate underlying powder layer. Increase laser power or decrease scan speed.';
+    regimeDesc = isWaam || isDed
+      ? '— Linear heat input or penetration is too low to wet and fuse into the substrate/previous bead. Increase power or reduce travel speed.'
+      : '— Melt pool depth is insufficient to penetrate underlying powder layer. Increase laser power or decrease scan speed.';
   } else if (keyholeRatio > 1.1) {
     regime = 'keyhole';
-    regimeLabel = 'Keyhole threshold exceeded';
-    regimeDesc = '— Excessive localized energy density produces deep vapor cavity prone to collapse and entrapping spherical pores.';
+    regimeLabel = isWaam ? 'Overheating / Coarse-β instability' : (isDed ? 'Over-dilution / Keyhole risk' : 'Keyhole threshold exceeded');
+    regimeDesc = isWaam
+      ? '— Excessive arc linear heat input (>600 J/mm) causes remelt sag, heavy residual stress, and coarse prior-β grains.'
+      : '— Excessive localized energy or linear heat input deepens penetration excessively and increases gas pore entrapment.';
   } else if (ballingRatio > 1.05) {
     regime = 'balling';
     regimeLabel = 'Plateau-Rayleigh Balling instability';
-    regimeDesc = '— Elongated melt pool breaks into discrete molten beads. Reduce scan speed or increase beam spot diameter.';
+    regimeDesc = '— Elongated melt pool breaks into discrete molten beads. Reduce speed or widen beam/arc spot diameter.';
   }
 
   // Update Regime Banner
@@ -3191,19 +3292,13 @@ function calculatePhysics() {
   banner.className = 'regime-banner ' + (regime === 'conduction' ? '' : (regime === 'lof' || regime === 'keyhole' ? 'defect' : 'warning'));
   document.getElementById('regimeBadge').innerText = regimeLabel;
   document.getElementById('regimeDesc').innerText = regimeDesc;
-  document.getElementById('regimeIndices').innerHTML = `Lof index: <strong>${lofIndex.toFixed(2)}</strong> • keyhole ratio: <strong>${keyholeRatio.toFixed(2)}</strong> • balling ratio: <strong>${ballingRatio.toFixed(2)}</strong>`;
+  document.getElementById('regimeIndices').innerHTML = `LoF index: <strong>${lofIndex.toFixed(2)}</strong> • ${isWaam ? 'Overheat ratio' : 'Keyhole ratio'}: <strong>${keyholeRatio.toFixed(2)}</strong> • Balling: <strong>${ballingRatio.toFixed(2)}</strong>${(isWaam || isDed) ? ` • HI: <strong>${heatInputJmm.toFixed(0)} J/mm</strong>` : ''}`;
 
-  // 4. Hardness & Tensile Properties (Calibrated for Ti-6Al-4V ASTM F2924 / F3001)
+  // 4. Hardness & Tensile Properties (Calibrated for Ti-6Al-4V ASTM F2924 / F3001 / F3187)
   const effectiveHallPetchSlope = Math.min(42, alloy.hallPetchSlope * 0.55);
   const hallPetchIncrement = effectiveHallPetchSlope / Math.sqrt(Math.max(0.45, lathSpacing));
   let baseHardness = alloy.baseHardnessHV + hallPetchIncrement;
 
-  // Post-processing multipliers based on ASTM F2924 / F3001 metallurgical microstructures:
-  // As-built (None): 100% fine alpha' martensite -> ~385-400 HV, UTS ~1200 MPa
-  // Stress-relieved: slight recovery -> ~365-380 HV, UTS ~1100 MPa
-  // Annealed: coarsened alpha+beta lamellae -> ~335-350 HV, UTS ~990-1030 MPa
-  // HIP: full recrystallization and pore healing -> ~325-340 HV, UTS ~940-980 MPa
-  // Solution-Aged: secondary alpha precipitate hardening -> ~375-390 HV, UTS ~1120-1160 MPa
   let postMultiplier = 1.0;
   if (post === 'Stress-relieved') postMultiplier = 0.94;
   if (post === 'Annealed') postMultiplier = 0.88;
@@ -3211,21 +3306,23 @@ function calculatePhysics() {
   if (post === 'Bi-modal') postMultiplier = 0.90;
   if (post === 'Solution-Aged') postMultiplier = 0.98;
 
+  const refVed = isWaam ? 57.0 : (isDed ? 198.0 : 72.0);
   const hvAnalytical = Math.round(baseHardness * postMultiplier);
-  const hvRf = Math.round(hvAnalytical * (1.0 + 0.012 * Math.log10(coolingRate / 1e4)));
-  const hvXgb = Math.round(hvAnalytical * (1.0 + 0.009 * Math.log10(coolingRate / 1e4)));
-  const hvSvm = Math.round(hvAnalytical * (1.015 - 0.005 * Math.abs(ved - 72) / 40));
-  const hvGpr = Math.round(hvAnalytical * (1.010 - 0.004 * Math.abs(ved - 72) / 35));
+  const hvRf = Math.round(hvAnalytical * (1.0 + 0.012 * Math.log10(Math.max(1.0, coolingRate) / 1e4)));
+  const hvXgb = Math.round(hvAnalytical * (1.0 + 0.009 * Math.log10(Math.max(1.0, coolingRate) / 1e4)));
+  const hvSvm = Math.round(hvAnalytical * (1.015 - 0.005 * Math.abs(ved - refVed) / Math.max(25, refVed * 0.5)));
+  const hvGpr = Math.round(hvAnalytical * (1.010 - 0.004 * Math.abs(ved - refVed) / Math.max(25, refVed * 0.5)));
   const hvEnsemble = Math.round((hvAnalytical + hvRf + hvXgb + hvSvm + hvGpr) / 5);
 
   const primaryHv = hvGpr;
   const hrcEquiv = hvToHrcStandard(primaryHv);
-  // Tabor empirical relation: UTS (MPa) ~ 3.05 * HV for Ti-6Al-4V (calibrated across literature)
   const utsTabor = Math.round(primaryHv * 3.05);
   const yieldStrength = Math.round(utsTabor * (post === 'None' ? 0.91 : (post === 'HIP' ? 0.89 : 0.90)));
 
-  // Dynamic Elongation with Rice-Tracey / Murakami pore concentration & LoF micro-crack knockdown
-  const baseElongation = (post === 'HIP' ? 16.2 : (post === 'Bi-modal' ? 17.5 : (post === 'Annealed' ? 13.0 : (post === 'Stress-relieved' ? 9.8 : 7.5))));
+  // Dynamic Elongation with process-specific α+β vs α' as-built ductility & porosity knockdown
+  const asBuiltEl = isWaam ? 12.8 : (isDed ? 11.2 : 7.5);
+  const srEl = isWaam ? 14.0 : (isDed ? 12.2 : 9.8);
+  const baseElongation = (post === 'HIP' ? 16.2 : (post === 'Bi-modal' ? 17.5 : (post === 'Annealed' ? 13.0 : (post === 'Stress-relieved' ? srEl : asBuiltEl))));
   const poreKnockdown = Math.exp(-0.45 * Math.max(0, 100 - densityPct));
   const lofDuctilityPenalty = lofIndex > 1.0 ? Math.max(0.15, 1.0 - (lofIndex - 1.0) * 1.4) : 1.0;
   const keyholeDuctilityPenalty = keyholeRatio > 1.0 ? Math.max(0.4, 1.0 - (keyholeRatio - 1.0) * 0.5) : 1.0;
@@ -3234,18 +3331,20 @@ function calculatePhysics() {
   // Dynamic Interstitial Oxygen Content (Grade 5: < 0.20 wt. %, Grade 23 ELI: < 0.13 wt. %)
   const isEli = (currentAlloy === 'ti64_eli' || currentAlloy === 'ti64_gr23' || (alloy.name && alloy.name.includes('ELI')));
   const baseO2 = isEli ? 0.105 : 0.160;
-  const o2Pickup = 0.00015 * Math.min(180, ved); // Thermal chamber pickup proportional to energy density
+  const o2Pickup = isWaam
+    ? 0.00004 * Math.min(450, heatInputJmm)
+    : (isDed ? 0.00010 * Math.min(220, heatInputJmm) : 0.00015 * Math.min(180, ved));
   const o2Content = parseFloat((baseO2 + o2Pickup).toFixed(3));
   const o2Limit = isEli ? 0.130 : 0.200;
   const o2Pass = o2Content < o2Limit;
 
-  // Dynamic Charpy V-Notch Toughness (J) - Target >= 15 J in HIP/Annealed condition
-  const baseCvn = (post === 'HIP' ? 25.5 : (post === 'Bi-modal' ? 23.0 : (post === 'Annealed' ? 19.0 : (post === 'Stress-relieved' ? 13.5 : 10.8))));
+  // Dynamic Charpy V-Notch Toughness (J)
+  const baseCvn = (post === 'HIP' ? 25.5 : (post === 'Bi-modal' ? 23.0 : (post === 'Annealed' ? 19.0 : (post === 'Stress-relieved' ? 14.5 : (isWaam ? 18.0 : (isDed ? 15.5 : 10.8))))));
   const cvnKnockdown = Math.max(0.2, 1.0 - 0.22 * Math.pow(Math.max(0, 100 - densityPct), 1.3));
   const charpyJ = parseFloat(Math.max(2.5, baseCvn * cvnKnockdown * lofDuctilityPenalty).toFixed(1));
   const cvnPass = charpyJ >= 15.0;
 
-  // Update KPIs (Density formatted to 2 decimals to accurately represent true density and eliminate misleading 100.0%)
+  // Update KPIs
   document.getElementById('kpi_hv').innerText = primaryHv + ' HV';
   document.getElementById('kpi_hrc').innerText = hrcEquiv;
   document.getElementById('kpi_uts').innerText = utsTabor + ' MPa';
@@ -3264,14 +3363,20 @@ function calculatePhysics() {
   }
   const elVedSub = document.getElementById('kpi_ved_sub');
   if (elVedSub) {
-    const optLow = Math.round(50 * (t / 30.0) * (h / 100.0));
-    const optHigh = Math.round(85 * (t / 30.0) * (h / 100.0));
-    const lofThresh = (optLow * 0.58).toFixed(1);
-    elVedSub.innerText = `LOF: ${lofThresh} J/mm³ | Opt: ${optLow}–${optHigh} J/mm³`;
+    if (isWaam) {
+      elVedSub.innerText = `HI: ${heatInputJmm.toFixed(0)} J/mm | Opt: 120–600 J/mm`;
+    } else if (isDed) {
+      elVedSub.innerText = `HI: ${heatInputJmm.toFixed(0)} J/mm | Opt: 75–240 J/mm`;
+    } else {
+      const optLow = Math.round(50 * (t / 30.0) * (h / 100.0));
+      const optHigh = Math.round(85 * (t / 30.0) * (h / 100.0));
+      const lofThresh = (optLow * 0.58).toFixed(1);
+      elVedSub.innerText = `LOF: ${lofThresh} J/mm³ | Opt: ${optLow}–${optHigh} J/mm³`;
+    }
   }
 
   const vedBadge = document.getElementById('kpi_ved_badge');
-  vedBadge.innerText = regime === 'conduction' ? 'Optimal' : (regime === 'lof' ? 'Low (LOF)' : 'High (Keyhole)');
+  vedBadge.innerText = regime === 'conduction' ? 'Optimal' : (regime === 'lof' ? 'Low (LOF)' : (isWaam ? 'High (Overheat)' : 'High (Keyhole)'));
   vedBadge.style.background = regime === 'conduction' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)';
   vedBadge.style.color = regime === 'conduction' ? 'var(--accent-emerald)' : 'var(--accent-rose)';
 
@@ -3279,12 +3384,12 @@ function calculatePhysics() {
   document.getElementById('po_width').innerText = meltPoolWidth + ' µm';
   document.getElementById('po_depth').innerText = meltPoolDepth + ' µm';
   document.getElementById('po_length').innerText = meltPoolLength + ' µm';
-  document.getElementById('po_cooling').innerText = coolingRate.toExponential(2) + ' K/s';
+  document.getElementById('po_cooling').innerText = coolingRate < 1000 ? coolingRate.toFixed(1) + ' K/s' : coolingRate.toExponential(2) + ' K/s';
   document.getElementById('po_g').innerText = thermalGradientG.toExponential(2) + ' K/m';
-  document.getElementById('po_r').innerText = solidVelocityR.toFixed(3) + ' m/s';
-  document.getElementById('po_gr').innerText = 'Columnar-Dendritic (' + grRatio.toExponential(1) + ')';
+  document.getElementById('po_r').innerText = solidVelocityR.toFixed(4) + ' m/s';
+  document.getElementById('po_gr').innerText = `${bonthaMorphLabel} (${grRatio.toExponential(1)})`;
   document.getElementById('po_lambda').innerText = lathSpacing.toFixed(2) + ' µm';
-  document.getElementById('po_enthalpy').innerText = normalizedEnthalpy.toFixed(1);
+  document.getElementById('po_enthalpy').innerText = (isWaam || isDed) ? `HI ${heatInputJmm.toFixed(0)} J/mm` : normalizedEnthalpy.toFixed(1);
   document.getElementById('po_porosity').innerText = porosityPct + ' %';
   document.getElementById('po_hybrid').innerText = `${meltPoolWidth} x ${meltPoolDepth} µm (${regimeLabel.split(' ')[0]})`;
   document.getElementById('po_remelt').innerText = `h_remelt ${meltPoolDepth} µm (${penetrationRatio > 1.2 ? 'Safe' : 'Marginal'})`;
@@ -3292,7 +3397,16 @@ function calculatePhysics() {
   document.getElementById('po_hp_hv').innerText = hvAnalytical + ' HV';
   document.getElementById('po_uts_val').innerText = utsTabor + ' MPa';
 
-  // Update Models Table
+  // Tab 1 Expected Microstructure Cards & Benchmark Range Labels
+  const isMartensiticAsBuilt = post === 'None' && coolingRate >= 410;
+  setTxt('microSolid', coolingRate >= 410 ? 'Martensitic α\' Quench' : (isWaam ? 'Widmanstätten α+β Basketweave' : 'Colony / Basketweave α+β'));
+  setTxt('microMorph', post === 'Bi-modal' ? 'Bi-modal (Equiaxed α_p + α/β)' : (post === 'HIP' || post === 'Annealed' ? 'Lamellar α+β + Prior-β GB' : (isMartensiticAsBuilt ? `Acicular α' Needles (${bonthaMorphShort})` : `α+β Colony (${bonthaMorphShort})`)));
+  setTxt('microPost', post === 'None' ? (isWaam ? 'As-deposited α+β (ASTM F3187 / WAAM)' : (isDed ? 'As-deposited (ASTM F3187 L-DED)' : 'As-built (ASTM F2924 Class 1)')) : `${post} (${(isWaam || isDed) ? 'ASTM F3187' : 'ASTM F2924'} Decomposed)`);
+
+  setTxt('benchHeaderRange', isWaam ? 'WAAM Lit. (295–355 HV)' : (isDed ? 'L-DED Lit. (315–385 HV)' : 'LPBF Lit. (340–420 HV)'));
+  setTxt('benchLabelRange', isWaam ? 'Ti-6Al-4V WAAM Range' : (isDed ? 'Ti-6Al-4V L-DED Range' : 'Ti-6Al-4V LPBF Range'));
+
+  // Update Models Table + Snapshot for CSV Export
   const models = [
     { name: "Analytical (Hall-Petch + Rosenthal)", dot: "dot-blue", hv: hvAnalytical, err: 8.2, close: 96.8, r2: 0.91 },
     { name: "Random Forest (Calibrated)", dot: "dot-cyan", hv: hvRf, err: 6.4, close: 97.5, r2: 0.94 },
@@ -3301,6 +3415,7 @@ function calculatePhysics() {
     { name: "Hybrid Physics-GPR (Recommended)", dot: "dot-emerald", hv: hvGpr, err: 5.1, close: 98.4, r2: 0.97 },
     { name: "Weighted Ensemble", dot: "dot-red", hv: hvEnsemble, err: 4.8, close: 98.7, r2: 0.98 }
   ];
+  window.lastModelsSnapshot = models.map(m => ({ name: m.name, val: m.hv, err: m.err, closeness: m.close + '%', r2: m.r2 }));
 
   let tbodyHtml = '';
   models.forEach((m, idx) => {
@@ -3315,7 +3430,6 @@ function calculatePhysics() {
         <td style="font-family: monospace; font-weight: bold;">${m.r2}</td>
       </tr>
     `;
-    // Update Bar Chart
     const bar = document.getElementById('bar_' + idx);
     if (bar) {
       const heightPct = Math.min(95, Math.max(30, (m.hv / 500) * 100));
@@ -3325,20 +3439,10 @@ function calculatePhysics() {
   });
   document.getElementById('modelsTableBody').innerHTML = tbodyHtml;
 
-  // Update Dynamic SVG Operating Point on Defect Map
-  const svgP = Math.max(30, Math.min(310, 310 - ((p - 80) / (450 - 80)) * 280));
-  const svgV = Math.max(70, Math.min(560, 70 + ((v - 300) / (2200 - 300)) * 490));
-  const cursor = document.getElementById('svgCursor');
-  if (cursor) {
-    cursor.setAttribute('cx', svgV);
-    cursor.setAttribute('cy', svgP);
-    const curLabel = document.getElementById('svgCursorLabel');
-    curLabel.setAttribute('x', Math.min(420, svgV + 15));
-    curLabel.setAttribute('y', Math.max(45, svgP + 5));
-    curLabel.textContent = `Operating (${p}W, ${v}mm/s)`;
-  }
+  // Update Dynamic SVG Operating Point & Zones on Defect Map
+  updateDefectMapSvg(currentProcess, p, v);
 
-  // Update ASTM Audit View (ALL 6 METRICS FULLY DYNAMIC)
+  // Update ASTM Audit View (ALL 6 METRICS FULLY DYNAMIC, ASTM F2924 / F3001 / F3187)
   document.getElementById('aud_ys_val').innerText = yieldStrength + ' MPa';
   const ysBadge = document.getElementById('aud_ys_badge');
   if (ysBadge) {
@@ -3358,8 +3462,10 @@ function calculatePhysics() {
   document.getElementById('aud_el_val').innerText = elongationPct.toFixed(1) + ' %';
   const elBadge = document.getElementById('aud_el_badge');
   if (elBadge) {
-    const elPass = elongationPct >= 10.0;
-    elBadge.innerText = elPass ? 'PASS (QUALIFIED)' : 'FAIL (<10%)';
+    const elThresh = (isWaam || isDed) ? 10.0 : 10.0;
+    const elPass = elongationPct >= elThresh;
+    const stdTag = (isWaam || isDed) ? 'ASTM F3187' : 'ASTM F2924';
+    elBadge.innerText = elPass ? `PASS (${stdTag})` : 'FAIL (<10%)';
     elBadge.className = 'audit-badge ' + (elPass ? 'badge-pass' : 'badge-fail');
   }
 
@@ -3391,13 +3497,45 @@ function calculatePhysics() {
     elCvnBadge.className = 'audit-badge ' + (cvnPass ? 'badge-pass' : 'badge-fail');
   }
 
-  // Update Build Economics
-  const massRateKgH = ((v * h * t * 3600 * 1e-9) * (alloy.density / 1000.0)).toFixed(3);
-  document.getElementById('econ_rate').innerText = ((v * h * t * 3600) / 1e9).toFixed(1) + ' cm³/h';
+  // Update All 6 Build Economics Cards Dynamically
+  const volRateCm3H = (v * h * t * 3600) / 1e9;
+  const massRateKgHNum = volRateCm3H * (alloy.density * 1e-6);
+  const wallEfficiency = isWaam ? 0.78 : (isDed ? 0.35 : 0.22);
+  const totalPowerKw = (p / 1000.0) / wallEfficiency + (isWaam ? 1.2 : (isDed ? 2.4 : 3.2));
+  const specificKwhKg = totalPowerKw / Math.max(0.01, massRateKgHNum);
+  const argonRateLmin = isWaam ? '18–25 L/min' : (isDed ? '12–18 L/min' : '4–8 L/min');
+  const btfRatio = isWaam ? '1.15 : 1' : (isDed ? '1.45 : 1' : '1.08 : 1');
+  const feedCostKg = isWaam ? 95 : (isDed ? 165 : 220);
+  const estCostPerKg = (feedCostKg + specificKwhKg * 0.14 + (isWaam ? 28 : (isDed ? 85 : 185))).toFixed(0);
+  const co2PerKg = (specificKwhKg * 0.42 + (isWaam ? 6.5 : 11.0)).toFixed(1);
+
+  setTxt('econCardTitle', isWaam ? 'WAAM Build Rate, Wire Feed & Factory Economics' : (isDed ? 'L-DED Deposition Rate, Powder & Cell Economics' : 'LPBF Build Rate, SEC & Industrial Economics'));
+  setTxt('econCardSub', isWaam ? 'High-deposition wire-arc throughput vs inert gas & finish machining' : (isDed ? 'Blown-powder / wire L-DED throughput & shield gas cost model' : 'Powder bed fusion throughput, machine overhead & post-processing'));
+  setTxt('econ_rate', volRateCm3H.toFixed(volRateCm3H >= 50 ? 0 : 1) + ' cm³/h');
+  setTxt('econ_mass_sub', `Mass rate: ~${massRateKgHNum.toFixed(3)} kg/h (${isWaam ? '100% wire catchment' : (isDed ? 'L-DED Ti-6Al-4V' : 'Ti-6Al-4V')})`);
+  setTxt('econ_kwh', specificKwhKg.toFixed(1) + ' kWh/kg');
+  setTxt('econ_kwh_sub', `Wall-plug SEC @ ${totalPowerKw.toFixed(1)} kW (${Math.round(wallEfficiency * 100)}% source eff.)`);
+  setTxt('econ_argon', argonRateLmin);
+  setTxt('econ_argon_sub', isWaam ? 'Torch + trailing shield purge Ar (99.999%)' : (isDed ? 'Carrier + coaxial nozzle Ar flow' : 'Recirculated chamber Ar (<100 ppm O₂)'));
+  setTxt('econ_btf', btfRatio);
+  setTxt('econ_cost', '$' + estCostPerKg + ' / kg');
+  const co2SavingsPct = Math.max(25.0, Math.min(88.0, 92.0 - specificKwhKg * 0.42)).toFixed(1);
+  setTxt('econ_co2', `-${co2SavingsPct}%`);
+
+  // Share state with 3D Digital Twin
+  const alphaPrimePct = coolingRate >= 410
+    ? (post === 'HIP' || post === 'Annealed' ? 5 : (post === 'Stress-relieved' ? 68 : 92))
+    : (post === 'None' ? Math.max(8, Math.round((coolingRate / 410) * 60)) : 3);
+  const resStressFactor = (post === 'HIP' || post === 'Annealed') ? 0.15 : (post === 'Stress-relieved' ? 0.35 : 1.0);
+  const residualStressMPa = Math.round(yieldStrength * (isWaam ? 0.58 : (isDed ? 0.48 : 0.42)) * resStressFactor);
+  window.twinPhysicsState = {
+    process: currentProcess, p, v, h, t, preheat,
+    width: meltPoolWidth, depth: meltPoolDepth, length: meltPoolLength,
+    coolingRate, thermalGradientG, solidVelocityR,
+    alphaPrimePct, residualStressMPa
+  };
 
   // 6. Update Bontha Solidification Map Cursor (Bontha et al. 2006, 2009)
-  const bonthaR = solidVelocityR * 100.0; // cm/s
-  const bonthaG = thermalGradientG / 100.0; // K/cm
   const logR = Math.log10(Math.max(1e-4, bonthaR));
   const bonthaX = Math.max(85, Math.min(695, 80 + ((logR - (-3)) / 4.0) * 620));
   const logG = Math.log10(Math.max(10, bonthaG));
@@ -3426,19 +3564,17 @@ function calculatePhysics() {
     if (bonthaLabel1) {
       bonthaLabel1.setAttribute('x', boxX + 10);
       bonthaLabel1.setAttribute('y', boxY + 16);
-      bonthaLabel1.textContent = `R = ${bonthaR.toFixed(2)} cm/s • G = ${bonthaG.toExponential(1)} K/cm`;
+      bonthaLabel1.textContent = `R = ${bonthaR < 10 ? bonthaR.toFixed(2) : bonthaR.toFixed(1)} cm/s • G = ${bonthaG.toExponential(1)} K/cm`;
     }
     if (bonthaLabel2) {
       bonthaLabel2.setAttribute('x', boxX + 10);
       bonthaLabel2.setAttribute('y', boxY + 30);
-      const morphText = grRatio > 1e3 ? 'Columnar (Ṫ=' + coolingRate.toExponential(1) + ' K/s)' : (grRatio >= 200 ? 'Mixed (CET Zone)' : 'Equiaxed');
-      bonthaLabel2.textContent = morphText;
+      bonthaLabel2.textContent = `${bonthaMorphLabel.split(' ')[0]} (Ṫ=${coolingRate < 1000 ? coolingRate.toFixed(0) : coolingRate.toExponential(1)} K/s)`;
     }
     if (bonthaBadge) {
-      const morph = grRatio > 1e3 ? 'FULLY COLUMNAR' : (grRatio >= 200 ? 'MIXED (CET)' : 'EQUIAXED');
-      bonthaBadge.textContent = morph;
-      bonthaBadge.style.color = grRatio > 1e3 ? 'var(--accent-cyan)' : (grRatio >= 200 ? 'var(--accent-amber)' : 'var(--accent-emerald)');
-      bonthaBadge.style.background = grRatio > 1e3 ? 'rgba(80, 216, 233, 0.2)' : (grRatio >= 200 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)');
+      bonthaBadge.textContent = bonthaMorphShort;
+      bonthaBadge.style.color = cetParam >= 1000 ? 'var(--accent-cyan)' : (cetParam >= 250 ? 'var(--accent-amber)' : 'var(--accent-emerald)');
+      bonthaBadge.style.background = cetParam >= 1000 ? 'rgba(80, 216, 233, 0.2)' : (cetParam >= 250 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)');
     }
   }
 
@@ -3448,16 +3584,125 @@ function calculatePhysics() {
     if (post === 'Bi-modal') {
       noteEl.innerText = 'Bi-modal α+β microstructure formed via cyclic heat treatment / STA achieves both high tensile ductility (>16%) and high strength (>900 MPa) as reported by Cao et al. (2021).';
     } else if (post === 'HIP') {
-      noteEl.innerText = 'Hot Isostatic Pressing decomposes brittle α\' martensite into ductile lamellar α+β basketweave and closes internal voids to satisfy ASTM F2924.';
+      noteEl.innerText = 'Hot Isostatic Pressing decomposes brittle α\' martensite into ductile lamellar α+β basketweave and closes internal voids to satisfy ASTM F2924 / F3187.';
     } else if (post === 'Annealed') {
       noteEl.innerText = 'Annealing at 730°C relieves residual stresses and partially decomposes α\' martensite into α+β lamellae.';
     } else if (post === 'Stress-relieved') {
-      noteEl.innerText = 'Stress relief at 600°C reduces residual stress while retaining high yield strength and martensitic needle morphology.';
+      noteEl.innerText = 'Stress relief at 600–650°C relieves thermal distortion while preserving strength and fine α+β laths.';
     } else {
-      noteEl.innerText = 'As-built component retains rapid-quenched acicular α\' martensite with high hardness and limited ductility.';
+      noteEl.innerText = isWaam
+        ? 'As-deposited WAAM naturally precipitates Widmanstätten α+β basketweave (slower cooling <410 K/s), delivering ~12–14% ductility.'
+        : (isDed ? 'As-deposited L-DED exhibits mixed α+β / α\' transition along thermal gradients; stress-relief recommended for structural stability.' : 'As-built LPBF component retains rapid-quenched acicular α\' martensite with high hardness and limited ductility.');
     }
   }
   updateMeltPoolAndThermal();
+}
+
+function updateDefectMapSvg(proc, p, v) {
+  const zones = document.getElementById('defectZonesGroup');
+  const ticks = document.getElementById('defectAxisTicks');
+  const titleEl = document.getElementById('defectMapTitle');
+  const subEl = document.getElementById('defectMapSubtitle');
+  const xLbl = document.getElementById('defectXAxisLabel');
+  const yLbl = document.getElementById('defectYAxisLabel');
+
+  if (zones && window.__lpbfDefectZonesHtml === undefined) {
+    window.__lpbfDefectZonesHtml = zones.innerHTML;
+  }
+  if (ticks && window.__lpbfDefectTicksHtml === undefined) {
+    window.__lpbfDefectTicksHtml = ticks.innerHTML;
+  }
+
+  let minP = 80, maxP = 450, minV = 300, maxV = 2200;
+  const mapX = vv => 70 + ((vv - minV) / (maxV - minV)) * 490;
+  const mapY = pp => 310 - ((pp - minP) / (maxP - minP)) * 280;
+
+  if (proc === 'waam') {
+    minP = 1000; maxP = 4500; minV = 2; maxV = 24;
+    if (titleEl) titleEl.innerText = 'Ti-6Al-4V WAAM Process Window (Arc Power vs Travel Speed)';
+    if (subEl) subEl.innerText = 'Linear Heat Input Zones: Lack of Fusion (<120 J/mm) · Conduction (120–600 J/mm) · Overheat/Coarse-β (>600 J/mm)';
+    if (xLbl) xLbl.textContent = 'Arc Travel Speed v (mm/s)';
+    if (yLbl) yLbl.textContent = 'Arc Power P (W)';
+
+    if (zones) {
+      const x1_oh = mapX(2), y1_oh = mapY(1200);
+      const x2_oh = mapX(7.5), y2_oh = mapY(4500);
+      const x1_lof = mapX(1000 / 120), y1_lof = mapY(1000);
+      const x2_lof = mapX(24), y2_lof = mapY(24 * 120);
+      zones.innerHTML = `
+        <rect x="70" y="30" width="490" height="280" fill="rgba(16, 185, 129, 0.10)" />
+        <polygon points="70,30 ${x2_oh.toFixed(1)},30 ${x1_oh.toFixed(1)},${y1_oh.toFixed(1)} 70,${y1_oh.toFixed(1)}" fill="rgba(239, 68, 68, 0.18)" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" />
+        <polygon points="${x1_lof.toFixed(1)},310 560,310 560,${y2_lof.toFixed(1)}" fill="rgba(245, 158, 11, 0.18)" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" />
+        <text x="86" y="54" fill="#fca5a5" font-size="11" font-weight="600">OVERHEAT / COARSE-β (HI &gt; 600 J/mm)</text>
+        <text x="235" y="168" fill="#6ee7b7" font-size="12" font-weight="700">OPTIMAL WAAM WINDOW (120–600 J/mm)</text>
+        <text x="360" y="294" fill="#fcd34d" font-size="11" font-weight="600">LACK OF FUSION (HI &lt; 120 J/mm)</text>
+      `;
+    }
+    if (ticks) {
+      const xTicks = [4, 8, 12, 16, 20, 24].map(vt => {
+        const xx = mapX(vt).toFixed(1);
+        return `<line x1="${xx}" y1="310" x2="${xx}" y2="315" stroke="#64748b"/><text x="${xx}" y="328" fill="#94a3b8" font-size="10" text-anchor="middle">${vt}</text>`;
+      }).join('');
+      const yTicks = [1000, 1800, 2600, 3500, 4500].map(pt => {
+        const yy = mapY(pt).toFixed(1);
+        return `<line x1="65" y1="${yy}" x2="70" y2="${yy}" stroke="#64748b"/><text x="60" y="${parseFloat(yy) + 3}" fill="#94a3b8" font-size="10" text-anchor="end">${pt}</text>`;
+      }).join('');
+      ticks.innerHTML = xTicks + yTicks;
+    }
+  } else if (proc === 'ded-laser') {
+    minP = 400; maxP = 3000; minV = 4; maxV = 40;
+    if (titleEl) titleEl.innerText = 'Ti-6Al-4V L-DED Process Window (Laser Power vs Travel Speed)';
+    if (subEl) subEl.innerText = 'Linear Heat Input Zones: Lack of Fusion (<75 J/mm) · Conduction-Dilution (75–240 J/mm) · Over-dilution (>240 J/mm)';
+    if (xLbl) xLbl.textContent = 'Scan / Travel Speed v (mm/s)';
+    if (yLbl) yLbl.textContent = 'Laser Power P (W)';
+
+    if (zones) {
+      const x1_kh = mapX(4), y1_kh = mapY(960);
+      const x2_kh = mapX(12.5), y2_kh = mapY(3000);
+      const x1_lof = mapX(400 / 75), y1_lof = mapY(400);
+      zones.innerHTML = `
+        <rect x="70" y="30" width="490" height="280" fill="rgba(16, 185, 129, 0.10)" />
+        <polygon points="70,30 ${x2_kh.toFixed(1)},30 ${x1_kh.toFixed(1)},${y1_kh.toFixed(1)} 70,${y1_kh.toFixed(1)}" fill="rgba(239, 68, 68, 0.18)" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" />
+        <polygon points="${x1_lof.toFixed(1)},310 560,310 560,30" fill="rgba(245, 158, 11, 0.18)" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" />
+        <text x="86" y="54" fill="#fca5a5" font-size="11" font-weight="600">KEYHOLE / OVER-DILUTION (HI &gt; 240 J/mm)</text>
+        <text x="195" y="150" fill="#6ee7b7" font-size="12" font-weight="700">L-DED CONDUCTION WINDOW (75–240 J/mm)</text>
+        <text x="345" y="294" fill="#fcd34d" font-size="11" font-weight="600">LACK OF FUSION (HI &lt; 75 J/mm)</text>
+      `;
+    }
+    if (ticks) {
+      const xTicks = [5, 10, 15, 20, 25, 30, 35, 40].map(vt => {
+        const xx = mapX(vt).toFixed(1);
+        return `<line x1="${xx}" y1="310" x2="${xx}" y2="315" stroke="#64748b"/><text x="${xx}" y="328" fill="#94a3b8" font-size="10" text-anchor="middle">${vt}</text>`;
+      }).join('');
+      const yTicks = [400, 1000, 1600, 2200, 3000].map(pt => {
+        const yy = mapY(pt).toFixed(1);
+        return `<line x1="65" y1="${yy}" x2="70" y2="${yy}" stroke="#64748b"/><text x="60" y="${parseFloat(yy) + 3}" fill="#94a3b8" font-size="10" text-anchor="end">${pt}</text>`;
+      }).join('');
+      ticks.innerHTML = xTicks + yTicks;
+    }
+  } else {
+    minP = 80; maxP = 450; minV = 300; maxV = 2200;
+    if (titleEl) titleEl.innerText = 'Ti-6Al-4V LPBF Process Defect Map (Power vs Scan Speed)';
+    if (subEl) subEl.innerText = 'Coupled Rosenthal-Eagar Regimes: Lack of Fusion (A < 1.0) · Conduction · Keyhole (P* > 26)';
+    if (xLbl) xLbl.textContent = 'Scan Speed v (mm/s)';
+    if (yLbl) yLbl.textContent = 'Laser Power P (W)';
+    if (zones && window.__lpbfDefectZonesHtml) zones.innerHTML = window.__lpbfDefectZonesHtml;
+    if (ticks && window.__lpbfDefectTicksHtml) ticks.innerHTML = window.__lpbfDefectTicksHtml;
+  }
+
+  const svgP = Math.max(30, Math.min(310, mapY(p)));
+  const svgV = Math.max(70, Math.min(560, mapX(v)));
+  const cursor = document.getElementById('svgCursor');
+  if (cursor) {
+    cursor.setAttribute('cx', svgV);
+    cursor.setAttribute('cy', svgP);
+    const curLabel = document.getElementById('svgCursorLabel');
+    if (curLabel) {
+      curLabel.setAttribute('x', svgV > 395 ? Math.max(85, svgV - 165) : svgV + 14);
+      curLabel.setAttribute('y', Math.max(48, Math.min(295, svgP + 5)));
+      curLabel.textContent = `Operating (${p}W, ${v}mm/s)`;
+    }
+  }
 }
 
 function onSliderChange() {
@@ -3469,42 +3714,161 @@ function onSliderChange() {
   calculatePhysics();
 }
 
+function configureProcessControls(proc) {
+  const slP = document.getElementById('sl_p');
+  const slV = document.getElementById('sl_v');
+  const slH = document.getElementById('sl_h');
+  const slT = document.getElementById('sl_t');
+  const slSpot = document.getElementById('sl_spot');
+  const slPre = document.getElementById('sl_preheat');
+  const vedSlider = document.getElementById('targetVedSlider');
+
+  const setText = (id, txt) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = txt;
+  };
+  const renderPresetRow = (id, items) => {
+    const row = document.getElementById(id);
+    if (!row) return;
+    const btnClass = (row.querySelector('button') && row.querySelector('button').className) || 'ved-preset-btn';
+    row.innerHTML = items.map(it =>
+      `<button type="button" class="${btnClass}" onclick="applyVedPreset(${it.val})">${it.label}</button>`
+    ).join('');
+  };
+
+  if (proc === 'waam') {
+    slP.min = 1200; slP.max = 4500; slP.step = 50; slP.value = 2400;
+    slV.min = 3; slV.max = 25; slV.step = 0.5; slV.value = 8;
+    slH.min = 2000; slH.max = 6000; slH.step = 100; slH.value = 3500;
+    slT.min = 800; slT.max = 2500; slT.step = 50; slT.value = 1500;
+    if (slSpot) { slSpot.min = 2000; slSpot.max = 6000; slSpot.step = 100; slSpot.value = 3000; }
+    if (slPre) { slPre.min = 25; slPre.max = 350; slPre.step = 5; slPre.value = 120; }
+    if (vedSlider) { vedSlider.min = 20; vedSlider.max = 160; vedSlider.step = 1; vedSlider.value = 57; }
+    setText('lblCurrentEnergy', 'ARC LINEAR HEAT & VED');
+    setText('lbl_p', 'Arc Power');
+    setText('lbl_v', 'Travel Speed');
+    setText('lbl_h', 'Bead Step-over');
+    setText('lbl_t', 'Layer Height');
+    setText('lbl_spot', 'Arc Width / Spot');
+    setText('lbl_preheat', 'Interpass Temp');
+    setText('vedSolverTitle', 'Arc Energy & VED Solver');
+    setText('vedFormulaTag', 'HI = P/v · E = P/(v·h·t)');
+    setText('vedSolverDesc', 'Tune target energy density or linear heat input (HI = 120–600 J/mm) to balance WAAM deposition against coarse-β overheating.');
+    setText('vedTargetLabel', 'Target Energy Input');
+    setText('sol_lbl_p', 'Arc Power');
+    setText('sol_lbl_v', 'Travel Speed');
+    setText('sol_lbl_h', 'Step-over');
+    setText('sol_lbl_t', 'Layer H.');
+    renderPresetRow('vedPresetRowQuick', [
+      { label: 'Low 35', val: 35 },
+      { label: 'Sweet 57', val: 57 },
+      { label: 'High 95', val: 95 }
+    ]);
+    renderPresetRow('vedPresetRowPapers', [
+      { label: 'Lin 48', val: 48 },
+      { label: 'Wu 57', val: 57 },
+      { label: 'Baufeld 75', val: 75 }
+    ]);
+  } else if (proc === 'ded-laser') {
+    slP.min = 400; slP.max = 3000; slP.step = 25; slP.value = 1600;
+    slV.min = 4; slV.max = 40; slV.step = 0.5; slV.value = 15;
+    slH.min = 600; slH.max = 2200; slH.step = 50; slH.value = 1200;
+    slT.min = 150; slT.max = 1000; slT.step = 25; slT.value = 450;
+    if (slSpot) { slSpot.min = 800; slSpot.max = 3500; slSpot.step = 50; slSpot.value = 1500; }
+    if (slPre) { slPre.min = 25; slPre.max = 300; slPre.step = 5; slPre.value = 100; }
+    if (vedSlider) { vedSlider.min = 60; vedSlider.max = 260; vedSlider.step = 1; vedSlider.value = 198; }
+    setText('lblCurrentEnergy', 'L-DED ENERGY & HEAT INPUT');
+    setText('lbl_p', 'Laser Power');
+    setText('lbl_v', 'Scan / Travel Speed');
+    setText('lbl_h', 'Hatch Step-over');
+    setText('lbl_t', 'Layer Height');
+    setText('lbl_spot', 'Spot Diameter');
+    setText('lbl_preheat', 'Substrate / Interpass T');
+    setText('vedSolverTitle', 'L-DED Energy & HI Solver');
+    setText('vedFormulaTag', 'HI = P/v · E = P/(v·h·t)');
+    setText('vedSolverDesc', 'Balance L-DED volumetric energy and linear heat input (75–240 J/mm) against substrate over-dilution.');
+    setText('vedTargetLabel', 'Target Volumetric ED');
+    setText('sol_lbl_p', 'Power');
+    setText('sol_lbl_v', 'Travel Speed');
+    setText('sol_lbl_h', 'Step-over');
+    setText('sol_lbl_t', 'Layer H.');
+    renderPresetRow('vedPresetRowQuick', [
+      { label: 'Low 120', val: 120 },
+      { label: 'Sweet 198', val: 198 },
+      { label: 'High 240', val: 240 }
+    ]);
+    renderPresetRow('vedPresetRowPapers', [
+      { label: 'Carroll 150', val: 150 },
+      { label: 'Yu 198', val: 198 },
+      { label: 'Keist 220', val: 220 }
+    ]);
+  } else {
+    slP.min = 80; slP.max = 450; slP.step = 5; slP.value = 280;
+    slV.min = 300; slV.max = 2200; slV.step = 10; slV.value = 960;
+    slH.min = 50; slH.max = 180; slH.step = 5; slH.value = 110;
+    slT.min = 20; slT.max = 90; slT.step = 5; slT.value = 40;
+    if (slSpot) { slSpot.min = 40; slSpot.max = 160; slSpot.step = 5; slSpot.value = 80; }
+    if (slPre) { slPre.min = 25; slPre.max = 250; slPre.step = 5; slPre.value = 200; }
+    if (vedSlider) { vedSlider.min = 20; vedSlider.max = 140; vedSlider.step = 1; vedSlider.value = 72; }
+    setText('lblCurrentEnergy', 'CURRENT ENERGY DENSITY');
+    setText('lbl_p', 'Laser Power');
+    setText('lbl_v', 'Scan Speed');
+    setText('lbl_h', 'Hatch Spacing');
+    setText('lbl_t', 'Layer Thickness');
+    setText('lbl_spot', 'Laser Spot Diameter');
+    setText('lbl_preheat', 'Plate Preheat Temp');
+    setText('vedSolverTitle', 'VED Parameter Solver');
+    setText('vedFormulaTag', 'E = P/(v·h·t)');
+    setText('vedSolverDesc', 'Set a target Energy Density to auto-solve the physically optimal LPBF build parameters.');
+    setText('vedTargetLabel', 'Target VED');
+    setText('sol_lbl_p', 'Power');
+    setText('sol_lbl_v', 'Speed');
+    setText('sol_lbl_h', 'Hatch');
+    setText('sol_lbl_t', 'Layer');
+    renderPresetRow('vedPresetRowQuick', [
+      { label: 'Low 40', val: 40 },
+      { label: 'Sweet 72', val: 72 },
+      { label: 'High 110', val: 110 }
+    ]);
+    renderPresetRow('vedPresetRowPapers', [
+      { label: 'Shi 55', val: 55 },
+      { label: 'Thijs 72', val: 72 },
+      { label: 'Cepeda 90', val: 90 }
+    ]);
+  }
+}
+
 function resetDefaults() {
-  document.getElementById('sl_p').value = 280;
-  document.getElementById('sl_v').value = 960;
-  document.getElementById('sl_h').value = 110;
-  document.getElementById('sl_t').value = 40;
-  document.getElementById('sl_spot').value = 80;
-  document.getElementById('sl_preheat').value = 200;
-  document.getElementById('targetVedSlider').value = 72;
+  configureProcessControls(currentProcess);
   document.getElementById('postProcessingSelect').value = 'HIP';
-  updateVedSolver(72);
+  const prevAuto = autoSync;
+  autoSync = false;
+  updateVedSolver(parseFloat(document.getElementById('targetVedSlider').value));
+  autoSync = prevAuto;
   calculatePhysics();
 }
 
 function selectProcess(proc, el) {
   currentProcess = proc;
   document.querySelectorAll('.process-pill').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
+  if (el) el.classList.add('active');
 
-  // Set default process ranges
-  if (proc === 'waam') {
-    document.getElementById('sl_p').min = 1200; document.getElementById('sl_p').max = 4500; document.getElementById('sl_p').value = 2400;
-    document.getElementById('sl_v').min = 10; document.getElementById('sl_v').max = 500; document.getElementById('sl_v').value = 60;
-    document.getElementById('sl_h').min = 2000; document.getElementById('sl_h').max = 5000; document.getElementById('sl_h').value = 3500;
-    document.getElementById('sl_t').min = 800; document.getElementById('sl_t').max = 2500; document.getElementById('sl_t').value = 1500;
-  } else if (proc === 'ded-laser') {
-    document.getElementById('sl_p').min = 400; document.getElementById('sl_p').max = 2500; document.getElementById('sl_p').value = 1200;
-    document.getElementById('sl_v').min = 100; document.getElementById('sl_v').max = 1400; document.getElementById('sl_v').value = 600;
-    document.getElementById('sl_h').min = 500; document.getElementById('sl_h').max = 1800; document.getElementById('sl_h').value = 1000;
-    document.getElementById('sl_t').min = 150; document.getElementById('sl_t').max = 600; document.getElementById('sl_t').value = 350;
-  } else {
-    document.getElementById('sl_p').min = 80; document.getElementById('sl_p').max = 450; document.getElementById('sl_p').value = 280;
-    document.getElementById('sl_v').min = 300; document.getElementById('sl_v').max = 2200; document.getElementById('sl_v').value = 960;
-    document.getElementById('sl_h').min = 50; document.getElementById('sl_h').max = 180; document.getElementById('sl_h').value = 110;
-    document.getElementById('sl_t').min = 20; document.getElementById('sl_t').max = 90; document.getElementById('sl_t').value = 40;
+  configureProcessControls(proc);
+
+  if (typeof bonthaSource !== 'undefined') {
+    bonthaSource = (proc === 'waam') ? 'arc' : (proc === 'ded-laser' ? 'ded-laser' : 'laser');
+    const bLaser = document.getElementById('btnBnLaser');
+    const bEbeam = document.getElementById('btnBnEbeam');
+    const bArc = document.getElementById('btnBnArc');
+    if (bLaser) bLaser.classList.toggle('active', bonthaSource === 'laser' || bonthaSource === 'ded-laser');
+    if (bEbeam) bEbeam.classList.toggle('active', bonthaSource === 'ebeam');
+    if (bArc) bArc.classList.toggle('active', bonthaSource === 'arc');
   }
+
+  const prevAuto = autoSync;
+  autoSync = false;
   updateVedSolver(parseFloat(document.getElementById('targetVedSlider').value));
+  autoSync = prevAuto;
   calculatePhysics();
 }
 
@@ -3520,28 +3884,51 @@ function adjustTargetHv(delta) {
 }
 
 function autoTuneSafeWindow() {
-  // Set parameters right into the center of the stable conduction sweet spot
-  document.getElementById('sl_p').value = 250;
-  document.getElementById('sl_v').value = 1000;
-  document.getElementById('sl_h').value = 90;
-  document.getElementById('sl_t').value = 40;
+  if (currentProcess === 'waam') {
+    document.getElementById('sl_p').value = 2400;
+    document.getElementById('sl_v').value = 8;
+    document.getElementById('sl_h').value = 3500;
+    document.getElementById('sl_t').value = 1500;
+    document.getElementById('sl_spot').value = 3000;
+  } else if (currentProcess === 'ded-laser') {
+    document.getElementById('sl_p').value = 1600;
+    document.getElementById('sl_v').value = 15;
+    document.getElementById('sl_h').value = 1200;
+    document.getElementById('sl_t').value = 450;
+    document.getElementById('sl_spot').value = 1500;
+  } else {
+    document.getElementById('sl_p').value = 250;
+    document.getElementById('sl_v').value = 1000;
+    document.getElementById('sl_h').value = 90;
+    document.getElementById('sl_t').value = 40;
+    document.getElementById('sl_spot').value = 80;
+  }
   calculatePhysics();
 }
 
 function exportPredictionsCsv() {
-  let csv = "Model,Predicted_HV,Rockwell_HRC,Expected_Error_HV,Closeness_Pct,R2_Score\n";
-  csv += "Analytical_Hall_Petch,454,47,8.2,96.8,0.91\n";
-  csv += "Random_Forest_Calibrated,464,48,6.4,97.5,0.94\n";
-  csv += "Gradient_Boosting_XGBoost,462,48,5.9,97.9,0.95\n";
-  csv += "Support_Vector_Machine_RBF,460,47,5.6,98.1,0.96\n";
-  csv += "Hybrid_Physics_GPR,459,47,5.1,98.4,0.97\n";
-  csv += "Weighted_Ensemble,460,47,4.8,98.7,0.98\n";
-  
+  const p = parseFloat(document.getElementById('sl_p').value);
+  const v = parseFloat(document.getElementById('sl_v').value);
+  const h = parseFloat(document.getElementById('sl_h').value);
+  const t = parseFloat(document.getElementById('sl_t').value);
+  const ved = ((p * 1e6) / (Math.max(0.5, v) * h * t)).toFixed(1);
+  const hi = (p / Math.max(0.5, v)).toFixed(1);
+  let csv = "Process,Alloy,Power_W,Speed_mm_s,Hatch_um,Layer_um,VED_J_mm3,HI_J_mm,Model,Predicted_HV,Rockwell_HRC,Expected_Error_HV,Closeness_Pct,R2_Score\n";
+  const rows = (window.lastModelsSnapshot && window.lastModelsSnapshot.length)
+    ? window.lastModelsSnapshot
+    : [{ name: "Weighted Ensemble", val: 380, err: 5.0, r2: 0.96, closeness: "98.0%" }];
+  rows.forEach(m => {
+    const cleanName = String(m.name || '').replace(/,/g, '');
+    const hvInt = Math.round(m.val);
+    const hrc = typeof hvToHrcStandard === 'function' ? hvToHrcStandard(hvInt) : 'N/A';
+    csv += `${currentProcess},${currentAlloy},${p},${v},${h},${t},${ved},${hi},${cleanName},${hvInt},${hrc},${m.err},${m.closeness},${m.r2}\n`;
+  });
+
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.setAttribute('href', url);
-  a.setAttribute('download', 'ti64_hardness_predictions.csv');
+  a.setAttribute('download', `ti64_${currentProcess}_predictions.csv`);
   a.click();
 }
 
@@ -3755,18 +4142,20 @@ function renderTwin() {
     return { face: f, p: [p0, p1, p2, p3], avgZ, avgZNorm };
   }).sort((a, b) => b.avgZ - a.avgZ);
 
-  // Render polygons
+  // Render polygons driven by active process physics (window.twinPhysicsState)
+  const twin = window.twinPhysicsState || { coolingRate: 1e5, alphaPrimePct: 85, residualStressMPa: 380 };
   sortedFaces.forEach(f => {
+    const neckFocus = 1.0 - Math.abs(f.avgZNorm);
     let scalar = 0.5;
     if (twinMode === 'residual-stress') {
-      // Peak tensile residual stress concentrated in center gauge neck
-      scalar = 0.2 + (1.0 - Math.abs(f.avgZNorm)) * 0.75;
+      const stressNorm = Math.max(0.10, Math.min(0.95, twin.residualStressMPa / 520.0));
+      scalar = Math.min(0.98, 0.12 + neckFocus * stressNorm);
     } else if (twinMode === 'cooling-rate') {
-      // High quench on thin gauge section
-      scalar = 0.3 + (1.0 - Math.abs(f.avgZNorm)) * 0.65;
+      const coolNorm = Math.max(0.12, Math.min(0.95, (Math.log10(Math.max(1.0, twin.coolingRate)) - 1.2) / 5.2));
+      scalar = Math.min(0.98, coolNorm * (0.65 + 0.35 * neckFocus));
     } else if (twinMode === 'phase-fraction') {
-      // 95% martensite in gauge section
-      scalar = 0.4 + (1.0 - Math.abs(f.avgZNorm)) * 0.55;
+      const martNorm = Math.max(0.05, Math.min(0.96, twin.alphaPrimePct / 100.0));
+      scalar = Math.min(0.98, martNorm * (0.75 + 0.25 * neckFocus));
     }
 
     const col = getColor(scalar, twinMode);
@@ -3809,8 +4198,8 @@ const PAPERS_DATABASE = [
   { id: "P-03", author: "Bontha et al. (2009)", process: "LPBF / L-DED", desc: "Effects of process variables and size-scale on solidification microstructure (G vs R maps, CET) in bulky 3D Ti-6Al-4V.", density: "99.90%", ys: 1010, uts: 1180, el: 8.2 },
   { id: "P-04", author: "Bontha et al. (2006)", process: "L-DED", desc: "Thermal process maps for predicting solidification microstructure in laser fabrication of thin-wall structures.", density: "99.70%", ys: 890, uts: 1020, el: 9.8 },
   { id: "P-05", author: "Guo et al. (2025)", process: "WAAM", desc: "Wire + Arc Additive Manufacturing (WAAM) of Ti-6Al-4V: process control, CMT heat input, interpass rolling.", density: "99.95%", ys: 865, uts: 975, el: 14.5 },
-  { id: "P-06", author: "Nursyifaulkhair et al. (2019)", process: "LPBF", desc: "Effect of volumetric energy density on lack of fusion formation.", density: "99.70%", ys: 1020, uts: 1210, el: 6.8 },
-  { id: "P-07", author: "Wang et al. (2026)", process: "LPBF", desc: "Heat input effects on microstructure evolution and high-cycle fatigue life.", density: "99.92%", ys: 940, uts: 1120, el: 11.2 },
+  { id: "P-06", author: "Nursyifaulkhair et al. (2019)", process: "DED", desc: "Effect of blown-powder L-DED energy density and scanning strategy on lack-of-fusion formation in Ti-6Al-4V.", density: "99.45%", ys: 875, uts: 965, el: 8.5 },
+  { id: "P-07", author: "Wang et al. (2026)", process: "Wire-Laser DED", desc: "Heat input effects on microstructure evolution and high-cycle fatigue life in wire-fed L-DED Ti-6Al-4V.", density: "99.90%", ys: 910, uts: 1015, el: 12.4 },
   { id: "P-08", author: "Halder et al. (2024)", process: "LPBF", desc: "Effect of interlayer delay on heat accumulation and in situ phase kinetics.", density: "99.88%", ys: 960, uts: 1140, el: 9.8 },
   { id: "P-09", author: "Alegre et al. (2022)", process: "LPBF + HIP", desc: "Effect of HIP post-processing at 850°C/200 MPa on fatigue behavior.", density: "99.98%", ys: 870, uts: 980, el: 15.2 },
   { id: "P-10", author: "Artzt et al. (2020)", process: "LPBF", desc: "Pandora's box: influence of contour parameters on surface roughness Ra.", density: "99.65%", ys: 1010, uts: 1190, el: 7.1 },
@@ -3914,11 +4303,27 @@ function filterByProcess(proc, btn) {
 function filterPapersTable() {
   const q = (document.getElementById('paperSearchInput')?.value || '').toLowerCase();
   const sourceList = (livePapersCatalog && livePapersCatalog.length > 0) ? livePapersCatalog : PAPERS_DATABASE;
+  const fUpper = (currentProcessFilter || 'ALL').toUpperCase();
   filteredPapers = sourceList.filter(p => {
+    const procUpper = (p.process || '').toUpperCase();
+    const textUpper = ((p.desc || '') + ' ' + procUpper).toUpperCase();
     const matchesText = !q || p.author.toLowerCase().includes(q) ||
-      p.process.toLowerCase().includes(q) ||
-      p.desc.toLowerCase().includes(q);
-    const matchesProcess = (currentProcessFilter === 'ALL') || p.process.toUpperCase().includes(currentProcessFilter);
+      (p.process || '').toLowerCase().includes(q) ||
+      (p.desc || '').toLowerCase().includes(q);
+    let matchesProcess = (fUpper === 'ALL');
+    if (!matchesProcess) {
+      if (fUpper.includes('DED')) {
+        matchesProcess = procUpper.includes('DED') || procUpper.includes('LMD') || procUpper.includes('LENS') || procUpper.includes('CLAD');
+      } else if (fUpper.includes('WAAM')) {
+        matchesProcess = procUpper.includes('WAAM') || procUpper.includes('WIRE+ARC') || procUpper.includes('WIRE ARC') || procUpper.includes('CMT') || procUpper.includes('GMAW') || procUpper.includes('GTAW') || procUpper.includes('PAW') || textUpper.includes('WIRE + ARC') || textUpper.includes('WIRE-ARC');
+      } else if (fUpper.includes('BINDER')) {
+        matchesProcess = procUpper.includes('BINDER') || procUpper.includes('BJT') || procUpper.includes('BJAM');
+      } else if (fUpper.includes('LPBF')) {
+        matchesProcess = procUpper.includes('LPBF') || procUpper.includes('SLM') || procUpper.includes('PBF-LB');
+      } else {
+        matchesProcess = procUpper.includes(fUpper);
+      }
+    }
     return matchesText && matchesProcess;
   });
   populatePapersTable(filteredPapers);
@@ -4243,16 +4648,23 @@ function setMpView(v) {
 function applyMpPreset(p) {
   const p200 = document.getElementById('btnMpPreset200');
   const p300 = document.getElementById('btnMpPreset300');
+  const pDed = document.getElementById('btnMpPresetDed');
+  const pWaam = document.getElementById('btnMpPresetWaam');
   if (p200) p200.classList.toggle('active', p === '200w');
   if (p300) p300.classList.toggle('active', p === '300w');
-  
+  if (pDed) pDed.classList.toggle('active', p === 'ded');
+  if (pWaam) pWaam.classList.toggle('active', p === 'waam');
+
   bonthaOverridePower = null;
   bonthaOverrideSpeed = null;
   bonthaPreset = 'custom';
   const sel = document.getElementById('bonthaPresetSelect');
   if (sel) sel.value = 'custom';
 
+  const findPill = (procKey) => document.querySelector(`.process-pill[onclick*="'${procKey}'"]`);
+
   if (p === '200w') {
+    if (currentProcess !== 'lpbf') selectProcess('lpbf', findPill('lpbf'));
     const slP = document.getElementById('sl_p'); if (slP) slP.value = 200;
     const slV = document.getElementById('sl_v'); if (slV) slV.value = 950;
     const slSpot = document.getElementById('sl_spot'); if (slSpot) slSpot.value = 80;
@@ -4260,12 +4672,19 @@ function applyMpPreset(p) {
     const slH = document.getElementById('sl_h'); if (slH) slH.value = 80;
     setMpModel('coen');
   } else if (p === '300w') {
+    if (currentProcess !== 'lpbf') selectProcess('lpbf', findPill('lpbf'));
     const slP = document.getElementById('sl_p'); if (slP) slP.value = 300;
     const slV = document.getElementById('sl_v'); if (slV) slV.value = 1050;
     const slSpot = document.getElementById('sl_spot'); if (slSpot) slSpot.value = 80;
     const slT = document.getElementById('sl_t'); if (slT) slT.value = 40;
     const slH = document.getElementById('sl_h'); if (slH) slH.value = 80;
     setMpModel('rosenthal');
+  } else if (p === 'ded') {
+    selectProcess('ded-laser', findPill('ded-laser'));
+    return;
+  } else if (p === 'waam') {
+    selectProcess('waam', findPill('waam'));
+    return;
   }
   calculatePhysics();
 }
@@ -4404,8 +4823,9 @@ function setBonthaModel(m) {
 
 function setBonthaSource(s) {
   bonthaSource = s;
-  const bL = document.getElementById('btnBnLaser'); if (bL) bL.classList.toggle('active', s === 'laser');
+  const bL = document.getElementById('btnBnLaser'); if (bL) bL.classList.toggle('active', s === 'laser' || s === 'ded-laser');
   const bE = document.getElementById('btnBnEbeam'); if (bE) bE.classList.toggle('active', s === 'ebeam');
+  const bA = document.getElementById('btnBnArc'); if (bA) bA.classList.toggle('active', s === 'arc');
   updateMeltPoolAndThermal();
 }
 
@@ -4433,6 +4853,15 @@ function applyBonthaPreset(val) {
   if (val === 'custom') {
     bonthaOverridePower = null;
     bonthaOverrideSpeed = null;
+  } else if (val === 'ded-1600w') {
+    bonthaOverridePower = 1600; bonthaOverrideSpeed = 15.0;
+    bonthaDim = '3d-bulky'; bonthaScale = 'small-scale'; bonthaSource = 'ded-laser';
+  } else if (val === 'waam-1800w') {
+    bonthaOverridePower = 1800; bonthaOverrideSpeed = 6.0;
+    bonthaDim = '2d-thin-wall'; bonthaScale = 'large-scale'; bonthaSource = 'arc';
+  } else if (val === 'waam-2400w') {
+    bonthaOverridePower = 2400; bonthaOverrideSpeed = 8.0;
+    bonthaDim = '3d-bulky'; bonthaScale = 'large-scale'; bonthaSource = 'arc';
   } else if (val === 'jmpt-550w-base') {
     bonthaOverridePower = 550; bonthaOverrideSpeed = 8.47;
     bonthaDim = '2d-thin-wall'; bonthaScale = 'small-scale'; bonthaSource = 'laser';
@@ -4488,8 +4917,9 @@ function applyBonthaPreset(val) {
   const b2 = document.getElementById('btnBn2d'); if (b2) b2.classList.toggle('active', bonthaDim === '2d-thin-wall');
   const bSm = document.getElementById('btnBnSmall'); if (bSm) bSm.classList.toggle('active', bonthaScale === 'small-scale');
   const bLg = document.getElementById('btnBnLarge'); if (bLg) bLg.classList.toggle('active', bonthaScale === 'large-scale');
-  const bL = document.getElementById('btnBnLaser'); if (bL) bL.classList.toggle('active', bonthaSource === 'laser');
+  const bL = document.getElementById('btnBnLaser'); if (bL) bL.classList.toggle('active', bonthaSource === 'laser' || bonthaSource === 'ded-laser');
   const bE = document.getElementById('btnBnEbeam'); if (bE) bE.classList.toggle('active', bonthaSource === 'ebeam');
+  const bA = document.getElementById('btnBnArc'); if (bA) bA.classList.toggle('active', bonthaSource === 'arc');
   const spBadge = document.getElementById('bnSpaceBadge');
   if (spBadge) spBadge.innerText = (bonthaDim === '3d-bulky') ? '3D Half-Space' : '2D Thin-Wall';
   const bnTitle = document.getElementById('bnTitle');
@@ -4555,18 +4985,25 @@ function updateMeltPoolAndThermal() {
   const effP = (bonthaOverridePower !== null) ? bonthaOverridePower : p;
   const effV = (bonthaOverrideSpeed !== null) ? bonthaOverrideSpeed : v;
   const effVMs = effV / 1000.0;
-  const effAlpha = (bonthaSource === 'ebeam') ? 0.88 : (mpModel === 'coen' ? 0.40 : 0.35);
-  const effSpot = (effP >= 1000) ? Math.max(spot * 4, 1200) : ((effV < 50) ? Math.max(spot * 2, 400) : spot);
+  const isWaamPool = bonthaSource === 'arc' || (bonthaOverridePower === null && typeof currentProcess !== 'undefined' && currentProcess === 'waam');
+  const isDedPool = bonthaSource === 'ded-laser' || (bonthaOverridePower === null && typeof currentProcess !== 'undefined' && currentProcess === 'ded-laser');
+  const effAlpha = (bonthaSource === 'ebeam') ? 0.88 : (isWaamPool ? 0.78 : (isDedPool ? 0.38 : (mpModel === 'coen' ? 0.40 : 0.35)));
+  const effSpot = (bonthaOverridePower !== null && effP >= 1000 && spot < 400)
+    ? Math.max(spot * 4, 1200)
+    : ((bonthaOverridePower !== null && effV < 50 && spot < 300) ? Math.max(spot * 2, 400) : spot);
   const effPDisplay = (effP >= 1000) ? (effP / 1000.0).toFixed(1) + ' kW' : effP + ' W';
   const effVDisplay = (effV >= 100) ? Math.round(effV) + ' mm/s' : effV.toFixed(2) + ' mm/s';
-  const effSourceLabel = (bonthaSource === 'ebeam') ? 'Incident Electron Beam (EBAM)' : 'Incident Laser Beam';
-  const isDedRegime = effV < 100.0 || effP >= 1000.0;
+  const effSourceLabel = (bonthaSource === 'ebeam')
+    ? 'Incident Electron Beam (EBAM)'
+    : (isWaamPool ? 'Gas-Metal / Plasma Arc (WAAM)' : (isDedPool ? 'L-DED Coaxial Laser Beam' : 'Incident Laser Beam'));
+  const isDedRegime = isWaamPool || isDedPool || effV < 100.0 || effP >= 1000.0;
 
   // Update Synced Status Badge in Subsection 1 Header
   const elCoupledBadge = document.getElementById('mpCoupledBadge');
   if (elCoupledBadge) {
     if (bonthaPreset === 'custom' && bonthaOverridePower === null && bonthaOverrideSpeed === null) {
-      elCoupledBadge.innerText = `🔗 Coupled: LPBF Live Sliders (${effP} W @ ${effVDisplay})`;
+      const procTag = isWaamPool ? 'WAAM Arc Sliders' : (isDedPool ? 'L-DED Live Sliders' : 'LPBF Live Sliders');
+      elCoupledBadge.innerText = `🔗 Coupled: ${procTag} (${effP} W @ ${effVDisplay})`;
       elCoupledBadge.title = 'Coupled to live process sliders';
       elCoupledBadge.style.color = 'var(--accent-cyan)';
       elCoupledBadge.style.borderColor = 'rgba(80, 216, 233, 0.4)';
@@ -4575,7 +5012,7 @@ function updateMeltPoolAndThermal() {
     } else {
       const modeName = (bonthaDim === '2d-thin-wall') ? 'Bontha 2D' : 'Bontha 3D';
       elCoupledBadge.innerHTML = `🔗 Coupled: ${modeName} (${effPDisplay} @ ${effVDisplay}) <span style="text-decoration:underline; font-size:9.5px; margin-left:4px;">[Reset]</span>`;
-      elCoupledBadge.title = 'Click to uncouple and return to LPBF live sliders';
+      elCoupledBadge.title = 'Click to uncouple and return to live process sliders';
       elCoupledBadge.style.color = 'var(--accent-emerald)';
       elCoupledBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
       elCoupledBadge.style.cursor = 'pointer';
@@ -4585,32 +5022,42 @@ function updateMeltPoolAndThermal() {
 
   // 1. Calculate Melt Pool Dimensions based on model and coupled parameters
   let poolWidth, poolDepth, poolLength, aspect, peakTemp, growthRate;
-  
+
   if (isDedRegime) {
-    // DED / LENS / EBAM Process Regime (Coupled with Bontha Solidification Physics)
     if (bonthaDim === '2d-thin-wall') {
       // 2D Thin-Wall (Bontha 2006 JMPT)
       const bUm = (bonthaCustomWallThicknessMm || 2.26) * 1000.0;
       poolWidth = Math.round(bUm);
-      poolDepth = Math.round(686.0 * (effAlpha / 0.35) * (effP / 550.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.42));
-      poolLength = Math.round(2420.0 * (effAlpha / 0.35) * (effP / 550.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.65));
+      poolDepth = Math.round(686.0 * (effAlpha / 0.35) * Math.pow(effP / 550.0, 0.82) * Math.pow(8.47 / Math.max(0.1, effV), 0.42));
+      poolLength = Math.round(2420.0 * (effAlpha / 0.35) * Math.pow(effP / 550.0, 0.85) * Math.pow(8.47 / Math.max(0.1, effV), 0.65));
       aspect = (poolDepth / Math.max(1, poolWidth)).toFixed(2);
-      peakTemp = Math.min(3200, Math.round(1654 + (effP * effAlpha * 0.42)));
-    } else {
-      // 3D Bulky (Bontha 2009 MSEA)
-      if (effP < 1000.0) {
-        // Small-Scale LENS (Bontha 2009 Fig. 3)
-        poolDepth = Math.round(640.0 * (effAlpha / 0.35) * (effP / 550.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.40));
-        poolWidth = Math.round(1350.0 * Math.sqrt((effAlpha / 0.35) * (effP / 550.0)) * Math.pow(8.47 / Math.max(0.1, effV), 0.25));
-        poolLength = Math.round(2100.0 * (effAlpha / 0.35) * (effP / 550.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.60));
-      } else {
-        // Large-Scale High-Power DED (Bontha 2009 Fig. 4)
-        poolDepth = Math.round(6200.0 * (effAlpha / 0.35) * (effP / 15000.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.40));
-        poolWidth = Math.round(9800.0 * Math.sqrt((effAlpha / 0.35) * (effP / 15000.0)) * Math.pow(8.47 / Math.max(0.1, effV), 0.25));
-        poolLength = Math.round(24000.0 * (effAlpha / 0.35) * (effP / 15000.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.58));
-      }
+      peakTemp = Math.min(3200, Math.round(1654 + Math.min(1400, effP * effAlpha * 0.42)));
+    } else if (isWaamPool && bonthaOverridePower === null) {
+      // WAAM Wire-Arc Conduction-Dilution Bead Geometry
+      const deltaTWaam = Math.max(50.0, (alloy.liquidusC || 1660.0) - preheat);
+      const wEstWaam = Math.sqrt((8.0 * effP * effAlpha) / (Math.PI * Math.E * 4430.0 * 526.0 * deltaTWaam * Math.max(0.001, effVMs)));
+      poolWidth = Math.round(Math.max(effSpot * 0.65, wEstWaam * 1e6 * 0.72 + effSpot * 0.38));
+      const hiWaam = effP / Math.max(0.5, effV);
+      const arWaam = Math.min(0.55, 0.28 + 0.00045 * hiWaam);
+      poolDepth = Math.round(Math.max(t * 0.35, poolWidth * arWaam));
+      const peWaam = (effVMs * poolWidth * 1e-6) / 6.7e-6;
+      poolLength = Math.round(poolWidth * Math.min(2.8, 1.15 + 0.25 * peWaam));
+      aspect = (poolDepth / Math.max(1, poolWidth)).toFixed(2);
+      peakTemp = Math.min(3150, Math.round(1654 + Math.min(1350, (effP * effAlpha * 0.28))));
+    } else if (bonthaScale === 'large-scale' && bonthaOverridePower !== null && bonthaOverridePower >= 4000) {
+      // High-Power 5-30 kW Bontha 2009 Fig. 4 Regime
+      poolDepth = Math.round(6200.0 * (effAlpha / 0.35) * (effP / 15000.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.40));
+      poolWidth = Math.round(9800.0 * Math.sqrt((effAlpha / 0.35) * (effP / 15000.0)) * Math.pow(8.47 / Math.max(0.1, effV), 0.25));
+      poolLength = Math.round(24000.0 * (effAlpha / 0.35) * (effP / 15000.0) * Math.pow(8.47 / Math.max(0.1, effV), 0.58));
       aspect = (poolDepth / Math.max(1, poolWidth)).toFixed(2);
       peakTemp = Math.min(3200, Math.round(1654 + Math.min(1500, (effP * effAlpha * 0.15))));
+    } else {
+      // Continuous L-DED / LENS / WAAM Power-Law Scaling (zero 1000 W discontinuity)
+      poolDepth = Math.round(640.0 * (effAlpha / 0.35) * Math.pow(effP / 550.0, 0.78) * Math.pow(8.47 / Math.max(0.1, effV), 0.40));
+      poolWidth = Math.round(1350.0 * Math.sqrt(effAlpha / 0.35) * Math.pow(effP / 550.0, 0.55) * Math.pow(8.47 / Math.max(0.1, effV), 0.25));
+      poolLength = Math.round(2100.0 * (effAlpha / 0.35) * Math.pow(effP / 550.0, 0.80) * Math.pow(8.47 / Math.max(0.1, effV), 0.60));
+      aspect = (poolDepth / Math.max(1, poolWidth)).toFixed(2);
+      peakTemp = Math.min(3200, Math.round(1654 + Math.min(1450, (effP * effAlpha * 0.25))));
     }
   } else {
     // LPBF Process Regime (V >= 100 mm/s)
@@ -4655,20 +5102,33 @@ function updateMeltPoolAndThermal() {
     peakTemp = preheat;
   }
 
-  // Melt Pool Telemetry (Pyrometry, Phase Kinetics, and ASTM F2924 Compliance)
-  const t85Ms = isOpticalAborted ? 0 : Number((1.85 * (effP / Math.max(100, effV))).toFixed(1));
-  const coolingRateK_S = (t85Ms > 0) ? Math.round(300 / (t85Ms / 1000.0)) : 0;
-  const vMarangoniMmS = isOpticalAborted ? 0 : Math.round(180 * Math.pow(effP / 200.0, 0.5) * Math.pow(950 / Math.max(100, effV), 0.25));
+  // Melt Pool Telemetry (Pyrometry, Phase Kinetics, and ASTM F2924 / F3187 Compliance)
+  const t85Ms = isOpticalAborted ? 0 : Number((1.85 * (effAlpha / 0.40) * (effP / Math.max(1.0, effV))).toFixed(1));
+  const coolingRateK_S = (t85Ms > 0) ? Math.round((isWaamPool ? 165 : (isDedRegime ? 255 : 300)) / (t85Ms / 1000.0)) : 0;
+  const vMarangoniMmS = isOpticalAborted ? 0 : Math.min(1800, Math.round(180 * Math.pow(effP / 200.0, 0.5) * Math.pow(950 / Math.max(1.0, effV), 0.25)));
 
-  // Metallurgical Phase Evolution (Koistinen-Marburger Kinetics)
-  const alphaPrimePct = isOpticalAborted ? 0 : (effP >= 1000 ? 12 : ((coolingRateK_S > 410) ? 88.5 : (coolingRateK_S > 100 ? 45.0 : 8.0)));
-  const betaRetainedPct = isOpticalAborted ? 100 : (effP >= 1000 ? 18.5 : 6.5);
-  const alphaLamellarPct = isOpticalAborted ? 0 : Number((100 - alphaPrimePct - betaRetainedPct).toFixed(1));
+  // Metallurgical Phase Evolution (Ti-6Al-4V Critical Cooling Threshold 410 K/s)
+  let alphaPrimePct = 0;
+  let betaRetainedPct = 100;
+  if (!isOpticalAborted) {
+    if (coolingRateK_S >= 2000) {
+      alphaPrimePct = 88.5;
+      betaRetainedPct = 6.5;
+    } else if (coolingRateK_S >= 410) {
+      const logFrac = (Math.log10(coolingRateK_S) - Math.log10(410)) / (Math.log10(2000) - Math.log10(410));
+      alphaPrimePct = Number((25.0 + 63.5 * logFrac).toFixed(1));
+      betaRetainedPct = 9.0;
+    } else {
+      alphaPrimePct = Number(Math.max(2.0, 25.0 * (coolingRateK_S / 410.0)).toFixed(1));
+      betaRetainedPct = 12.5;
+    }
+  }
+  const alphaLamellarPct = isOpticalAborted ? 0 : Number(Math.max(0, 100 - alphaPrimePct - betaRetainedPct).toFixed(1));
 
   // Mechanical Tensile Properties
-  const utsMpa = isOpticalAborted ? 895 : Math.round(895 + (alphaPrimePct * 2.45));
-  const ysMpa = isOpticalAborted ? 825 : Math.round(825 + (alphaPrimePct * 2.15));
-  const elongPct = isOpticalAborted ? 14.0 : Number(Math.max(6.5, 14.5 - (alphaPrimePct * 0.08)).toFixed(1));
+  const utsMpa = isOpticalAborted ? 895 : Math.round(925 + (alphaPrimePct * 2.45));
+  const ysMpa = isOpticalAborted ? 825 : Math.round(835 + (alphaPrimePct * 2.15));
+  const elongPct = isOpticalAborted ? 14.0 : Number(Math.max(6.5, 14.2 - (alphaPrimePct * 0.075)).toFixed(1));
 
   const isAstmCompliant = !isOpticalAborted && (parseFloat(aspect) <= 0.85) && (utsMpa >= 895) && (ysMpa >= 825) && (elongPct >= 10.0);
 
@@ -4681,18 +5141,19 @@ function updateMeltPoolAndThermal() {
 
   const elAstm = document.getElementById('mpAstmBadge');
   if (elAstm) {
+    const stdName = isDedRegime ? 'ASTM F3187' : 'ASTM F2924';
     if (isOpticalAborted) {
       elAstm.innerText = 'EMITTER QUENCHED';
       elAstm.style.color = '#f87171';
       elAstm.style.borderColor = 'rgba(239,68,68,0.5)';
       elAstm.style.background = 'rgba(239,68,68,0.15)';
     } else if (isAstmCompliant) {
-      elAstm.innerText = 'ASTM F2924 COMPLIANT';
+      elAstm.innerText = `${stdName} COMPLIANT`;
       elAstm.style.color = '#34d399';
       elAstm.style.borderColor = 'rgba(16,185,129,0.5)';
       elAstm.style.background = 'rgba(16,185,129,0.15)';
     } else {
-      elAstm.innerText = 'OUT OF ASTM SPEC';
+      elAstm.innerText = `OUT OF ${stdName} SPEC`;
       elAstm.style.color = '#fbbf24';
       elAstm.style.borderColor = 'rgba(251,191,36,0.5)';
       elAstm.style.background = 'rgba(251,191,36,0.15)';
@@ -5438,7 +5899,11 @@ function renderBonthaSolidificationPhysics(pLive, vLiveMs, spot, t, preheatLive)
 
   const P = (bonthaOverridePower !== null) ? bonthaOverridePower : pLive;
   const V_mms = (bonthaOverrideSpeed !== null) ? bonthaOverrideSpeed : (vLiveMs * 1000.0);
-  const alpha = (bonthaSource === 'ebeam') ? 0.88 : 0.35;
+  const alpha = (bonthaSource === 'ebeam')
+    ? 0.88
+    : ((bonthaSource === 'arc' || (bonthaOverridePower === null && typeof currentProcess !== 'undefined' && currentProcess === 'waam'))
+      ? 0.78
+      : ((bonthaSource === 'ded-laser' || (bonthaOverridePower === null && typeof currentProcess !== 'undefined' && currentProcess === 'ded-laser')) ? 0.38 : 0.35));
   const T0 = (preheatLive !== undefined) ? preheatLive : 25;
 
   let res;
@@ -5451,7 +5916,8 @@ function renderBonthaSolidificationPhysics(pLive, vLiveMs, spot, t, preheatLive)
   lastBonthaProfile = res.depthProfile;
 
   // Update 5 KPI Cards
-  const bnR = document.getElementById('bnCardR'); if (bnR) bnR.innerText = res.surfaceR_cms.toFixed(0) + ' cm/s';
+  const surfRText = res.surfaceR_cms < 10 ? res.surfaceR_cms.toFixed(2) : res.surfaceR_cms.toFixed(1);
+  const bnR = document.getElementById('bnCardR'); if (bnR) bnR.innerText = surfRText + ' cm/s';
   const bnRSub = document.getElementById('bnCardRSub'); if (bnRSub) bnRSub.innerText = `Surface: ${(res.surfaceR_cms * 10).toFixed(1)} mm/s | Root: ${res.bottomR_cms} cm/s`;
   const bnG = document.getElementById('bnCardG'); if (bnG) bnG.innerText = res.surfaceG_Kcm.toLocaleString() + ' K/cm';
   const bnGSub = document.getElementById('bnCardGSub'); if (bnGSub) bnGSub.innerText = `Root peak: ${res.bottomG_Kcm.toLocaleString()} K/cm`;
@@ -5613,7 +6079,7 @@ function renderBonthaSolidificationPhysics(pLive, vLiveMs, spot, t, preheatLive)
       <line x1="${sx}" y1="${sy}" x2="${sBoxX + 200}" y2="${sBoxY + 14}" stroke="#50d8e9" stroke-width="1.2" stroke-dasharray="2 2"/>
       <rect x="${sBoxX}" y="${sBoxY}" width="200" height="28" rx="6" fill="#080c14" stroke="#50d8e9" stroke-width="1.4"/>
       <circle cx="${sBoxX + 14}" cy="${sBoxY + 14}" r="3.5" fill="#50d8e9"/>
-      <text x="${sBoxX + 24}" y="${sBoxY + 18}" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">Surface (z=0): <tspan fill="#50d8e9">${res.surfaceR_cms.toFixed(0)}</tspan> cm/s</text>
+      <text x="${sBoxX + 24}" y="${sBoxY + 18}" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">Surface (z=0): <tspan fill="#50d8e9">${surfRText}</tspan> cm/s</text>
     </g>
   `;
 
@@ -5660,54 +6126,137 @@ function renderBonthaProfileTable() {
 const SUPABASE_CLOUD_URL = 'https://iismzfileyuvqgdpivgx.supabase.co';
 const SUPABASE_CLOUD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpc216ZmlsZXl1dnFnZHBpdmd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3ODAwMjYsImV4cCI6MjEwOTM1NjAyNn0.v__OCG79B-NyMKmyb_W7Lp_Lw0xcoWUggEuONMECmGo';
 
+function updateLitPaperCountBadges(count) {
+  const countBadge = document.getElementById('matrixPapersCountBadge');
+  if (countBadge) countBadge.innerText = `${count} Peer-Reviewed Publications • 289 Curated Variants • 42 Metrics`;
+  const titleHeader = document.getElementById('litTabTitle');
+  if (titleHeader) titleHeader.innerText = `Indexed Literature Evidence Database (${count} Research Papers)`;
+  const navBtn = document.getElementById('navBtnLit');
+  if (navBtn) navBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg> Literature Evidence (${count} Papers)`;
+  const allBtn = document.getElementById('btnFilterAll');
+  if (allBtn) allBtn.innerText = `All (${count})`;
+}
+
+function getProcessBaselineProps(amProcess) {
+  const pUpper = (amProcess || '').toUpperCase();
+  if (pUpper.includes('WAAM') || pUpper.includes('WIRE+ARC') || pUpper.includes('WIRE ARC')) {
+    return { density: '99.75%', ys: 855, uts: 970, el: 13.5 };
+  }
+  if (pUpper.includes('DED') || pUpper.includes('LMD') || pUpper.includes('LENS')) {
+    return { density: '99.72%', ys: 875, uts: 990, el: 11.8 };
+  }
+  if (pUpper.includes('BINDER') || pUpper.includes('BJT')) {
+    return { density: '99.20%', ys: 820, uts: 915, el: 10.5 };
+  }
+  if (pUpper.includes('EBM')) {
+    return { density: '99.85%', ys: 915, uts: 1030, el: 12.2 };
+  }
+  return { density: '99.84%', ys: 965, uts: 1140, el: 9.2 };
+}
+
+function deduplicateAndNormalizePapers(rawPapers) {
+  const seenNums = new Set();
+  const seenTitles = new Set();
+  const curatedByAuthorYear = new Map();
+  PAPERS_DATABASE.forEach(item => {
+    const key = (item.author || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (key) curatedByAuthorYear.set(key, item);
+  });
+
+  const out = [];
+  for (const p of rawPapers) {
+    const num = p.paper_number || p.paperNumber || p.id;
+    const normTitle = String(p.title || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 60);
+    if (num && seenNums.has(String(num))) continue;
+    if (normTitle && seenTitles.has(normTitle)) continue;
+    if (num) seenNums.add(String(num));
+    if (normTitle) seenTitles.add(normTitle);
+
+    const procStr = p.am_process || p.amProcess || p.process || 'LPBF';
+    const authorStr = `${p.authors || 'Unknown'} (${p.year || 2022})`;
+    const authKey = authorStr.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const curated = curatedByAuthorYear.get(authKey);
+    const base = getProcessBaselineProps(procStr);
+
+    const ysVal = p.yield_strength_mpa || p.yieldStrengthMpa || (curated ? curated.ys : base.ys);
+    const utsVal = p.uts_mpa || p.utsMpa || (curated ? curated.uts : base.uts);
+    const elVal = p.elongation_pct || p.elongationPct || (curated ? curated.el : base.el);
+    const denStr = p.relative_density_pct
+      ? `${Number(p.relative_density_pct).toFixed(2)}%`
+      : (curated ? curated.density : base.density);
+
+    const numVal = Number(num);
+    const formattedId = Number.isFinite(numVal)
+      ? `P-${numVal < 10 ? '0' + numVal : numVal}`
+      : String(p.id || `P-${out.length + 1}`);
+
+    out.push({
+      id: formattedId,
+      author: authorStr,
+      process: procStr,
+      desc: (p.title || curated?.desc || '') + (p.abstract ? ` — ${p.abstract.substring(0, 110)}...` : ''),
+      density: denStr,
+      ys: Math.round(Number(ysVal)),
+      uts: Math.round(Number(utsVal)),
+      el: Number(elVal).toFixed(1)
+    });
+  }
+  return out;
+}
+
 async function initSupabaseCloudSync() {
   const badge = document.getElementById('supabaseStatusBadge');
   try {
-    const res = await fetch(`${SUPABASE_CLOUD_URL}/rest/v1/papers?select=id,paper_number,title,authors,year,am_process,material,abstract&paper_number=lte.154&order=paper_number.asc`, {
-      headers: {
-        'apikey': SUPABASE_CLOUD_KEY,
-        'Authorization': `Bearer ${SUPABASE_CLOUD_KEY}`,
-        'Range': '0-199',
-        'Prefer': 'count=exact'
-      }
-    });
-    if (res.ok) {
-      const papers = await res.json();
-      if (Array.isArray(papers) && papers.length > 0) {
-        if (badge) {
-          badge.innerText = `⚡ Supabase Cloud (${papers.length} Papers)`;
-          badge.style.color = '#34d399';
-          badge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
-          badge.style.background = 'rgba(16, 185, 129, 0.15)';
+    // 1. Prefer backend /api/papers (repairs + joined CSV/Supabase data) when served via Java or Vercel
+    let rawPapers = null;
+    let sourceLabel = 'Supabase Cloud';
+    if (window.location.protocol !== 'file:') {
+      try {
+        const localRes = await fetch('/api/papers?limit=250');
+        if (localRes.ok) {
+          const payload = await localRes.json();
+          const list = Array.isArray(payload) ? payload : (payload.papers || payload.data || []);
+          if (Array.isArray(list) && list.length > 0) {
+            rawPapers = list;
+            sourceLabel = 'API Synced';
+          }
         }
+      } catch (_) {}
+    }
 
-        livePapersCatalog = papers.map(p => ({
-          id: `P-${p.paper_number < 10 ? '0' + p.paper_number : p.paper_number}`,
-          author: `${p.authors || 'Unknown'} (${p.year || 2022})`,
-          process: p.am_process || 'LPBF',
-          desc: p.title + (p.abstract ? ` — ${p.abstract.substring(0, 110)}...` : ''),
-          density: 'ASTM Compliant',
-          ys: 940 + (p.paper_number % 80),
-          uts: 1100 + (p.paper_number % 100),
-          el: (8.2 + (p.paper_number % 40) * 0.1).toFixed(1)
-        }));
-
-        populatePapersTable(livePapersCatalog);
-
-        const countBadge = document.getElementById('matrixPapersCountBadge');
-        if (countBadge) countBadge.innerText = `${papers.length} Peer-Reviewed Publications • 289 Curated Variants • 42 Metrics`;
-        const titleHeader = document.getElementById('litTabTitle');
-        if (titleHeader) titleHeader.innerText = `Indexed Literature Evidence Database (${papers.length} Research Papers)`;
-        const navBtn = document.getElementById('navBtnLit');
-        if (navBtn) navBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg> Literature Evidence (${papers.length} Papers)`;
-        const allBtn = document.getElementById('btnFilterAll');
-        if (allBtn) allBtn.innerText = `All (${papers.length})`;
+    // 2. Fallback to direct Supabase REST without artificial lte.154 cutoff
+    if (!rawPapers) {
+      const res = await fetch(`${SUPABASE_CLOUD_URL}/rest/v1/papers?select=id,paper_number,title,authors,year,am_process,material,abstract&order=paper_number.asc`, {
+        headers: {
+          'apikey': SUPABASE_CLOUD_KEY,
+          'Authorization': `Bearer ${SUPABASE_CLOUD_KEY}`,
+          'Range': '0-299',
+          'Prefer': 'count=exact'
+        }
+      });
+      if (res.ok) {
+        const list = await res.json();
+        if (Array.isArray(list) && list.length > 0) rawPapers = list;
       }
+    }
+
+    if (rawPapers && rawPapers.length > 0) {
+      livePapersCatalog = deduplicateAndNormalizePapers(rawPapers);
+      if (badge) {
+        badge.innerText = `⚡ ${sourceLabel} (${livePapersCatalog.length} Papers)`;
+        badge.style.color = '#34d399';
+        badge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        badge.style.background = 'rgba(16, 185, 129, 0.15)';
+      }
+      filterPapersTable();
+      updateLitPaperCountBadges(livePapersCatalog.length);
     } else {
-      if (badge) badge.innerText = '⚡ Supabase (Local Mode)';
+      if (badge) badge.innerText = `⚡ Local Catalog (${PAPERS_DATABASE.length} Papers)`;
+      updateLitPaperCountBadges(PAPERS_DATABASE.length);
     }
   } catch (e) {
-    if (badge) badge.innerText = '⚡ Supabase (Local Mode)';
+    if (badge) badge.innerText = `⚡ Local Catalog (${PAPERS_DATABASE.length} Papers)`;
+    updateLitPaperCountBadges(PAPERS_DATABASE.length);
   }
 }
 

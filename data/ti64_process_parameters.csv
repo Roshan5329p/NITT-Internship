@@ -48,11 +48,11 @@ id,paper_number,laser_power_w,scan_speed_mms,layer_thickness_um,hatch_spacing_um
 47,35,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
 48,38,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
 49,39,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-50,40,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+50,40,800.0,15.0,500.0,1100.0,97.0,1000.0,,6.0,Linear bidirectional,Blown-powder DED Ti-6Al-4V (Nursyifaulkhair 2019: 700-900W 15 mm/s 1mm spot)
 51,45,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
 52,47,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
 53,49,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-54,53,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
+54,53,450.0,16.7,400.0,1000.0,67.4,1000.0,,7.5,Single-track & block raster,Direct Laser Metal Deposition (Chen 2016: 450W steady / 1000W init 16.7 mm/s 1mm spot)
 55,55,250.0,1000.0,30.0,100.0,83.3,60.0,,,Bidirectional 90 deg,KU Leuven hybrid conduction-keyhole validation
 56,56,300.0,800.0,40.0,110.0,85.2,100.0,,,Meander,Bulky 3D G vs R process map and CET transition
 57,57,450.0,10.6,500.0,1200.0,70.8,1200.0,,8.5,Linear raster,Thin-wall thermal process map and solid velocity

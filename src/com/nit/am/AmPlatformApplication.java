@@ -132,7 +132,9 @@ public class AmPlatformApplication {
         // Papers
         List<String> lines = Files.readAllLines(papersPath, StandardCharsets.UTF_8);
         for (int i = 1; i < lines.size(); i++) {
-            String[] tok = parseCsvLine(lines.get(i));
+            String raw = lines.get(i).trim();
+            if (raw.isEmpty()) continue;
+            String[] tok = parseCsvLine(raw);
             if (tok.length >= 5) {
                 int pid = Integer.parseInt(tok[0].trim());
                 AmRecord rec = new AmRecord();
@@ -141,7 +143,7 @@ public class AmPlatformApplication {
                 rec.authors = tok[2];
                 rec.year = (int) parseD(tok[3]);
                 rec.amProcess = tok[4];
-                map.put(pid, rec);
+                map.putIfAbsent(pid, rec);
             }
         }
 
@@ -279,34 +281,52 @@ public class AmPlatformApplication {
             }
         });
 
-        // 3. API /api/evaluate?power=250&speed=1000&layer=30&hatch=100&spot=80&preheat=200&condition=HIP
+        // 3. API /api/evaluate?process=lpbf&power=250&speed=1000&layer=30&hatch=100&spot=80&preheat=200&condition=HIP
         server.createContext("/api/evaluate", new HttpHandler() {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
                 String query = exchange.getRequestURI().getQuery();
-                double p = 250.0, v = 1000.0, l = 30.0, h = 100.0, spot = 80.0, preheat = 200.0;
+                double p = 250.0, v = 1000.0, l = 30.0, h = 100.0, spot = 80.0, preheat = 200.0, abs = -1.0;
+                boolean hasSpot = false, hasLayer = false, hasHatch = false;
                 String condition = "HIP";
+                String process = null;
                 if (query != null) {
                     for (String pair : query.split("&")) {
                         String[] kv = pair.split("=");
                         if (kv.length == 2) {
+                            if (kv[0].equalsIgnoreCase("process")) process = kv[1];
                             if (kv[0].equalsIgnoreCase("power")) p = parsePositiveD(kv[1], p);
                             if (kv[0].equalsIgnoreCase("speed")) v = parsePositiveD(kv[1], v);
-                            if (kv[0].equalsIgnoreCase("layer")) l = parsePositiveD(kv[1], l);
-                            if (kv[0].equalsIgnoreCase("hatch")) h = parsePositiveD(kv[1], h);
-                            if (kv[0].equalsIgnoreCase("spot")) spot = parsePositiveD(kv[1], spot);
+                            if (kv[0].equalsIgnoreCase("layer")) { l = parsePositiveD(kv[1], l); hasLayer = true; }
+                            if (kv[0].equalsIgnoreCase("hatch")) { h = parsePositiveD(kv[1], h); hasHatch = true; }
+                            if (kv[0].equalsIgnoreCase("spot")) { spot = parsePositiveD(kv[1], spot); hasSpot = true; }
                             if (kv[0].equalsIgnoreCase("preheat")) preheat = parseFiniteD(kv[1], preheat);
+                            if (kv[0].equalsIgnoreCase("absorptivity")) abs = parsePositiveD(kv[1], abs);
                             if (kv[0].equalsIgnoreCase("condition")) condition = kv[1];
                         }
                     }
                 }
+                if (process == null) {
+                    process = (v < 100.0 && spot >= 400.0) ? ((spot >= 2200.0 || p >= 2400.0) ? "waam" : "ded-laser") : "lpbf";
+                }
+                String normProc = ThermalPhysicsEngine.normalizeProcess(process);
+                if (!hasSpot) {
+                    spot = normProc.equals("waam") ? 3000.0 : (normProc.equals("ded-laser") ? 1500.0 : 80.0);
+                }
+                if (!hasLayer) {
+                    l = normProc.equals("waam") ? 1500.0 : (normProc.equals("ded-laser") ? 450.0 : l);
+                }
+                if (!hasHatch) {
+                    h = normProc.equals("waam") ? 3500.0 : (normProc.equals("ded-laser") ? 1200.0 : h);
+                }
 
-                ThermalPhysicsEngine.PhysicsResult phys = ThermalPhysicsEngine.evaluateExtended(p, v, l, h, spot, preheat, ThermalPhysicsEngine.DEFAULT_ABSORPTIVITY);
-                PropertyPredictor.PredictionOutput pred = PropertyPredictor.predict(phys.cellSpacingLambdaUm, condition, 20.0);
+                ThermalPhysicsEngine.PhysicsResult phys = ThermalPhysicsEngine.evaluateForProcess(normProc, p, v, l, h, spot, preheat, abs);
+                double poreSqrt = phys.isSafeWindow ? 15.0 : 35.0;
+                PropertyPredictor.PredictionOutput pred = PropertyPredictor.predictForProcess(normProc, phys.cellSpacingLambdaUm, condition, poreSqrt);
 
                 String json = String.format(Locale.US,
-                        "{\"power_w\": %.1f, \"speed_mms\": %.1f, \"energy_density_j_mm3\": %.2f, \"peclet_number\": %.2f, \"normalized_enthalpy\": %.2f, \"defect_regime\": \"%s\", \"safe_window\": %b, \"relative_density_pct\": %.2f, \"melt_pool_width_um\": %.1f, \"melt_pool_depth_um\": %.1f, \"melt_pool_length_um\": %.1f, \"aspect_ratio\": %.2f, \"cooling_rate_k_s\": %.2e, \"thermal_gradient_g\": %.2e, \"solidification_rate_r\": %.3f, \"grain_morphology\": \"%s\", \"cell_spacing_um\": %.2f, \"hardness_hv\": %.0f, \"rockwell_hrc\": %.0f, \"predicted_ys_mpa\": %.1f, \"predicted_uts_mpa\": %.1f, \"predicted_elongation_pct\": %.1f, \"fatigue_limit_mpa\": %.0f, \"astm_compliant\": %b, \"verdict\": \"%s\"}",
-                        p, v, phys.volumetricEnergyDensity, phys.pecletNumber, phys.normalizedEnthalpy, phys.defectRegime, phys.isSafeWindow, phys.relativeDensityPct,
+                        "{\"process\": \"%s\", \"power_w\": %.1f, \"speed_mms\": %.1f, \"energy_density_j_mm3\": %.2f, \"linear_heat_input_j_mm\": %.2f, \"peclet_number\": %.2f, \"normalized_enthalpy\": %.2f, \"defect_regime\": \"%s\", \"safe_window\": %b, \"relative_density_pct\": %.2f, \"melt_pool_width_um\": %.1f, \"melt_pool_depth_um\": %.1f, \"melt_pool_length_um\": %.1f, \"aspect_ratio\": %.2f, \"cooling_rate_k_s\": %.2e, \"thermal_gradient_g\": %.2e, \"solidification_rate_r\": %.3f, \"grain_morphology\": \"%s\", \"cell_spacing_um\": %.2f, \"hardness_hv\": %.0f, \"rockwell_hrc\": %.0f, \"predicted_ys_mpa\": %.1f, \"predicted_uts_mpa\": %.1f, \"predicted_elongation_pct\": %.1f, \"fatigue_limit_mpa\": %.0f, \"astm_compliant\": %b, \"verdict\": \"%s\"}",
+                        normProc, p, v, phys.volumetricEnergyDensity, phys.linearHeatInputJmm, phys.pecletNumber, phys.normalizedEnthalpy, phys.defectRegime, phys.isSafeWindow, phys.relativeDensityPct,
                         phys.estimatedMeltPoolWidthUm, phys.estimatedMeltPoolDepthUm, phys.estimatedMeltPoolLengthUm, phys.aspectRatio,
                         phys.estimatedCoolingRateKs, phys.thermalGradientG, phys.solidificationRateR, phys.grainMorphology, phys.cellSpacingLambdaUm,
                         pred.vickersHardnessHv, pred.rockwellHrc, pred.predictedYieldStrengthMpa, pred.predictedUtsMpa, pred.predictedElongationPct, pred.predictedFatigueLimitMpa,
@@ -361,27 +381,38 @@ public class AmPlatformApplication {
             }
         });
 
-        // 6. API /api/meltpool?model=coen&power=200&speed=950&spot=80&layer=40&hatch=80
+        // 6. API /api/meltpool?model=coen&process=lpbf&power=200&speed=950&spot=80&layer=40&hatch=80
         server.createContext("/api/meltpool", new HttpHandler() {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
                 String query = exchange.getRequestURI().getQuery();
                 String model = "coen";
+                String process = null;
                 double p = 200.0, v = 950.0, spot = 80.0, layer = 40.0, hatch = 80.0;
+                boolean hasSpot = false, hasLayer = false, hasHatch = false;
                 if (query != null) {
                     for (String pair : query.split("&")) {
                         String[] kv = pair.split("=");
                         if (kv.length == 2) {
                             if (kv[0].equalsIgnoreCase("model")) model = kv[1];
+                            if (kv[0].equalsIgnoreCase("process")) process = kv[1];
                             if (kv[0].equalsIgnoreCase("power")) p = parsePositiveD(kv[1], p);
                             if (kv[0].equalsIgnoreCase("speed")) v = parsePositiveD(kv[1], v);
-                            if (kv[0].equalsIgnoreCase("spot")) spot = parsePositiveD(kv[1], spot);
-                            if (kv[0].equalsIgnoreCase("layer")) layer = parsePositiveD(kv[1], layer);
-                            if (kv[0].equalsIgnoreCase("hatch")) hatch = parsePositiveD(kv[1], hatch);
+                            if (kv[0].equalsIgnoreCase("spot")) { spot = parsePositiveD(kv[1], spot); hasSpot = true; }
+                            if (kv[0].equalsIgnoreCase("layer")) { layer = parsePositiveD(kv[1], layer); hasLayer = true; }
+                            if (kv[0].equalsIgnoreCase("hatch")) { hatch = parsePositiveD(kv[1], hatch); hasHatch = true; }
                         }
                     }
                 }
-                MeltPoolPhysicsEngine.MeltPoolResult res = MeltPoolPhysicsEngine.calculate(model, p, v, spot, layer, hatch);
+                if (process != null) {
+                    String np = ThermalPhysicsEngine.normalizeProcess(process);
+                    if (!hasSpot) spot = np.equals("waam") ? 3000.0 : (np.equals("ded-laser") ? 1500.0 : spot);
+                    if (!hasLayer) layer = np.equals("waam") ? 1500.0 : (np.equals("ded-laser") ? 450.0 : layer);
+                    if (!hasHatch) hatch = np.equals("waam") ? 3500.0 : (np.equals("ded-laser") ? 1200.0 : hatch);
+                }
+                MeltPoolPhysicsEngine.MeltPoolResult res = (process != null)
+                        ? MeltPoolPhysicsEngine.calculate(model, p, v, spot, layer, hatch, process)
+                        : MeltPoolPhysicsEngine.calculate(model, p, v, spot, layer, hatch);
                 sendJsonResponse(exchange, 200, res.json);
             }
         });

@@ -48,11 +48,11 @@ id,paper_number,test_direction,condition,yield_strength_mpa,ultimate_tensile_str
 47,35,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
 48,38,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
 49,39,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-50,40,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+50,40,horizontal (XY),as-built,875.0,965.0,8.5,335.0,,,210.0,0,0,DED LOF defect regime reduces tensile ductility (Nursyifaulkhair 2019)
 51,45,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
 52,47,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
 53,49,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-54,53,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
+54,53,horizontal (XY),as-built,890.0,980.0,11.0,350.0,,,290.0,1,0,Direct LMD as-built (~350 HV) meets F2924/F3187 ductility (Chen 2016)
 55,55,horizontal (XY),as-built,1040.0,1210.0,7.8,385.0,,,340.0,0,0,As-built martensitic alpha prime needles
 56,56,horizontal (XY),as-built,1010.0,1180.0,8.2,375.0,,,330.0,0,0,Bulky 3D columnar prior-beta grains
 57,57,vertical (Z),as-built,890.0,1020.0,9.8,340.0,,,310.0,0,0,Thin-wall layer boundary ductility

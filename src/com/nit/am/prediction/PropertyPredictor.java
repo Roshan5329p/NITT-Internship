@@ -42,34 +42,56 @@ public class PropertyPredictor {
      * Predicts tensile and fatigue behavior based on α/α' lath width, condition, and pore defect size.
      */
     public static PredictionOutput predict(double alphaLathUm, String condition, double maxPoreSqrtAreaUm) {
+        return predictForProcess("lpbf", alphaLathUm, condition, maxPoreSqrtAreaUm);
+    }
+
+    /**
+     * Process-aware tensile, hardness, fatigue, and ASTM F2924/F3001/F3187 qualification prediction.
+     */
+    public static PredictionOutput predictForProcess(String process, double alphaLathUm, String condition, double maxPoreSqrtAreaUm) {
         PredictionOutput out = new PredictionOutput();
+        String proc = com.nit.am.physics.ThermalPhysicsEngine.normalizeProcess(process);
+        boolean isDed = proc.equals("ded-laser");
+        boolean isWaam = proc.equals("waam");
 
         // 1. Hall-Petch Yield Strength: sigma_y = sigma_0 + k_hp / sqrt(lambda_alpha)
-        double lambdaUm = (alphaLathUm > 0) ? alphaLathUm : 0.45;
+        double lambdaUm = (alphaLathUm > 0) ? alphaLathUm : (isWaam ? 1.85 : (isDed ? 1.25 : 0.45));
         double lambdaM = lambdaUm * 1e-6;
         double hallPetchBase = SIGMA_0 + (K_HALL_PETCH / Math.sqrt(lambdaM));
 
         String cond = (condition != null) ? condition.toLowerCase() : "none";
 
         if (cond.contains("as-built") || cond.contains("none")) {
-            // As-built hierarchical acicular α' martensite (Cao et al. Table 1: YS 980-1140 MPa, El. 4-8%)
-            out.predictedYieldStrengthMpa = Math.min(1150.0, hallPetchBase + 120.0);
-            out.predictedElongationPct = 7.2;
-            out.vickersHardnessHv = Math.round(out.predictedYieldStrengthMpa / 2.55);
+            if (isWaam) {
+                // As-deposited WAAM Widmanstatten alpha+beta lamellae (lower residual stress, higher ductility)
+                out.predictedYieldStrengthMpa = Math.max(820.0, Math.min(935.0, hallPetchBase * 0.90));
+                out.predictedElongationPct = 12.8;
+                out.vickersHardnessHv = Math.round(out.predictedYieldStrengthMpa / 2.68);
+            } else if (isDed) {
+                // As-deposited L-DED basketweave alpha+beta + tempered martensite
+                out.predictedYieldStrengthMpa = Math.max(860.0, Math.min(1010.0, hallPetchBase * 0.96));
+                out.predictedElongationPct = 11.2;
+                out.vickersHardnessHv = Math.round(out.predictedYieldStrengthMpa / 2.62);
+            } else {
+                // As-built LPBF hierarchical acicular α' martensite (Cao et al. Table 1: YS 980-1140 MPa, El. 4-8%)
+                out.predictedYieldStrengthMpa = Math.min(1150.0, hallPetchBase + 120.0);
+                out.predictedElongationPct = 7.2;
+                out.vickersHardnessHv = Math.round(out.predictedYieldStrengthMpa / 2.55);
+            }
         } else if (cond.contains("hip")) {
             // Hot Isostatic Pressing: 900-930°C / 100-120 MPa (Cao et al. Table 1: YS 840-885 MPa, El. 14-22%)
-            out.predictedYieldStrengthMpa = Math.max(835.0, hallPetchBase - 50.0);
-            out.predictedElongationPct = 15.5;
+            out.predictedYieldStrengthMpa = Math.max(835.0, (isWaam ? 845.0 : hallPetchBase - 50.0));
+            out.predictedElongationPct = isWaam ? 16.5 : 15.5;
             out.vickersHardnessHv = Math.round(out.predictedYieldStrengthMpa / 2.80);
         } else if (cond.contains("bi-modal") || cond.contains("cyclic") || cond.contains("sta")) {
             // Bi-modal α+β microstructure (Cao et al. Table 1: YS 865-1080 MPa, El. 16-20%)
-            out.predictedYieldStrengthMpa = 910.0;
-            out.predictedElongationPct = 17.5;
+            out.predictedYieldStrengthMpa = isWaam ? 875.0 : 910.0;
+            out.predictedElongationPct = isWaam ? 18.0 : 17.5;
             out.vickersHardnessHv = Math.round(out.predictedYieldStrengthMpa / 2.65);
         } else if (cond.contains("anneal") || cond.contains("stress")) {
             // Stress relief / Annealed (Cao et al. Table 1: YS 935-1010 MPa, El. 9.5-14%)
-            out.predictedYieldStrengthMpa = Math.max(890.0, hallPetchBase - 25.0);
-            out.predictedElongationPct = 11.5;
+            out.predictedYieldStrengthMpa = Math.max(855.0, (isWaam ? 865.0 : hallPetchBase - 25.0));
+            out.predictedElongationPct = isWaam ? 14.0 : 11.5;
             out.vickersHardnessHv = Math.round(out.predictedYieldStrengthMpa / 2.70);
         } else {
             out.predictedYieldStrengthMpa = 920.0;
@@ -90,7 +112,6 @@ public class PropertyPredictor {
         // 2. Murakami Defect-Tolerant Fatigue Model: sigma_w = 1.43 * (HV + 120) / (sqrt(area))^0.1667
         double sqrtArea = Math.max(8.0, maxPoreSqrtAreaUm);
         if (cond.contains("hip")) {
-            // HIP closes interior gas and lack-of-fusion voids (Cao et al. Fig. 12 & Fig. 14)
             sqrtArea = Math.min(sqrtArea, 6.0);
         }
         out.predictedFatigueLimitMpa = Math.round((1.43 * (out.vickersHardnessHv + 120.0)) / Math.pow(sqrtArea, 1.0 / 6.0));
@@ -107,12 +128,22 @@ public class PropertyPredictor {
                               (out.predictedUtsMpa >= ASTM_F3001_MIN_UTS) &&
                               (out.predictedElongationPct >= ASTM_F3001_MIN_ELONG);
 
-        if (out.passesAstmF2924 && out.passesAstmF3001) {
-            out.qualificationVerdict = "QUALIFIED (Complies with ASTM F2924 Grade 5 & ASTM F3001 Grade 23 ELI)";
-        } else if (out.passesAstmF2924) {
-            out.qualificationVerdict = "QUALIFIED (ASTM F2924 Grade 5 Compliant)";
+        if (isDed || isWaam) {
+            if (out.passesAstmF2924) {
+                out.qualificationVerdict = "QUALIFIED (ASTM F3187 DED & ASTM F2924 Grade 5 Tensile Baseline)";
+            } else if (out.passesAstmF3001) {
+                out.qualificationVerdict = "QUALIFIED (ASTM F3187 DED / F3001 ELI Ductility Window)";
+            } else {
+                out.qualificationVerdict = "NON-COMPLIANT (Adjust heat input / interpass control or apply stress-relief + HIP)";
+            }
         } else {
-            out.qualificationVerdict = "NON-COMPLIANT (Ductility elongation < 10% requires post-build HIP or annealing)";
+            if (out.passesAstmF2924 && out.passesAstmF3001) {
+                out.qualificationVerdict = "QUALIFIED (Complies with ASTM F2924 Grade 5 & ASTM F3001 Grade 23 ELI)";
+            } else if (out.passesAstmF2924) {
+                out.qualificationVerdict = "QUALIFIED (ASTM F2924 Grade 5 Compliant)";
+            } else {
+                out.qualificationVerdict = "NON-COMPLIANT (Ductility elongation < 10% requires post-build HIP or annealing)";
+            }
         }
 
         return out;
@@ -126,7 +157,7 @@ public class PropertyPredictor {
             double lath = rec.alphaLathThicknessUm > 0 ? rec.alphaLathThicknessUm :
                          (rec.priorBetaGrainWidthUm > 0 ? rec.priorBetaGrainWidthUm * 0.05 : 0.45);
             double pore = (rec.defectRegime != null && rec.defectRegime.toLowerCase().contains("keyhole")) ? 45.0 : 15.0;
-            PredictionOutput pred = predict(lath, rec.condition, pore);
+            PredictionOutput pred = predictForProcess(rec.amProcess, lath, rec.condition, pore);
             return pred.passesAstmF2924;
         }
         return (rec.yieldStrengthMpa >= ASTM_F2924_MIN_YS) &&

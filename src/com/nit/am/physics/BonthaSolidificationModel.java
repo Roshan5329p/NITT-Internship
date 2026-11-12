@@ -140,11 +140,22 @@ public class BonthaSolidificationModel {
         BonthaResult res = new BonthaResult();
         res.geometryMode = (geometryMode != null && geometryMode.contains("2d")) ? "2d-thin-wall" : "3d-bulky";
         res.physicsMode = (physicsMode != null && physicsMode.contains("fem")) ? "nonlinear-fem" : "rosenthal";
-        res.beamSource = (beamSource != null && beamSource.contains("ebeam")) ? "ebeam" : "laser";
+        String srcLow = (beamSource != null) ? beamSource.toLowerCase() : "laser";
+        if (srcLow.contains("ebeam")) {
+            res.beamSource = "ebeam";
+        } else if (srcLow.contains("arc") || srcLow.contains("waam")) {
+            res.beamSource = "arc";
+        } else if (srcLow.contains("ded")) {
+            res.beamSource = "ded-laser";
+        } else {
+            res.beamSource = "laser";
+        }
         res.powerW = Math.max(10.0, powerW);
         res.speedMms = Math.max(0.1, speedMms);
 
-        double alpha = res.beamSource.equals("ebeam") ? 0.88 : 0.35;
+        double alpha = res.beamSource.equals("ebeam") ? 0.88
+                : (res.beamSource.equals("arc") ? 0.78
+                : (res.beamSource.equals("ded-laser") ? 0.38 : 0.35));
         double vMs = res.speedMms / 1000.0;
         double alphaQ = alpha * res.powerW;
 
@@ -315,7 +326,7 @@ public class BonthaSolidificationModel {
         StringBuilder jsonSb = new StringBuilder();
         jsonSb.append(String.format(Locale.US,
                 "{\"geometry\":\"%s\",\"physics\":\"%s\",\"source\":\"%s\",\"power_w\":%.1f,\"speed_mms\":%.1f," +
-                "\"surface_r_cms\":%.1f,\"surface_g_kcm\":%.0f,\"surface_cooling_ks\":%.0f," +
+                "\"surface_r_cms\":%.2f,\"surface_g_kcm\":%.0f,\"surface_cooling_ks\":%.0f," +
                 "\"root_g_kcm\":%.0f,\"root_r_cms\":%.2f,\"root_cooling_ks\":%.0f," +
                 "\"norm_tm\":%.3f,\"pdas_um\":%.2f,\"morphology\":\"%s\",\"stations\":[",
                 res.geometryMode, res.physicsMode, res.beamSource, res.powerW, res.speedMms,

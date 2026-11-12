@@ -48,8 +48,8 @@ id,paper_number,condition,phases_identified,alpha_fraction_pct,beta_fraction_pct
 47,35,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
 48,38,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
 49,39,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-50,40,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+50,40,as-built,"alpha,beta",86.0,14.0,0.0,1.8,420.0,columnar,"OM,SEM",Widmanstatten alpha+beta basketweave in blown-powder DED (Nursyifaulkhair 2019)
 51,45,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
 52,47,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
 53,49,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-54,53,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
+54,53,as-built,"alpha,beta",88.0,12.0,0.0,1.5,380.0,columnar,"OM,SEM",Basketweave alpha+beta colonies in direct LMD Ti-6Al-4V (Chen 2016)
