@@ -102,12 +102,8 @@ public class PropertyPredictor {
         // Ultimate Tensile Strength (UTS ~ 1.10 - 1.15 * YS)
         out.predictedUtsMpa = Math.round(out.predictedYieldStrengthMpa * 1.12);
 
-        // Rockwell C Equivalent: HRC = 100 - (15000 / HV)
-        if (out.vickersHardnessHv >= 240.0) {
-            out.rockwellHrc = Math.max(20.0, Math.min(68.0, Math.round(100.0 - (15000.0 / out.vickersHardnessHv))));
-        } else {
-            out.rockwellHrc = 0.0;
-        }
+        // Rockwell C Equivalent via ASTM E140 piecewise lookup (matches dashboard hvToHrcStandard)
+        out.rockwellHrc = hvToHrcStandard(out.vickersHardnessHv);
 
         // 2. Murakami Defect-Tolerant Fatigue Model: sigma_w = 1.43 * (HV + 120) / (sqrt(area))^0.1667
         double sqrtArea = Math.max(8.0, maxPoreSqrtAreaUm);
@@ -141,8 +137,10 @@ public class PropertyPredictor {
                 out.qualificationVerdict = "QUALIFIED (Complies with ASTM F2924 Grade 5 & ASTM F3001 Grade 23 ELI)";
             } else if (out.passesAstmF2924) {
                 out.qualificationVerdict = "QUALIFIED (ASTM F2924 Grade 5 Compliant)";
-            } else {
+            } else if (out.predictedElongationPct < ASTM_F2924_MIN_ELONG) {
                 out.qualificationVerdict = "NON-COMPLIANT (Ductility elongation < 10% requires post-build HIP or annealing)";
+            } else {
+                out.qualificationVerdict = "NON-COMPLIANT (YS < 825 MPa or UTS < 895 MPa per ASTM F2924)";
             }
         }
 
@@ -150,9 +148,32 @@ public class PropertyPredictor {
     }
 
     /**
+     * Converts Vickers hardness (HV) to Rockwell C (HRC) via ASTM E140 piecewise linear interpolation.
+     */
+    public static double hvToHrcStandard(double hv) {
+        if (!Double.isFinite(hv) || hv < 240.0) return 0.0;
+        final double[][] table = {
+            {240.0, 20.3}, {300.0, 29.8}, {400.0, 40.8},
+            {500.0, 49.1}, {600.0, 54.7}, {700.0, 58.1}, {800.0, 60.3}
+        };
+        if (hv >= table[table.length - 1][0]) return Math.round(table[table.length - 1][1]);
+        for (int i = 1; i < table.length; i++) {
+            double upperHv = table[i][0];
+            if (hv <= upperHv) {
+                double lowerHv = table[i - 1][0];
+                double lowerHrc = table[i - 1][1];
+                double upperHrc = table[i][1];
+                return Math.round(lowerHrc + ((hv - lowerHv) / (upperHv - lowerHv)) * (upperHrc - lowerHrc));
+            }
+        }
+        return 0.0;
+    }
+
+    /**
      * Verifies if an AmRecord complies with ASTM F2924.
      */
     public static boolean checkAstmF2924(AmRecord rec) {
+        if (rec == null) return false;
         if (rec.yieldStrengthMpa <= 0 && rec.elongationPct <= 0) {
             double lath = rec.alphaLathThicknessUm > 0 ? rec.alphaLathThicknessUm :
                          (rec.priorBetaGrainWidthUm > 0 ? rec.priorBetaGrainWidthUm * 0.05 : 0.45);
@@ -161,7 +182,7 @@ public class PropertyPredictor {
             return pred.passesAstmF2924;
         }
         return (rec.yieldStrengthMpa >= ASTM_F2924_MIN_YS) &&
-               (rec.utsMpa >= ASTM_F2924_MIN_UTS || rec.utsMpa <= 0) &&
+               (rec.utsMpa == 0 || rec.utsMpa >= ASTM_F2924_MIN_UTS) &&
                (rec.elongationPct >= ASTM_F2924_MIN_ELONG);
     }
 }

@@ -9,6 +9,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,8 +24,10 @@ import java.util.zip.GZIPOutputStream;
 public class StaticHandler implements HttpHandler {
 
     private final File webDir;
-    private final String canonicalWebDirPath;
+    private final Path canonicalWebDirPath;
     private final Map<String, CachedAsset> cache = new ConcurrentHashMap<>();
+
+    private static final long MAX_CACHEABLE_FILE_BYTES = 32L * 1024L * 1024L;
 
     private static final Set<String> BLOCKED_EXTENSIONS = Set.of(
         ".class", ".java", ".bat", ".cmd", ".ps1", ".sh", ".exe", ".dll", ".so", ".csv", ".db"
@@ -48,13 +53,13 @@ public class StaticHandler implements HttpHandler {
 
     public StaticHandler(File webDir) {
         this.webDir = webDir;
-        String path;
+        Path resolved = webDir.toPath().toAbsolutePath().normalize();
         try {
-            path = webDir.getCanonicalPath();
-        } catch (IOException e) {
-            path = webDir.getAbsolutePath();
+            resolved = resolved.toRealPath();
+        } catch (IOException ignored) {
+            // Directory may be created later; normalized absolute Path still enforces component boundaries
         }
-        this.canonicalWebDirPath = path;
+        this.canonicalWebDirPath = resolved;
     }
 
     @Override
@@ -68,15 +73,16 @@ public class StaticHandler implements HttpHandler {
 
         String relPath = path.startsWith("/") ? path.substring(1) : path;
         // Block path traversal tokens
-        if (relPath.contains("..") || relPath.contains("//") || relPath.contains("\\\\")) {
+        if (relPath.contains("..") || relPath.contains("//") || relPath.contains("\\\\") || relPath.contains("\\")) {
             sendNotFound(exchange);
             return;
         }
 
         File requestedFile = new File(webDir, relPath.replace('/', File.separatorChar)).getCanonicalFile();
+        Path requestedPath = requestedFile.toPath().toAbsolutePath().normalize();
 
-        // Prevent directory traversal: file must reside strictly inside webDir
-        if (!requestedFile.getPath().startsWith(canonicalWebDirPath)) {
+        // Prevent directory traversal using path-segment-aware prefix check and reject symlinks escaping root
+        if (!requestedPath.startsWith(canonicalWebDirPath) || Files.isSymbolicLink(requestedPath)) {
             sendNotFound(exchange);
             return;
         }
@@ -123,6 +129,7 @@ public class StaticHandler implements HttpHandler {
         }
 
         // Check if browser accepts GZIP compression
+        exchange.getResponseHeaders().set("Vary", "Accept-Encoding");
         String acceptEncoding = exchange.getRequestHeaders().getFirst("Accept-Encoding");
         boolean useGzip = acceptEncoding != null && acceptEncoding.contains("gzip") && asset.gzipBytes != null;
 
@@ -162,8 +169,12 @@ public class StaticHandler implements HttpHandler {
     }
 
     private byte[] FilesReadAllBytes(File file) throws IOException {
+        long len = file.length();
+        if (len < 0 || len > MAX_CACHEABLE_FILE_BYTES) {
+            throw new IOException("Asset exceeds maximum cacheable size: " + len);
+        }
         try (FileInputStream fis = new FileInputStream(file);
-             ByteArrayOutputStream baos = new ByteArrayOutputStream((int) file.length())) {
+             ByteArrayOutputStream baos = new ByteArrayOutputStream((int) len)) {
             byte[] buffer = new byte[16384];
             int read;
             while ((read = fis.read(buffer)) != -1) {
@@ -198,7 +209,7 @@ public class StaticHandler implements HttpHandler {
 
     private void sendNotFound(HttpExchange exchange) throws IOException {
         String notFound = "<h1>404 Not Found</h1>";
-        byte[] bytes = notFound.getBytes();
+        byte[] bytes = notFound.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
         exchange.sendResponseHeaders(404, bytes.length);
         try (OutputStream os = exchange.getResponseBody()) {

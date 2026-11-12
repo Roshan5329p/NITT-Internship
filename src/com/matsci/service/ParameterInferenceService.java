@@ -6,6 +6,7 @@ import com.matsci.model.ProcessRecipe;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Advanced Metallurgy & Additive Manufacturing Parameter Engine.
@@ -16,8 +17,13 @@ import java.util.List;
 public class ParameterInferenceService {
 
     public ProcessRecipe inferRecipe(MaterialVariant v) {
+        if (v == null) {
+            throw new IllegalArgumentException("MaterialVariant must not be null");
+        }
         String subprocess = v.getSubprocess() != null ? v.getSubprocess().trim() : "";
+        String subLower = subprocess.toLowerCase(Locale.ROOT);
         String post = v.getPostProcessingCondition() != null ? v.getPostProcessingCondition().trim() : "";
+        String postLower = post.toLowerCase(Locale.ROOT);
         Double liquidus = v.getLiquidusTemperature();
         Double betaTransus = v.getBetaTransusTemperature();
         Double buildRate = v.getBuildRate();
@@ -34,7 +40,7 @@ public class ParameterInferenceService {
         String atmosphere;
 
         // 1. Process Route Specific Formulation
-        if (subprocess.contains("Laser PBF") || subprocess.contains("SLM") || subprocess.contains("DMLS")) {
+        if (subLower.contains("laser pbf") || subLower.contains("slm") || subLower.contains("dmls") || subLower.contains("lpbf")) {
             summary = "Laser Powder Bed Fusion (L-PBF / SLM) utilizing a high-power continuous-wave fiber laser to selectively fuse gas-atomized titanium alloy powder layer-by-layer under inert argon.";
             equipment = "Industrial L-PBF 3D Printer (e.g. EOS M290, SLM Solutions 280, Concept Laser M2), Inert Glovebox, Ultrasonic Sieve Station";
             atmosphere = "Ultra-high purity Argon (99.999%), O₂ < 100 ppm, H₂O < 15 ppm (Prevents interstitial titanium oxygen pickup)";
@@ -52,13 +58,13 @@ public class ParameterInferenceService {
             params.add(new ProcessParameter("Optics", "Hatch Spacing", "90 – 110", "µm", "Track overlap distance ensuring >99.5% relative density"));
             params.add(new ProcessParameter("Thermal", "Substrate Preheat Temp", "160 – 200", "°C", "Baseplate resistive heater to control residual stress"));
             if (laserAbs != null) {
-                params.add(new ProcessParameter("Optics", "Laser Absorptivity (1070nm)", String.format("%.3f", laserAbs), "", "Material optical coupling efficiency"));
+                params.add(new ProcessParameter("Optics", "Laser Absorptivity (1070nm)", String.format(Locale.US, "%.3f", laserAbs), "", "Material optical coupling efficiency"));
             }
             if (buildRate != null) {
-                params.add(new ProcessParameter("Productivity", "Volumetric Build Rate", String.format("%.1f", buildRate), "cm³/h", "Actual volumetric throughput per hour"));
+                params.add(new ProcessParameter("Productivity", "Volumetric Build Rate", String.format(Locale.US, "%.1f", buildRate), "cm³/h", "Actual volumetric throughput per hour"));
             }
 
-        } else if (subprocess.contains("Laser powder DED") || subprocess.contains("LENS")) {
+        } else if (subLower.contains("laser powder ded") || subLower.contains("lens")) {
             summary = "Blown-powder Directed Energy Deposition (Laser DED / LENS) injecting metallic powder streams coaxially into a laser-induced melt pool on a substrate.";
             equipment = "Optomec LENS / DMG MORI Lasertec 65 3D multi-axis CNC laser deposition system";
             atmosphere = "High-purity Argon shielding gas (coaxial nozzle + trailing shroud), local O₂ < 50 ppm";
@@ -74,10 +80,10 @@ public class ParameterInferenceService {
             params.add(new ProcessParameter("Feedstock", "Powder Feed Rate", "8 – 18", "g/min", "Carrier-gas powder mass delivery rate"));
             params.add(new ProcessParameter("Atmosphere", "Shielding Argon Flow", "15 – 25", "L/min", "Coaxial and trailing shield gas flow"));
             if (buildRate != null) {
-                params.add(new ProcessParameter("Productivity", "Deposition Build Rate", String.format("%.1f", buildRate), "cm³/h", "Material deposition rate"));
+                params.add(new ProcessParameter("Productivity", "Deposition Build Rate", String.format(Locale.US, "%.1f", buildRate), "cm³/h", "Material deposition rate"));
             }
 
-        } else if (subprocess.contains("wire DED") || subprocess.contains("Wire DED")) {
+        } else if (subLower.contains("wire ded")) {
             summary = "Wire-fed Directed Energy Deposition using focused laser or electron beam to melt continuous titanium wire spool for high-deposition near-net shapes.";
             equipment = "Sciaky EBAM (Electron Beam Additive Manufacturing) or Robotic Laser Wire DED Cell";
             atmosphere = "Vacuum (< 10⁻⁴ mbar) for electron beam; High-purity Argon enclosure (O₂ < 20 ppm) for laser wire";
@@ -91,10 +97,10 @@ public class ParameterInferenceService {
             params.add(new ProcessParameter("Feedstock", "Wire Feed Speed", "1.5 – 3.5", "m/min", "Wire feed velocity (1.2–1.6 mm diameter wire)"));
             params.add(new ProcessParameter("Kinetic", "Travel Speed", "8 – 18", "mm/s", "Robot travel velocity"));
             if (buildRate != null) {
-                params.add(new ProcessParameter("Productivity", "Build Rate", String.format("%.1f", buildRate), "cm³/h", "Heavy cross-section deposition rate"));
+                params.add(new ProcessParameter("Productivity", "Build Rate", String.format(Locale.US, "%.1f", buildRate), "cm³/h", "Heavy cross-section deposition rate"));
             }
 
-        } else if (subprocess.contains("WAAM")) {
+        } else if (subLower.contains("waam") || subLower.contains("wire arc")) {
             summary = "Wire Arc Additive Manufacturing (WAAM) combining robotic kinematics with electric arc welding (TIG/Plasma) to manufacture massive titanium structural preforms.";
             equipment = "6-Axis Industrial Robot (KUKA / ABB) with Fronius CMT / Lincoln Electric Arc Power Source and trailing argon shield";
             atmosphere = "Flexible purged Argon bubble / local trailing argon gas shield with O₂ monitoring (< 50 ppm)";
@@ -105,7 +111,7 @@ public class ParameterInferenceService {
             steps.add("Enforced interpass cooling pauses allowing bead temperature to drop below 150 °C");
             steps.add("Stress-relief heat treatment prior to substrate de-clamping to prevent severe warping");
 
-            boolean isPlasma = subprocess.contains("Plasma");
+            boolean isPlasma = subLower.contains("plasma");
             params.add(new ProcessParameter("Electric Arc", "Arc Current", isPlasma ? "160 – 260" : "120 – 200", "A", isPlasma ? "Transferred plasma arc current" : "GTAW pulsed arc current"));
             params.add(new ProcessParameter("Electric Arc", "Arc Voltage", isPlasma ? "18 – 24" : "12 – 16", "V", "Operating arc voltage"));
             params.add(new ProcessParameter("Feedstock", "Wire Feed Speed", "1.8 – 3.2", "m/min", "Titanium wire feed speed"));
@@ -113,10 +119,10 @@ public class ParameterInferenceService {
             params.add(new ProcessParameter("Thermal", "Max Interpass Temp", "150", "°C", "Critical limit to avoid excessive grain coarsening & oxidation"));
             params.add(new ProcessParameter("Atmosphere", "Argon Flow", "25 – 45", "L/min", "Torch and trailing protective gas flow"));
             if (buildRate != null) {
-                params.add(new ProcessParameter("Productivity", "Deposition Rate", String.format("%.1f", buildRate), "cm³/h", "High-volume build rate"));
+                params.add(new ProcessParameter("Productivity", "Deposition Rate", String.format(Locale.US, "%.1f", buildRate), "cm³/h", "High-volume build rate"));
             }
 
-        } else if (subprocess.contains("Binder jetting") || subprocess.contains("Binder Jetting")) {
+        } else if (subLower.contains("binder jetting")) {
             summary = "Two-step indirect additive manufacturing: liquid polymeric binder is selectively jetted onto fine titanium powder beds at room temperature, followed by debinding and high-vacuum solid-state sintering.";
             equipment = "Desktop Metal / ExOne / HP Metal Jet Binder Jetting System, High-Vacuum Sintering Furnace";
             atmosphere = "Ambient air printing; High-Vacuum (< 10⁻⁵ mbar) or Argon for debind & sintering";
@@ -134,7 +140,7 @@ public class ParameterInferenceService {
             params.add(new ProcessParameter("Atmosphere", "Sintering Vacuum", "< 1e-5", "mbar", "Ultra-high vacuum to prevent oxygen and nitrogen pickup"));
             params.add(new ProcessParameter("Kinetic", "Sintering Dwell Time", "3 – 5", "hr", "Soak duration to achieve dense metallurgical bonding"));
             if (relDensity != null) {
-                params.add(new ProcessParameter("Quality", "Achieved Relative Density", String.format("%.2f", relDensity), "%", "As-sintered or sintered+HIP density"));
+                params.add(new ProcessParameter("Quality", "Achieved Relative Density", String.format(Locale.US, "%.2f", relDensity), "%", "As-sintered or sintered+HIP density"));
             }
 
         } else {
@@ -150,21 +156,21 @@ public class ParameterInferenceService {
         }
 
         // 2. Post-Processing Condition Formulation
-        if (post.equalsIgnoreCase("HIP") || post.contains("Sintered + HIP")) {
+        if (postLower.equals("hip") || postLower.contains("sintered + hip")) {
             steps.add("Hot Isostatic Pressing (HIP): Illustrative cycle of ~920 °C, 100 MPa argon pressure for 2 hours to reduce internal porosity; qualify parameters for the material and application, then verify the resulting density. ASTM F3001 is a material specification, not a prescribed HIP cycle.");
             params.add(new ProcessParameter("Post-Treatment", "HIP Temperature", "900 – 930", "°C", "Sub-transus temperature preventing coarse prior-beta grain growth"));
             params.add(new ProcessParameter("Post-Treatment", "HIP Pressure", "100 – 105", "MPa", "Isostatic high-pressure high-purity argon gas"));
             params.add(new ProcessParameter("Post-Treatment", "HIP Dwell Duration", "2.0", "hr", "Equiaxed creep pore collapse dwell time"));
             params.add(new ProcessParameter("Post-Treatment", "HIP Cooling Mode", "Uniform Rapid Cooling (URC)", "", "Controlled furnace cooldown preventing brittle alpha-case formation"));
 
-        } else if (post.equalsIgnoreCase("Stress-relieved")) {
+        } else if (postLower.equals("stress-relieved") || postLower.equals("stress relieved")) {
             int stressTemp = betaTransus != null ? Math.min(650, (int) Math.round(betaTransus * 0.65)) : 600;
             steps.add("Thermal Stress Relief: Vacuum furnace heating to " + stressTemp + " °C, dwell 2–4 hours, slow furnace cool to relieve >85% of locked-in residual thermal stresses");
             params.add(new ProcessParameter("Post-Treatment", "Stress Relief Temp", String.valueOf(stressTemp), "°C", "Vacuum furnace stress-relief soak"));
             params.add(new ProcessParameter("Post-Treatment", "Dwell Duration", "2 – 4", "hr", "Soak time in high vacuum (< 1e-4 mbar)"));
             params.add(new ProcessParameter("Post-Treatment", "Cooling Rate", "Slow Furnace Cool (< 5 °C/min)", "", "Prevents reintroduction of thermal contraction gradients"));
 
-        } else if (post.contains("Solution-treated") || post.contains("aged") || post.equalsIgnoreCase("STA")) {
+        } else if (postLower.contains("solution-treated") || postLower.contains("aged") || postLower.equals("sta")) {
             int solTemp = betaTransus != null ? (int) Math.round(betaTransus - 40) : 920;
             steps.add("Solution Treatment: Heating to " + solTemp + " °C for 60 min followed by rapid water/gas quenching into supersaturated beta phase");
             steps.add("Artificial Aging: Re-heating to 480–540 °C for 6–8 hours to precipitate ultra-fine secondary alpha needles, yielding peak tensile and yield strength");
@@ -172,28 +178,28 @@ public class ParameterInferenceService {
             params.add(new ProcessParameter("Post-Treatment", "Quench Medium", "Water Quench / High-Pressure Gas", "", "Freezes metastable beta solid solution"));
             params.add(new ProcessParameter("Post-Treatment", "Aging Temp & Time", "500 °C / 6 hr", "Air Cool", "Controlled coherent alpha precipitation hardening"));
 
-        } else if (post.equalsIgnoreCase("Annealed")) {
+        } else if (postLower.equals("annealed")) {
             int annealTemp = betaTransus != null ? Math.min(780, (int) Math.round(betaTransus * 0.80)) : 730;
             steps.add("Mill/Duplex Anneal: Heating to " + annealTemp + " °C for 2 hours in vacuum furnace, argon fan cool to achieve stabilized ductility and fracture toughness");
             params.add(new ProcessParameter("Post-Treatment", "Annealing Temp", String.valueOf(annealTemp), "°C", "Sub-transus microstructure stabilization"));
             params.add(new ProcessParameter("Post-Treatment", "Soak Duration", "2.0", "hr", "Homogenization dwell"));
 
-        } else if (post.equalsIgnoreCase("As-built") || post.equalsIgnoreCase("As-deposited") || post.equalsIgnoreCase("As-sintered")) {
+        } else if (postLower.equals("as-built") || postLower.equals("as-deposited") || postLower.equals("as-sintered")) {
             steps.add("Baseline " + post + " State: No secondary thermal cycle applied; retains native rapid-solidification martensitic (alpha-prime) or columnar grain structure with as-deposited residual stresses");
             if (maxStress != null) {
-                params.add(new ProcessParameter("Residual State", "Peak Internal Stress", String.format("%.1f", maxStress), "MPa", "As-built residual stress state"));
+                params.add(new ProcessParameter("Residual State", "Peak Internal Stress", String.format(Locale.US, "%.1f", maxStress), "MPa", "As-built residual stress state"));
             }
         }
 
         // Add metallurgical telemetry safety parameters
         if (liquidus != null) {
-            params.add(new ProcessParameter("Metallurgy", "Liquidus Temperature", String.format("%.0f", liquidus), "°C", "Thermodynamic melting onset for process window qualification"));
+            params.add(new ProcessParameter("Metallurgy", "Liquidus Temperature", String.format(Locale.US, "%.0f", liquidus), "°C", "Thermodynamic melting onset for process window qualification"));
         }
         if (oxygen != null) {
-            params.add(new ProcessParameter("Metallurgy", "Interstitial Oxygen Content", String.format("%.3f", oxygen), "wt. %", "Controlled interstitial pickup; higher O increases strength but reduces ductility"));
+            params.add(new ProcessParameter("Metallurgy", "Interstitial Oxygen Content", String.format(Locale.US, "%.3f", oxygen), "wt. %", "Controlled interstitial pickup; higher O increases strength but reduces ductility"));
         }
         if (surfaceRa != null) {
-            params.add(new ProcessParameter("Surface Finish", "Surface Roughness (Ra)", String.format("%.2f", surfaceRa), "µm", "As-processed surface topography"));
+            params.add(new ProcessParameter("Surface Finish", "Surface Roughness (Ra)", String.format(Locale.US, "%.2f", surfaceRa), "µm", "As-processed surface topography"));
         }
 
         return new ProcessRecipe(subprocess, post, summary, equipment, atmosphere, steps, params);

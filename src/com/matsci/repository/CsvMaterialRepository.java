@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * High-performance thread-safe in-memory repository populated directly from the dataset.
@@ -21,9 +22,9 @@ public class CsvMaterialRepository implements MaterialRepository {
 
     private final Map<String, Material> materialsById = new LinkedHashMap<>();
     private final Map<String, MaterialVariant> variantsById = new ConcurrentHashMap<>();
-    private final List<MaterialVariant> allVariants = new ArrayList<>();
+    private final List<MaterialVariant> allVariants = new CopyOnWriteArrayList<>();
     private final Set<String> materialClasses = new TreeSet<>();
-    private final Map<String, Set<String>> subclassesByClass = new HashMap<>();
+    private final Map<String, Set<String>> subclassesByClass = new ConcurrentHashMap<>();
 
     public CsvMaterialRepository(File csvFile, ParameterInferenceService parameterService) throws Exception {
         loadCsv(csvFile, parameterService);
@@ -98,7 +99,7 @@ public class CsvMaterialRepository implements MaterialRepository {
                     if (!AUTHORIZED_PROCESSES.contains(isoCategory)) {
                         continue;
                     }
-                    if (subprocess != null && subprocess.contains("Electron-beam")) {
+                    if (subprocess != null && subprocess.toLowerCase(Locale.ROOT).contains("electron-beam")) {
                         continue;
                     }
 
@@ -214,11 +215,14 @@ public class CsvMaterialRepository implements MaterialRepository {
                     variant.setRecipe(parameterService.inferRecipe(variant));
                 }
 
-                variantsById.put(variant.getVariantId(), variant);
+                String varKey = variant.getVariantId() != null ? variant.getVariantId().trim().toUpperCase(Locale.ROOT) : "";
+                if (varKey.isEmpty() || variantsById.putIfAbsent(varKey, variant) != null) {
+                    continue;
+                }
                 allVariants.add(variant);
 
                 materialClasses.add(mClass);
-                subclassesByClass.computeIfAbsent(mClass, k -> new TreeSet<>()).add(subClass);
+                subclassesByClass.computeIfAbsent(mClass.toLowerCase(Locale.ROOT), k -> Collections.synchronizedSet(new TreeSet<>())).add(subClass);
 
                 final String finalFamily = alloyFamily;
                 final String finalClass = mClass;
@@ -243,7 +247,8 @@ public class CsvMaterialRepository implements MaterialRepository {
     private Double parseDouble(String s) {
         if (s == null || s.trim().isEmpty()) return null;
         try {
-            return Double.parseDouble(s.trim());
+            double val = Double.parseDouble(s.trim());
+            return Double.isFinite(val) ? val : null;
         } catch (NumberFormatException e) {
             return null;
         }
@@ -275,11 +280,10 @@ public class CsvMaterialRepository implements MaterialRepository {
 
         // Normalized slug search fallback (e.g. ti-6al-4v, ti-6242, ti-5553)
         String targetSlug = toSlug(materialId);
-        if (!targetSlug.isEmpty()) {
+        if (targetSlug.length() >= 4) {
             for (Material m : materialsById.values()) {
                 String nameSlug = toSlug(m.getName());
-                String idSlug = toSlug(m.getMaterialId());
-                if (nameSlug.contains(targetSlug) || targetSlug.contains(idSlug)) {
+                if (nameSlug.equals(targetSlug) || nameSlug.contains(targetSlug)) {
                     return Optional.of(m);
                 }
             }
@@ -343,8 +347,14 @@ public class CsvMaterialRepository implements MaterialRepository {
 
     @Override
     public List<String> getSubclasses(String materialClass) {
-        Set<String> sub = subclassesByClass.get(materialClass);
-        if (sub != null) return new ArrayList<>(sub);
+        if (materialClass != null) {
+            Set<String> sub = subclassesByClass.get(materialClass.trim().toLowerCase(Locale.ROOT));
+            if (sub != null) {
+                synchronized (sub) {
+                    return new ArrayList<>(sub);
+                }
+            }
+        }
 
         // Fallback: collect all distinct alloy families
         Set<String> allSubs = new TreeSet<>();

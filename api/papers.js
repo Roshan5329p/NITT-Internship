@@ -13,17 +13,20 @@ export default async function handler(req, res) {
     const q = req.query || {};
     const supabaseUrl = process.env.SUPABASE_URL || 'https://iismzfileyuvqgdpivgx.supabase.co';
     const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpc216ZmlsZXl1dnFnZHBpdmd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3ODAwMjYsImV4cCI6MjEwOTM1NjAyNn0.v__OCG79B-NyMKmyb_W7Lp_Lw0xcoWUggEuONMECmGo';
-    const limit = Math.min(parseInt(q.limit) || 200, 250);
-    const offset = parseInt(q.offset) || 0;
-    const processFilter = q.process;
+    const parsedLimit = parseInt(q.limit, 10);
+    const parsedOffset = parseInt(q.offset, 10);
+    const limit = Math.max(1, Math.min(Number.isFinite(parsedLimit) ? parsedLimit : 200, 250));
+    const offset = Math.max(0, Number.isFinite(parsedOffset) ? parsedOffset : 0);
+    const rawProcessFilter = typeof q.process === 'string' ? q.process.trim() : '';
 
     let endpoint = `${supabaseUrl}/rest/v1/papers?select=*&order=paper_number.asc&limit=${limit}&offset=${offset}`;
-    if (processFilter) {
-      const pf = processFilter.toUpperCase();
+    if (rawProcessFilter) {
+      const sanitizedFilter = rawProcessFilter.replace(/[^a-zA-Z0-9\s\-+_/]/g, '').trim();
+      const pf = sanitizedFilter.toUpperCase();
       if (pf === 'L-DED' || pf === 'DED') {
         endpoint += `&or=(am_process.ilike.*DED*,am_process.ilike.*LMD*,am_process.ilike.*LENS*)`;
-      } else {
-        endpoint += `&am_process=ilike.*${encodeURIComponent(processFilter)}*`;
+      } else if (pf) {
+        endpoint += `&am_process=ilike.*${encodeURIComponent(sanitizedFilter)}*`;
       }
     }
 
@@ -58,7 +61,6 @@ export default async function handler(req, res) {
     }
     res.status(200).json({
       source: 'Supabase PostgreSQL Cloud',
-      project_id: 'iismzfileyuvqgdpivgx',
       count: Array.isArray(data) ? data.length : 0,
       papers: data
     });

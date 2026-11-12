@@ -150,8 +150,8 @@ public class BonthaSolidificationModel {
         } else {
             res.beamSource = "laser";
         }
-        res.powerW = Math.max(10.0, powerW);
-        res.speedMms = Math.max(0.1, speedMms);
+        res.powerW = (Double.isFinite(powerW) && powerW > 0) ? Math.max(10.0, powerW) : 200.0;
+        res.speedMms = (Double.isFinite(speedMms) && speedMms > 0) ? Math.max(0.1, speedMms) : 950.0;
 
         double alpha = res.beamSource.equals("ebeam") ? 0.88
                 : (res.beamSource.equals("arc") ? 0.78
@@ -288,10 +288,11 @@ public class BonthaSolidificationModel {
                 femSt.morphology = classifyMorphology(femSt.thermalGradientGKcm, femSt.velocityRCms);
 
                 double[] b = calcCetBoundaries(st.velocityRCms);
+                double[] femB = calcCetBoundaries(femSt.velocityRCms);
                 st.cetRatio = Double.parseDouble(String.format(Locale.US, "%.2f",
                         Math.pow(10.0, Math.log10(Math.max(1.0, st.thermalGradientGKcm)) - b[0])));
                 femSt.cetRatio = Double.parseDouble(String.format(Locale.US, "%.2f",
-                        Math.pow(10.0, Math.log10(Math.max(1.0, femSt.thermalGradientGKcm)) - b[0])));
+                        Math.pow(10.0, Math.log10(Math.max(1.0, femSt.thermalGradientGKcm)) - femB[0])));
 
                 if (res.physicsMode.equals("nonlinear-fem")) {
                     res.depthProfile.add(femSt);
@@ -305,6 +306,9 @@ public class BonthaSolidificationModel {
             }
         }
 
+        if (res.depthProfile.isEmpty()) {
+            throw new IllegalStateException("Bontha depth profile produced zero stations");
+        }
         Station surf = res.depthProfile.get(0);
         Station root = res.depthProfile.get(res.depthProfile.size() - 1);
 
@@ -319,8 +323,9 @@ public class BonthaSolidificationModel {
         res.pdasUm = Double.parseDouble(String.format(Locale.US, "%.2f",
                 35.5 * Math.pow(Math.max(10.0, res.surfaceCoolingRateKs), -0.28)));
 
-        res.overallMorphology = (columnarCount == 10) ? "Columnar Grain Growth" :
-                (columnarCount >= 5 ? "Mixed (Columnar + Equiaxed)" : "Equiaxed Grain Growth");
+        int stationTotal = res.depthProfile.size();
+        res.overallMorphology = (columnarCount == stationTotal) ? "Columnar Grain Growth" :
+                (columnarCount >= (stationTotal + 1) / 2 ? "Mixed (Columnar + Equiaxed)" : "Equiaxed Grain Growth");
 
         // Format JSON response
         StringBuilder jsonSb = new StringBuilder();

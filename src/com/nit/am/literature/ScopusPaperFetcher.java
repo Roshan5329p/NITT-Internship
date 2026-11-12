@@ -87,8 +87,10 @@ public class ScopusPaperFetcher {
         }
 
         String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+        String safeSort = (sort != null && !sort.isBlank()) ? sort : "citedby-count";
+        String encodedSort = URLEncoder.encode(safeSort, StandardCharsets.UTF_8);
         String urlStr = String.format("%s?query=%s&count=%d&sort=%s&view=STANDARD",
-                SCOPUS_SEARCH_URL, encodedQuery, count, sort != null ? sort : "citedby-count");
+                SCOPUS_SEARCH_URL, encodedQuery, count, encodedSort);
 
         HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(15))

@@ -26,12 +26,15 @@ export default function handler(req, res) {
     const isWaam = proc === 'waam';
     const isDed = proc === 'ded-laser';
 
-    const p = Math.max(10, Number.isFinite(rawP) ? rawP : (isWaam ? 2400 : (isDed ? 1600 : 280)));
-    const v = Math.max(0.5, Number.isFinite(rawV) ? rawV : (isWaam ? 8 : (isDed ? 15 : 960)));
-    const h = Math.max(10, parseFloat(q.hatch) || (isWaam ? 3500 : (isDed ? 1200 : 110)));
-    const t = Math.max(5, parseFloat(q.layer) || (isWaam ? 1500 : (isDed ? 450 : 40)));
-    const spot = Math.max(10, Number.isFinite(rawSpot) ? rawSpot : (isWaam ? 3000 : (isDed ? 1500 : 80)));
-    const preheat = Number.isFinite(parseFloat(q.preheat)) ? parseFloat(q.preheat) : 200;
+    const rawH = parseFloat(q.hatch);
+    const rawT = parseFloat(q.layer);
+    const rawPre = parseFloat(q.preheat);
+    const p = Math.min(50000, Math.max(10, Number.isFinite(rawP) ? rawP : (isWaam ? 2400 : (isDed ? 1600 : 280))));
+    const v = Math.min(20000, Math.max(0.5, Number.isFinite(rawV) ? rawV : (isWaam ? 8 : (isDed ? 15 : 960))));
+    const h = Math.min(20000, Math.max(10, (Number.isFinite(rawH) && rawH > 0) ? rawH : (isWaam ? 3500 : (isDed ? 1200 : 110))));
+    const t = Math.min(10000, Math.max(5, (Number.isFinite(rawT) && rawT > 0) ? rawT : (isWaam ? 1500 : (isDed ? 450 : 40))));
+    const spot = Math.min(20000, Math.max(10, Number.isFinite(rawSpot) ? rawSpot : (isWaam ? 3000 : (isDed ? 1500 : 80))));
+    const preheat = Math.min(1600, Math.max(0, Number.isFinite(rawPre) ? rawPre : 200));
 
     const ved = (p * 1e6) / Math.max(1, v * h * t);
     const linearHeatInput = p / v; // J/mm

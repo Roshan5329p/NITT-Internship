@@ -802,11 +802,11 @@
     box-shadow: var(--shadow-card);
   }
   .regime-banner.defect {
-    background: linear-gradient(90deg, rgba(239, 68, 68, 0.12), rgba(28, 28, 30, 0.9));
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.14), var(--bg-card));
     border-color: rgba(239, 68, 68, 0.4);
   }
   .regime-banner.warning {
-    background: linear-gradient(90deg, rgba(245, 158, 11, 0.12), rgba(28, 28, 30, 0.9));
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.14), var(--bg-card));
     border-color: rgba(245, 158, 11, 0.4);
   }
   .regime-left {
@@ -1608,7 +1608,7 @@
             <div class="derived-metric"><span id="sol_lbl_t">Layer Thickness t</span><strong id="sol_t">40 µm</strong></div>
           </div>
           <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
-            <span>Build rate: <strong style="color: #fff;" id="sol_rate">10.7 cm³/h</strong></span>
+            <span>Build rate: <strong style="color: var(--text-primary);" id="sol_rate">10.7 cm³/h</strong></span>
             <span>Regime: <strong style="color: var(--accent-emerald);" id="sol_regime">Conduction mode</strong></span>
           </div>
           <button class="apply-solved-btn" onclick="applySolvedToSliders()">Apply Solved (P, v, h, t) to Sliders</button>
@@ -2035,7 +2035,7 @@
       <div class="defect-svg-container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
           <div>
-            <h3 style="font-size: 16px; font-weight: 700; color: #fff;" id="defectMapTitle">2D Defect Process Window (King's Enthalpy Criterion)</h3>
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary);" id="defectMapTitle">2D Defect Process Window (King's Enthalpy Criterion)</h3>
             <p style="font-size: 11.5px; color: var(--text-muted);" id="defectMapSubtitle">Melt pool depth-to-width ratio & normalized enthalpy ΔH/h_s mapped across Laser Power P and Scan Speed v.</p>
           </div>
           <button class="step-btn" style="background: var(--accent-cyan); color: #070b10; font-weight: bold; padding: 6px 14px;" onclick="autoTuneSafeWindow()">Auto-Tune to Safe Window</button>
@@ -2132,8 +2132,8 @@
             <span style="font-size: 11px; color: var(--text-muted);">Compared to 12:1 in conventional CNC forging</span>
           </div>
           <div class="audit-item">
-            <span class="audit-name">Estimated Machine Build Cost</span>
-            <div style="font-size: 24px; font-weight: 800; color: #fff; font-family: monospace;" id="econ_cost">$48.50 / hr</div>
+            <span class="audit-name">Estimated Part Production Cost</span>
+            <div style="font-size: 24px; font-weight: 800; color: var(--text-primary); font-family: monospace;" id="econ_cost">$380 / kg</div>
             <span style="font-size: 11px; color: var(--text-muted);">Depreciation, operator & consumables</span>
           </div>
           <div class="audit-item">
@@ -2191,7 +2191,7 @@
               <span class="audit-name">Yield Strength (0.2% Offset)</span>
               <span class="audit-badge badge-pass" id="aud_ys_badge">PASS</span>
             </div>
-            <div style="font-size: 18px; font-weight: 700; color: #fff; font-family: monospace;" id="aud_ys_val">850 MPa</div>
+            <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); font-family: monospace;" id="aud_ys_val">850 MPa</div>
             <span style="font-size: 11px; color: var(--text-muted);">ASTM F2924 Min Requirement: ≥ 825 MPa</span>
           </div>
 
@@ -2200,7 +2200,7 @@
               <span class="audit-name">Ultimate Tensile Strength (UTS)</span>
               <span class="audit-badge badge-pass" id="aud_uts_badge">PASS</span>
             </div>
-            <div style="font-size: 18px; font-weight: 700; color: #fff; font-family: monospace;" id="aud_uts_val">1290 MPa</div>
+            <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); font-family: monospace;" id="aud_uts_val">1290 MPa</div>
             <span style="font-size: 11px; color: var(--text-muted);">ASTM F2924 Min Requirement: ≥ 895 MPa</span>
           </div>
 
@@ -2209,7 +2209,7 @@
               <span class="audit-name">Elongation at Break</span>
               <span class="audit-badge badge-pass" id="aud_el_badge">PASS (HIP)</span>
             </div>
-            <div style="font-size: 18px; font-weight: 700; color: #fff; font-family: monospace;" id="aud_el_val">14.5 %</div>
+            <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); font-family: monospace;" id="aud_el_val">14.5 %</div>
             <span style="font-size: 11px; color: var(--text-muted);">ASTM F2924 Min Requirement: ≥ 10.0% (HIP required)</span>
           </div>
 
@@ -2218,7 +2218,7 @@
               <span class="audit-name">Relative Density / Porosity</span>
               <span class="audit-badge badge-pass" id="aud_den_badge">PASS</span>
             </div>
-            <div style="font-size: 18px; font-weight: 700; color: #fff; font-family: monospace;" id="aud_den_val">99.90 %</div>
+            <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); font-family: monospace;" id="aud_den_val">99.90 %</div>
             <span style="font-size: 11px; color: var(--text-muted);">Aerospace Specification: ≥ 99.50%</span>
           </div>
 
@@ -2227,7 +2227,7 @@
               <span class="audit-name">Interstitial Oxygen Content</span>
               <span class="audit-badge badge-pass" id="aud_o2_badge">PASS</span>
             </div>
-            <div style="font-size: 18px; font-weight: 700; color: #fff; font-family: monospace;" id="aud_o2_val">0.17 wt. %</div>
+            <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); font-family: monospace;" id="aud_o2_val">0.17 wt. %</div>
             <span style="font-size: 11px; color: var(--text-muted);" id="aud_o2_limit">Grade 5 limit: &lt; 0.20 wt. % | Grade 23 ELI: &lt; 0.13 wt. %</span>
           </div>
 
@@ -2236,7 +2236,7 @@
               <span class="audit-name">Charpy V-Notch Toughness</span>
               <span class="audit-badge badge-pass" id="aud_cvn_badge">PASS</span>
             </div>
-            <div style="font-size: 18px; font-weight: 700; color: #fff; font-family: monospace;" id="aud_cvn_val">18.5 J</div>
+            <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); font-family: monospace;" id="aud_cvn_val">18.5 J</div>
             <span style="font-size: 11px; color: var(--text-muted);">Target: ≥ 15 J in HIP annealed condition</span>
           </div>
         </div>
@@ -2679,7 +2679,7 @@
           <!-- Solidification Map Header with Legend & 3D FEM Checkbox -->
           <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px;">
             <div>
-              <div style="font-size: 13.5px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+              <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
                 <span id="bnTitle">Solidification Microstructure Map for Ti-6Al-4V (Bontha et al. 2009 MSEA)</span>
                 <span class="brand-badge" style="font-size: 9.5px;" id="bnSpaceBadge">3D Half-Space</span>
               </div>
@@ -3193,7 +3193,7 @@ function calculatePhysics() {
 
   // 2. Melt pool physics (Analytical Rosenthal 3D + Process Thermal Efficiency)
   const vMs = Math.max(0.001, v / 1000.0);
-  const eta = isWaam ? 0.78 : (isDed ? (currentAlloy === 'ti64' ? 0.38 : alloy.laserAbsorptivity * 0.90) : alloy.laserAbsorptivity);
+  const eta = isWaam ? 0.78 : (isDed ? (String(currentAlloy || '').startsWith('ti64') ? 0.38 : alloy.laserAbsorptivity * 0.90) : alloy.laserAbsorptivity);
   const effectivePower = p * eta;
   const deltaT = Math.max(50, alloy.liquidusC - preheat);
   const thermalDiffusivity = alloy.thermalConductivity / (alloy.density * alloy.specificHeat);
@@ -3437,7 +3437,7 @@ function calculatePhysics() {
     tbodyHtml += `
       <tr>
         <td><span class="dot ${m.dot}"></span><strong>${m.name}</strong></td>
-        <td style="font-family: monospace; font-weight: bold; color: #fff;">${m.hv} HV</td>
+        <td style="font-family: monospace; font-weight: bold; color: var(--text-primary);">${m.hv} HV</td>
         <td style="font-family: monospace; color: var(--text-secondary);">${hrc}</td>
         <td style="font-family: monospace; color: var(--accent-emerald);">± ${m.err} HV</td>
         <td style="font-family: monospace; color: var(--accent-cyan);">${m.close}%</td>
@@ -3818,6 +3818,39 @@ function configureProcessControls(proc) {
       { label: 'Yu 198', val: 198 },
       { label: 'Keist 220', val: 220 }
     ]);
+  } else if (proc === 'binder-jetting') {
+    slP.min = 50; slP.max = 250; slP.step = 5; slP.value = 120;
+    slV.min = 150; slV.max = 900; slV.step = 25; slV.value = 400;
+    slH.min = 30; slH.max = 120; slH.step = 5; slH.value = 50;
+    slT.min = 25; slT.max = 100; slT.step = 5; slT.value = 50;
+    if (slSpot) { slSpot.min = 20; slSpot.max = 100; slSpot.step = 5; slSpot.value = 35; }
+    if (slPre) { slPre.min = 25; slPre.max = 220; slPre.step = 5; slPre.value = 180; }
+    if (vedSlider) { vedSlider.min = 25; vedSlider.max = 120; vedSlider.step = 1; vedSlider.value = 65; }
+    setText('lblCurrentEnergy', 'BINDER JETTING / SINTERING');
+    setText('lbl_p', 'IR Cure / Eq. Power');
+    setText('lbl_v', 'Printhead Traverse');
+    setText('lbl_h', 'Drop Step-over');
+    setText('lbl_t', 'Powder Layer Thick.');
+    setText('lbl_spot', 'Droplet Footprint');
+    setText('lbl_preheat', 'Oven Cure Temp');
+    setText('vedSolverTitle', 'Binder Jetting + Sinter Solver');
+    setText('vedFormulaTag', 'Sinter 1280 °C · Green -> HIP');
+    setText('vedSolverDesc', 'Configure green-state binder deposition and equivalent energy budget prior to debinding and vacuum sintering.');
+    setText('vedTargetLabel', 'Target Eq. Energy');
+    setText('sol_lbl_p', 'Cure Power');
+    setText('sol_lbl_v', 'Traverse');
+    setText('sol_lbl_h', 'Drop Pitch');
+    setText('sol_lbl_t', 'Layer t');
+    renderPresetRow('vedPresetRowQuick', [
+      { label: 'Low 40', val: 40 },
+      { label: 'Sweet 65', val: 65 },
+      { label: 'High 95', val: 95 }
+    ]);
+    renderPresetRow('vedPresetRowPapers', [
+      { label: 'BJ-Green 45', val: 45 },
+      { label: 'Sinter 65', val: 65 },
+      { label: 'Sinter+HIP 85', val: 85 }
+    ]);
   } else {
     slP.min = 80; slP.max = 450; slP.step = 5; slP.value = 280;
     slV.min = 300; slV.max = 2200; slV.step = 10; slV.value = 960;
@@ -3895,7 +3928,9 @@ function updateAll() {
 
 function adjustTargetHv(delta) {
   const inp = document.getElementById('targetHvInput');
-  inp.value = Math.max(200, Math.min(550, parseInt(inp.value) + delta));
+  if (!inp) return;
+  const current = parseInt(inp.value, 10);
+  inp.value = Math.max(200, Math.min(550, (Number.isFinite(current) ? current : 345) + delta));
   updateAll();
 }
 
@@ -4031,14 +4066,16 @@ function resetCamera() {
 }
 
 const canvas = document.getElementById('twinCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas ? canvas.getContext('2d') : null;
 const wrapper = document.getElementById('canvasWrapper');
 
-wrapper.addEventListener('mousedown', (e) => {
-  isDragging = true;
-  lastMouseX = e.clientX;
-  lastMouseY = e.clientY;
-});
+if (wrapper && canvas && ctx) {
+  wrapper.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+  });
+}
 window.addEventListener('mousemove', (e) => {
   if (!isDragging) return;
   const dx = e.clientX - lastMouseX;
@@ -4130,6 +4167,10 @@ function getColor(normalizedVal, mode) {
 }
 
 function renderTwin() {
+  if (!canvas || !ctx || document.hidden) {
+    animFrameId = null;
+    return;
+  }
   const viewTwin = document.getElementById('view_digital-twin');
   if (viewTwin && !viewTwin.classList.contains('active')) {
     animFrameId = null;
@@ -4291,20 +4332,31 @@ const PAPERS_DATABASE = [
   { id: "P-78", author: "Cunningham et al. (2017)", process: "LPBF", desc: "Synchrotron-based X-ray microtomography of processing variables and porosity formation (346 citations).", density: "99.88%", ys: 960, uts: 1135, el: 9.5 }
 ];
 
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function populatePapersTable(papers) {
+  const tbody = document.getElementById('papersTableBody');
+  if (!tbody) return;
   let html = '';
-  papers.forEach(p => {
+  (papers || []).forEach(p => {
     html += `
       <tr>
-        <td style="font-family: monospace; font-weight: bold; color: var(--accent-cyan);">${p.id}</td>
-        <td><strong>${p.author}</strong></td>
-        <td><span class="brand-badge">${p.process}</span></td>
-        <td style="color: #cbd5e1;">${p.desc}</td>
-        <td style="font-family: monospace; color: var(--accent-emerald); font-weight: bold;">${p.density} • YS ${p.ys} MPa</td>
+        <td style="font-family: monospace; font-weight: bold; color: var(--accent-cyan);">${escapeHtml(p.id)}</td>
+        <td><strong>${escapeHtml(p.author)}</strong></td>
+        <td><span class="brand-badge">${escapeHtml(p.process)}</span></td>
+        <td style="color: var(--text-secondary);">${escapeHtml(p.desc)}</td>
+        <td style="font-family: monospace; color: var(--accent-emerald); font-weight: bold;">${escapeHtml(p.density)} • YS ${escapeHtml(p.ys)} MPa</td>
       </tr>
     `;
   });
-  document.getElementById('papersTableBody').innerHTML = html;
+  tbody.innerHTML = html;
 }
 
 let currentProcessFilter = 'ALL';
@@ -6401,14 +6453,13 @@ async function initSupabaseCloudSync() {
 function toggleTheme() {
   const html = document.documentElement;
   const isDark = html.classList.contains('dark');
-  if (isDark) {
-    html.classList.remove('dark');
-    html.classList.add('light');
-    localStorage.setItem('snow_theme', 'light');
-  } else {
-    html.classList.remove('light');
-    html.classList.add('dark');
-    localStorage.setItem('snow_theme', 'dark');
+  const next = isDark ? 'light' : 'dark';
+  html.classList.remove('dark', 'light');
+  html.classList.add(next);
+  try {
+    localStorage.setItem('snow_theme', next);
+  } catch (e) {
+    // Ignore storage quota / private mode errors
   }
   updateThemeIcon();
 }
@@ -6474,8 +6525,26 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    const viewTwin = document.getElementById('view_digital-twin');
+    if (viewTwin && viewTwin.classList.contains('active')) {
+      startTwinAnimation();
+    }
+    const viewMp = document.getElementById('view_melt-pool');
+    if (viewMp && viewMp.classList.contains('active') && typeof ensureMpAnimationRunning === 'function') {
+      ensureMpAnimationRunning();
+    }
+  }
+});
+
 window.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('snow_theme') || 'dark';
+  let savedTheme = 'dark';
+  try {
+    savedTheme = localStorage.getItem('snow_theme') || 'dark';
+  } catch (e) {
+    savedTheme = 'dark';
+  }
   document.documentElement.className = savedTheme;
   updateThemeIcon();
   initSupabaseCloudSync();

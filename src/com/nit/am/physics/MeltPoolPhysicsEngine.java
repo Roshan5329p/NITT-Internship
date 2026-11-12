@@ -64,11 +64,11 @@ public class MeltPoolPhysicsEngine {
         boolean isDed = proc.equals("ded-laser");
 
         res.model = (modelType != null && modelType.equalsIgnoreCase("rosenthal")) ? "rosenthal" : "coen";
-        res.powerW = Math.max(10.0, powerW);
-        res.speedMms = Math.max(1.0, speedMms);
-        res.spotDiameterUm = Math.max(10.0, spotUm);
-        res.layerThicknessUm = Math.max(5.0, layerUm);
-        res.hatchSpacingUm = Math.max(10.0, hatchUm);
+        res.powerW = (Double.isFinite(powerW) && powerW > 0) ? Math.min(50000.0, Math.max(10.0, powerW)) : (isWaam ? 2400.0 : (isDed ? 1600.0 : 200.0));
+        res.speedMms = (Double.isFinite(speedMms) && speedMms > 0) ? Math.min(20000.0, Math.max(1.0, speedMms)) : (isWaam ? 8.0 : (isDed ? 15.0 : 950.0));
+        res.spotDiameterUm = (Double.isFinite(spotUm) && spotUm > 0) ? Math.min(20000.0, Math.max(10.0, spotUm)) : (isWaam ? 3000.0 : (isDed ? 1500.0 : 80.0));
+        res.layerThicknessUm = (Double.isFinite(layerUm) && layerUm > 0) ? Math.min(10000.0, Math.max(5.0, layerUm)) : (isWaam ? 1500.0 : (isDed ? 450.0 : 40.0));
+        res.hatchSpacingUm = (Double.isFinite(hatchUm) && hatchUm > 0) ? Math.min(20000.0, Math.max(10.0, hatchUm)) : (isWaam ? 3500.0 : (isDed ? 1200.0 : 80.0));
 
         double vMs = res.speedMms / 1000.0;
         double eta = isWaam ? 0.78 : (isDed ? 0.38 : DEFAULT_ABSORPTIVITY);

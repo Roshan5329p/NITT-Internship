@@ -11,12 +11,22 @@ export default async function handler(req, res) {
 
   try {
     const q = req.query || {};
-    const apiKey = process.env.SCOPUS_API_KEY || 'c4c5b696cfd9e5c3ad43a784c60b75a5';
-    const query = q.query || 'TITLE-ABS-KEY("Ti-6Al-4V" AND ("selective laser melting" OR "LPBF" OR "additive manufacturing") AND ("solidification" OR "melt pool"))';
-    const count = Math.min(parseInt(q.count) || 10, 25);
-    const sort = q.sort || 'citedby-count';
+    const apiKey = process.env.SCOPUS_API_KEY || process.env.ELSEVIER_API_KEY;
+    if (!apiKey) {
+      return res.status(503).json({
+        status: 'error',
+        message: 'SCOPUS_API_KEY is not configured in server environment variables.'
+      });
+    }
+    const rawQuery = typeof q.query === 'string' && q.query.trim()
+      ? q.query.trim().slice(0, 500)
+      : 'TITLE-ABS-KEY("Ti-6Al-4V" AND ("selective laser melting" OR "LPBF" OR "additive manufacturing") AND ("solidification" OR "melt pool"))';
+    const parsedCount = parseInt(q.count, 10);
+    const count = Math.max(1, Math.min(Number.isFinite(parsedCount) ? parsedCount : 10, 25));
+    const allowedSorts = new Set(['citedby-count', 'relevance', 'coverDate', '-coverDate', 'pubyear', '-pubyear', 'title']);
+    const sort = allowedSorts.has(q.sort) ? q.sort : 'citedby-count';
 
-    const url = `https://api.elsevier.com/content/search/scopus?query=${encodeURIComponent(query)}&count=${count}&sort=${encodeURIComponent(sort)}&view=STANDARD`;
+    const url = `https://api.elsevier.com/content/search/scopus?query=${encodeURIComponent(rawQuery)}&count=${count}&sort=${encodeURIComponent(sort)}&view=STANDARD`;
 
     const r = await fetch(url, {
       headers: {
@@ -61,8 +71,8 @@ export default async function handler(req, res) {
     res.status(200).json({
       status: 'success',
       source: 'Elsevier Scopus REST API',
-      query,
-      totalResults: parseInt(totalResults),
+      query: rawQuery,
+      totalResults: parseInt(totalResults, 10) || 0,
       count: papers.length,
       rateLimit,
       papers

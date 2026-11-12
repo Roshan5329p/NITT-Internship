@@ -96,7 +96,7 @@ public class ProcessWindowPlotter {
         List<String> thermLines = Files.readAllLines(thermPath);
         for (int i = 1; i < thermLines.size(); i++) {
             String[] tokens = parseCsvLine(thermLines.get(i));
-            if (tokens.length >= 10) {
+            if (tokens.length >= 11) {
                 int pid = (int) parseDoubleSafe(tokens[1]);
                 DataRecord rec = map.get(pid);
                 if (rec != null) {
@@ -113,7 +113,7 @@ public class ProcessWindowPlotter {
         List<String> mechLines = Files.readAllLines(mechPath);
         for (int i = 1; i < mechLines.size(); i++) {
             String[] tokens = parseCsvLine(mechLines.get(i));
-            if (tokens.length >= 12) {
+            if (tokens.length >= 11) {
                 int pid = (int) parseDoubleSafe(tokens[1]);
                 DataRecord rec = map.get(pid);
                 if (rec != null) {
@@ -123,8 +123,8 @@ public class ProcessWindowPlotter {
                     rec.elongationPct = parseDoubleSafe(tokens[6]);
                     rec.vickersHv = parseDoubleSafe(tokens[7]);
                     rec.fatigueLimitMpa = parseDoubleSafe(tokens[10]);
-                    rec.astmF2924 = parseDoubleSafe(tokens[11]) == 1.0;
-                    rec.astmF3001 = parseDoubleSafe(tokens[12]) == 1.0;
+                    rec.astmF2924 = tokens.length > 11 && parseDoubleSafe(tokens[11]) == 1.0;
+                    rec.astmF3001 = tokens.length > 12 && parseDoubleSafe(tokens[12]) == 1.0;
                 }
             }
         }

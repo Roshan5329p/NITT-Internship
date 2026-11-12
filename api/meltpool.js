@@ -26,10 +26,11 @@ export default function handler(req, res) {
 
     const isWaam = proc === 'waam';
     const isDed = proc === 'ded-laser';
-    const p = Math.max(10, Number.isFinite(rawP) ? rawP : (isWaam ? 2400 : (isDed ? 1600 : 200)));
-    const v = Math.max(0.5, Number.isFinite(rawV) ? rawV : (isWaam ? 8 : (isDed ? 15 : 950)));
-    const spot = Math.max(10, Number.isFinite(rawSpot) ? rawSpot : (isWaam ? 3000 : (isDed ? 1500 : 80)));
-    const preheat = Number.isFinite(parseFloat(q.preheat)) ? parseFloat(q.preheat) : 25;
+    const rawPre = parseFloat(q.preheat);
+    const p = Math.min(50000, Math.max(10, Number.isFinite(rawP) ? rawP : (isWaam ? 2400 : (isDed ? 1600 : 200))));
+    const v = Math.min(20000, Math.max(0.5, Number.isFinite(rawV) ? rawV : (isWaam ? 8 : (isDed ? 15 : 950))));
+    const spot = Math.min(20000, Math.max(10, Number.isFinite(rawSpot) ? rawSpot : (isWaam ? 3000 : (isDed ? 1500 : 80))));
+    const preheat = Math.min(1600, Math.max(0, Number.isFinite(rawPre) ? rawPre : 25));
 
     const vMs = Math.max(1e-4, v / 1000.0);
     const eta = isWaam ? 0.78 : (isDed ? 0.38 : (model === 'coen' ? 0.40 : 0.35));

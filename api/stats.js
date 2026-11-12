@@ -22,9 +22,13 @@ export default async function handler(req, res) {
         'Prefer': 'count=exact'
       }
     });
-    const cr = r.headers.get('content-range');
-    if (cr && cr.includes('/')) {
-      supabaseCount = parseInt(cr.split('/')[1]) || 178;
+    if (!r.ok) {
+      supabaseStatus = 'degraded';
+    } else {
+      const cr = r.headers.get('content-range');
+      if (cr && cr.includes('/')) {
+        supabaseCount = parseInt(cr.split('/')[1], 10) || 178;
+      }
     }
   } catch (e) {
     supabaseStatus = 'offline_fallback';
@@ -35,7 +39,6 @@ export default async function handler(req, res) {
     version: '2.5.0',
     deployment: 'Vercel Cloud Serverless',
     supabase_status: supabaseStatus,
-    supabase_project: 'iismzfileyuvqgdpivgx',
     indexed_papers: supabaseCount,
     experimental_variants: 289,
     supported_alloys: ['Ti-6Al-4V Grade 5', 'Ti-6Al-4V ELI Grade 23'],

@@ -84,12 +84,24 @@ public class ThermalPhysicsEngine {
      * Preserves KU Leuven (Coen 2022) / Rosenthal / Bontha equations for LPBF and switches absorption,
      * power-density conduction vs. keyhole scaling, and linear heat input (P/v) process windows for DED/WAAM.
      */
+    private static double finiteOrDefault(double val, double fallback, double min, double max) {
+        if (!Double.isFinite(val)) return fallback;
+        return Math.min(max, Math.max(min, val));
+    }
+
     public static PhysicsResult evaluateForProcess(String process, double powerW, double speedMms, double layerUm, double hatchUm,
                                                    double spotDiameterUm, double preheatC, double absorptivity) {
         PhysicsResult res = new PhysicsResult();
         String proc = normalizeProcess(process);
         boolean isDed = proc.equals("ded-laser");
         boolean isWaam = proc.equals("waam");
+
+        powerW = finiteOrDefault(powerW, isWaam ? 2400.0 : (isDed ? 1600.0 : 250.0), 10.0, 50000.0);
+        speedMms = finiteOrDefault(speedMms, isWaam ? 8.0 : (isDed ? 15.0 : 1000.0), 0.1, 20000.0);
+        layerUm = finiteOrDefault(layerUm, isWaam ? 1500.0 : (isDed ? 450.0 : 30.0), 1.0, 10000.0);
+        hatchUm = finiteOrDefault(hatchUm, isWaam ? 3500.0 : (isDed ? 1200.0 : 100.0), 1.0, 20000.0);
+        spotDiameterUm = finiteOrDefault(spotDiameterUm, isWaam ? 3000.0 : (isDed ? 1500.0 : 80.0), 5.0, 20000.0);
+        preheatC = finiteOrDefault(preheatC, 200.0, 0.0, 1600.0);
 
         double vMs = Math.max(0.001, speedMms / 1000.0);
         double aBeamRadiusM = Math.max(1e-6, (spotDiameterUm / 2.0) * 1e-6); // beam / arc radius a
@@ -98,7 +110,7 @@ public class ThermalPhysicsEngine {
         double deltaTb = Math.max(100.0, BOILING_TEMP_K - t0K);
 
         double defaultEta = isWaam ? 0.78 : (isDed ? 0.38 : DEFAULT_ABSORPTIVITY);
-        double eta = (absorptivity > 0) ? absorptivity : defaultEta;
+        double eta = (Double.isFinite(absorptivity) && absorptivity > 0.0 && absorptivity <= 1.0) ? absorptivity : defaultEta;
         double absorbedPower = powerW * eta;
 
         // 1. Energy Density & Linear Heat Input
