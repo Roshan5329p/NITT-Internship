@@ -561,11 +561,15 @@
     margin-bottom: 12px;
   }
   .preset-pill {
+    appearance: none;
+    -webkit-appearance: none;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
     font-size: 10.5px;
     font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    line-height: 1.25;
     padding: 4px 9px;
     border-radius: 6px;
     cursor: pointer;
@@ -3084,12 +3088,19 @@ function onTargetVedSlider(val) {
   updateVedSolver(parseFloat(val));
 }
 
-function applyVedPreset(val) {
+function applyVedPreset(val, el) {
   const s = document.getElementById('targetVedSlider');
   const minVal = parseFloat(s.min) || 20;
   const maxVal = parseFloat(s.max) || 260;
   const clamped = Math.max(minVal, Math.min(maxVal, val));
   s.value = clamped;
+  document.querySelectorAll('#vedPresetRowQuick .preset-pill, #vedPresetRowPapers .preset-pill').forEach(p => {
+    if (el) {
+      p.classList.toggle('active', p === el);
+    } else {
+      p.classList.toggle('active', parseFloat(p.dataset?.ved) === val);
+    }
+  });
   updateVedSolver(clamped);
 }
 
@@ -3730,10 +3741,12 @@ function configureProcessControls(proc) {
   const renderPresetRow = (id, items) => {
     const row = document.getElementById(id);
     if (!row) return;
-    const btnClass = (row.querySelector('button') && row.querySelector('button').className) || 'ved-preset-btn';
-    row.innerHTML = items.map(it =>
-      `<button type="button" class="${btnClass}" onclick="applyVedPreset(${it.val})">${it.label}</button>`
-    ).join('');
+    const isQuick = id === 'vedPresetRowQuick';
+    const activeVed = vedSlider ? Math.round(parseFloat(vedSlider.value)) : NaN;
+    row.innerHTML = items.map(it => {
+      const isAct = isQuick && Math.round(it.val) === activeVed;
+      return `<button type="button" class="preset-pill${isAct ? ' active' : ''}" data-ved="${it.val}" onclick="applyVedPreset(${it.val}, this)">${it.label}</button>`;
+    }).join('');
   };
 
   if (proc === 'waam') {
