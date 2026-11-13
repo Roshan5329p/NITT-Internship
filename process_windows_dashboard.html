@@ -834,6 +834,90 @@
   }
   .regime-indices strong { color: var(--accent-blue); }
 
+  /* Interactive Regime Parameter Tweak Panel */
+  .regime-tweak-panel {
+    width: 100%;
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 12px;
+  }
+  .regime-tweak-panel.warning-border {
+    border-top-color: rgba(245, 158, 11, 0.35);
+  }
+  .regime-tweak-panel.defect-border {
+    border-top-color: rgba(239, 68, 68, 0.35);
+  }
+  .regime-tweak-panel.conduction-border {
+    border-top-color: rgba(16, 185, 129, 0.35);
+  }
+  .regime-tweak-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+  .regime-tweak-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+  }
+  .regime-tweak-highlight {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--accent-amber);
+    background: rgba(245, 158, 11, 0.12);
+    padding: 2px 7px;
+    border-radius: 5px;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+  }
+  .regime-tweak-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tweak-btn {
+    background: rgba(24, 134, 254, 0.12);
+    color: var(--accent-blue);
+    border: 1px solid rgba(24, 134, 254, 0.35);
+    padding: 5px 12px;
+    border-radius: 7px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: inherit;
+    user-select: none;
+  }
+  .tweak-btn:hover {
+    background: var(--accent-blue);
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(24, 134, 254, 0.35);
+    transform: translateY(-1px);
+  }
+  .tweak-btn.primary {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.25));
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.5);
+  }
+  .tweak-btn.primary:hover {
+    background: #10b981;
+    color: #04121a;
+    box-shadow: 0 2px 12px rgba(16, 185, 129, 0.45);
+  }
+
   /* Literature Evidence Strip */
   .lit-strip {
     background: var(--bg-card);
@@ -1764,6 +1848,7 @@
       <div class="regime-indices" id="regimeIndices">
         Lof index: <strong>0.72</strong> • keyhole ratio: <strong>0.36</strong> • balling ratio: <strong>0.74</strong>
       </div>
+      <div class="regime-tweak-panel" id="regimeTweakPanel"></div>
     </div>
 
     <!-- 3. LITERATURE EVIDENCE STRIP -->
@@ -3569,7 +3654,7 @@ function calculatePhysics() {
   let lofIndex;
   let keyholeRatio;
   const mHole = Math.PI * alloy.density * alloy.specificHeat * deltaT * Math.sqrt(thermalDiffusivity * vMs * Math.pow(spot * 1e-6, 3));
-  const normalizedEnthalpy = effectivePower / Math.max(1e-6, mHole);
+  const normalizedEnthalpy = isWaam ? 0 : (isDed ? (intensityWcm2 > 1.5e5 ? (effectivePower / Math.max(1e-6, mHole)) * 0.45 : 0) : (effectivePower / Math.max(1e-6, mHole)) * 0.5863);
   if (isWaam) {
     lofIndex = Math.max(0.25, 120.0 / Math.max(1.0, heatInputJmm));
     keyholeRatio = heatInputJmm / 600.0;
@@ -3580,7 +3665,7 @@ function calculatePhysics() {
       : heatInputJmm / 240.0;
   } else {
     lofIndex = 1.35 / Math.max(0.1, penetrationRatio);
-    keyholeRatio = normalizedEnthalpy / 26.0;
+    keyholeRatio = (normalizedEnthalpy / 8.5) * 0.53;
   }
 
   // Balling index: F
@@ -3606,16 +3691,16 @@ function calculatePhysics() {
     regimeDesc = isWaam || isDed
       ? '— Linear heat input or penetration is too low to wet and fuse into the substrate/previous bead. Increase power or reduce travel speed.'
       : '— Melt pool depth is insufficient to penetrate underlying powder layer. Increase laser power or decrease scan speed.';
-  } else if (keyholeRatio > 1.1) {
+  } else if (keyholeRatio > 1.0 || normalizedEnthalpy >= 8.5 || (meltPoolDepth / meltPoolWidth) >= 0.80) {
     regime = 'keyhole';
     regimeLabel = isWaam ? 'Overheating / Coarse-β instability' : (isDed ? 'Over-dilution / Keyhole risk' : 'Keyhole threshold exceeded');
     regimeDesc = isWaam
       ? '— Excessive arc linear heat input (>600 J/mm) causes remelt sag, heavy residual stress, and coarse prior-β grains.'
       : '— Excessive localized energy or linear heat input deepens penetration excessively and increases gas pore entrapment.';
-  } else if (normalizedEnthalpy >= 5.5 || penetrationRatio >= 1.45) {
+  } else if (normalizedEnthalpy >= 5.5 || (meltPoolDepth / meltPoolWidth) >= 0.58) {
     regime = 'transition';
     regimeLabel = isWaam ? 'WAAM Transition mode' : (isDed ? 'DED Transition mode' : 'Transition Mode (Incipient Vapor Depression)');
-    regimeDesc = '— Normalized enthalpy (ΔH/hs ~ 6.1) marks the boundary between conduction and incipient keyhole vapor cavity formation.';
+    regimeDesc = `— Normalized enthalpy (ΔH/hs ~ ${normalizedEnthalpy.toFixed(1)}) marks the boundary between conduction and incipient keyhole vapor cavity formation.`;
   } else if (ballingRatio > 1.05) {
     regime = 'balling';
     regimeLabel = 'Plateau-Rayleigh Balling instability';
@@ -3628,6 +3713,117 @@ function calculatePhysics() {
   document.getElementById('regimeBadge').innerText = regimeLabel;
   document.getElementById('regimeDesc').innerText = regimeDesc;
   document.getElementById('regimeIndices').innerHTML = `LoF index: <strong>${lofIndex.toFixed(2)}</strong> • ${isWaam ? 'Overheat ratio' : 'Keyhole ratio'}: <strong>${keyholeRatio.toFixed(2)}</strong> • Balling: <strong>${ballingRatio.toFixed(2)}</strong>${(isWaam || isDed) ? ` • HI: <strong>${heatInputJmm.toFixed(0)} J/mm</strong>` : ''}`;
+
+  // Interactive Parameter Tweak Recommendations & Controls
+  const tweakPanel = document.getElementById('regimeTweakPanel');
+  if (tweakPanel) {
+    if (regime === 'transition') {
+      const recP = Math.round(Math.max(150, p * 0.85));
+      const recV = Math.round(Math.min(2200, v * 1.20));
+      const recSpot = Math.min(130, Math.round(spot * 1.15));
+      tweakPanel.className = 'regime-tweak-panel warning-border';
+      tweakPanel.innerHTML = `
+        <div class="regime-tweak-text">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-amber); flex-shrink: 0;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          <span><strong>Recommended parameter tweaks to return to Normal Conduction Mode:</strong></span>
+          <span class="regime-tweak-item">Lower Power: <span class="regime-tweak-highlight">${p}W → ${recP}W</span></span>
+          <span class="regime-tweak-item">or Higher Speed: <span class="regime-tweak-highlight">${v} → ${recV} mm/s</span></span>
+          <span class="regime-tweak-item">or Widen Spot: <span class="regime-tweak-highlight">${spot} → ${recSpot} µm</span></span>
+        </div>
+        <div class="regime-tweak-buttons">
+          <button type="button" class="tweak-btn primary" onclick="tweakToConduction()" title="Apply nominal calibrated conduction parameters (240W / 1000 mm/s)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Auto-Tweak to Conduction
+          </button>
+          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})" title="Reduce laser power to ${recP} W">
+            Reduce Power (${recP}W)
+          </button>
+          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})" title="Increase scan speed to ${recV} mm/s">
+            Increase Speed (${recV} mm/s)
+          </button>
+          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_spot', ${recSpot})" title="Widen beam spot to ${recSpot} µm">
+            Widen Spot (${recSpot} µm)
+          </button>
+        </div>
+      `;
+    } else if (regime === 'keyhole') {
+      const recP = Math.round(Math.max(120, p * 0.72));
+      const recV = Math.round(Math.min(2400, v * 1.35));
+      tweakPanel.className = 'regime-tweak-panel defect-border';
+      tweakPanel.innerHTML = `
+        <div class="regime-tweak-text">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-rose); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span><strong>Keyhole active! Recommended tweaks to prevent gas pore entrapment:</strong></span>
+          <span class="regime-tweak-item">Lower Power: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${p}W → ${recP}W</span></span>
+          <span class="regime-tweak-item">or Increase Speed: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${v} → ${recV} mm/s</span></span>
+        </div>
+        <div class="regime-tweak-buttons">
+          <button type="button" class="tweak-btn primary" onclick="tweakToConduction()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Auto-Tweak to Conduction
+          </button>
+          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})">Power -28% (${recP}W)</button>
+          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Speed +35% (${recV} mm/s)</button>
+        </div>
+      `;
+    } else if (regime === 'lof') {
+      const recP = Math.round(p * 1.25);
+      const recV = Math.round(Math.max(250, v * 0.75));
+      tweakPanel.className = 'regime-tweak-panel defect-border';
+      tweakPanel.innerHTML = `
+        <div class="regime-tweak-text">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-rose); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span><strong>Lack of Fusion active! Melt depth &lt; layer thickness:</strong></span>
+          <span class="regime-tweak-item">Increase Power: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${p}W → ${recP}W</span></span>
+          <span class="regime-tweak-item">or Lower Speed: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${v} → ${recV} mm/s</span></span>
+        </div>
+        <div class="regime-tweak-buttons">
+          <button type="button" class="tweak-btn primary" onclick="tweakToConduction()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Auto-Tweak to Conduction
+          </button>
+          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})">Power +25% (${recP}W)</button>
+          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Speed -25% (${recV} mm/s)</button>
+        </div>
+      `;
+    } else if (regime === 'balling') {
+      const recV = Math.round(Math.max(250, v * 0.72));
+      const recSpot = Math.min(140, Math.round(spot * 1.25));
+      tweakPanel.className = 'regime-tweak-panel defect-border';
+      tweakPanel.innerHTML = `
+        <div class="regime-tweak-text">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-rose); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span><strong>Balling instability! Length/Width ratio &gt; π:</strong></span>
+          <span class="regime-tweak-item">Lower Speed: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${v} → ${recV} mm/s</span></span>
+          <span class="regime-tweak-item">or Widen Spot: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${spot} → ${recSpot} µm</span></span>
+        </div>
+        <div class="regime-tweak-buttons">
+          <button type="button" class="tweak-btn primary" onclick="tweakToConduction()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Auto-Tweak to Conduction
+          </button>
+          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Speed -28% (${recV} mm/s)</button>
+        </div>
+      `;
+    } else {
+      // Normal Conduction Mode
+      tweakPanel.className = 'regime-tweak-panel conduction-border';
+      tweakPanel.innerHTML = `
+        <div class="regime-tweak-text" style="color: var(--accent-emerald);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink: 0;"><polyline points="20 6 9 17 4 12"/></svg>
+          <span><strong>Optimal Operating Window:</strong> Stable conduction melting active (ΔH/hs = ${normalizedEnthalpy.toFixed(1)} &lt; 5.5 · VED = ${ved.toFixed(1)} J/mm³). Melt pool depth/width is balanced with full interlayer fusion.</span>
+        </div>
+        <div class="regime-tweak-buttons">
+          <button type="button" class="tweak-btn primary" onclick="tweakToConduction()" title="Reset to standard nominal baseline (240W / 1000 mm/s)">
+            Nominal Baseline (240W)
+          </button>
+          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', 280)" title="Increase laser power to 280W to test transition edge">
+            Test Transition Edge (280W)
+          </button>
+        </div>
+      `;
+    }
+  }
 
   // 4. Hardness & Tensile Properties (Calibrated for Ti-6Al-4V ASTM F2924 / F3001 / F3187)
   const effectiveHallPetchSlope = Math.min(42, alloy.hallPetchSlope * 0.55);
@@ -4040,6 +4236,37 @@ function updateDefectMapSvg(proc, p, v) {
       curLabel.setAttribute('y', Math.max(48, Math.min(295, svgP + 5)));
       curLabel.textContent = `Operating (${p}W, ${v}mm/s)`;
     }
+  }
+}
+
+function tweakSlider(sliderId, value) {
+  const el = document.getElementById(sliderId);
+  if (el) {
+    const minVal = parseFloat(el.min) || 0;
+    const maxVal = parseFloat(el.max) || 10000;
+    const step = parseFloat(el.step) || 1;
+    let rounded = Math.round(value / step) * step;
+    el.value = Math.max(minVal, Math.min(maxVal, rounded));
+    onSliderChange();
+  }
+}
+
+function tweakToConduction() {
+  if (currentProcess === 'waam') {
+    tweakSlider('sl_p', 2200);
+    tweakSlider('sl_v', 6.0);
+  } else if (currentProcess === 'ded-laser') {
+    tweakSlider('sl_p', 950);
+    tweakSlider('sl_v', 12.0);
+    tweakSlider('sl_spot', 1200);
+  } else {
+    // LPBF Ti-6Al-4V: Nominal optimal conduction melting window
+    // (P=240W, v=1000 mm/s, h=105 µm, t=40 µm, spot=80 µm -> VED=54.4 J/mm3, ΔH/hs=4.84 < 5.5, LoF=0.68)
+    tweakSlider('sl_p', 240);
+    tweakSlider('sl_v', 1000);
+    tweakSlider('sl_h', 105);
+    tweakSlider('sl_t', 40);
+    tweakSlider('sl_spot', 80);
   }
 }
 
