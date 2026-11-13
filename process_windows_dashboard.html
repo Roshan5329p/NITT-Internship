@@ -3145,6 +3145,33 @@ let currentAlloy = 'ti64_gr5';
 let currentProfile = 'balanced';
 let autoSync = true;
 
+// Melt pool & Bontha state variables hoisted to avoid TDZ
+let mpModel = 'coen';        // 'coen' | 'rosenthal'
+let mpView = 'surface';      // 'surface' | 'cross-section'
+let mpDims = true;
+let mpCallouts = true;
+let mpGrid = true;
+let mpHighGrid = false;
+let mpPyrometry = true;      // 1650°C Liquidus, 995°C β-Transus, 575°C Ms
+let mpMarangoni = true;      // Radial Marangoni surface flow vectors
+let isOpticalAborted = false;// Emergency optical beam quench simulation
+let isMpSimulating = true;
+let mpAnimPhase = 0;
+let lastMpAnimTs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+let mpAnimFrameId = null;
+
+let bonthaDim = '3d-bulky';      // '3d-bulky' | '2d-thin-wall'
+let bonthaScale = 'small-scale'; // 'small-scale' | 'large-scale'
+let bonthaModel = 'rosenthal';   // 'rosenthal' | 'nonlinear-fem'
+let bonthaSource = 'laser';      // 'laser' | 'ebeam'
+let bonthaFemOverlay = true;
+let bonthaPreset = 'custom';
+let bonthaActiveSubTab = 'map';
+let bonthaOverridePower = null;
+let bonthaOverrideSpeed = null;
+let bonthaCustomWallThicknessMm = 2.26;
+let lastBonthaResult = null;
+
 const ALLOY_DATA = {
   ti64_gr5: {
     name: "Ti-6Al-4V (Grade 5)",
@@ -4701,24 +4728,24 @@ function filterPapersTable() {
 // ==========================================
 // 8. MELT POOL & THERMAL FIELD CONTROLLER (SCREENSHOTS 1, 2, 3, 4, 5)
 // ==========================================
-let mpModel = 'coen';        // 'coen' | 'rosenthal'
-let mpView = 'surface';      // 'surface' | 'cross-section'
-let mpDims = true;
-let mpCallouts = true;
-let mpGrid = true;
-let mpHighGrid = false;
-let mpPyrometry = true;      // 1650°C Liquidus, 995°C β-Transus, 575°C Ms
-let mpMarangoni = true;      // Radial Marangoni surface flow vectors
-let isOpticalAborted = false;// Emergency optical beam quench simulation
+mpModel = 'coen';        // 'coen' | 'rosenthal'
+mpView = 'surface';      // 'surface' | 'cross-section'
+mpDims = true;
+mpCallouts = true;
+mpGrid = true;
+mpHighGrid = false;
+mpPyrometry = true;      // 1650°C Liquidus, 995°C β-Transus, 575°C Ms
+mpMarangoni = true;      // Radial Marangoni surface flow vectors
+isOpticalAborted = false;// Emergency optical beam quench simulation
 
 // ========================================================
 // 60 FPS LIVE FLUID DYNAMICS & PYROMETRY ANIMATION ENGINE
 // GPU-Composited HiDPI Canvas Overlay (#mpAnimCanvas)
 // ========================================================
-let isMpSimulating = true;
-let mpAnimPhase = 0;
-let lastMpAnimTs = performance.now();
-let mpAnimFrameId = null;
+isMpSimulating = true;
+mpAnimPhase = 0;
+lastMpAnimTs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+mpAnimFrameId = null;
 
 let mpAnimState = {
   xBeam: 560, span: 200, halfW: 60, depthPx: 45, spotR: 12,
@@ -5081,17 +5108,17 @@ function renderMpAnimationStep(now) {
   }
 }
 
-let bonthaDim = '3d-bulky';      // '3d-bulky' | '2d-thin-wall'
-let bonthaScale = 'small-scale'; // 'small-scale' | 'large-scale'
-let bonthaModel = 'rosenthal';   // 'rosenthal' | 'nonlinear-fem'
-let bonthaSource = 'laser';      // 'laser' | 'ebeam'
-let bonthaFemOverlay = true;
-let bonthaPreset = 'custom';
-let bonthaActiveSubTab = 'map';
-let bonthaOverridePower = null;
-let bonthaOverrideSpeed = null;
-let bonthaCustomWallThicknessMm = 2.26;
-let lastBonthaResult = null;
+bonthaDim = '3d-bulky';      // '3d-bulky' | '2d-thin-wall'
+bonthaScale = 'small-scale'; // 'small-scale' | 'large-scale'
+bonthaModel = 'rosenthal';   // 'rosenthal' | 'nonlinear-fem'
+bonthaSource = 'laser';      // 'laser' | 'ebeam'
+bonthaFemOverlay = true;
+bonthaPreset = 'custom';
+bonthaActiveSubTab = 'map';
+bonthaOverridePower = null;
+bonthaOverrideSpeed = null;
+bonthaCustomWallThicknessMm = 2.26;
+lastBonthaResult = null;
 
 function setMpModel(m) {
   mpModel = m;
@@ -5586,6 +5613,7 @@ function updateMeltPoolAndThermal() {
 
   // Melt Pool Telemetry (Pyrometry, Phase Kinetics, and ASTM F2924 / F3187 Compliance)
   const tBetaMs = isOpticalAborted ? 0 : Number((2.15 * (effAlpha / 0.40) * (effP / Math.max(1.0, effV))).toFixed(1));
+  const t85Ms = tBetaMs; // Backward compatibility alias for cooling dwell
   const betaCoolingRate = (tBetaMs > 0) ? Math.round(420.0 / (tBetaMs / 1000.0)) : 0;
   const vMarangoniMmS = isOpticalAborted ? 0 : Math.min(1800, Math.round(180 * Math.pow(effP / 200.0, 0.5) * Math.pow(950 / Math.max(1.0, effV), 0.25)));
 
@@ -5810,13 +5838,13 @@ function updateMeltPoolAndThermal() {
           </g>
         `;
 
-        // t8/5 cooling pyrometry interval line (800°C to 500°C)
+        // t_β/Ms cooling pyrometry interval line (995°C to 575°C)
         const t85_X1 = xBeam - 0.72 * poolLength * scale;
         const t85_X2 = xBeam - 1.35 * poolLength * scale;
         if (t85_X2 >= 85 && t85_X1 <= 855) {
           svgHtml += `<line x1="${t85_X1.toFixed(1)}" y1="210" x2="${t85_X2.toFixed(1)}" y2="210" stroke="#c084fc" stroke-width="3" stroke-linecap="round" opacity="0.85"/>`;
-          svgHtml += `<rect x="${((t85_X1 + t85_X2)/2 - 40).toFixed(1)}" y="214" width="80" height="14" rx="4" fill="#070c14" stroke="#a855f7" stroke-width="0.8"/>`;
-          svgHtml += `<text x="${((t85_X1 + t85_X2)/2).toFixed(1)}" y="224" fill="#e9d5ff" font-size="8.5" font-family="monospace" text-anchor="middle">t₈/₅ = ${t85Ms} ms</text>`;
+          svgHtml += `<rect x="${((t85_X1 + t85_X2)/2 - 50).toFixed(1)}" y="214" width="100" height="14" rx="4" fill="#070c14" stroke="#a855f7" stroke-width="0.8"/>`;
+          svgHtml += `<text x="${((t85_X1 + t85_X2)/2).toFixed(1)}" y="224" fill="#e9d5ff" font-size="8.5" font-family="monospace" text-anchor="middle">t_β/Ms = ${tBetaMs} ms</text>`;
         }
       }
 

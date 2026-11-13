@@ -237,6 +237,7 @@ public class AmPlatformApplication {
 
     public void startServer() throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+        server.setExecutor(Executors.newCachedThreadPool());
 
         // 1. Dashboard & Static Assets Handler
         server.createContext("/", new HttpHandler() {
@@ -629,6 +630,10 @@ public class AmPlatformApplication {
         byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
         addCommonHeaders(exchange);
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+        if ("HEAD".equalsIgnoreCase(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(status, -1);
+            return;
+        }
         exchange.sendResponseHeaders(status, bytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(bytes);
@@ -639,6 +644,10 @@ public class AmPlatformApplication {
         byte[] bytes = Files.readAllBytes(file);
         addCommonHeaders(exchange);
         exchange.getResponseHeaders().set("Content-Type", contentType);
+        if ("HEAD".equalsIgnoreCase(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(200, -1);
+            return;
+        }
         exchange.sendResponseHeaders(200, bytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(bytes);
