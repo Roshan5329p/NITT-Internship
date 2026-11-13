@@ -1229,6 +1229,197 @@
     font-weight: 700;
   }
 
+  /* 3D Digital Twin Material State Scale & HUD */
+  .twin-scale-panel {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: rgba(10, 16, 26, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    padding: 12px 14px;
+    z-index: 10;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 210px;
+    max-width: 240px;
+    user-select: none;
+    pointer-events: auto;
+  }
+  .twin-scale-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 6px;
+  }
+  .twin-scale-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+    text-transform: uppercase;
+  }
+  .twin-scale-unit {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-cyan);
+    font-weight: 600;
+  }
+  .twin-scale-body {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+    height: 175px;
+    margin: 4px 0;
+  }
+  .twin-scale-bar-track {
+    width: 14px;
+    height: 100%;
+    border-radius: 7px;
+    background: linear-gradient(to bottom, #ef4444 0%, #f59e0b 28%, #10b981 50%, #00f7ff 75%, #3b82f6 100%);
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+  }
+  .twin-scale-marker {
+    position: absolute;
+    left: -4px;
+    right: -4px;
+    height: 3px;
+    background: #ffffff;
+    box-shadow: 0 0 8px #ffffff, 0 0 14px var(--accent-cyan);
+    border-radius: 2px;
+    transition: top 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .twin-scale-ticks {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-secondary);
+    padding: 2px 0;
+  }
+  .twin-tick-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1;
+  }
+  .twin-tick-val {
+    font-weight: 700;
+    color: var(--text-primary);
+    min-width: 48px;
+  }
+  .twin-tick-label {
+    font-size: 9px;
+    color: var(--text-muted);
+  }
+  .twin-scale-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .twin-state-badge {
+    display: inline-block;
+    font-size: 9.5px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(16, 185, 129, 0.18);
+    color: var(--accent-emerald);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    text-align: center;
+  }
+  .twin-state-desc {
+    font-size: 9.5px;
+    color: var(--text-muted);
+    line-height: 1.35;
+    margin-top: 2px;
+  }
+
+  /* Bottom Material State HUD Bar */
+  .twin-hud-bar {
+    position: absolute;
+    bottom: 12px;
+    left: 14px;
+    right: 14px;
+    background: rgba(10, 16, 26, 0.88);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    z-index: 10;
+    font-size: 11px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    user-select: none;
+    pointer-events: auto;
+  }
+  .twin-hud-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .twin-hud-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .twin-hud-label {
+    color: var(--text-muted);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .twin-hud-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .twin-hud-divider {
+    width: 1px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+  .twin-hud-hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  @media (max-width: 768px) {
+    .twin-scale-panel {
+      min-width: 170px;
+      padding: 8px 10px;
+    }
+    .twin-scale-body {
+      height: 130px;
+    }
+    .twin-hud-bar {
+      font-size: 9.5px;
+      padding: 6px 10px;
+    }
+  }
+
   /* Defect Window SVG View */
   .defect-svg-container {
     background: var(--bg-card);
@@ -2301,9 +2492,55 @@
             <button class="twin-btn" id="btnWireframe" onclick="toggleWireframe()">Wireframe: OFF</button>
             <button class="twin-btn" onclick="resetCamera()">Reset Camera</button>
           </div>
+
+          <!-- Dynamic Material State Colorbar & Metric Scale (Top Right) -->
+          <div class="twin-scale-panel" id="twinScalePanel">
+            <div class="twin-scale-header">
+              <span class="twin-scale-title" id="twinScaleTitle">Von Mises Stress</span>
+              <span class="twin-scale-unit" id="twinScaleUnit">σ_vm (MPa)</span>
+            </div>
+            <div class="twin-scale-body">
+              <div class="twin-scale-bar-track">
+                <div class="twin-scale-marker" id="twinScaleMarker" style="top: 45%;"></div>
+              </div>
+              <div class="twin-scale-ticks" id="twinScaleTicks">
+                <!-- Dynamically generated based on twinMode -->
+              </div>
+            </div>
+            <div class="twin-scale-footer">
+              <div class="twin-state-badge" id="twinStateBadge">ELASTIC SUB-YIELD</div>
+              <div class="twin-state-desc" id="twinStateDesc">Peak gauge stress: 380 MPa (41% of YS). Stable under ambient conditions.</div>
+            </div>
+          </div>
+
           <canvas id="twinCanvas" width="800" height="480"></canvas>
-          <div style="position: absolute; bottom: 12px; left: 14px; font-size: 10.5px; color: var(--text-muted); font-family: monospace; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px;">
-            Click & Drag to Orbit • Real-Time Von Mises Stress Gradient
+
+          <!-- Real-Time Material State & Phase Telemetry HUD Strip (Bottom) -->
+          <div class="twin-hud-bar" id="twinHudBar">
+            <div class="twin-hud-left">
+              <div class="twin-hud-item">
+                <span class="twin-hud-label">Material State:</span>
+                <span class="twin-hud-val" id="twinHudState" style="color: var(--accent-emerald);">HIP Basketweave (ASTM Class C)</span>
+              </div>
+              <div class="twin-hud-divider"></div>
+              <div class="twin-hud-item">
+                <span class="twin-hud-label">Phase Fractions:</span>
+                <span class="twin-hud-val" id="twinHudPhases" style="color: #38bdf8;">5% α' · 95% Lamellar α+β</span>
+              </div>
+              <div class="twin-hud-divider"></div>
+              <div class="twin-hud-item">
+                <span class="twin-hud-label">Tensile Capacity:</span>
+                <span class="twin-hud-val" id="twinHudYs">YS 920 MPa · UTS 1034 MPa</span>
+              </div>
+              <div class="twin-hud-divider"></div>
+              <div class="twin-hud-item">
+                <span class="twin-hud-label">Peak Stress:</span>
+                <span class="twin-hud-val" id="twinHudStress" style="color: #fbbf24;">145 MPa (Relaxed)</span>
+              </div>
+            </div>
+            <div class="twin-hud-hint">
+              <span>Click &amp; Drag to Orbit · Scroll to Zoom</span>
+            </div>
           </div>
         </div>
       </div>
@@ -4063,8 +4300,12 @@ function calculatePhysics() {
     process: currentProcess, p, v, h, t, preheat,
     width: meltPoolWidth, depth: meltPoolDepth, length: meltPoolLength,
     coolingRate, thermalGradientG, solidVelocityR,
-    alphaPrimePct, residualStressMPa
+    alphaPrimePct, residualStressMPa, yieldStrength, tensileStrength: utsTabor,
+    post
   };
+  if (typeof updateTwinScaleAndHud === 'function') {
+    updateTwinScaleAndHud();
+  }
 
   // 6. Update Bontha Solidification Map Cursor (Bontha et al. 2006, 2009)
   const logR = Math.log10(Math.max(1e-4, bonthaR));
@@ -4593,9 +4834,15 @@ let animFrameId = null;
 
 function setTwinMode(mode) {
   twinMode = mode;
-  document.getElementById('twinMode_stress').classList.toggle('active', mode === 'residual-stress');
-  document.getElementById('twinMode_cooling').classList.toggle('active', mode === 'cooling-rate');
-  document.getElementById('twinMode_phase').classList.toggle('active', mode === 'phase-fraction');
+  const btnStress = document.getElementById('twinMode_stress');
+  const btnCooling = document.getElementById('twinMode_cooling');
+  const btnPhase = document.getElementById('twinMode_phase');
+  if (btnStress) btnStress.classList.toggle('active', mode === 'residual-stress');
+  if (btnCooling) btnCooling.classList.toggle('active', mode === 'cooling-rate');
+  if (btnPhase) btnPhase.classList.toggle('active', mode === 'phase-fraction');
+  if (typeof updateTwinScaleAndHud === 'function') {
+    updateTwinScaleAndHud();
+  }
 }
 
 function toggleAutoOrbit() {
@@ -4626,6 +4873,10 @@ if (wrapper && canvas && ctx) {
     lastMouseX = e.clientX;
     lastMouseY = e.clientY;
   });
+  wrapper.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    scale = Math.max(0.65, Math.min(2.4, scale - e.deltaY * 0.0012));
+  }, { passive: false });
 }
 window.addEventListener('mousemove', (e) => {
   if (!isDragging) return;
@@ -4717,6 +4968,164 @@ function getColor(normalizedVal, mode) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+function updateTwinScaleAndHud() {
+  const twin = window.twinPhysicsState || {
+    coolingRate: 1.17e6,
+    alphaPrimePct: 88,
+    residualStressMPa: 387,
+    yieldStrength: 920,
+    tensileStrength: 1034,
+    process: 'lpbf',
+    post: 'HIP'
+  };
+
+  const postSelect = document.getElementById('postProcessingSelect');
+  const post = twin.post || (postSelect ? postSelect.value : 'HIP');
+
+  const titleEl = document.getElementById('twinScaleTitle');
+  const unitEl = document.getElementById('twinScaleUnit');
+  const ticksEl = document.getElementById('twinScaleTicks');
+  const markerEl = document.getElementById('twinScaleMarker');
+  const badgeEl = document.getElementById('twinStateBadge');
+  const descEl = document.getElementById('twinStateDesc');
+
+  const hudState = document.getElementById('twinHudState');
+  const hudPhases = document.getElementById('twinHudPhases');
+  const hudYs = document.getElementById('twinHudYs');
+  const hudStress = document.getElementById('twinHudStress');
+
+  if (!titleEl || !ticksEl) return;
+
+  if (twinMode === 'residual-stress') {
+    titleEl.textContent = 'Von Mises Stress';
+    unitEl.textContent = 'σ_vm (MPa)';
+    ticksEl.innerHTML = `
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">600</span><span class="twin-tick-label">Yield Risk</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">450</span><span class="twin-tick-label">High Tensile</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">300</span><span class="twin-tick-label">Sub-Yield</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">150</span><span class="twin-tick-label">Relieved</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Stress-Free</span></div>
+    `;
+    const curVal = twin.residualStressMPa !== undefined ? twin.residualStressMPa : 380;
+    const pct = Math.max(0, Math.min(100, (curVal / 600) * 100));
+    if (markerEl) markerEl.style.top = (100 - pct) + '%';
+
+    if (badgeEl && descEl) {
+      if (curVal > 500) {
+        badgeEl.textContent = 'CRITICAL RESIDUAL TENSION';
+        badgeEl.style.color = '#ef4444';
+        badgeEl.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+        badgeEl.style.background = 'rgba(239, 68, 68, 0.18)';
+        descEl.textContent = `Gauge peak: ${curVal} MPa (>55% of YS). Severe distortion risk; post-weld stress relief required.`;
+      } else if (curVal > 250) {
+        badgeEl.textContent = 'ELASTIC SUB-YIELD TENSION';
+        badgeEl.style.color = '#f59e0b';
+        badgeEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+        badgeEl.style.background = 'rgba(245, 158, 11, 0.18)';
+        descEl.textContent = `Gauge peak: ${curVal} MPa (Elastic state, 30–45% of YS). Stable under ambient conditions.`;
+      } else {
+        badgeEl.textContent = 'STRESS-RELIEVED / HIP';
+        badgeEl.style.color = '#10b981';
+        badgeEl.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        badgeEl.style.background = 'rgba(16, 185, 129, 0.18)';
+        descEl.textContent = `Gauge peak: ${curVal} MPa (<25% of YS). Residual stresses relaxed; high fatigue resistance.`;
+      }
+    }
+
+  } else if (twinMode === 'cooling-rate') {
+    titleEl.textContent = 'Cooling Rate';
+    unitEl.textContent = 'Ṫ (K/s)';
+    ticksEl.innerHTML = `
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">10⁷</span><span class="twin-tick-label">Surface Quench</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">10⁶</span><span class="twin-tick-label">LPBF Martensite</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">10⁵</span><span class="twin-tick-label">α' Solidification</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">10³</span><span class="twin-tick-label">DED / Lamellar</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">10¹</span><span class="twin-tick-label">WAAM / Sinter</span></div>
+    `;
+    const curVal = twin.coolingRate || 1.17e6;
+    const logVal = Math.log10(Math.max(10, curVal));
+    const pct = Math.max(0, Math.min(100, ((logVal - 1.0) / 6.0) * 100));
+    if (markerEl) markerEl.style.top = (100 - pct) + '%';
+
+    const dispCool = curVal >= 1e6 ? `${(curVal / 1e6).toFixed(2)} × 10⁶` : (curVal >= 1e3 ? `${(curVal / 1e3).toFixed(1)} × 10³` : curVal.toFixed(0));
+    if (badgeEl && descEl) {
+      if (curVal >= 410) {
+        badgeEl.textContent = 'MARTENSITIC QUENCH';
+        badgeEl.style.color = '#f59e0b';
+        badgeEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+        badgeEl.style.background = 'rgba(245, 158, 11, 0.18)';
+        descEl.textContent = `Solidification rate: ${dispCool} K/s (>410 K/s). Exceeds critical speed for diffusionless acicular α'.`;
+      } else {
+        badgeEl.textContent = 'DIFFUSIONAL SOLIDIFICATION';
+        badgeEl.style.color = '#10b981';
+        badgeEl.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        badgeEl.style.background = 'rgba(16, 185, 129, 0.18)';
+        descEl.textContent = `Solidification rate: ${dispCool} K/s (<410 K/s). Nucleates equilibrium Widmanstätten α+β basketweave.`;
+      }
+    }
+
+  } else if (twinMode === 'phase-fraction') {
+    titleEl.textContent = 'Phase Kinetics';
+    unitEl.textContent = 'Vol. % α\'';
+    ticksEl.innerHTML = `
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">100%</span><span class="twin-tick-label">Acicular α'</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">75%</span><span class="twin-tick-label">Martensite-rich</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">50%</span><span class="twin-tick-label">Dual Phase α+β</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">25%</span><span class="twin-tick-label">Decomposed</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0%</span><span class="twin-tick-label">Equiaxed α+β</span></div>
+    `;
+    const curVal = twin.alphaPrimePct !== undefined ? twin.alphaPrimePct : 88;
+    const pct = Math.max(0, Math.min(100, curVal));
+    if (markerEl) markerEl.style.top = (100 - pct) + '%';
+
+    if (badgeEl && descEl) {
+      if (curVal >= 80) {
+        badgeEl.textContent = 'AS-BUILT α\' MARTENSITE';
+        badgeEl.style.color = '#ef4444';
+        badgeEl.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+        badgeEl.style.background = 'rgba(239, 68, 68, 0.18)';
+        descEl.textContent = `${curVal}% acicular α' needles. High hardness (~400 HV), low tensile ductility (<10%, fails ASTM F2924).`;
+      } else if (curVal >= 30) {
+        badgeEl.textContent = 'STRESS-RELIEVED α+β';
+        badgeEl.style.color = '#f59e0b';
+        badgeEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+        badgeEl.style.background = 'rgba(245, 158, 11, 0.18)';
+        descEl.textContent = `${curVal}% retained α' + lamellar α+β. Moderate ductility ~10–12%, passes ASTM F2924 Class A.`;
+      } else {
+        badgeEl.textContent = 'EQUILIBRIUM LAMELLAR α+β';
+        badgeEl.style.color = '#10b981';
+        badgeEl.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        badgeEl.style.background = 'rgba(16, 185, 129, 0.18)';
+        descEl.textContent = `<5% α'. Fully decomposed ductile basketweave structure. Elongation >14%, ASTM F2924 Class C (HIP).`;
+      }
+    }
+  }
+
+  // Update Bottom Material State HUD Bar
+  if (hudState) {
+    if (post === 'HIP') hudState.textContent = 'HIP Basketweave (ASTM Class C)';
+    else if (post === 'Annealed') hudState.textContent = 'Annealed α+β Lamellar (ASTM Class B)';
+    else if (post === 'Stress-relieved') hudState.textContent = 'Stress-Relieved Partial α\' (ASTM Class A)';
+    else if (post === 'Bi-modal') hudState.textContent = 'Bi-Modal Duplex (High Ductility STA)';
+    else hudState.textContent = 'As-Built Acicular α\' Martensite (Non-Compliant)';
+  }
+  if (hudPhases) {
+    const aPrime = twin.alphaPrimePct !== undefined ? twin.alphaPrimePct : 88;
+    const lamellar = Math.max(0, 100 - aPrime);
+    hudPhases.textContent = `${aPrime}% α' · ${lamellar}% α+β`;
+  }
+  if (hudYs) {
+    const ys = document.getElementById('aud_ys_val') ? document.getElementById('aud_ys_val').innerText : '920 MPa';
+    const uts = document.getElementById('aud_uts_val') ? document.getElementById('aud_uts_val').innerText : '1034 MPa';
+    hudYs.textContent = `YS ${ys} · UTS ${uts}`;
+  }
+  if (hudStress) {
+    const s = twin.residualStressMPa || 380;
+    hudStress.textContent = `${s} MPa (${s < 200 ? 'Relaxed' : (s < 450 ? 'Elastic' : 'Critical')})`;
+    hudStress.style.color = s < 200 ? 'var(--accent-emerald)' : (s < 450 ? '#fbbf24' : '#ef4444');
+  }
+}
+
 function renderTwin() {
   if (!canvas || !ctx || document.hidden) {
     animFrameId = null;
@@ -4794,6 +5203,9 @@ function renderTwin() {
 }
 
 function startTwinAnimation() {
+  if (typeof updateTwinScaleAndHud === 'function') {
+    updateTwinScaleAndHud();
+  }
   if (!animFrameId) {
     animFrameId = requestAnimationFrame(renderTwin);
   }
