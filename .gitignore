@@ -9,6 +9,7 @@ bin/
 
 # Research paper source PDFs (stored locally, metadata & extractions tracked in data/ and SQLite)
 *.pdf
+!report/*.pdf
 
 # Python
 __pycache__/

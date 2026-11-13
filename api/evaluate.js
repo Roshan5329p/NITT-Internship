@@ -64,11 +64,18 @@ export default function handler(req, res) {
     const depth = Math.round(Math.max(t * 0.2, width * aspect));
     const length = Math.round(width * ((isDed || isWaam) ? (1.35 + 0.015 * Math.min(40, v)) : (1.2 + 0.0012 * v)));
 
+    const rawPost = (q.post || q.condition || 'hip').toLowerCase();
+    const isEli = (q.alloy || '').toLowerCase().includes('eli') || (q.alloy || '').toLowerCase().includes('gr23');
+    const isHip = rawPost.includes('hip');
+    const isNone = rawPost.includes('none') || rawPost.includes('as-built');
+
     // Cooling rate (no arbitrary 100 mm/s floor clamping on slow speeds)
     const thermalAccum = isWaam ? 0.15 : (isDed ? 0.45 : 1.0);
     const coolingRate = Math.round(Math.max(isWaam || isDed ? 1.0 : 100.0,
       thermalAccum * (2 * Math.PI * 28.4 * vMs * Math.pow(deltaT, 2)) / Math.max(5, absorbedP)));
     const t85 = Number((1.85 * linearHeatInput).toFixed(1));
+    const tBetaMs = Number((2.15 * (eta / 0.40) * (p / Math.max(1.0, v))).toFixed(1));
+    const betaCoolingRate = tBetaMs > 0 ? Math.round(420.0 / (tBetaMs / 1000.0)) : 0;
     const marangoniV = Math.round(180 * Math.sqrt(p / (isWaam ? 2200.0 : (isDed ? 1500.0 : 200.0))) * Math.pow((isWaam ? 8.0 : (isDed ? 15.0 : 950.0)) / Math.max(1.0, v), 0.25));
 
     // Process-aware defects & ASTM qualification
@@ -88,18 +95,22 @@ export default function handler(req, res) {
       else compliant = true;
     } else {
       if (aspect > 0.80 || ved > 95.0) regime = 'Keyholing';
+      else if (aspect >= 0.55 || ved >= 65.0) regime = 'Transition Mode (Incipient Vapor Depression)';
       else if (ved < 55.0 || remeltRatio < 1.25) regime = 'Lack of Fusion';
       else if (ballingRatio > 1.05 || v > 1650) regime = 'Balling Risk';
-      else compliant = (ved >= 55 && ved <= 95);
+      else regime = 'Optimal Conduction';
+      compliant = (ved >= 55 && ved <= 95 && !isNone); // As-built martensite fails elongation <10%
     }
+
+    const modeLabel = aspect > 0.8 ? 'Keyhole Mode' : (aspect >= 0.55 ? 'Transition Mode (Incipient Vapor Depression)' : 'Conduction Mode');
 
     res.status(200).json({
       process: proc,
-      inputs: { laser_power_w: p, scan_speed_mms: v, hatch_spacing_um: h, layer_thickness_um: t, spot_diameter_um: spot, preheat_temp_c: preheat, ved_j_mm3: parseFloat(ved.toFixed(2)), linear_heat_input_j_mm: parseFloat(linearHeatInput.toFixed(2)) },
-      melt_pool: { width_um: width, depth_um: depth, length_um: length, aspect_ratio: aspect, mode: aspect > 0.8 ? 'Keyhole Mode' : 'Conduction Mode', remelt_ratio: parseFloat(remeltRatio.toFixed(2)) },
-      thermal_kinetics: { cooling_rate_ks: coolingRate, t85_ms: t85, marangoni_velocity_mms: marangoniV },
+      inputs: { laser_power_w: p, scan_speed_mms: v, hatch_spacing_um: h, layer_thickness_um: t, spot_diameter_um: spot, preheat_temp_c: preheat, ved_j_mm3: parseFloat(ved.toFixed(2)), linear_heat_input_j_mm: parseFloat(linearHeatInput.toFixed(2)), post_processing: rawPost },
+      melt_pool: { width_um: width, depth_um: depth, length_um: length, aspect_ratio: aspect, mode: modeLabel, remelt_ratio: parseFloat(remeltRatio.toFixed(2)) },
+      thermal_kinetics: { cooling_rate_ks: coolingRate, t85_ms: t85, t_beta_ms: tBetaMs, t_beta_cooling_rate_ks: betaCoolingRate, marangoni_velocity_mms: marangoniV },
       defect_indices: { regime: regime, keyhole_threshold: isWaam || isDed ? 0.95 : 0.80, balling_ratio: parseFloat(ballingRatio.toFixed(2)), safe_window: compliant },
-      astm_f2924: { compliant: compliant },
+      astm_f2924: { class: isHip ? 'Class C (HIP)' : (isNone ? 'Non-compliant (As-Built α\')' : 'Class A/B'), compliant: compliant && !isNone },
       astm_f3187: { applicable: isDed || isWaam, compliant: (isDed || isWaam) && compliant }
     });
   } catch (err) {
