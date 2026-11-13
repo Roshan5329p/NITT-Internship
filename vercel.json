@@ -21,6 +21,10 @@
     {
       "src": "docs/**",
       "use": "@vercel/static"
+    },
+    {
+      "src": "report/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -63,6 +67,10 @@
     {
       "src": "/docs/(.*)",
       "dest": "/docs/$1"
+    },
+    {
+      "src": "/report/(.*)",
+      "dest": "/report/$1"
     },
     {
       "src": "/dashboard/?",
