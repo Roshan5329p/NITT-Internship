@@ -2338,13 +2338,15 @@
 
   <!-- KaTeX Publication-Grade Mathematical Rendering Engine -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script>
 // ========================================================
 // UNIVERSAL MATERIAL STATE & PHASE FRACTION SYNCHRONIZER
 // ========================================================
-let globalMaterialState = 'hip';
+var globalMaterialState = 'hip';
+window.globalMaterialState = globalMaterialState;
 
-const MATERIAL_STATE_REGISTRY = {
+var MATERIAL_STATE_REGISTRY = {
   as_built: {
     key: 'as_built',
     label: "As-Built (Rapid Quenched)",
@@ -2595,15 +2597,21 @@ function updateAstmAuditor() {
   }
 }
 
+window.MATERIAL_STATE_REGISTRY = MATERIAL_STATE_REGISTRY;
+window.setGlobalMaterialState = setGlobalMaterialState;
+window.updateAstmAuditor = updateAstmAuditor;
 
 // ========================================================
 // DIGITAL TWIN ENGINEERING STRESS TENSOR & LOAD ENGINE
 // ========================================================
-let activeStressComponent = 'vm'; // 'vm', 'szz', 'sxx', 'txz'
-let activeLoadCase = 'residual';  // 'residual', 'applied'
+var activeStressComponent = 'vm'; // 'vm', 'szz', 'sxx', 'txz'
+var activeLoadCase = 'residual';  // 'residual', 'applied'
+window.activeStressComponent = activeStressComponent;
+window.activeLoadCase = activeLoadCase;
 
 function setStressComponent(comp) {
   activeStressComponent = comp;
+  window.activeStressComponent = comp;
   document.querySelectorAll('#canvasWrapper .twin-btn').forEach(b => {
     if (b.id && b.id.startsWith('btnStress_')) b.classList.remove('active');
   });
@@ -2614,9 +2622,11 @@ function setStressComponent(comp) {
     updateTwinScaleAndHud();
   }
 }
+window.setStressComponent = setStressComponent;
 
 function toggleLoadCase() {
   activeLoadCase = (activeLoadCase === 'residual') ? 'applied' : 'residual';
+  window.activeLoadCase = activeLoadCase;
   const btn = document.getElementById('btnLoadCase');
   if (btn) {
     if (activeLoadCase === 'applied') {
@@ -2636,6 +2646,7 @@ function toggleLoadCase() {
     updateTwinScaleAndHud();
   }
 }
+window.toggleLoadCase = toggleLoadCase;
 
 function openEngineeringReportModal() {
   const modal = document.getElementById('engineeringReportModal');
@@ -7092,6 +7103,9 @@ function resetCamera() {
   yaw = 0.65;
   pitch = 0.35;
   scale = 1.15;
+  if (typeof startTwinAnimation === 'function') {
+    startTwinAnimation();
+  }
 }
 
 const canvas = document.getElementById('twinCanvas');
@@ -7232,12 +7246,15 @@ function updateTwinScaleAndHud() {
 
   if (!titleEl || !ticksEl) return;
 
+  const curStressComp = (typeof activeStressComponent !== 'undefined' ? activeStressComponent : (window.activeStressComponent || 'vm'));
+  const curLoadCase = (typeof activeLoadCase !== 'undefined' ? activeLoadCase : (window.activeLoadCase || 'residual'));
+
   if (twinMode === 'residual-stress') {
     let peakVal = baseResidual;
     let maxScale = 600;
 
-    if (activeLoadCase === 'applied') {
-      if (activeStressComponent === 'vm') {
+    if (curLoadCase === 'applied') {
+      if (curStressComp === 'vm') {
         titleEl.textContent = 'Von Mises Equivalent Stress';
         unitEl.textContent = 'σ_vM (MPa)';
         maxScale = 1200;
@@ -7259,7 +7276,7 @@ function updateTwinScaleAndHud() {
           descEl.innerHTML = `<strong>Gauge Neck Stress:</strong> 945 MPa (Active plastic necking initiation)<br><strong>Grip Shoulder Stress:</strong> 240 MPa (Elastic constraint)<br><strong>ASTM E8 Pull:</strong> 23.6 kN uniaxial tensile load`;
         }
         if (hudStress) hudStress.innerHTML = `PEAK σ_vM: <strong style="color:#ef4444;">945 MPa</strong> (Gauge Center Yield)`;
-      } else if (activeStressComponent === 'szz') {
+      } else if (curStressComp === 'szz') {
         titleEl.textContent = 'Axial Normal Stress (Build Axis Z)';
         unitEl.textContent = 'σ_zz (MPa)';
         maxScale = 1200;
@@ -7281,7 +7298,7 @@ function updateTwinScaleAndHud() {
           descEl.innerHTML = `<strong>Nominal Axial Pull σ_zz:</strong> 945 MPa (Dominant normal stress driving necking)<br><strong>Grip Shoulder σ_zz:</strong> 216 MPa (F/A_grip distribution)<br><strong>Stress Ratio:</strong> σ_zz accounts for >98% of total strain energy`;
         }
         if (hudStress) hudStress.innerHTML = `PEAK σ_zz: <strong style="color:#ef4444;">945 MPa</strong> (Reduced Gauge Neck)`;
-      } else if (activeStressComponent === 'sxx') {
+      } else if (curStressComp === 'sxx') {
         titleEl.textContent = 'Transverse Normal Stress (Scan Axis X)';
         unitEl.textContent = 'σ_xx (MPa)';
         maxScale = 200;
@@ -7303,7 +7320,7 @@ function updateTwinScaleAndHud() {
           descEl.innerHTML = `<strong>Transverse Stress σ_xx:</strong> 45 MPa (Minor Poisson contraction constraint)<br><strong>Significance:</strong> Under pure uniaxial tension, transverse normal stresses are negligible.<br><strong>Boundary Condition:</strong> Traction-free lateral cylindrical surface`;
         }
         if (hudStress) hudStress.innerHTML = `PEAK σ_xx: <strong style="color:#38bdf8;">45 MPa</strong> (Poisson Contraction Zone)`;
-      } else if (activeStressComponent === 'txz') {
+      } else if (curStressComp === 'txz') {
         titleEl.textContent = 'Interlaminar Shear Stress (Plane X-Z)';
         unitEl.textContent = 'τ_xz (MPa)';
         maxScale = 450;
@@ -7328,7 +7345,7 @@ function updateTwinScaleAndHud() {
       }
     } else {
       // Residual stress mode
-      if (activeStressComponent === 'vm') {
+      if (curStressComp === 'vm') {
         titleEl.textContent = 'Von Mises Equivalent Stress';
         unitEl.textContent = 'σ_vM (MPa)';
         maxScale = 600;
@@ -7362,7 +7379,7 @@ function updateTwinScaleAndHud() {
           descEl.innerHTML = `<strong>Gauge Core Peak:</strong> ${baseResidual} MPa (Residual thermal tension)<br><strong>Grip Shoulder:</strong> ${Math.round(baseResidual * 0.38)} MPa (Relaxed boundary)<br><strong>State Compliance:</strong> ${baseResidual < 100 ? 'Compliant with ASTM Class 1' : 'Requires thermal stress relief'}`;
         }
         if (hudStress) hudStress.innerHTML = `PEAK σ_vM: <strong style="color:#ef4444;">${baseResidual} MPa</strong> (Gauge Core Center)`;
-      } else if (activeStressComponent === 'szz') {
+      } else if (curStressComp === 'szz') {
         titleEl.textContent = 'Axial Normal Stress (Build Axis Z)';
         unitEl.textContent = 'σ_zz (MPa)';
         maxScale = 600;
@@ -7384,7 +7401,7 @@ function updateTwinScaleAndHud() {
           descEl.innerHTML = `<strong>Peak Axial Residual σ_zz:</strong> ${peakVal} MPa (Along build height axis [001])<br><strong>Grip Boundary σ_zz:</strong> ${Math.round(peakVal * 0.30)} MPa (Low thermal constraint)<br><strong>Physical Cause:</strong> Cumulative thermal shrinkage across successive melted powder layers`;
         }
         if (hudStress) hudStress.innerHTML = `PEAK σ_zz: <strong style="color:#38bdf8;">${peakVal} MPa</strong> (Along Build Height [001])`;
-      } else if (activeStressComponent === 'sxx') {
+      } else if (curStressComp === 'sxx') {
         titleEl.textContent = 'Transverse Normal Stress (Scan Axis X)';
         unitEl.textContent = 'σ_xx (MPa)';
         maxScale = 400;
@@ -7406,7 +7423,7 @@ function updateTwinScaleAndHud() {
           descEl.innerHTML = `<strong>Peak Transverse Residual σ_xx:</strong> ${peakVal} MPa (Perpendicular to build axis, along scan vector)<br><strong>Anisotropy Ratio (σ_xx / σ_zz):</strong> 0.54 (Matches neutron diffraction benchmarks)<br><strong>Relaxation:</strong> Decomposes rapidly after 650°C stress relief`;
         }
         if (hudStress) hudStress.innerHTML = `PEAK σ_xx: <strong style="color:#34d399;">${peakVal} MPa</strong> (Across Laser Scan Tracks)`;
-      } else if (activeStressComponent === 'txz') {
+      } else if (curStressComp === 'txz') {
         titleEl.textContent = 'Interlaminar Shear Stress (Plane X-Z)';
         unitEl.textContent = 'τ_xz (MPa)';
         maxScale = 300;
@@ -7519,75 +7536,84 @@ function renderTwin() {
   // Render polygons driven by active process physics and stress tensor selection
   const stateData = (typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY[globalMaterialState])
     ? MATERIAL_STATE_REGISTRY[globalMaterialState]
+    : (window.MATERIAL_STATE_REGISTRY && window.MATERIAL_STATE_REGISTRY[window.globalMaterialState || 'hip'])
+    ? window.MATERIAL_STATE_REGISTRY[window.globalMaterialState || 'hip']
     : { residualStressGaugeMpa: 387, alphaPrime: 88, ysMpa: 865 };
   const baseResidual = stateData.residualStressGaugeMpa || 387;
 
-  sortedFaces.forEach(f => {
-    const absZ = Math.abs(f.avgZNorm);
-    const neckFocus = Math.max(0, 1.0 - absZ); // 1.0 at center gauge, 0.0 at ends
-    // Fillet transition focus (peaks at absZ ~ 0.55 between gauge 0.45 and grip 0.70)
-    const filletDist = Math.abs(absZ - 0.55);
-    const filletFocus = Math.max(0, 1.0 - (filletDist / 0.22));
+  const curStressComp = (typeof activeStressComponent !== 'undefined' ? activeStressComponent : (window.activeStressComponent || 'vm'));
+  const curLoadCase = (typeof activeLoadCase !== 'undefined' ? activeLoadCase : (window.activeLoadCase || 'residual'));
 
-    let scalar = 0.5;
-    if (twinMode === 'residual-stress') {
-      if (activeLoadCase === 'applied') {
-        // Applied ASTM E8 Uniaxial Tensile pull
-        if (activeStressComponent === 'vm' || activeStressComponent === 'szz') {
-          // Intense gauge yielding (945 MPa at gauge, dropping to 240 MPa at grip)
-          scalar = (absZ <= 0.45) ? 0.96 : Math.max(0.20, 0.96 - ((absZ - 0.45) / 0.55) * 0.76);
-        } else if (activeStressComponent === 'sxx') {
-          // Transverse normal stress in unconstrained bar is negligible
-          scalar = Math.min(0.25, 0.08 + 0.12 * neckFocus);
-        } else if (activeStressComponent === 'txz') {
-          // Intense shear concentration in fillet transition shoulder!
-          scalar = Math.min(0.95, 0.08 + 0.86 * Math.pow(filletFocus, 1.5));
+  try {
+    sortedFaces.forEach(f => {
+      const absZ = Math.abs(f.avgZNorm);
+      const neckFocus = Math.max(0, 1.0 - absZ); // 1.0 at center gauge, 0.0 at ends
+      // Fillet transition focus (peaks at absZ ~ 0.55 between gauge 0.45 and grip 0.70)
+      const filletDist = Math.abs(absZ - 0.55);
+      const filletFocus = Math.max(0, 1.0 - (filletDist / 0.22));
+
+      let scalar = 0.5;
+      if (twinMode === 'residual-stress') {
+        if (curLoadCase === 'applied') {
+          // Applied ASTM E8 Uniaxial Tensile pull
+          if (curStressComp === 'vm' || curStressComp === 'szz') {
+            // Intense gauge yielding (945 MPa at gauge, dropping to 240 MPa at grip)
+            scalar = (absZ <= 0.45) ? 0.96 : Math.max(0.20, 0.96 - ((absZ - 0.45) / 0.55) * 0.76);
+          } else if (curStressComp === 'sxx') {
+            // Transverse normal stress in unconstrained bar is negligible
+            scalar = Math.min(0.25, 0.08 + 0.12 * neckFocus);
+          } else if (curStressComp === 'txz') {
+            // Intense shear concentration in fillet transition shoulder!
+            scalar = Math.min(0.95, 0.08 + 0.86 * Math.pow(filletFocus, 1.5));
+          }
+        } else {
+          // Residual stress mode scaled by material state
+          const k = Math.max(0.10, Math.min(1.0, baseResidual / 480.0));
+          if (curStressComp === 'vm') {
+            scalar = Math.min(0.98, 0.12 + neckFocus * 0.85 * k);
+          } else if (curStressComp === 'szz') {
+            // Axial is largest component in build direction
+            scalar = Math.min(0.98, 0.15 + neckFocus * 0.94 * k);
+          } else if (curStressComp === 'sxx') {
+            // Transverse is ~58% of axial
+            scalar = Math.min(0.85, 0.08 + neckFocus * 0.52 * k);
+          } else if (curStressComp === 'txz') {
+            // Shear peaks in transition radius
+            scalar = Math.min(0.92, 0.06 + Math.pow(filletFocus, 1.4) * 0.84 * k);
+          }
         }
-      } else {
-        // Residual stress mode scaled by material state
-        const k = Math.max(0.10, Math.min(1.0, baseResidual / 480.0));
-        if (activeStressComponent === 'vm') {
-          scalar = Math.min(0.98, 0.12 + neckFocus * 0.85 * k);
-        } else if (activeStressComponent === 'szz') {
-          // Axial is largest component in build direction
-          scalar = Math.min(0.98, 0.15 + neckFocus * 0.94 * k);
-        } else if (activeStressComponent === 'sxx') {
-          // Transverse is ~58% of axial
-          scalar = Math.min(0.85, 0.08 + neckFocus * 0.52 * k);
-        } else if (activeStressComponent === 'txz') {
-          // Shear peaks in transition radius
-          scalar = Math.min(0.92, 0.06 + Math.pow(filletFocus, 1.4) * 0.84 * k);
-        }
+      } else if (twinMode === 'cooling-rate') {
+        const coolNorm = 0.75;
+        scalar = Math.min(0.98, coolNorm * (0.65 + 0.35 * neckFocus));
+      } else if (twinMode === 'phase-fraction') {
+        const martNorm = Math.max(0.05, Math.min(0.96, (stateData.alphaPrime || 88) / 100.0));
+        scalar = Math.min(0.98, martNorm * (0.75 + 0.25 * neckFocus));
       }
-    } else if (twinMode === 'cooling-rate') {
-      const coolNorm = 0.75;
-      scalar = Math.min(0.98, coolNorm * (0.65 + 0.35 * neckFocus));
-    } else if (twinMode === 'phase-fraction') {
-      const martNorm = Math.max(0.05, Math.min(0.96, (stateData.alphaPrime || 88) / 100.0));
-      scalar = Math.min(0.98, martNorm * (0.75 + 0.25 * neckFocus));
-    }
 
-    const col = getColor(scalar, twinMode);
+      const col = getColor(scalar, twinMode);
 
-    ctx.beginPath();
-    ctx.moveTo(f.p[0].px, f.p[0].py);
-    ctx.lineTo(f.p[1].px, f.p[1].py);
-    ctx.lineTo(f.p[2].px, f.p[2].py);
-    ctx.lineTo(f.p[3].px, f.p[3].py);
-    ctx.closePath();
+      ctx.beginPath();
+      ctx.moveTo(f.p[0].px, f.p[0].py);
+      ctx.lineTo(f.p[1].px, f.p[1].py);
+      ctx.lineTo(f.p[2].px, f.p[2].py);
+      ctx.lineTo(f.p[3].px, f.p[3].py);
+      ctx.closePath();
 
-    if (wireframe) {
-      ctx.strokeStyle = col;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    } else {
-      ctx.fillStyle = col;
-      ctx.fill();
-      ctx.strokeStyle = "rgba(7, 11, 16, 0.35)";
-      ctx.lineWidth = 0.5;
-      ctx.stroke();
-    }
-  });
+      if (wireframe) {
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = col;
+        ctx.fill();
+        ctx.strokeStyle = "rgba(7, 11, 16, 0.35)";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    });
+  } catch (err) {
+    console.error('Error in renderTwin mesh traversal:', err);
+  }
 
   animFrameId = requestAnimationFrame(renderTwin);
 }
