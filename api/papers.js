@@ -1,18 +1,31 @@
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+import { setCorsHeaders } from './_shared.js';
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+export default async function handler(req, res) {
+  if (setCorsHeaders(req, res)) return;
 
   res.setHeader('Content-Type', 'application/json');
 
+  if (req.method !== 'GET') {
+    return res.status(405).json({
+      status: 'error',
+      code: 'METHOD_NOT_ALLOWED',
+      message: `HTTP method ${req.method} is not allowed. Use GET.`
+    });
+  }
+
   try {
     const q = req.query || {};
-    const supabaseUrl = process.env.SUPABASE_URL || 'https://iismzfileyuvqgdpivgx.supabase.co';
-    const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpc216ZmlsZXl1dnFnZHBpdmd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3ODAwMjYsImV4cCI6MjEwOTM1NjAyNn0.v__OCG79B-NyMKmyb_W7Lp_Lw0xcoWUggEuONMECmGo';
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      return res.status(503).json({
+        status: 'error',
+        code: 'DATABASE_UNCONFIGURED',
+        message: 'Supabase credentials are not configured in environment variables. Falling back to static papers registry.'
+      });
+    }
+
     const parsedLimit = parseInt(q.limit, 10);
     const parsedOffset = parseInt(q.offset, 10);
     const limit = Math.max(1, Math.min(Number.isFinite(parsedLimit) ? parsedLimit : 200, 250));
@@ -47,7 +60,6 @@ export default async function handler(req, res) {
     }
 
     const raw = await r.json();
-    // Deduplicate rows if remote table holds duplicate paper_number records
     const data = [];
     const seenKeys = new Set();
     if (Array.isArray(raw)) {
@@ -60,11 +72,12 @@ export default async function handler(req, res) {
       }
     }
     res.status(200).json({
+      status: 'success',
       source: 'Supabase PostgreSQL Cloud',
-      count: Array.isArray(data) ? data.length : 0,
+      count: data.length,
       papers: data
     });
   } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
+    res.status(500).json({ status: 'error', code: 'INTERNAL_ERROR', message: err.message });
   }
 }

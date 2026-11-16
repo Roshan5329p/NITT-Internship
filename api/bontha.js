@@ -1,35 +1,53 @@
-export default function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+/**
+ * NIT Trichy Titanium AM Platform - Bontha Solidification & CET Map API
+ * Calculates thermal gradient G (K/cm) and solidification velocity R (cm/s)
+ * based on Bontha et al. (2006, 2009) criteria.
+ */
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+import { setCorsHeaders, normalizeProcessName, validateProcessInputs } from './_shared.js';
+
+export default function handler(req, res) {
+  if (setCorsHeaders(req, res)) return;
 
   res.setHeader('Content-Type', 'application/json');
 
-  try {
-    const q = req.query || {};
-    const dim = q.dim || '3d-bulky';
-    const srcRaw = (q.source || q.process || 'laser').toLowerCase();
-    const rawP = parseFloat(q.power);
-    const rawV = parseFloat(q.speed);
-    const rawPre = parseFloat(q.preheat);
-    const p = Math.min(50000, Math.max(10, (Number.isFinite(rawP) && rawP > 0) ? rawP : 200));
-    const v = Math.min(20000, Math.max(0.5, (Number.isFinite(rawV) && rawV > 0) ? rawV : 950));
-    const preheat = Math.min(1600, Math.max(0, Number.isFinite(rawPre) ? rawPre : 25));
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({
+      status: 'error',
+      code: 'METHOD_NOT_ALLOWED',
+      message: `HTTP method ${req.method} is not allowed. Use GET or POST.`
+    });
+  }
 
+  try {
+    const q = req.method === 'POST' ? (req.body || {}) : (req.query || {});
+    const proc = normalizeProcessName(q.process || q.source);
+
+    const validation = validateProcessInputs(q, proc);
+    if (!validation.valid) {
+      return res.status(400).json({
+        status: 'error',
+        code: 'INVALID_PHYSICAL_PARAMETER',
+        message: `Validation failed: ${validation.rejected_parameters.length} parameter(s) outside physical operating limits.`,
+        process: proc,
+        process_name: validation.process_name,
+        rejected_parameters: validation.rejected_parameters,
+        accepted_parameters: validation.accepted_parameters
+      });
+    }
+
+    const { power: p, speed: v, preheat } = validation.accepted_parameters;
+    const dim = (q.dim || '3d-bulky').toLowerCase();
     const vMs = Math.max(1e-4, v / 1000.0);
+
     let source = 'laser';
     let alpha = 0.35;
-    if (srcRaw.includes('ebeam')) { source = 'ebeam'; alpha = 0.88; }
-    else if (srcRaw.includes('arc') || srcRaw.includes('waam')) { source = 'arc'; alpha = 0.78; }
-    else if (srcRaw.includes('ded')) { source = 'ded-laser'; alpha = 0.38; }
+    if (proc === 'waam') { source = 'arc'; alpha = 0.78; }
+    else if (proc === 'ded-laser') { source = 'ded-laser'; alpha = 0.38; }
 
-    const rho = 4420, c = 526, k = 27.0;
-    const Tm = 1654, T0 = preheat;
-    const deltaTm = Math.max(50, Tm - T0);
+    const rho = 4420.0, c = 526.0, k = 27.0;
+    const Tm = 1654.0, T0 = preheat;
+    const deltaTm = Math.max(50.0, Tm - T0);
     const alpha_Q = alpha * p;
     const T_c = (alpha_Q / (Math.PI * k)) * ((rho * c * vMs) / (2.0 * k));
     const T_bar_m = deltaTm / Math.max(1e-6, T_c);
@@ -50,21 +68,36 @@ export default function handler(req, res) {
     else if (logG <= logGUpper) morph = 'Mixed (CET)';
 
     res.status(200).json({
+      status: 'success',
       dimension: dim === '3d-bulky' ? '3D Bulky Half-Space (Bontha 2009)' : '2D Thin-Wall (Bontha 2006)',
-      source: source,
-      absorptivity: alpha,
-      power_w: p,
-      speed_mms: v,
-      preheat_c: preheat,
-      norm_tm: parseFloat(T_bar_m.toFixed(3)),
-      surface_growth_rate_r_cms: parseFloat(R_cms.toFixed(2)),
-      surface_temperature_gradient_g_kcm: G_Kcm,
-      cooling_rate_ks: coolingRate,
-      gr_ratio: parseFloat((G_Kcm / Math.max(0.001, R_cms)).toFixed(1)),
-      morphology: morph,
-      depth_stations: 10
+      process: proc,
+      process_name: validation.process_name,
+      inputs: {
+        power_w: p,
+        speed_mms: v,
+        preheat_c: preheat,
+        absorptivity: alpha
+      },
+      solidification_kinetics: {
+        norm_tm: parseFloat(T_bar_m.toFixed(3)),
+        solidification_growth_rate_r_cms: parseFloat(R_cms.toFixed(2)),
+        thermal_gradient_g_kcm: G_Kcm,
+        cooling_rate_ks: coolingRate,
+        gr_ratio: parseFloat((G_Kcm / Math.max(0.001, R_cms)).toFixed(1)),
+        cooling_rate_g_times_r: G_Kcm * R_cms,
+        grain_morphology: morph
+      },
+      hunt_cet_criterion: {
+        governing_relation: "G^3.4 / R > K_CET (Columnar) vs G^3.4 / R < K_CET_min (Equiaxed)",
+        log_g: parseFloat(logG.toFixed(3)),
+        log_g_lower_threshold: parseFloat(logGLower.toFixed(3)),
+        log_g_upper_threshold: parseFloat(logGUpper.toFixed(3)),
+        interpretation: morph === 'Columnar'
+          ? "High thermal gradients suppress equiaxed grain nucleating ahead of solidification front, fostering elongated prior-β grains along [001] build direction."
+          : "Thermal gradient is sufficiently low to allow heterogeneous nucleation of equiaxed grains ahead of the liquidus isotherm."
+      }
     });
   } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
+    res.status(500).json({ status: 'error', code: 'INTERNAL_ERROR', message: err.message });
   }
 }

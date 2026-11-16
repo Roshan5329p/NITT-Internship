@@ -33,6 +33,10 @@
       "dest": "/api/stats.js"
     },
     {
+      "src": "/api/predict/?",
+      "dest": "/api/predict.js"
+    },
+    {
       "src": "/api/evaluate/?",
       "dest": "/api/evaluate.js"
     },

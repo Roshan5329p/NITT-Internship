@@ -1,13 +1,17 @@
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+import { setCorsHeaders } from './_shared.js';
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+export default async function handler(req, res) {
+  if (setCorsHeaders(req, res)) return;
 
   res.setHeader('Content-Type', 'application/json');
+
+  if (req.method !== 'GET') {
+    return res.status(405).json({
+      status: 'error',
+      code: 'METHOD_NOT_ALLOWED',
+      message: `HTTP method ${req.method} is not allowed. Use GET.`
+    });
+  }
 
   try {
     const q = req.query || {};
@@ -15,6 +19,7 @@ export default async function handler(req, res) {
     if (!apiKey) {
       return res.status(503).json({
         status: 'error',
+        code: 'SCOPUS_KEY_UNCONFIGURED',
         message: 'SCOPUS_API_KEY is not configured in server environment variables.'
       });
     }
@@ -78,6 +83,6 @@ export default async function handler(req, res) {
       papers
     });
   } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
+    res.status(500).json({ status: 'error', code: 'INTERNAL_ERROR', message: err.message });
   }
 }

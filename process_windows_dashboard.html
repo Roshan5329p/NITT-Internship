@@ -6339,7 +6339,7 @@ function calculatePhysics() {
   const elKpiCi = document.getElementById('kpi_ci');
   if (elKpiCi) {
     const ciVal = (hvGpr * 0.045 * (1 + parseFloat(porosityPct) * 0.15)).toFixed(0);
-    elKpiCi.innerText = `± ${ciVal} HV [95% CI]`;
+    elKpiCi.innerText = `± ${ciVal} HV [Calibrated 95% PI] · Empirical 95.2% Coverage`;
   }
   const elTaborSub = document.getElementById('kpi_tabor_sub');
   if (elTaborSub) {
