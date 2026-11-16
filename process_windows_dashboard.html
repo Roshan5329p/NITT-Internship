@@ -1219,14 +1219,7 @@
     height: 100%;
     display: block;
   }
-  .twin-controls-overlay {
-    position: absolute;
-    top: 14px; left: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    z-index: 10;
-  }
+  
   .twin-btn {
     background: rgba(28, 28, 30, 0.85);
     border: 1px solid var(--border-color);
@@ -2558,16 +2551,16 @@ function setStressComponent(comp) {
   const unitEl = document.getElementById('twinScaleUnit');
   const titleEl = document.getElementById('twinScaleTitle');
   if (comp === 'vm') {
-    if (titleEl) titleEl.innerText = 'Von Mises Stress';
+    if (titleEl) titleEl.innerText = 'Von Mises Equivalent Stress';
     if (unitEl) unitEl.innerText = 'σ_vM (MPa)';
   } else if (comp === 'szz') {
-    if (titleEl) titleEl.innerText = 'Longitudinal Stress';
-    if (unitEl) unitEl.innerText = 'S_zz [Tensile] (MPa)';
+    if (titleEl) titleEl.innerText = 'Axial Normal Stress (Build Axis Z)';
+    if (unitEl) unitEl.innerText = 'σ_zz (MPa)';
   } else if (comp === 'sxx') {
-    if (titleEl) titleEl.innerText = 'Transverse Scan Stress';
-    if (unitEl) unitEl.innerText = 'S_xx (MPa)';
+    if (titleEl) titleEl.innerText = 'Transverse Normal Stress (Scan Axis X)';
+    if (unitEl) unitEl.innerText = 'σ_xx (MPa)';
   } else if (comp === 'txz') {
-    if (titleEl) titleEl.innerText = 'Interlaminar Shear Stress';
+    if (titleEl) titleEl.innerText = 'Interlaminar Shear Stress (Plane X-Z)';
     if (unitEl) unitEl.innerText = 'τ_xz (MPa)';
   }
 }
@@ -2596,7 +2589,7 @@ function toggleLoadCase() {
     }
   } else {
     if (btn) {
-      btn.innerText = 'Load Case: Thermal Residual';
+      btn.innerText = 'Load Case: Residual Stress';
       btn.style.color = '';
       btn.style.borderColor = '';
     }
@@ -2939,12 +2932,11 @@ function closeEngineeringReportModal() {
         <span class="brand-badge" id="postStatusBadge">HIP QUALIFIED</span>
       </div>
       <select class="dark-select" id="postProcessingSelect" onchange="updateAll()">
-        <option value="None">None (As-built martensite α')</option>
-        <option value="Stress-relieved">Stress-relieved (600°C / 2 hr)</option>
+        <option value="None">As-Built (α' Martensite)</option>
+        <option value="Stress-relieved">Stress-Relieved (650°C / 2 hr)</option>
         <option value="Annealed">Annealed (730°C / 2 hr)</option>
-        <option value="HIP" selected>HIP (Hot Isostatic Pressing: 920°C / 100 MPa)</option>
-        <option value="Bi-modal">Bi-modal α+β (Cyclic Heat Treatment / Cao 2021)</option>
-        <option value="Solution-Aged">Solution-Treated & Aged (STA)</option>
+        <option value="HIP" selected>HIP-Treated (920°C / 100 MPa)</option>
+        <option value="Solution-Aged">Solution-Treated &amp; Aged (STA)</option>
       </select>
       <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;" id="postProcessingNote">
         Hot Isostatic Pressing decomposes brittle α' martensite into ductile lamellar α+β basketweave and closes internal voids to satisfy ASTM F2924.
@@ -3055,11 +3047,11 @@ function closeEngineeringReportModal() {
         </div>
       </div>
       <div class="mat-state-pills">
-        <button type="button" class="mat-state-btn" id="btnMatState_as_built" onclick="setGlobalMaterialState('as_built')">1. As-Built (α' Needles)</button>
-        <button type="button" class="mat-state-btn" id="btnMatState_stress_relieved" onclick="setGlobalMaterialState('stress_relieved')">2. Stress-Relieved (650°C)</button>
-        <button type="button" class="mat-state-btn" id="btnMatState_annealed" onclick="setGlobalMaterialState('annealed')">3. Annealed (730°C)</button>
-        <button type="button" class="mat-state-btn active" id="btnMatState_hip" onclick="setGlobalMaterialState('hip')">4. HIP-Treated (920°C/100MPa)</button>
-        <button type="button" class="mat-state-btn" id="btnMatState_sta" onclick="setGlobalMaterialState('sta')">5. Solution &amp; Aged (STA)</button>
+        <button type="button" class="mat-state-btn" id="btnMatState_as_built" onclick="setGlobalMaterialState('as_built')">As-Built (α' Martensite)</button>
+        <button type="button" class="mat-state-btn" id="btnMatState_stress_relieved" onclick="setGlobalMaterialState('stress_relieved')">Stress-Relieved (650°C)</button>
+        <button type="button" class="mat-state-btn" id="btnMatState_annealed" onclick="setGlobalMaterialState('annealed')">Annealed (730°C)</button>
+        <button type="button" class="mat-state-btn active" id="btnMatState_hip" onclick="setGlobalMaterialState('hip')">HIP-Treated (920°C / 100 MPa)</button>
+        <button type="button" class="mat-state-btn" id="btnMatState_sta" onclick="setGlobalMaterialState('sta')">Solution-Treated &amp; Aged (STA)</button>
       </div>
     </div>
 
@@ -3463,9 +3455,9 @@ function closeEngineeringReportModal() {
         <div class="micro-pills">
           <button type="button" class="micro-pill-btn" onclick="selectMicrostructurePhase('as_built', this)">As-Built (α' Martensite)</button>
           <button type="button" class="micro-pill-btn" onclick="selectMicrostructurePhase('stress_relieved', this)">Stress-Relieved (650°C)</button>
-          <button type="button" class="micro-pill-btn" onclick="selectMicrostructurePhase('annealed', this)">Annealed (730°C α+β)</button>
-          <button type="button" class="micro-pill-btn active" onclick="selectMicrostructurePhase('hip', this)">HIP Treated (920°C Basketweave)</button>
-          <button type="button" class="micro-pill-btn" onclick="selectMicrostructurePhase('bimodal', this)">Bi-Modal STA (High-Ductility)</button>
+          <button type="button" class="micro-pill-btn" onclick="selectMicrostructurePhase('annealed', this)">Annealed (730°C)</button>
+          <button type="button" class="micro-pill-btn active" onclick="selectMicrostructurePhase('hip', this)">HIP-Treated (920°C / 100 MPa)</button>
+          <button type="button" class="micro-pill-btn" onclick="selectMicrostructurePhase('sta', this)">Solution-Treated &amp; Aged (STA)</button>
         </div>
 
         <div style="display: grid; grid-template-columns: 340px 1fr; gap: 16px;">
@@ -4400,13 +4392,13 @@ function closeEngineeringReportModal() {
             <button class="twin-btn" onclick="resetCamera()">Reset Camera</button>
             <span style="border-left: 1px solid rgba(255,255,255,0.15); margin: 0 4px; height: 16px;"></span>
             <!-- Stress Tensor Component Selection -->
-            <button class="twin-btn active" id="btnStress_vm" onclick="setStressComponent('vm')">σ_vM</button>
-            <button class="twin-btn" id="btnStress_szz" onclick="setStressComponent('szz')">S_zz (Tensile)</button>
-            <button class="twin-btn" id="btnStress_sxx" onclick="setStressComponent('sxx')">S_xx (Transverse)</button>
-            <button class="twin-btn" id="btnStress_txz" onclick="setStressComponent('txz')">τ_xz (Shear)</button>
+            <button class="twin-btn active" id="btnStress_vm" onclick="setStressComponent('vm')">σ_vM (Von Mises)</button>
+            <button class="twin-btn" id="btnStress_szz" onclick="setStressComponent('szz')">σ_zz (Axial / Z)</button>
+            <button class="twin-btn" id="btnStress_sxx" onclick="setStressComponent('sxx')">σ_xx (Transverse / X)</button>
+            <button class="twin-btn" id="btnStress_txz" onclick="setStressComponent('txz')">τ_xz (Shear / XZ)</button>
             <span style="border-left: 1px solid rgba(255,255,255,0.15); margin: 0 4px; height: 16px;"></span>
             <!-- Load Case Toggle -->
-            <button class="twin-btn" id="btnLoadCase" onclick="toggleLoadCase()">Load Case: Thermal Residual</button>
+            <button class="twin-btn" id="btnLoadCase" onclick="toggleLoadCase()">Load Case: Residual Stress</button>
           </div>
           <!-- 3D Build Direction Indicator -->
           <div style="position: absolute; bottom: 55px; left: 16px; background: rgba(6,11,20,0.75); border: 1px solid rgba(56,189,248,0.3); border-radius: 4px; padding: 4px 8px; font-family: monospace; font-size: 10.5px; color: #38bdf8; z-index: 5; pointer-events: none; display: flex; align-items: center; gap: 6px;">
@@ -10086,7 +10078,12 @@ function updateLiteratureTraceability(p, v, h, t) {
 let activeMicroPhase = 'hip';
 function selectMicrostructurePhase(phaseKey, btn) {
   activeMicroPhase = phaseKey;
-  document.querySelectorAll('.micro-pill-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.micro-pill-btn').forEach(b => {
+    b.classList.remove('active');
+    if (!btn && b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + phaseKey + "'")) {
+      b.classList.add('active');
+    }
+  });
   if (btn) btn.classList.add('active');
 
   const meta = {
@@ -10113,6 +10110,12 @@ function selectMicrostructurePhase(phaseKey, btn) {
       desc: "Eliminates lack-of-fusion and gas porosity via high-pressure creep diffusion bonding. Microstructure fully transforms into coarse Widmanstätten basketweave α+β laths with high ductility and fatigue life.",
       alpha: 88.0, beta: 12.0, alphaPrime: 0.0,
       lath: "1.85 µm", elong: "14.5%", astm: "PASS (Class C)", astmCol: "#34d399"
+    },
+    sta: {
+      title: "Solution-Treated & Aged (STA: 940°C + 540°C)",
+      desc: "Synthesizes globular primary α_p particles within a fine transformed lamellar α_s + β matrix, providing an optimal trade-off of high yield strength (>990 MPa) and high ductility.",
+      alpha: 78.0, beta: 22.0, alphaPrime: 0.0,
+      lath: "1.40 µm", elong: "12.0%", astm: "PASS (STA)", astmCol: "#34d399"
     },
     bimodal: {
       title: "Bi-Modal STA (Solution Treated & Aged: Cyclic Heat Treatment)",
