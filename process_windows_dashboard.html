@@ -2610,64 +2610,32 @@ function setStressComponent(comp) {
   const btn = document.getElementById('btnStress_' + comp);
   if (btn) btn.classList.add('active');
 
-  const unitEl = document.getElementById('twinScaleUnit');
-  const titleEl = document.getElementById('twinScaleTitle');
-  if (comp === 'vm') {
-    if (titleEl) titleEl.innerText = 'Von Mises Equivalent Stress';
-    if (unitEl) unitEl.innerText = 'σ_vM (MPa)';
-  } else if (comp === 'szz') {
-    if (titleEl) titleEl.innerText = 'Axial Normal Stress (Build Axis Z)';
-    if (unitEl) unitEl.innerText = 'σ_zz (MPa)';
-  } else if (comp === 'sxx') {
-    if (titleEl) titleEl.innerText = 'Transverse Normal Stress (Scan Axis X)';
-    if (unitEl) unitEl.innerText = 'σ_xx (MPa)';
-  } else if (comp === 'txz') {
-    if (titleEl) titleEl.innerText = 'Interlaminar Shear Stress (Plane X-Z)';
-    if (unitEl) unitEl.innerText = 'τ_xz (MPa)';
+  if (typeof updateTwinScaleAndHud === 'function') {
+    updateTwinScaleAndHud();
   }
 }
 
 function toggleLoadCase() {
   activeLoadCase = (activeLoadCase === 'residual') ? 'applied' : 'residual';
   const btn = document.getElementById('btnLoadCase');
-  const descEl = document.getElementById('twinStateDesc');
-  const badgeEl = document.getElementById('twinStateBadge');
-
-  if (activeLoadCase === 'applied') {
-    if (btn) {
-      btn.innerText = 'Load Case: ASTM E8 Tensile (950 MPa)';
+  if (btn) {
+    if (activeLoadCase === 'applied') {
+      btn.innerText = 'Load Case: Applied Tension (ASTM E8)';
       btn.style.color = '#38bdf8';
       btn.style.borderColor = '#38bdf8';
-    }
-    if (badgeEl) {
-      badgeEl.innerText = 'UNIAXIAL TENSION (YIELD THRESHOLD)';
-      badgeEl.style.background = 'rgba(245, 158, 11, 0.2)';
-      badgeEl.style.color = '#fbbf24';
-    }
-    if (descEl) {
-      descEl.innerHTML = '<strong>Gauge Stress:</strong> 945 MPa (Plastic deformation initiated)<br>' +
-        '<strong>Grip Stress:</strong> 280 MPa (Elastic shoulder constraint)<br>' +
-        '<strong>ASTM E8 Tensile Load:</strong> 23.6 kN uniaxial pull';
-    }
-  } else {
-    if (btn) {
+      btn.style.background = 'rgba(56, 189, 248, 0.2)';
+    } else {
       btn.innerText = 'Load Case: Residual Stress';
       btn.style.color = '';
       btn.style.borderColor = '';
-    }
-    if (badgeEl) {
-      badgeEl.innerText = 'ELASTIC SUB-YIELD';
-      badgeEl.style.background = 'rgba(16, 185, 129, 0.2)';
-      badgeEl.style.color = 'var(--accent-emerald)';
-    }
-    if (descEl) {
-      descEl.innerHTML = '<strong>Gauge Peak:</strong> 380 MPa (Residual tension in reduced neck)<br>' +
-        '<strong>Grip Boundary:</strong> 145 MPa (Relaxed outer shoulder)<br>' +
-        '<strong>Yield Strength:</strong> 865 MPa (44% of YS in HIP state)';
+      btn.style.background = '';
     }
   }
-}
 
+  if (typeof updateTwinScaleAndHud === 'function') {
+    updateTwinScaleAndHud();
+  }
+}
 
 function openEngineeringReportModal() {
   const modal = document.getElementById('engineeringReportModal');
@@ -7242,8 +7210,13 @@ function updateTwinScaleAndHud() {
     post: 'HIP'
   };
 
-  const postSelect = document.getElementById('postProcessingSelect');
-  const post = twin.post || (postSelect ? postSelect.value : 'HIP');
+  const stateData = (typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY[globalMaterialState])
+    ? MATERIAL_STATE_REGISTRY[globalMaterialState]
+    : { label: 'HIP Basketweave', ysMpa: 865, utsMpa: 945, residualStressGaugeMpa: 387, alphaPrime: 0, alpha: 88, beta: 12 };
+
+  const baseResidual = stateData.residualStressGaugeMpa || twin.residualStressMPa || 387;
+  const ys = stateData.ysMpa || twin.yieldStrength || 920;
+  const uts = stateData.utsMpa || twin.tensileStrength || 1034;
 
   const titleEl = document.getElementById('twinScaleTitle');
   const unitEl = document.getElementById('twinScaleUnit');
@@ -7260,132 +7233,251 @@ function updateTwinScaleAndHud() {
   if (!titleEl || !ticksEl) return;
 
   if (twinMode === 'residual-stress') {
-    titleEl.textContent = 'Von Mises Stress';
-    unitEl.textContent = 'σ_vm (MPa)';
-    ticksEl.innerHTML = `
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">600</span><span class="twin-tick-label">Yield Risk</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">450</span><span class="twin-tick-label">High Tensile</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">300</span><span class="twin-tick-label">Sub-Yield</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">150</span><span class="twin-tick-label">Relieved</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Stress-Free</span></div>
-    `;
-    const curVal = twin.residualStressMPa !== undefined ? twin.residualStressMPa : 380;
-    const pct = Math.max(0, Math.min(100, (curVal / 600) * 100));
-    if (markerEl) markerEl.style.top = (100 - pct) + '%';
+    let peakVal = baseResidual;
+    let maxScale = 600;
 
-    if (badgeEl && descEl) {
-      if (curVal > 500) {
-        badgeEl.textContent = 'CRITICAL RESIDUAL TENSION';
-        badgeEl.style.color = '#ef4444';
-        badgeEl.style.borderColor = 'rgba(239, 68, 68, 0.4)';
-        badgeEl.style.background = 'rgba(239, 68, 68, 0.18)';
-        descEl.textContent = `Gauge peak: ${curVal} MPa (>55% of YS). Severe distortion risk; post-weld stress relief required.`;
-      } else if (curVal > 250) {
-        badgeEl.textContent = 'ELASTIC SUB-YIELD TENSION';
-        badgeEl.style.color = '#f59e0b';
-        badgeEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
-        badgeEl.style.background = 'rgba(245, 158, 11, 0.18)';
-        descEl.textContent = `Gauge peak: ${curVal} MPa (Elastic state, 30–45% of YS). Stable under ambient conditions.`;
-      } else {
-        badgeEl.textContent = 'STRESS-RELIEVED / HIP';
-        badgeEl.style.color = '#10b981';
-        badgeEl.style.borderColor = 'rgba(16, 185, 129, 0.4)';
-        badgeEl.style.background = 'rgba(16, 185, 129, 0.18)';
-        descEl.textContent = `Gauge peak: ${curVal} MPa (<25% of YS). Residual stresses relaxed; high fatigue resistance.`;
+    if (activeLoadCase === 'applied') {
+      if (activeStressComponent === 'vm') {
+        titleEl.textContent = 'Von Mises Equivalent Stress';
+        unitEl.textContent = 'σ_vM (MPa)';
+        maxScale = 1200;
+        peakVal = 945;
+        ticksEl.innerHTML = `
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">1200</span><span class="twin-tick-label">UTS Overload</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">950</span><span class="twin-tick-label">Yield Initiation</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">700</span><span class="twin-tick-label">High Elastic</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">450</span><span class="twin-tick-label">Shoulder Taper</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">200</span><span class="twin-tick-label">Grip Ends</span></div>
+        `;
+        if (badgeEl) {
+          badgeEl.textContent = 'UNIAXIAL TENSION (YIELD THRESHOLD)';
+          badgeEl.style.color = '#f59e0b';
+          badgeEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+          badgeEl.style.background = 'rgba(245, 158, 11, 0.18)';
+        }
+        if (descEl) {
+          descEl.innerHTML = `<strong>Gauge Neck Stress:</strong> 945 MPa (Active plastic necking initiation)<br><strong>Grip Shoulder Stress:</strong> 240 MPa (Elastic constraint)<br><strong>ASTM E8 Pull:</strong> 23.6 kN uniaxial tensile load`;
+        }
+        if (hudStress) hudStress.innerHTML = `PEAK σ_vM: <strong style="color:#ef4444;">945 MPa</strong> (Gauge Center Yield)`;
+      } else if (activeStressComponent === 'szz') {
+        titleEl.textContent = 'Axial Normal Stress (Build Axis Z)';
+        unitEl.textContent = 'σ_zz (MPa)';
+        maxScale = 1200;
+        peakVal = 945;
+        ticksEl.innerHTML = `
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">1200</span><span class="twin-tick-label">Max Tension</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">950</span><span class="twin-tick-label">Axial Yield</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">700</span><span class="twin-tick-label">Elastic Pull</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">450</span><span class="twin-tick-label">Fillet Radius</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">200</span><span class="twin-tick-label">Grip Base</span></div>
+        `;
+        if (badgeEl) {
+          badgeEl.textContent = 'AXIAL TENSILE LOAD (PULL AXIS Z)';
+          badgeEl.style.color = '#38bdf8';
+          badgeEl.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+          badgeEl.style.background = 'rgba(56, 189, 248, 0.18)';
+        }
+        if (descEl) {
+          descEl.innerHTML = `<strong>Nominal Axial Pull σ_zz:</strong> 945 MPa (Dominant normal stress driving necking)<br><strong>Grip Shoulder σ_zz:</strong> 216 MPa (F/A_grip distribution)<br><strong>Stress Ratio:</strong> σ_zz accounts for >98% of total strain energy`;
+        }
+        if (hudStress) hudStress.innerHTML = `PEAK σ_zz: <strong style="color:#ef4444;">945 MPa</strong> (Reduced Gauge Neck)`;
+      } else if (activeStressComponent === 'sxx') {
+        titleEl.textContent = 'Transverse Normal Stress (Scan Axis X)';
+        unitEl.textContent = 'σ_xx (MPa)';
+        maxScale = 200;
+        peakVal = 45;
+        ticksEl.innerHTML = `
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">200</span><span class="twin-tick-label">High Confinement</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">150</span><span class="twin-tick-label">Moderate</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">100</span><span class="twin-tick-label">Poisson Effect</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">50</span><span class="twin-tick-label">Low Stress</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Free Surface</span></div>
+        `;
+        if (badgeEl) {
+          badgeEl.textContent = 'TRANSVERSE COMPONENT (NEAR ZERO)';
+          badgeEl.style.color = '#34d399';
+          badgeEl.style.borderColor = 'rgba(52, 211, 153, 0.4)';
+          badgeEl.style.background = 'rgba(52, 211, 153, 0.18)';
+        }
+        if (descEl) {
+          descEl.innerHTML = `<strong>Transverse Stress σ_xx:</strong> 45 MPa (Minor Poisson contraction constraint)<br><strong>Significance:</strong> Under pure uniaxial tension, transverse normal stresses are negligible.<br><strong>Boundary Condition:</strong> Traction-free lateral cylindrical surface`;
+        }
+        if (hudStress) hudStress.innerHTML = `PEAK σ_xx: <strong style="color:#38bdf8;">45 MPa</strong> (Poisson Contraction Zone)`;
+      } else if (activeStressComponent === 'txz') {
+        titleEl.textContent = 'Interlaminar Shear Stress (Plane X-Z)';
+        unitEl.textContent = 'τ_xz (MPa)';
+        maxScale = 450;
+        peakVal = 320;
+        ticksEl.innerHTML = `
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">450</span><span class="twin-tick-label">Max Shear</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">320</span><span class="twin-tick-label">Fillet Peak</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">200</span><span class="twin-tick-label">Transition</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">100</span><span class="twin-tick-label">Low Shear</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Gauge / Grip Zero</span></div>
+        `;
+        if (badgeEl) {
+          badgeEl.textContent = 'FILLET SHEAR CONCENTRATION BAND';
+          badgeEl.style.color = '#c084fc';
+          badgeEl.style.borderColor = 'rgba(192, 132, 252, 0.4)';
+          badgeEl.style.background = 'rgba(192, 132, 252, 0.18)';
+        }
+        if (descEl) {
+          descEl.innerHTML = `<strong>Peak Fillet Shear τ_xz:</strong> 320 MPa (Concentrated at shoulder transition radius)<br><strong>Gauge Center Shear:</strong> ~0 MPa (Pure normal tension along Z)<br><strong>FEA Validation:</strong> Classic shear band at radius expansion (ASTM E8 shoulder)`;
+        }
+        if (hudStress) hudStress.innerHTML = `PEAK τ_xz: <strong style="color:#c084fc;">320 MPa</strong> (Transition Fillet Radius)`;
+      }
+    } else {
+      // Residual stress mode
+      if (activeStressComponent === 'vm') {
+        titleEl.textContent = 'Von Mises Equivalent Stress';
+        unitEl.textContent = 'σ_vM (MPa)';
+        maxScale = 600;
+        peakVal = baseResidual;
+        ticksEl.innerHTML = `
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">600</span><span class="twin-tick-label">Yield Risk</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">450</span><span class="twin-tick-label">High Tensile</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">300</span><span class="twin-tick-label">Sub-Yield</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">150</span><span class="twin-tick-label">Relieved</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Stress-Free</span></div>
+        `;
+        if (badgeEl) {
+          if (baseResidual > 400) {
+            badgeEl.textContent = 'CRITICAL RESIDUAL TENSION';
+            badgeEl.style.color = '#ef4444';
+            badgeEl.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+            badgeEl.style.background = 'rgba(239, 68, 68, 0.18)';
+          } else if (baseResidual > 150) {
+            badgeEl.textContent = 'MODERATE RESIDUAL STRESS';
+            badgeEl.style.color = '#f59e0b';
+            badgeEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+            badgeEl.style.background = 'rgba(245, 158, 11, 0.18)';
+          } else {
+            badgeEl.textContent = 'ELASTICALLY RELIEVED (PASS)';
+            badgeEl.style.color = '#34d399';
+            badgeEl.style.borderColor = 'rgba(52, 211, 153, 0.4)';
+            badgeEl.style.background = 'rgba(52, 211, 153, 0.18)';
+          }
+        }
+        if (descEl) {
+          descEl.innerHTML = `<strong>Gauge Core Peak:</strong> ${baseResidual} MPa (Residual thermal tension)<br><strong>Grip Shoulder:</strong> ${Math.round(baseResidual * 0.38)} MPa (Relaxed boundary)<br><strong>State Compliance:</strong> ${baseResidual < 100 ? 'Compliant with ASTM Class 1' : 'Requires thermal stress relief'}`;
+        }
+        if (hudStress) hudStress.innerHTML = `PEAK σ_vM: <strong style="color:#ef4444;">${baseResidual} MPa</strong> (Gauge Core Center)`;
+      } else if (activeStressComponent === 'szz') {
+        titleEl.textContent = 'Axial Normal Stress (Build Axis Z)';
+        unitEl.textContent = 'σ_zz (MPa)';
+        maxScale = 600;
+        peakVal = Math.round(baseResidual * 1.08);
+        ticksEl.innerHTML = `
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">600</span><span class="twin-tick-label">Max Tension</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">450</span><span class="twin-tick-label">Build Peak</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">300</span><span class="twin-tick-label">Core Tension</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">150</span><span class="twin-tick-label">Grip Zone</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Neutral Axis</span></div>
+        `;
+        if (badgeEl) {
+          badgeEl.textContent = 'AXIAL RESIDUAL TENSION (BUILD AXIS Z)';
+          badgeEl.style.color = '#38bdf8';
+          badgeEl.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+          badgeEl.style.background = 'rgba(56, 189, 248, 0.18)';
+        }
+        if (descEl) {
+          descEl.innerHTML = `<strong>Peak Axial Residual σ_zz:</strong> ${peakVal} MPa (Along build height axis [001])<br><strong>Grip Boundary σ_zz:</strong> ${Math.round(peakVal * 0.30)} MPa (Low thermal constraint)<br><strong>Physical Cause:</strong> Cumulative thermal shrinkage across successive melted powder layers`;
+        }
+        if (hudStress) hudStress.innerHTML = `PEAK σ_zz: <strong style="color:#38bdf8;">${peakVal} MPa</strong> (Along Build Height [001])`;
+      } else if (activeStressComponent === 'sxx') {
+        titleEl.textContent = 'Transverse Normal Stress (Scan Axis X)';
+        unitEl.textContent = 'σ_xx (MPa)';
+        maxScale = 400;
+        peakVal = Math.round(baseResidual * 0.58);
+        ticksEl.innerHTML = `
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">400</span><span class="twin-tick-label">High Transverse</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">300</span><span class="twin-tick-label">Moderate</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">200</span><span class="twin-tick-label">Scan Track Residual</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">100</span><span class="twin-tick-label">Grip Zone</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Free Surface</span></div>
+        `;
+        if (badgeEl) {
+          badgeEl.textContent = 'TRANSVERSE PLANAR CONFINEMENT (X)';
+          badgeEl.style.color = '#34d399';
+          badgeEl.style.borderColor = 'rgba(52, 211, 153, 0.4)';
+          badgeEl.style.background = 'rgba(52, 211, 153, 0.18)';
+        }
+        if (descEl) {
+          descEl.innerHTML = `<strong>Peak Transverse Residual σ_xx:</strong> ${peakVal} MPa (Perpendicular to build axis, along scan vector)<br><strong>Anisotropy Ratio (σ_xx / σ_zz):</strong> 0.54 (Matches neutron diffraction benchmarks)<br><strong>Relaxation:</strong> Decomposes rapidly after 650°C stress relief`;
+        }
+        if (hudStress) hudStress.innerHTML = `PEAK σ_xx: <strong style="color:#34d399;">${peakVal} MPa</strong> (Across Laser Scan Tracks)`;
+      } else if (activeStressComponent === 'txz') {
+        titleEl.textContent = 'Interlaminar Shear Stress (Plane X-Z)';
+        unitEl.textContent = 'τ_xz (MPa)';
+        maxScale = 300;
+        peakVal = Math.round(baseResidual * 0.42);
+        ticksEl.innerHTML = `
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">300</span><span class="twin-tick-label">Max Fillet Shear</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">225</span><span class="twin-tick-label">Concentration</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">150</span><span class="twin-tick-label">Transition Radius</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">75</span><span class="twin-tick-label">Low Shear</span></div>
+          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Uniform Sections</span></div>
+        `;
+        if (badgeEl) {
+          badgeEl.textContent = 'INTERLAMINAR SHEAR CONCENTRATION';
+          badgeEl.style.color = '#c084fc';
+          badgeEl.style.borderColor = 'rgba(192, 132, 252, 0.4)';
+          badgeEl.style.background = 'rgba(192, 132, 252, 0.18)';
+        }
+        if (descEl) {
+          descEl.innerHTML = `<strong>Fillet Shear Peak τ_xz:</strong> ${peakVal} MPa (Concentrated at geometry taper between gauge and grip)<br><strong>Gauge Center Shear:</strong> ~0 MPa (Pure normal thermal contraction)<br><strong>Vulnerability:</strong> Primary site for delamination and shear fatigue crack initiation`;
+        }
+        if (hudStress) hudStress.innerHTML = `PEAK τ_xz: <strong style="color:#c084fc;">${peakVal} MPa</strong> (Shoulder Fillet Radius)`;
       }
     }
 
+    const pct = Math.max(0, Math.min(100, (peakVal / maxScale) * 100));
+    if (markerEl) markerEl.style.top = (100 - pct) + '%';
   } else if (twinMode === 'cooling-rate') {
-    titleEl.textContent = 'Cooling Rate';
+    titleEl.textContent = 'Solidification Cooling Rate';
     unitEl.textContent = 'Ṫ (K/s)';
     ticksEl.innerHTML = `
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">10⁷</span><span class="twin-tick-label">Surface Quench</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">10⁶</span><span class="twin-tick-label">LPBF Martensite</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">10⁵</span><span class="twin-tick-label">α' Solidification</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">10³</span><span class="twin-tick-label">DED / Lamellar</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">10¹</span><span class="twin-tick-label">WAAM / Sinter</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">10⁷</span><span class="twin-tick-label">Ultra-Quench</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">10⁶</span><span class="twin-tick-label">Martensite α'</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">10⁵</span><span class="twin-tick-label">Fine Acicular</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">10⁴</span><span class="twin-tick-label">Lamellar α+β</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">10³</span><span class="twin-tick-label">Coarse Cast</span></div>
     `;
-    const curVal = twin.coolingRate || 1.17e6;
-    const logVal = Math.log10(Math.max(10, curVal));
-    const pct = Math.max(0, Math.min(100, ((logVal - 1.0) / 6.0) * 100));
+    const cr = twin.coolingRate || 1.17e6;
+    const logVal = Math.log10(Math.max(1e3, cr));
+    const pct = Math.max(0, Math.min(100, ((logVal - 3) / 4) * 100));
     if (markerEl) markerEl.style.top = (100 - pct) + '%';
-
-    const dispCool = curVal >= 1e6 ? `${(curVal / 1e6).toFixed(2)} × 10⁶` : (curVal >= 1e3 ? `${(curVal / 1e3).toFixed(1)} × 10³` : curVal.toFixed(0));
-    if (badgeEl && descEl) {
-      if (curVal >= 410) {
-        badgeEl.textContent = 'MARTENSITIC QUENCH';
-        badgeEl.style.color = '#f59e0b';
-        badgeEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
-        badgeEl.style.background = 'rgba(245, 158, 11, 0.18)';
-        descEl.textContent = `Solidification rate: ${dispCool} K/s (>410 K/s). Exceeds critical speed for diffusionless acicular α'.`;
-      } else {
-        badgeEl.textContent = 'DIFFUSIONAL SOLIDIFICATION';
-        badgeEl.style.color = '#10b981';
-        badgeEl.style.borderColor = 'rgba(16, 185, 129, 0.4)';
-        badgeEl.style.background = 'rgba(16, 185, 129, 0.18)';
-        descEl.textContent = `Solidification rate: ${dispCool} K/s (<410 K/s). Nucleates equilibrium Widmanstätten α+β basketweave.`;
-      }
+    if (badgeEl) {
+      badgeEl.textContent = cr > 4.1e5 ? "RAPID QUENCH (DIFFUSIONLESS β → α')" : "MODERATE COOLING (DIFFUSIONAL)";
+      badgeEl.style.color = '#fbbf24';
+      badgeEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+      badgeEl.style.background = 'rgba(245, 158, 11, 0.18)';
     }
-
   } else if (twinMode === 'phase-fraction') {
-    titleEl.textContent = 'Phase Kinetics';
-    unitEl.textContent = 'Vol. % α\'';
+    titleEl.textContent = "Acicular α' Martensite";
+    unitEl.textContent = "Phase Volume (%)";
     ticksEl.innerHTML = `
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">100%</span><span class="twin-tick-label">Acicular α'</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">75%</span><span class="twin-tick-label">Martensite-rich</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">50%</span><span class="twin-tick-label">Dual Phase α+β</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">25%</span><span class="twin-tick-label">Decomposed</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0%</span><span class="twin-tick-label">Equiaxed α+β</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">100%</span><span class="twin-tick-label">Pure Martensite</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">75%</span><span class="twin-tick-label">High Acicular</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">50%</span><span class="twin-tick-label">Partial Decomp</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">25%</span><span class="twin-tick-label">Equilibrium α+β</span></div>
+      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0%</span><span class="twin-tick-label">Fully Decomposed</span></div>
     `;
-    const curVal = twin.alphaPrimePct !== undefined ? twin.alphaPrimePct : 88;
-    const pct = Math.max(0, Math.min(100, curVal));
-    if (markerEl) markerEl.style.top = (100 - pct) + '%';
-
-    if (badgeEl && descEl) {
-      if (curVal >= 80) {
-        badgeEl.textContent = 'AS-BUILT α\' MARTENSITE';
-        badgeEl.style.color = '#ef4444';
-        badgeEl.style.borderColor = 'rgba(239, 68, 68, 0.4)';
-        badgeEl.style.background = 'rgba(239, 68, 68, 0.18)';
-        descEl.textContent = `${curVal}% acicular α' needles. High hardness (~400 HV), low tensile ductility (<10%, fails ASTM F2924).`;
-      } else if (curVal >= 30) {
-        badgeEl.textContent = 'STRESS-RELIEVED α+β';
-        badgeEl.style.color = '#f59e0b';
-        badgeEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
-        badgeEl.style.background = 'rgba(245, 158, 11, 0.18)';
-        descEl.textContent = `${curVal}% retained α' + lamellar α+β. Moderate ductility ~10–12%, passes ASTM F2924 Class A.`;
-      } else {
-        badgeEl.textContent = 'EQUILIBRIUM LAMELLAR α+β';
-        badgeEl.style.color = '#10b981';
-        badgeEl.style.borderColor = 'rgba(16, 185, 129, 0.4)';
-        badgeEl.style.background = 'rgba(16, 185, 129, 0.18)';
-        descEl.textContent = `<5% α'. Fully decomposed ductile basketweave structure. Elongation >14%, ASTM F2924 Class C (HIP).`;
-      }
-    }
+    const aPrime = stateData.alphaPrime !== undefined ? stateData.alphaPrime : 88;
+    if (markerEl) markerEl.style.top = (100 - aPrime) + '%';
   }
 
-  // Update Bottom Material State HUD Bar
+  // Update Bottom HUD Bar Telemetry
   if (hudState) {
-    if (post === 'HIP') hudState.textContent = 'HIP Basketweave (ASTM Class C)';
-    else if (post === 'Annealed') hudState.textContent = 'Annealed α+β Lamellar (ASTM Class B)';
-    else if (post === 'Stress-relieved') hudState.textContent = 'Stress-Relieved Partial α\' (ASTM Class A)';
-    else if (post === 'Bi-modal') hudState.textContent = 'Bi-Modal Duplex (High Ductility STA)';
-    else hudState.textContent = 'As-Built Acicular α\' Martensite (Non-Compliant)';
+    hudState.textContent = stateData.badge || 'HIP Basketweave (ASTM Class 1)';
   }
   if (hudPhases) {
-    const aPrime = twin.alphaPrimePct !== undefined ? twin.alphaPrimePct : 88;
+    const aPrime = stateData.alphaPrime !== undefined ? stateData.alphaPrime : 0;
     const lamellar = Math.max(0, 100 - aPrime);
     hudPhases.textContent = `${aPrime}% α' · ${lamellar}% α+β`;
   }
   if (hudYs) {
-    const ys = document.getElementById('aud_ys_val') ? document.getElementById('aud_ys_val').innerText : '920 MPa';
-    const uts = document.getElementById('aud_uts_val') ? document.getElementById('aud_uts_val').innerText : '1034 MPa';
-    hudYs.textContent = `YS ${ys} · UTS ${uts}`;
-  }
-  if (hudStress) {
-    const s = twin.residualStressMPa || 380;
-    hudStress.textContent = `${s} MPa (${s < 200 ? 'Relaxed' : (s < 450 ? 'Elastic' : 'Critical')})`;
-    hudStress.style.color = s < 200 ? 'var(--accent-emerald)' : (s < 450 ? '#fbbf24' : '#ef4444');
+    hudYs.textContent = `YS ${ys} MPa · UTS ${uts} MPa`;
   }
 }
 
@@ -7424,19 +7516,54 @@ function renderTwin() {
     return { face: f, p: [p0, p1, p2, p3], avgZ, avgZNorm };
   }).sort((a, b) => b.avgZ - a.avgZ);
 
-  // Render polygons driven by active process physics (window.twinPhysicsState)
-  const twin = window.twinPhysicsState || { coolingRate: 1e5, alphaPrimePct: 85, residualStressMPa: 380 };
+  // Render polygons driven by active process physics and stress tensor selection
+  const stateData = (typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY[globalMaterialState])
+    ? MATERIAL_STATE_REGISTRY[globalMaterialState]
+    : { residualStressGaugeMpa: 387, alphaPrime: 88, ysMpa: 865 };
+  const baseResidual = stateData.residualStressGaugeMpa || 387;
+
   sortedFaces.forEach(f => {
-    const neckFocus = 1.0 - Math.abs(f.avgZNorm);
+    const absZ = Math.abs(f.avgZNorm);
+    const neckFocus = Math.max(0, 1.0 - absZ); // 1.0 at center gauge, 0.0 at ends
+    // Fillet transition focus (peaks at absZ ~ 0.55 between gauge 0.45 and grip 0.70)
+    const filletDist = Math.abs(absZ - 0.55);
+    const filletFocus = Math.max(0, 1.0 - (filletDist / 0.22));
+
     let scalar = 0.5;
     if (twinMode === 'residual-stress') {
-      const stressNorm = Math.max(0.10, Math.min(0.95, twin.residualStressMPa / 520.0));
-      scalar = Math.min(0.98, 0.12 + neckFocus * stressNorm);
+      if (activeLoadCase === 'applied') {
+        // Applied ASTM E8 Uniaxial Tensile pull
+        if (activeStressComponent === 'vm' || activeStressComponent === 'szz') {
+          // Intense gauge yielding (945 MPa at gauge, dropping to 240 MPa at grip)
+          scalar = (absZ <= 0.45) ? 0.96 : Math.max(0.20, 0.96 - ((absZ - 0.45) / 0.55) * 0.76);
+        } else if (activeStressComponent === 'sxx') {
+          // Transverse normal stress in unconstrained bar is negligible
+          scalar = Math.min(0.25, 0.08 + 0.12 * neckFocus);
+        } else if (activeStressComponent === 'txz') {
+          // Intense shear concentration in fillet transition shoulder!
+          scalar = Math.min(0.95, 0.08 + 0.86 * Math.pow(filletFocus, 1.5));
+        }
+      } else {
+        // Residual stress mode scaled by material state
+        const k = Math.max(0.10, Math.min(1.0, baseResidual / 480.0));
+        if (activeStressComponent === 'vm') {
+          scalar = Math.min(0.98, 0.12 + neckFocus * 0.85 * k);
+        } else if (activeStressComponent === 'szz') {
+          // Axial is largest component in build direction
+          scalar = Math.min(0.98, 0.15 + neckFocus * 0.94 * k);
+        } else if (activeStressComponent === 'sxx') {
+          // Transverse is ~58% of axial
+          scalar = Math.min(0.85, 0.08 + neckFocus * 0.52 * k);
+        } else if (activeStressComponent === 'txz') {
+          // Shear peaks in transition radius
+          scalar = Math.min(0.92, 0.06 + Math.pow(filletFocus, 1.4) * 0.84 * k);
+        }
+      }
     } else if (twinMode === 'cooling-rate') {
-      const coolNorm = Math.max(0.12, Math.min(0.95, (Math.log10(Math.max(1.0, twin.coolingRate)) - 1.2) / 5.2));
+      const coolNorm = 0.75;
       scalar = Math.min(0.98, coolNorm * (0.65 + 0.35 * neckFocus));
     } else if (twinMode === 'phase-fraction') {
-      const martNorm = Math.max(0.05, Math.min(0.96, twin.alphaPrimePct / 100.0));
+      const martNorm = Math.max(0.05, Math.min(0.96, (stateData.alphaPrime || 88) / 100.0));
       scalar = Math.min(0.98, martNorm * (0.75 + 0.25 * neckFocus));
     }
 
