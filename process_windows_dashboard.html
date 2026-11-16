@@ -2050,7 +2050,243 @@
     border-bottom-color: #38bdf8;
   }
 
+
+  /* ========================================================
+     PUBLICATION-GRADE READABLE MATHEMATICS & EQUATIONS SUITE
+     ======================================================== */
+  .eq-box {
+    background: #090e18;
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .eq-box:hover {
+    border-color: rgba(56, 189, 248, 0.38);
+    box-shadow: 0 6px 24px rgba(14, 165, 233, 0.08);
+  }
+  .eq-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .eq-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eq-pill-tag {
+    background: rgba(56, 189, 248, 0.12);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+  }
+  .eq-title-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+  .eq-citation {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: monospace;
+  }
+  
+  /* Mathematical Display Container */
+  .math-display-card {
+    background: #040711;
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    overflow-x: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  
+  .math-row {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'KaTeX_Math', 'Cambria Math', 'Times New Roman', serif;
+    font-size: 17px;
+    color: #f1f5f9;
+    letter-spacing: 0.2px;
+    line-height: 1.2;
+    padding: 4px 8px;
+  }
+  .math-var {
+    font-style: italic;
+    color: #e2e8f0;
+    padding: 0 1px;
+  }
+  .math-const {
+    font-style: normal;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #cbd5e1;
+    font-weight: 500;
+  }
+  .math-op {
+    margin: 0 6px;
+    color: #38bdf8;
+    font-weight: 400;
+  }
+  .math-sup {
+    font-size: 0.72em;
+    vertical-align: super;
+    line-height: 0;
+    color: #38bdf8;
+    margin-left: 1px;
+  }
+  .math-sub {
+    font-size: 0.72em;
+    vertical-align: sub;
+    line-height: 0;
+    color: #94a3b8;
+    margin-left: 1px;
+  }
+  .math-frac {
+    display: inline-flex;
+    flex-direction: column;
+    vertical-align: middle;
+    text-align: center;
+    padding: 0 6px;
+    margin: 0 4px;
+  }
+  .math-num {
+    border-bottom: 1.5px solid #38bdf8;
+    padding-bottom: 3px;
+    font-size: 0.95em;
+  }
+  .math-denom {
+    padding-top: 3px;
+    font-size: 0.95em;
+  }
+  .math-sqrt {
+    display: inline-flex;
+    align-items: stretch;
+    vertical-align: middle;
+    margin: 0 3px;
+  }
+  .math-rad {
+    font-size: 1.3em;
+    line-height: 0.9;
+    color: #38bdf8;
+    margin-right: 1px;
+    font-family: sans-serif;
+  }
+  .math-radicand {
+    border-top: 1.5px solid #38bdf8;
+    padding-top: 2px;
+    padding-left: 2px;
+    padding-right: 4px;
+    font-size: 0.92em;
+  }
+  .math-paren {
+    font-size: 1.45em;
+    color: #64748b;
+    font-weight: 300;
+    line-height: 1;
+    padding: 0 2px;
+  }
+  .math-exp-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: #f59e0b;
+    margin-left: 6px;
+  }
+  .math-sub-formula {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #94a3b8;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    padding-top: 8px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Structured Parameter Glossary Grid */
+  .param-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+    background: rgba(15, 23, 42, 0.45);
+    border-radius: 6px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  .param-item {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 11.5px;
+    line-height: 1.4;
+  }
+  .param-sym {
+    font-family: 'Cambria Math', 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: 700;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    padding: 1px 6px;
+    border-radius: 3px;
+    min-width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .param-name {
+    color: #cbd5e1;
+    flex-grow: 1;
+  }
+  .param-val {
+    font-family: monospace;
+    color: #34d399;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* Physical Engineering Significance Callout */
+  .eq-significance {
+    margin-top: 10px;
+    background: rgba(14, 165, 233, 0.06);
+    border-left: 3px solid #38bdf8;
+    border-radius: 0 4px 4px 0;
+    padding: 8px 12px;
+    font-size: 11.5px;
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+  .eq-significance strong {
+    color: #f1f5f9;
+  }
+
 </style>
+
+  <!-- KaTeX Publication-Grade Mathematical Rendering Engine -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+    onload="if (typeof renderMathInElement === 'function') renderMathInElement(document.body);"></script>
+
 </head>
 <body>
 
@@ -2917,52 +3153,386 @@
         </div>
 
         <!-- Collapsible Governing Equations Drawer -->
-        <div id="governingEquationsDrawer" style="display: none; margin-top: 14px;">
+        <!-- Collapsible Governing Equations Drawer -->
+        <div id="governingEquationsDrawer" style="display: none; margin-top: 16px;">
+
+          <!-- EQUATION 1: ROSENTHAL 3D MOVING POINT SOURCE -->
           <div class="eq-box">
-            <div class="eq-title">
-              <span>1. Rosenthal 3D Moving Point Source Thermal Distribution</span>
-              <span style="font-size: 10px; color: var(--text-muted);">Rosenthal (1946) Trans. ASME</span>
+            <div class="eq-header">
+              <div class="eq-header-left">
+                <span class="eq-pill-tag">Eq. 1</span>
+                <span class="eq-title-text">Rosenthal 3D Moving Point Source Thermal Field</span>
+              </div>
+              <span class="eq-citation">Rosenthal (1946) Trans. ASME 68: 849–866</span>
             </div>
-            <div class="eq-formula">T(x,y,z) - T₀ = [ (η · P) / (2 · π · k · R) ] · exp( - [ v · (R - x) ] / [ 2 · α ] )</div>
-            <div class="eq-desc">
-              Where R = √(x² + y² + z²) is distance from the laser emitter, η is thermal absorptivity (0.448 for Ti-6Al-4V), k is thermal conductivity (6.7 W/m·K), v is travel velocity, and α = k/(ρ·cp) is thermal diffusivity.
+
+            <!-- Mathematical Display Card -->
+            <div class="math-display-card">
+              <div class="math-row">
+                <span class="math-var">T</span><span class="math-const">(</span><span class="math-var">x</span><span class="math-const">,</span> <span class="math-var">y</span><span class="math-const">,</span> <span class="math-var">z</span><span class="math-const">)</span>
+                <span class="math-op">−</span>
+                <span class="math-var">T</span><span class="math-sub">0</span>
+                <span class="math-op">=</span>
+                <div class="math-frac">
+                  <span class="math-num"><span class="math-var">η</span> <span class="math-op">·</span> <span class="math-var">P</span></span>
+                  <span class="math-denom"><span class="math-const">2</span><span class="math-var">π</span> <span class="math-op">·</span> <span class="math-var">k</span> <span class="math-op">·</span> <span class="math-var">R</span></span>
+                </div>
+                <span class="math-exp-label">exp</span>
+                <span class="math-paren">[</span>
+                <span class="math-op">−</span>
+                <div class="math-frac">
+                  <span class="math-num"><span class="math-var">v</span> <span class="math-op">·</span> <span class="math-const">(</span><span class="math-var">R</span> <span class="math-op">−</span> <span class="math-var">x</span><span class="math-const">)</span></span>
+                  <span class="math-denom"><span class="math-const">2</span> <span class="math-op">·</span> <span class="math-var">α</span></span>
+                </div>
+                <span class="math-paren">]</span>
+              </div>
+
+              <div class="math-sub-formula">
+                <span>Radial Distance: <span class="math-var">R</span> = <span class="math-sqrt"><span class="math-rad">√</span><span class="math-radicand"><span class="math-var">x</span><span class="math-sup">2</span> + <span class="math-var">y</span><span class="math-sup">2</span> + <span class="math-var">z</span><span class="math-sup">2</span></span></span></span>
+                <span style="margin: 0 10px; color: #475569;">•</span>
+                <span>Thermal Diffusivity: <span class="math-var">α</span> = <div class="math-frac" style="font-size:0.9em;"><span class="math-num"><span class="math-var">k</span></span><span class="math-denom"><span class="math-var">ρ</span> <span class="math-op">·</span> <span class="math-var">c</span><span class="math-sub">p</span></span></div></span>
+              </div>
+            </div>
+
+            <!-- Structured Parameter Glossary Grid -->
+            <div class="param-grid">
+              <div class="param-item">
+                <span class="param-sym">T(x,y,z)</span>
+                <span class="param-name">Local 3D temperature at coordinate (x, y, z)</span>
+                <span class="param-val">[°C / K]</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">T₀</span>
+                <span class="param-name">Baseplate preheat temperature</span>
+                <span class="param-val">25°C (Ambient)</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">η</span>
+                <span class="param-name">Laser optical absorptivity (Ti-6Al-4V)</span>
+                <span class="param-val">0.448</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">P</span>
+                <span class="param-name">Incident laser beam power</span>
+                <span class="param-val">Live Slider: 280 W</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">k</span>
+                <span class="param-name">Thermal conductivity of Ti-6Al-4V</span>
+                <span class="param-val">6.7 W/(m·K)</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">v</span>
+                <span class="param-name">Scan speed along build axis x</span>
+                <span class="param-val">Live Slider: 960 mm/s</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">ρ</span>
+                <span class="param-name">Density of solid Ti-6Al-4V</span>
+                <span class="param-val">4,430 kg/m³</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">cₚ</span>
+                <span class="param-name">Specific heat capacity</span>
+                <span class="param-val">526 J/(kg·K)</span>
+              </div>
+            </div>
+
+            <div class="eq-significance">
+              <strong>💡 Physical Significance & Application:</strong> Governs the quasi-steady 3D temperature field trailing the beam. While accurate in conduction mode, the point-source assumption yields an infinite temperature singularity at the laser center (R → 0). The platform resolves this with a physical vapor recoil clamp at Ti-6Al-4V's boiling point (3,287°C).
             </div>
           </div>
 
+          <!-- EQUATION 2: KU LEUVEN HYBRID MELT POOL & RECOIL KEYHOLE -->
           <div class="eq-box">
-            <div class="eq-title">
-              <span>2. KU Leuven Semi-Analytical Hybrid Melt Pool & Recoil Depression</span>
-              <span style="font-size: 10px; color: var(--text-muted);">Coen et al. (2022) J. Mater. Process. Technol. 304: 117547</span>
+            <div class="eq-header">
+              <div class="eq-header-left">
+                <span class="eq-pill-tag">Eq. 2</span>
+                <span class="eq-title-text">KU Leuven Semi-Analytical Hybrid Melt Pool & Recoil Depression</span>
+              </div>
+              <span class="eq-citation">Coen et al. (2022) J. Mater. Process. Technol. 304: 117547</span>
             </div>
-            <div class="eq-formula">ΔH / hs = [ 2^0.75 · η · P ] / [ hs · √(π · α · v · r₀³) ]   •   W* = 0.6536 · (ΔH/hs)^0.42 · Pe^-0.18</div>
-            <div class="eq-desc">
-              Normalizes absorbed beam enthalpy ΔH against enthalpy of melting hs = ρ·cp·ΔT + ρ·ΔHf to classify Conduction Mode (&lt;6.0), Transition Mode (6.0–6.5), and Keyhole Vapor Depression (&gt;6.5).
+
+            <!-- Mathematical Display Card -->
+            <div class="math-display-card">
+              <!-- Part A: Normalized Enthalpy -->
+              <div class="math-row">
+                <span class="eq-pill-tag" style="font-size:10px; margin-right:8px;">2a</span>
+                <div class="math-frac">
+                  <span class="math-num"><span class="math-var">ΔH</span></span>
+                  <span class="math-denom"><span class="math-var">h</span><span class="math-sub">s</span></span>
+                </div>
+                <span class="math-op">=</span>
+                <div class="math-frac">
+                  <span class="math-num"><span class="math-const">2</span><span class="math-sup">0.75</span> <span class="math-op">·</span> <span class="math-var">η</span> <span class="math-op">·</span> <span class="math-var">P</span></span>
+                  <span class="math-denom"><span class="math-var">h</span><span class="math-sub">s</span> <span class="math-op">·</span> <span class="math-sqrt"><span class="math-rad">√</span><span class="math-radicand"><span class="math-var">π</span> <span class="math-op">·</span> <span class="math-var">α</span> <span class="math-op">·</span> <span class="math-var">v</span> <span class="math-op">·</span> <span class="math-var">r</span><span class="math-sub">0</span><span class="math-sup">3</span></span></span></span>
+                </div>
+              </div>
+
+              <!-- Part B: Normalized Width -->
+              <div class="math-row" style="border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 10px; width: 100%; justify-content: center;">
+                <span class="eq-pill-tag" style="font-size:10px; margin-right:8px;">2b</span>
+                <span class="math-var">W</span><span class="math-sup">*</span>
+                <span class="math-op">=</span>
+                <div class="math-frac">
+                  <span class="math-num"><span class="math-var">W</span></span>
+                  <span class="math-denom"><span class="math-const">2</span><span class="math-var">r</span><span class="math-sub">0</span></span>
+                </div>
+                <span class="math-op">=</span>
+                <span class="math-const">0.6536</span>
+                <span class="math-op">·</span>
+                <span class="math-paren">(</span>
+                <div class="math-frac">
+                  <span class="math-num"><span class="math-var">ΔH</span></span>
+                  <span class="math-denom"><span class="math-var">h</span><span class="math-sub">s</span></span>
+                </div>
+                <span class="math-paren">)</span><span class="math-sup">0.42</span>
+                <span class="math-op">·</span>
+                <span class="math-var">Pe</span><span class="math-sup">−0.18</span>
+              </div>
+
+              <!-- Part C: Recoil Aspect Ratio -->
+              <div class="math-row" style="border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 10px; width: 100%; justify-content: center;">
+                <span class="eq-pill-tag" style="font-size:10px; margin-right:8px;">2c</span>
+                <span class="math-var">R</span><span class="math-sub">aspect</span>
+                <span class="math-op">=</span>
+                <div class="math-frac">
+                  <span class="math-num"><span class="math-var">d</span></span>
+                  <span class="math-denom"><span class="math-var">W</span></span>
+                </div>
+                <span class="math-op">=</span>
+                <span class="math-var">Y</span><span class="math-sub">recoil</span> <span class="math-op">·</span> <span class="math-var">B</span><span class="math-sub">Fabbro</span>
+                <span class="math-op">=</span>
+                <span class="math-paren">[</span>
+                <div class="math-frac">
+                  <span class="math-num"><span class="math-var">η</span> <span class="math-op">·</span> <span class="math-var">P</span></span>
+                  <span class="math-denom"><span class="math-const">2</span><span class="math-var">r</span><span class="math-sub">0</span> <span class="math-op">·</span> <span class="math-var">k</span><span class="math-sub">l</span> <span class="math-op">·</span> <span class="math-const">(</span><span class="math-var">T</span><span class="math-sub">b</span> <span class="math-op">−</span> <span class="math-var">T</span><span class="math-sub">0</span><span class="math-const">)</span></span>
+                </div>
+                <span class="math-paren">]</span>
+                <span class="math-op">·</span>
+                <span class="math-paren">[</span>
+                <span class="math-const">0.1488</span> <span class="math-op">·</span> <span class="math-var">Pe</span><span class="math-sup">−0.79</span>
+                <span class="math-paren">]</span>
+              </div>
+            </div>
+
+            <!-- Structured Parameter Glossary Grid -->
+            <div class="param-grid">
+              <div class="param-item">
+                <span class="param-sym">ΔH / hₛ</span>
+                <span class="param-name">Normalized absorbed beam enthalpy</span>
+                <span class="param-val">~6.1 (Transition)</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">hₛ</span>
+                <span class="param-name">Solid-to-liquid enthalpy of melting</span>
+                <span class="param-val">5.37 × 10⁹ J/m³</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">r₀</span>
+                <span class="param-name">Gaussian laser beam radius (∅/2)</span>
+                <span class="param-val">Live: 40 µm</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">Pe</span>
+                <span class="param-name">Péclet number (v · r₀ / α)</span>
+                <span class="param-val">~13.4</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">W, d</span>
+                <span class="param-name">Melt pool width (W) and depth (d)</span>
+                <span class="param-val">127 × 65 µm</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">T_b</span>
+                <span class="param-name">Titanium vaporization boiling point</span>
+                <span class="param-val">3,287°C (3,560 K)</span>
+              </div>
+            </div>
+
+            <div class="eq-significance">
+              <strong>💡 Physical Significance & Application:</strong> Couples Eagar-Tsai Gaussian conduction with Fabbro recoil pressure. Categorizes process mode into <em>Conduction Mode</em> (ΔH/hₛ &lt; 6.0), <em>Transition Mode</em> (6.0–6.5, incipient depression), and <em>Keyhole Mode</em> (&gt;6.5, deep vapor cavity porosity risk).
             </div>
           </div>
 
+          <!-- EQUATION 3: COLUMNAR-TO-EQUIAXED TRANSITION (CET) -->
           <div class="eq-box">
-            <div class="eq-title">
-              <span>3. Columnar-to-Equiaxed Transition (CET) Hunt Solidification Criterion</span>
-              <span style="font-size: 10px; color: var(--text-muted);">Hunt (1984) Mater. Sci. Eng. / Bontha et al. (2006, 2009)</span>
+            <div class="eq-header">
+              <div class="eq-header-left">
+                <span class="eq-pill-tag">Eq. 3</span>
+                <span class="eq-title-text">Columnar-to-Equiaxed Transition (CET) Solidification Criterion</span>
+              </div>
+              <span class="eq-citation">Hunt (1984) Mater. Sci. Eng. • Bontha et al. (2006, 2009)</span>
             </div>
-            <div class="eq-formula">G^3.4 / R &gt; K_CET (Columnar)   •   G^3.4 / R &lt; K_CET_min (Equiaxed)</div>
-            <div class="eq-desc">
-              Reconciles constant G/R lines with Bontha's curved Kobryn boundaries log₁₀(G) = a·(log₁₀R)² + b·log₁₀R + c. In LPBF of Ti-6Al-4V, high thermal gradients keep the morphology predominantly columnar along the [001] build axis.
+
+            <!-- Mathematical Display Card -->
+            <div class="math-display-card">
+              <div class="math-row">
+                <span class="math-const" style="color:#f43f5e; font-weight:700; margin-right:8px;">Columnar:</span>
+                <div class="math-frac">
+                  <span class="math-num"><span class="math-var">G</span><span class="math-sup">3.4</span></span>
+                  <span class="math-denom"><span class="math-var">R</span></span>
+                </div>
+                <span class="math-op">≥</span>
+                <span class="math-var">K</span><span class="math-sub">CET, col</span>
+                <span class="math-const" style="font-size:12px; color:#94a3b8; margin-left:10px;">(≈ 1.25 × 10⁵ K³·⁴s/m⁴·⁴)</span>
+              </div>
+
+              <div class="math-row" style="border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 8px; width: 100%; justify-content: center;">
+                <span class="math-const" style="color:#fbbf24; font-weight:700; margin-right:8px;">Mixed CET:</span>
+                <span class="math-var">K</span><span class="math-sub">CET, equi</span>
+                <span class="math-op">&lt;</span>
+                <div class="math-frac">
+                  <span class="math-num"><span class="math-var">G</span><span class="math-sup">3.4</span></span>
+                  <span class="math-denom"><span class="math-var">R</span></span>
+                </div>
+                <span class="math-op">&lt;</span>
+                <span class="math-var">K</span><span class="math-sub">CET, col</span>
+              </div>
+
+              <div class="math-row" style="border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 8px; width: 100%; justify-content: center;">
+                <span class="math-const" style="color:#34d399; font-weight:700; margin-right:8px;">Equiaxed:</span>
+                <div class="math-frac">
+                  <span class="math-num"><span class="math-var">G</span><span class="math-sup">3.4</span></span>
+                  <span class="math-denom"><span class="math-var">R</span></span>
+                </div>
+                <span class="math-op">≤</span>
+                <span class="math-var">K</span><span class="math-sub">CET, equi</span>
+                <span class="math-const" style="font-size:12px; color:#94a3b8; margin-left:10px;">(≈ 3.16 × 10³ K³·⁴s/m⁴·⁴)</span>
+              </div>
+
+              <div class="math-sub-formula">
+                <span>Cooling Rate: <span class="math-var">Ṫ</span> = <span class="math-var">G</span> <span class="math-op">·</span> <span class="math-var">R</span> [K/s]</span>
+                <span style="margin: 0 10px; color: #475569;">•</span>
+                <span>Shape Factor: <span class="math-var">G / R</span> [K·s/m²]</span>
+              </div>
+            </div>
+
+            <!-- Structured Parameter Glossary Grid -->
+            <div class="param-grid">
+              <div class="param-item">
+                <span class="param-sym">G</span>
+                <span class="param-name">Thermal temperature gradient at solidus</span>
+                <span class="param-val">1.71 × 10⁴ K/cm</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">R</span>
+                <span class="param-name">Solidification growth velocity (v · cos θ)</span>
+                <span class="param-val">68.4 cm/s</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">Ṫ = G·R</span>
+                <span class="param-name">Centerline solidus cooling rate</span>
+                <span class="param-val">1.17 × 10⁶ K/s</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">G / R</span>
+                <span class="param-name">Morphology ratio (determines grain shape)</span>
+                <span class="param-val">2.50 × 10⁶ K·s/m²</span>
+              </div>
+            </div>
+
+            <div class="eq-significance">
+              <strong>💡 Physical Significance & Application:</strong> The ratio G³·⁴/R determines grain morphology (columnar vs. equiaxed) through constitutional supercooling ahead of the advancing dendritic front. In LPBF of Ti-6Al-4V, ultra-high gradients lock the microstructure predominantly into vertically aligned columnar prior-β grains.
             </div>
           </div>
 
+          <!-- EQUATION 4: HALL-PETCH MICROSTRUCTURE & TABOR STRENGTH -->
           <div class="eq-box">
-            <div class="eq-title">
-              <span>4. Hall-Petch Lath Refinement & Hardness Relation</span>
-              <span style="font-size: 10px; color: var(--text-muted);">Ashby & Shercliff (1992) / Tabor (1951)</span>
+            <div class="eq-header">
+              <div class="eq-header-left">
+                <span class="eq-pill-tag">Eq. 4</span>
+                <span class="eq-title-text">Microstructure Kinetics, Hall-Petch Hardness & Tabor Strength</span>
+              </div>
+              <span class="eq-citation">Ashby & Shercliff (1992) • Tabor (1951) • ASTM E384</span>
             </div>
-            <div class="eq-formula">HV = HV₀ + k_HP · (λ)^(-1/2)   •   λ₁ = 35.5 · Ṫ^(-0.28) µm</div>
-            <div class="eq-desc">
-              Where HV₀ is baseline intrinsic lattice friction (320 HV), k_HP is the Hall-Petch strengthening coefficient (68 HV·µm^(1/2)), and λ is the mean α' needle or lamellar lath thickness.
+
+            <!-- Mathematical Display Card -->
+            <div class="math-display-card">
+              <!-- Part A: Dendrite Spacing -->
+              <div class="math-row">
+                <span class="eq-pill-tag" style="font-size:10px; margin-right:8px;">4a</span>
+                <span class="math-var">λ</span><span class="math-sub">1</span>
+                <span class="math-op">=</span>
+                <span class="math-const">35.5</span>
+                <span class="math-op">·</span>
+                <span class="math-var">Ṫ</span><span class="math-sup">−0.28</span>
+                <span class="math-const" style="font-size:13px; color:#94a3b8; margin-left:8px;">[µm]</span>
+              </div>
+
+              <!-- Part B: Hall-Petch -->
+              <div class="math-row" style="border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 10px; width: 100%; justify-content: center;">
+                <span class="eq-pill-tag" style="font-size:10px; margin-right:8px;">4b</span>
+                <span class="math-var">HV</span>
+                <span class="math-op">=</span>
+                <span class="math-var">HV</span><span class="math-sub">0</span>
+                <span class="math-op">+</span>
+                <div class="math-frac">
+                  <span class="math-num"><span class="math-var">k</span><span class="math-sub">HP</span></span>
+                  <span class="math-denom"><span class="math-sqrt"><span class="math-rad">√</span><span class="math-radicand"><span class="math-var">λ</span></span></span></span>
+                </div>
+                <span class="math-const" style="font-size:13px; color:#94a3b8; margin-left:8px;">[HV]</span>
+              </div>
+
+              <!-- Part C: Tabor Tensile Scaling -->
+              <div class="math-row" style="border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 10px; width: 100%; justify-content: center;">
+                <span class="eq-pill-tag" style="font-size:10px; margin-right:8px;">4c</span>
+                <span class="math-var">σ</span><span class="math-sub">UTS</span>
+                <span class="math-op">≈</span>
+                <span class="math-const">2.81</span>
+                <span class="math-op">·</span>
+                <span class="math-var">HV</span><span class="math-sub">0.3</span>
+                <span class="math-const" style="font-size:13px; color:#94a3b8; margin-left:8px;">[MPa]</span>
+                <span style="margin: 0 14px; color: #475569;">•</span>
+                <span class="math-var">σ</span><span class="math-sub">YS</span>
+                <span class="math-op">≈</span>
+                <div class="math-frac">
+                  <span class="math-num"><span class="math-var">σ</span><span class="math-sub">UTS</span></span>
+                  <span class="math-denom"><span class="math-const">1.11</span></span>
+                </div>
+                <span class="math-const" style="font-size:13px; color:#94a3b8; margin-left:8px;">[MPa]</span>
+              </div>
+            </div>
+
+            <!-- Structured Parameter Glossary Grid -->
+            <div class="param-grid">
+              <div class="param-item">
+                <span class="param-sym">λ₁</span>
+                <span class="param-name">Primary dendrite / cell spacing</span>
+                <span class="param-val">0.71 µm</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">λ</span>
+                <span class="param-name">Mean effective α' needle / lamellar width</span>
+                <span class="param-val">0.65 µm (As-built)</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">HV₀</span>
+                <span class="param-name">Intrinsic lattice friction stress of Ti-6Al-4V</span>
+                <span class="param-val">320 HV</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">k_HP</span>
+                <span class="param-name">Hall-Petch grain boundary locking factor</span>
+                <span class="param-val">68 HV·µm^(1/2)</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">2.81</span>
+                <span class="param-name">Empirical AM plastic constraint factor</span>
+                <span class="param-val">UTS ≈ 2.81 × HV</span>
+              </div>
+              <div class="param-item">
+                <span class="param-sym">1.11</span>
+                <span class="param-name">Ti-6Al-4V work hardening ratio (UTS / YS)</span>
+                <span class="param-val">YS ≈ UTS / 1.11</span>
+              </div>
+            </div>
+
+            <div class="eq-significance">
+              <strong>💡 Physical Significance & Application:</strong> Directly links thermal solidification history (cooling rate Ṫ) to microstructure scale (lath width λ), microhardness, and macro tensile strength. As-built rapid cooling forms fine acicular α' needles with high hardness (~380–420 HV), while HIP coarsens laths to ~2.8 µm, reducing hardness to ~339 HV while restoring ductility (&gt;10% elongation).
             </div>
           </div>
         </div>
-      </div>
 
       <!-- 7. DEFECT DIAGNOSIS ENGINE & SENSITIVITY ANALYSIS -->
       <div class="res-card">
@@ -9237,6 +9807,19 @@ function toggleGoverningEquationsDrawer() {
   const isHidden = drawer.style.display === 'none';
   drawer.style.display = isHidden ? 'block' : 'none';
   if (btn) btn.innerText = isHidden ? 'Hide Equations ▴' : 'Show All Equations ▾';
+  if (isHidden && typeof renderMathInElement === 'function') {
+    try {
+      renderMathInElement(drawer, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '$', right: '$', display: false }
+        ],
+        throwOnError: false
+      });
+    } catch (e) {
+      console.warn('KaTeX render note:', e);
+    }
+  }
 }
 
 </script>
