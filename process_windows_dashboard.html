@@ -3940,6 +3940,8 @@ function closeEngineeringReportModal() {
           </div>
         </div>
 
+      </div>
+
       <!-- 7. DEFECT DIAGNOSIS ENGINE & SENSITIVITY ANALYSIS -->
       <div class="res-card">
         <div class="res-card-header">
@@ -5345,6 +5347,105 @@ function closeEngineeringReportModal() {
         </div>
 
       </div>
+
+      <!-- SUBSECTION 3: UNIFIED MULTI-MODEL THERMAL COMPARISON MATRIX -->
+      <div class="model-card" style="margin-top: 20px;">
+        <div class="model-card-header">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+              <span class="model-card-title">Unified Multi-Model Thermal Simulation Comparison Matrix</span>
+              <span class="brand-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);">Synchronized Operating State</span>
+            </div>
+            <div class="model-card-sub" style="margin-top: 4px;">
+              Side-by-side reconciliation of governing physical assumptions, boundary conditions, computational speeds, and thermal outputs across all 4 integrated physics engines.
+            </div>
+          </div>
+        </div>
+
+        <!-- Shared Simulation Configuration Bar -->
+        <div style="background: #060a12; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 16px; font-family: monospace; font-size: 11px;">
+          <div><span style="color: var(--text-muted);">Laser Power P:</span> <strong style="color: #38bdf8;" id="thMatP">280 W</strong></div>
+          <div><span style="color: var(--text-muted);">Scan Speed v:</span> <strong style="color: #38bdf8;" id="thMatV">960 mm/s</strong></div>
+          <div><span style="color: var(--text-muted);">Hatch Spacing h:</span> <strong style="color: #cbd5e1;" id="thMatH">110 µm</strong></div>
+          <div><span style="color: var(--text-muted);">Layer Thickness t:</span> <strong style="color: #cbd5e1;" id="thMatT">40 µm</strong></div>
+          <div><span style="color: var(--text-muted);">Gaussian Spot ∅:</span> <strong style="color: #cbd5e1;">80 µm</strong></div>
+          <div><span style="color: var(--text-muted);">Base Preheat T₀:</span> <strong style="color: #cbd5e1;">25 °C</strong></div>
+          <div><span style="color: var(--text-muted);">Effective Absorptivity η:</span> <strong style="color: #34d399;">0.448 (Ti-6Al-4V)</strong></div>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="thermal-matrix-table">
+            <thead>
+              <tr>
+                <th>Thermal Engine</th>
+                <th>Physical Principle &amp; Assumptions</th>
+                <th>Boundary Conditions</th>
+                <th>Calc. Time</th>
+                <th>Validated Window</th>
+                <th>Predicted Pool (W × d)</th>
+                <th>Cooling Rate (Ṫ)</th>
+                <th>Primary Use &amp; Limitations</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight: 700; color: #fff;">
+                  Rosenthal 3D Analytical
+                  <div style="font-size: 10px; color: var(--text-muted); font-family: monospace;">Rosenthal (1946) ASME</div>
+                </td>
+                <td>Moving infinitesimal point heat source; temperature-independent k, ρ, cₚ; pure conduction.</td>
+                <td>T(R → ∞) = T₀; insulated top surface; point flux at origin.</td>
+                <td style="font-family: monospace; color: #34d399;">&lt; 0.2 ms</td>
+                <td>P/v: 0.15–0.45 J/mm (Conduction mode only)</td>
+                <td style="font-family: monospace; color: #38bdf8; font-weight: bold;" id="thMatRosPool">145 × 74 µm</td>
+                <td style="font-family: monospace; color: #fbbf24; font-weight: bold;" id="thMatRosCool">1.17 × 10⁶ K/s</td>
+                <td style="font-size: 10.5px; color: var(--text-secondary);">Rapid baseline screening. Singular at center (R → 0); lacks spot width and recoil cavity physics.</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 700; color: #fff;">
+                  KU Leuven Semi-Analytical Hybrid
+                  <div style="font-size: 10px; color: var(--text-muted); font-family: monospace;">Coen et al. (2022) JMPT</div>
+                </td>
+                <td>Finite Gaussian spot (r₀ = 40 µm); Eagar-Tsai normalized enthalpy (ΔH/hₛ); Fabbro vapor recoil pressure depression.</td>
+                <td>Gaussian distributed top-hat heat flux; recoil vapor pressure balance at keyhole threshold.</td>
+                <td style="font-family: monospace; color: #34d399;">1.2 ms</td>
+                <td>P: 100–500 W, v: 400–1800 mm/s (Conduction &amp; Keyhole)</td>
+                <td style="font-family: monospace; color: #38bdf8; font-weight: bold;" id="thMatCoenPool">127 × 65 µm</td>
+                <td style="font-family: monospace; color: #fbbf24; font-weight: bold;" id="thMatCoenCool">1.12 × 10⁶ K/s</td>
+                <td style="font-size: 10.5px; color: var(--text-secondary);">Accurate cross-section bead geometry without CFD runtime. Captures conduction-to-keyhole transition at ΔH/hₛ ~ 6.0.</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 700; color: #fff;">
+                  Bontha Solidification CET
+                  <div style="font-size: 10px; color: var(--text-muted); font-family: monospace;">Bontha et al. (2006, 2009)</div>
+                </td>
+                <td>Interface tracking along moving melt pool boundary; Hunt G³·⁴/R constitutional undercooling criterion.</td>
+                <td>Liquidus (1,668°C) to Solidus (1,600°C) isotherm extraction; Kobryn boundary curves.</td>
+                <td style="font-family: monospace; color: #34d399;">0.8 ms</td>
+                <td>3D Bulky &amp; 2D Thin-Wall (LPBF, DED, WAAM)</td>
+                <td style="font-family: monospace; color: #38bdf8; font-weight: bold;" id="thMatBonthaPool">135 × 68 µm</td>
+                <td style="font-family: monospace; color: #fbbf24; font-weight: bold;" id="thMatBonthaCool">4.89 × 10⁶ K/s</td>
+                <td style="font-size: 10.5px; color: var(--text-secondary);">Predicts primary grain morphology (columnar vs equiaxed). Root apex rate (4.89 × 10⁶ K/s) describes local substrate quench.</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 700; color: #fff;">
+                  Pyrometry &amp; Kinetic Dwell
+                  <div style="font-size: 10px; color: var(--text-muted); font-family: monospace;">Ashby-Shercliff / Phase Kinetics</div>
+                </td>
+                <td>Solid-state diffusionless β → α' martensitic transformation kinetics across the β-transus window (995°C → 575°C).</td>
+                <td>Macro surface cooling; thermal dwell time t_β/Ms = 2.1 ms.</td>
+                <td style="font-family: monospace; color: #34d399;">0.4 ms</td>
+                <td>Full component thermal history</td>
+                <td style="font-family: monospace; color: #94a3b8;">Solid-State Field</td>
+                <td style="font-family: monospace; color: #fbbf24; font-weight: bold;">1.40 × 10⁵ K/s</td>
+                <td style="font-size: 10.5px; color: var(--text-secondary);">Controls solid-state martensitic needle thickening rather than liquid solidification. Matches optical co-axial pyrometry.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
 
     </div>
 
@@ -10499,102 +10600,3 @@ function toggleGoverningEquationsDrawer() {
 
 </body>
 </html>
-      <!-- SUBSECTION 3: UNIFIED MULTI-MODEL THERMAL COMPARISON MATRIX -->
-      <div class="model-card" style="margin-top: 20px;">
-        <div class="model-card-header">
-          <div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-              <span class="model-card-title">Unified Multi-Model Thermal Simulation Comparison Matrix</span>
-              <span class="brand-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);">Synchronized Operating State</span>
-            </div>
-            <div class="model-card-sub" style="margin-top: 4px;">
-              Side-by-side reconciliation of governing physical assumptions, boundary conditions, computational speeds, and thermal outputs across all 4 integrated physics engines.
-            </div>
-          </div>
-        </div>
-
-        <!-- Shared Simulation Configuration Bar -->
-        <div style="background: #060a12; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 16px; font-family: monospace; font-size: 11px;">
-          <div><span style="color: var(--text-muted);">Laser Power P:</span> <strong style="color: #38bdf8;" id="thMatP">280 W</strong></div>
-          <div><span style="color: var(--text-muted);">Scan Speed v:</span> <strong style="color: #38bdf8;" id="thMatV">960 mm/s</strong></div>
-          <div><span style="color: var(--text-muted);">Hatch Spacing h:</span> <strong style="color: #cbd5e1;" id="thMatH">110 µm</strong></div>
-          <div><span style="color: var(--text-muted);">Layer Thickness t:</span> <strong style="color: #cbd5e1;" id="thMatT">40 µm</strong></div>
-          <div><span style="color: var(--text-muted);">Gaussian Spot ∅:</span> <strong style="color: #cbd5e1;">80 µm</strong></div>
-          <div><span style="color: var(--text-muted);">Base Preheat T₀:</span> <strong style="color: #cbd5e1;">25 °C</strong></div>
-          <div><span style="color: var(--text-muted);">Effective Absorptivity η:</span> <strong style="color: #34d399;">0.448 (Ti-6Al-4V)</strong></div>
-        </div>
-
-        <div style="overflow-x: auto;">
-          <table class="thermal-matrix-table">
-            <thead>
-              <tr>
-                <th>Thermal Engine</th>
-                <th>Physical Principle &amp; Assumptions</th>
-                <th>Boundary Conditions</th>
-                <th>Calc. Time</th>
-                <th>Validated Window</th>
-                <th>Predicted Pool (W × d)</th>
-                <th>Cooling Rate (Ṫ)</th>
-                <th>Primary Use &amp; Limitations</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style="font-weight: 700; color: #fff;">
-                  Rosenthal 3D Analytical
-                  <div style="font-size: 10px; color: var(--text-muted); font-family: monospace;">Rosenthal (1946) ASME</div>
-                </td>
-                <td>Moving infinitesimal point heat source; temperature-independent k, ρ, cₚ; pure conduction.</td>
-                <td>T(R → ∞) = T₀; insulated top surface; point flux at origin.</td>
-                <td style="font-family: monospace; color: #34d399;">&lt; 0.2 ms</td>
-                <td>P/v: 0.15–0.45 J/mm (Conduction mode only)</td>
-                <td style="font-family: monospace; color: #38bdf8; font-weight: bold;" id="thMatRosPool">145 × 74 µm</td>
-                <td style="font-family: monospace; color: #fbbf24; font-weight: bold;" id="thMatRosCool">1.17 × 10⁶ K/s</td>
-                <td style="font-size: 10.5px; color: var(--text-secondary);">Rapid baseline screening. Singular at center (R → 0); lacks spot width and recoil cavity physics.</td>
-              </tr>
-              <tr>
-                <td style="font-weight: 700; color: #fff;">
-                  KU Leuven Semi-Analytical Hybrid
-                  <div style="font-size: 10px; color: var(--text-muted); font-family: monospace;">Coen et al. (2022) JMPT</div>
-                </td>
-                <td>Finite Gaussian spot (r₀ = 40 µm); Eagar-Tsai normalized enthalpy (ΔH/hₛ); Fabbro vapor recoil pressure depression.</td>
-                <td>Gaussian distributed top-hat heat flux; recoil vapor pressure balance at keyhole threshold.</td>
-                <td style="font-family: monospace; color: #34d399;">1.2 ms</td>
-                <td>P: 100–500 W, v: 400–1800 mm/s (Conduction &amp; Keyhole)</td>
-                <td style="font-family: monospace; color: #38bdf8; font-weight: bold;" id="thMatCoenPool">127 × 65 µm</td>
-                <td style="font-family: monospace; color: #fbbf24; font-weight: bold;" id="thMatCoenCool">1.12 × 10⁶ K/s</td>
-                <td style="font-size: 10.5px; color: var(--text-secondary);">Accurate cross-section bead geometry without CFD runtime. Captures conduction-to-keyhole transition at ΔH/hₛ ~ 6.0.</td>
-              </tr>
-              <tr>
-                <td style="font-weight: 700; color: #fff;">
-                  Bontha Solidification CET
-                  <div style="font-size: 10px; color: var(--text-muted); font-family: monospace;">Bontha et al. (2006, 2009)</div>
-                </td>
-                <td>Interface tracking along moving melt pool boundary; Hunt G³·⁴/R constitutional undercooling criterion.</td>
-                <td>Liquidus (1,668°C) to Solidus (1,600°C) isotherm extraction; Kobryn boundary curves.</td>
-                <td style="font-family: monospace; color: #34d399;">0.8 ms</td>
-                <td>3D Bulky &amp; 2D Thin-Wall (LPBF, DED, WAAM)</td>
-                <td style="font-family: monospace; color: #38bdf8; font-weight: bold;" id="thMatBonthaPool">135 × 68 µm</td>
-                <td style="font-family: monospace; color: #fbbf24; font-weight: bold;" id="thMatBonthaCool">4.89 × 10⁶ K/s</td>
-                <td style="font-size: 10.5px; color: var(--text-secondary);">Predicts primary grain morphology (columnar vs equiaxed). Root apex rate (4.89 × 10⁶ K/s) describes local substrate quench.</td>
-              </tr>
-              <tr>
-                <td style="font-weight: 700; color: #fff;">
-                  Pyrometry &amp; Kinetic Dwell
-                  <div style="font-size: 10px; color: var(--text-muted); font-family: monospace;">Ashby-Shercliff / Phase Kinetics</div>
-                </td>
-                <td>Solid-state diffusionless β → α' martensitic transformation kinetics across the β-transus window (995°C → 575°C).</td>
-                <td>Macro surface cooling; thermal dwell time t_β/Ms = 2.1 ms.</td>
-                <td style="font-family: monospace; color: #34d399;">0.4 ms</td>
-                <td>Full component thermal history</td>
-                <td style="font-family: monospace; color: #94a3b8;">Solid-State Field</td>
-                <td style="font-family: monospace; color: #fbbf24; font-weight: bold;">1.40 × 10⁵ K/s</td>
-                <td style="font-size: 10.5px; color: var(--text-secondary);">Controls solid-state martensitic needle thickening rather than liquid solidification. Matches optical co-axial pyrometry.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </div>tml>
