@@ -38,3 +38,5 @@ dvros_dump.html
 # AI Studio & Tool metadata
 .aistudio/
 .qodo/
+
+scratch/
