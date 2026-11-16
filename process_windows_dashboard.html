@@ -822,6 +822,27 @@
     font-weight: 700;
     padding: 5px 12px;
     border-radius: 8px;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .regime-banner.defect .regime-tag {
+    background: rgba(239, 68, 68, 0.22);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.5);
+  }
+  .regime-banner.warning .regime-tag {
+    background: rgba(245, 158, 11, 0.22);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.5);
+  }
+  html.light .regime-banner.defect .regime-tag {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+    border-color: rgba(239, 68, 68, 0.35);
+  }
+  html.light .regime-banner.warning .regime-tag {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border-color: rgba(245, 158, 11, 0.35);
   }
   .regime-desc {
     font-size: 12.5px;
@@ -3772,6 +3793,16 @@ function calculatePhysics() {
     setTxt('regimeDesc', '— Binder Jetting utilizes room-temperature liquid binder deposition followed by vacuum sintering (1250°C). Melt pool physics and laser keyholing are non-applicable.');
     const elRegIndices = document.getElementById('regimeIndices');
     if (elRegIndices) elRegIndices.innerHTML = 'Process: <strong>Liquid Binder Inkjet + Vacuum Furnace Sintering</strong> • Standard: <strong>ISO/ASTM 52900 / MPIF 35</strong>';
+    const tweakPanel = document.getElementById('regimeTweakPanel');
+    if (tweakPanel) {
+      tweakPanel.className = 'regime-tweak-panel conduction-border';
+      tweakPanel.innerHTML = `
+        <div class="regime-tweak-text" style="color: var(--accent-emerald);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink: 0;"><polyline points="20 6 9 17 4 12"/></svg>
+          <span><strong>Binder Jetting Solid-State Sintering:</strong> Room-temperature inkjet print bed with subsequent vacuum sintering furnace (1250°C). Hydrodynamic melt defects (LoF, Keyhole, Balling) do not apply.</span>
+        </div>
+      `;
+    }
 
     setTxt('kpi_hv', primaryHv + ' HV');
     setTxt('kpi_hrc', hrcEquiv);
@@ -3820,6 +3851,21 @@ function calculatePhysics() {
     setTxt('po_remelt', '0 µm');
     setTxt('regimeBadge', 'Cold Ambient State (Laser Off / P=0)');
     setTxt('regimeDesc', '— Laser power is zero. Substrate remains at preheat temperature with no melting or vapor cavity formation.');
+    const banner = document.getElementById('regimeBanner');
+    if (banner) banner.className = 'regime-banner warning';
+    const tweakPanel = document.getElementById('regimeTweakPanel');
+    if (tweakPanel) {
+      tweakPanel.className = 'regime-tweak-panel warning-border';
+      tweakPanel.innerHTML = `
+        <div class="regime-tweak-text">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-amber); flex-shrink: 0;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          <span><strong>Beam Emitter Off (0 W):</strong> Zero power input. Turn on power slider or auto-tune to nominal conduction window.</span>
+        </div>
+        <div class="regime-tweak-buttons">
+          <button type="button" class="tweak-btn primary" onclick="tweakToConduction()">Ignite Nominal</button>
+        </div>
+      `;
+    }
     updateDefectMapSvg(currentProcess, p, v);
     updateMeltPoolAndThermal();
     return;
@@ -3954,108 +4000,129 @@ function calculatePhysics() {
   // Interactive Parameter Tweak Recommendations & Controls
   const tweakPanel = document.getElementById('regimeTweakPanel');
   if (tweakPanel) {
+    const elP = document.getElementById('sl_p');
+    const elV = document.getElementById('sl_v');
+    const elSpot = document.getElementById('sl_spot');
+
+    const pMin = elP ? parseFloat(elP.min) : 50;
+    const pMax = elP ? parseFloat(elP.max) : 5000;
+    const pStep = elP ? parseFloat(elP.step) : 5;
+
+    const vMin = elV ? parseFloat(elV.min) : 3;
+    const vMax = elV ? parseFloat(elV.max) : 2500;
+    const vStep = elV ? parseFloat(elV.step) : 1;
+
+    const spotMin = elSpot ? parseFloat(elSpot.min) : 40;
+    const spotMax = elSpot ? parseFloat(elSpot.max) : 6000;
+    const spotStep = elSpot ? parseFloat(elSpot.step) : 5;
+
+    const quantize = (val, min, max, step) => {
+      const clamped = Math.max(min, Math.min(max, val));
+      const decimals = step < 1 ? ((step.toString().split('.')[1] || '').length) : 0;
+      return Number((Math.round(clamped / step) * step).toFixed(decimals));
+    };
+
+    const dispV = (val) => (val >= 100 || val % 1 === 0 ? Math.round(val) : val.toFixed(1));
+
     if (regime === 'transition') {
-      const recP = Math.round(Math.max(150, p * 0.85));
-      const recV = Math.round(Math.min(2200, v * 1.20));
-      const recSpot = Math.min(130, Math.round(spot * 1.15));
+      const recP = quantize(p * 0.85, pMin, pMax, pStep);
+      const recV = quantize(v * 1.20, vMin, vMax, vStep);
+      const recSpot = quantize(spot * 1.15, spotMin, spotMax, spotStep);
       tweakPanel.className = 'regime-tweak-panel warning-border';
       tweakPanel.innerHTML = `
         <div class="regime-tweak-text">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-amber); flex-shrink: 0;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
           <span><strong>Recommended parameter tweaks to return to Normal Conduction Mode:</strong></span>
-          <span class="regime-tweak-item">Lower Power: <span class="regime-tweak-highlight">${p}W → ${recP}W</span></span>
-          <span class="regime-tweak-item">or Higher Speed: <span class="regime-tweak-highlight">${v} → ${recV} mm/s</span></span>
-          <span class="regime-tweak-item">or Widen Spot: <span class="regime-tweak-highlight">${spot} → ${recSpot} µm</span></span>
+          ${recP < p ? `<span class="regime-tweak-item">Lower Power: <span class="regime-tweak-highlight">${p}W → ${recP}W</span></span>` : ''}
+          ${recV > v ? `<span class="regime-tweak-item">or Higher Speed: <span class="regime-tweak-highlight">${dispV(v)} → ${dispV(recV)} mm/s</span></span>` : ''}
+          ${recSpot > spot ? `<span class="regime-tweak-item">or Widen Spot: <span class="regime-tweak-highlight">${spot} → ${recSpot} µm</span></span>` : ''}
         </div>
         <div class="regime-tweak-buttons">
-          <button type="button" class="tweak-btn primary" onclick="tweakToConduction()" title="Apply nominal calibrated conduction parameters (240W / 1000 mm/s)">
+          <button type="button" class="tweak-btn primary" onclick="tweakToConduction()" title="Apply nominal calibrated conduction parameters">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             Auto-Tweak to Conduction
           </button>
-          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})" title="Reduce laser power to ${recP} W">
-            Reduce Power (${recP}W)
-          </button>
-          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})" title="Increase scan speed to ${recV} mm/s">
-            Increase Speed (${recV} mm/s)
-          </button>
-          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_spot', ${recSpot})" title="Widen beam spot to ${recSpot} µm">
-            Widen Spot (${recSpot} µm)
-          </button>
+          ${recP < p ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})" title="Reduce power to ${recP} W">Reduce Power (${recP}W)</button>` : ''}
+          ${recV > v ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})" title="Increase speed to ${recV} mm/s">Increase Speed (${dispV(recV)} mm/s)</button>` : ''}
+          ${recSpot > spot ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_spot', ${recSpot})" title="Widen beam spot to ${recSpot} µm">Widen Spot (${recSpot} µm)</button>` : ''}
         </div>
       `;
     } else if (regime === 'keyhole') {
-      const recP = Math.round(Math.max(120, p * 0.72));
-      const recV = Math.round(Math.min(2400, v * 1.35));
+      const recP = quantize(p * 0.75, pMin, pMax, pStep);
+      const recV = quantize(v * 1.30, vMin, vMax, vStep);
       tweakPanel.className = 'regime-tweak-panel defect-border';
       tweakPanel.innerHTML = `
         <div class="regime-tweak-text">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-rose); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span><strong>Keyhole active! Recommended tweaks to prevent gas pore entrapment:</strong></span>
-          <span class="regime-tweak-item">Lower Power: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${p}W → ${recP}W</span></span>
-          <span class="regime-tweak-item">or Increase Speed: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${v} → ${recV} mm/s</span></span>
+          <span><strong>Keyhole active! Tweaks to prevent gas pore entrapment:</strong></span>
+          ${recP < p ? `<span class="regime-tweak-item">Lower Power: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${p}W → ${recP}W</span></span>` : ''}
+          ${recV > v ? `<span class="regime-tweak-item">or Increase Speed: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${dispV(v)} → ${dispV(recV)} mm/s</span></span>` : ''}
         </div>
         <div class="regime-tweak-buttons">
           <button type="button" class="tweak-btn primary" onclick="tweakToConduction()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             Auto-Tweak to Conduction
           </button>
-          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})">Power -28% (${recP}W)</button>
-          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Speed +35% (${recV} mm/s)</button>
+          ${recP < p ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})">Power -25% (${recP}W)</button>` : ''}
+          ${recV > v ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Speed +30% (${dispV(recV)} mm/s)</button>` : ''}
         </div>
       `;
     } else if (regime === 'lof') {
-      const recP = Math.round(p * 1.25);
-      const recV = Math.round(Math.max(250, v * 0.75));
+      const recP = quantize(p * 1.25, pMin, pMax, pStep);
+      const recV = quantize(v * 0.75, vMin, vMax, vStep);
       tweakPanel.className = 'regime-tweak-panel defect-border';
       tweakPanel.innerHTML = `
         <div class="regime-tweak-text">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-rose); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           <span><strong>Lack of Fusion active! Melt depth &lt; layer thickness:</strong></span>
-          <span class="regime-tweak-item">Increase Power: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${p}W → ${recP}W</span></span>
-          <span class="regime-tweak-item">or Lower Speed: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${v} → ${recV} mm/s</span></span>
+          ${recP > p ? `<span class="regime-tweak-item">Increase Power: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${p}W → ${recP}W</span></span>` : ''}
+          ${recV < v ? `<span class="regime-tweak-item">or Lower Speed: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${dispV(v)} → ${dispV(recV)} mm/s</span></span>` : ''}
         </div>
         <div class="regime-tweak-buttons">
           <button type="button" class="tweak-btn primary" onclick="tweakToConduction()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             Auto-Tweak to Conduction
           </button>
-          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})">Power +25% (${recP}W)</button>
-          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Speed -25% (${recV} mm/s)</button>
+          ${recP > p ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})">Power +25% (${recP}W)</button>` : ''}
+          ${recV < v ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Speed -25% (${dispV(recV)} mm/s)</button>` : ''}
         </div>
       `;
     } else if (regime === 'balling') {
-      const recV = Math.round(Math.max(250, v * 0.72));
-      const recSpot = Math.min(140, Math.round(spot * 1.25));
+      const recV = quantize(v * 0.75, vMin, vMax, vStep);
+      const recSpot = quantize(spot * 1.25, spotMin, spotMax, spotStep);
       tweakPanel.className = 'regime-tweak-panel defect-border';
       tweakPanel.innerHTML = `
         <div class="regime-tweak-text">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-rose); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           <span><strong>Balling instability! Length/Width ratio &gt; π:</strong></span>
-          <span class="regime-tweak-item">Lower Speed: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${v} → ${recV} mm/s</span></span>
-          <span class="regime-tweak-item">or Widen Spot: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${spot} → ${recSpot} µm</span></span>
+          ${recV < v ? `<span class="regime-tweak-item">Lower Speed: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${dispV(v)} → ${dispV(recV)} mm/s</span></span>` : ''}
+          ${recSpot > spot ? `<span class="regime-tweak-item">or Widen Spot: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${spot} → ${recSpot} µm</span></span>` : ''}
         </div>
         <div class="regime-tweak-buttons">
           <button type="button" class="tweak-btn primary" onclick="tweakToConduction()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             Auto-Tweak to Conduction
           </button>
-          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Speed -28% (${recV} mm/s)</button>
+          ${recV < v ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Speed -25% (${dispV(recV)} mm/s)</button>` : ''}
+          ${recSpot > spot ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_spot', ${recSpot})">Spot +25% (${recSpot} µm)</button>` : ''}
         </div>
       `;
     } else {
       // Normal Conduction Mode
       tweakPanel.className = 'regime-tweak-panel conduction-border';
+      const condPower = (currentProcess === 'waam') ? 2400 : (currentProcess === 'ded-laser' ? 1600 : 240);
+      const testPower = (currentProcess === 'waam') ? 3200 : (currentProcess === 'ded-laser' ? 2200 : 280);
       tweakPanel.innerHTML = `
         <div class="regime-tweak-text" style="color: var(--accent-emerald);">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink: 0;"><polyline points="20 6 9 17 4 12"/></svg>
           <span><strong>Optimal Operating Window:</strong> Stable conduction melting active (ΔH/hs = ${normalizedEnthalpy.toFixed(1)} &lt; 5.5 · VED = ${ved.toFixed(1)} J/mm³). Melt pool depth/width is balanced with full interlayer fusion.</span>
         </div>
         <div class="regime-tweak-buttons">
-          <button type="button" class="tweak-btn primary" onclick="tweakToConduction()" title="Reset to standard nominal baseline (240W / 1000 mm/s)">
-            Nominal Baseline (240W)
+          <button type="button" class="tweak-btn primary" onclick="tweakToConduction()" title="Reset to standard nominal baseline">
+            Nominal Baseline (${condPower}W)
           </button>
-          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', 280)" title="Increase laser power to 280W to test transition edge">
-            Test Transition Edge (280W)
+          <button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${testPower})" title="Increase power to test transition edge">
+            Test Transition Edge (${testPower}W)
           </button>
         </div>
       `;
@@ -4480,34 +4547,46 @@ function updateDefectMapSvg(proc, p, v) {
   }
 }
 
-function tweakSlider(sliderId, value) {
+function tweakSlider(sliderId, value, skipChange = false) {
   const el = document.getElementById(sliderId);
   if (el) {
     const minVal = parseFloat(el.min) || 0;
     const maxVal = parseFloat(el.max) || 10000;
     const step = parseFloat(el.step) || 1;
-    let rounded = Math.round(value / step) * step;
+    const decimals = step < 1 ? ((step.toString().split('.')[1] || '').length) : 0;
+    let rounded = Number((Math.round(value / step) * step).toFixed(decimals));
     el.value = Math.max(minVal, Math.min(maxVal, rounded));
-    onSliderChange();
+    if (!skipChange) onSliderChange();
   }
 }
 
 function tweakToConduction() {
   if (currentProcess === 'waam') {
-    tweakSlider('sl_p', 2200);
-    tweakSlider('sl_v', 6.0);
+    tweakSlider('sl_p', 2400, true);
+    tweakSlider('sl_v', 8.0, true);
+    tweakSlider('sl_h', 3500, true);
+    tweakSlider('sl_t', 1500, true);
+    tweakSlider('sl_spot', 3000, true);
+    tweakSlider('sl_preheat', 120, false);
   } else if (currentProcess === 'ded-laser') {
-    tweakSlider('sl_p', 950);
-    tweakSlider('sl_v', 12.0);
-    tweakSlider('sl_spot', 1200);
+    tweakSlider('sl_p', 1600, true);
+    tweakSlider('sl_v', 15.0, true);
+    tweakSlider('sl_h', 1200, true);
+    tweakSlider('sl_t', 450, true);
+    tweakSlider('sl_spot', 1500, true);
+    tweakSlider('sl_preheat', 100, false);
+  } else if (currentProcess === 'binder-jetting') {
+    tweakSlider('sl_p', 120, true);
+    tweakSlider('sl_v', 400, false);
   } else {
     // LPBF Ti-6Al-4V: Nominal optimal conduction melting window
-    // (P=240W, v=1000 mm/s, h=105 µm, t=40 µm, spot=80 µm -> VED=54.4 J/mm3, ΔH/hs=4.84 < 5.5, LoF=0.68)
-    tweakSlider('sl_p', 240);
-    tweakSlider('sl_v', 1000);
-    tweakSlider('sl_h', 105);
-    tweakSlider('sl_t', 40);
-    tweakSlider('sl_spot', 80);
+    // (P=240W, v=1000 mm/s, h=105 µm, t=40 µm, spot=80 µm -> VED=57.1 J/mm3, ΔH/hs=4.84 < 5.5, LoF=0.68)
+    tweakSlider('sl_p', 240, true);
+    tweakSlider('sl_v', 1000, true);
+    tweakSlider('sl_h', 105, true);
+    tweakSlider('sl_t', 40, true);
+    tweakSlider('sl_spot', 80, true);
+    tweakSlider('sl_preheat', 200, false);
   }
 }
 
