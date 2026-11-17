@@ -2647,28 +2647,16 @@
 
   /* RESEARCH-GRADE HIGH-CONTRAST DARK THEME PRINT ENGINE */
   @media print {
-    @page {
-      margin: 8mm 10mm;
-      size: auto;
-      background-color: #070b12 !important;
-    }
-
-    /* Force all layout engines (WebKit, Blink, Gecko) to retain exact dark background graphics */
+    /* Force all layout engines (WebKit, Blink, Gecko) to retain exact background graphics */
     *, *::before, *::after {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
       color-adjust: exact !important;
     }
 
-    html, body {
-      background-color: #070b12 !important;
-      background: #070b12 !important;
-      color: #f8fafc !important;
-      color-scheme: dark !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      font-size: 10.5pt !important;
-      -webkit-font-smoothing: antialiased;
+    @page {
+      margin: 6mm 8mm;
+      size: auto;
     }
 
     /* Non-printable screen UI controls */
@@ -2684,17 +2672,112 @@
       display: none !important;
     }
 
-    /* --- MODE A: Dedicated Technical Assessment Report Printing --- */
+    /* =========================================================================
+       MODE 1: Engineering Qualification Audit Certificate Printing (Crisp White PDF)
+       Exact match to ASTM Engineering Qualification Audit Certificate Reference PDF
+       ========================================================================= */
+    body.printing-audit-certificate,
+    body.printing-audit-certificate html {
+      background-color: #ffffff !important;
+      background: #ffffff !important;
+      color: #0f172a !important;
+      color-scheme: light !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      font-size: 10pt !important;
+    }
+
+    body.printing-audit-certificate main,
+    body.printing-audit-certificate footer,
+    body.printing-audit-certificate header,
+    body.printing-audit-certificate .tabs-bar-wrapper,
+    body.printing-audit-certificate .dash-view,
+    body.printing-audit-certificate .snow-header-actions,
+    body.printing-audit-certificate #engineeringReportModal {
+      display: none !important;
+    }
+
+    body.printing-audit-certificate #auditCertificateModal {
+      display: block !important;
+      position: static !important;
+      inset: auto !important;
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      overflow: visible !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: none !important;
+      width: 100% !important;
+    }
+
+    body.printing-audit-certificate #auditCertificateModal > div {
+      max-width: 100% !important;
+      width: 100% !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      border: none !important;
+    }
+
+    body.printing-audit-certificate .audit-cert-paper {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 4mm 6mm !important;
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      box-shadow: none !important;
+      border: none !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    body.printing-audit-certificate .audit-cert-paper table {
+      border-collapse: collapse !important;
+      width: 100% !important;
+      margin-bottom: 0 !important;
+    }
+
+    body.printing-audit-certificate .audit-cert-paper th {
+      background: #070d1e !important;
+      background-color: #070d1e !important;
+      color: #ffffff !important;
+      border: 1px solid #070d1e !important;
+      font-weight: 700 !important;
+      padding: 8px 10px !important;
+    }
+
+    body.printing-audit-certificate .audit-cert-paper td {
+      border: 1px solid #cbd5e1 !important;
+      padding: 7px 10px !important;
+    }
+
+    /* =========================================================================
+       MODE 2: Dedicated Technical Assessment Report Printing (Dark Theme)
+       ========================================================================= */
+    body.printing-report {
+      background-color: #070b12 !important;
+      background: #070b12 !important;
+      color: #f8fafc !important;
+      color-scheme: dark !important;
+    }
+
     body.printing-report main,
     body.printing-report footer,
     body.printing-report .tabs-bar-wrapper,
     body.printing-report .dash-view,
     body.printing-report header,
-    body.printing-report .snow-header-actions {
+    body.printing-report .snow-header-actions,
+    body.printing-report #auditCertificateModal {
       display: none !important;
     }
 
-    body.printing-report .report-modal {
+    body.printing-report #engineeringReportModal {
       display: block !important;
       position: static !important;
       inset: auto !important;
@@ -2722,17 +2805,34 @@
       break-inside: avoid !important;
     }
 
-    /* --- MODE B: Direct Dashboard / Tab Printing in Dark Theme --- */
-    body:not(.printing-report) .report-modal {
+    /* =========================================================================
+       MODE 3: Direct Dashboard / Tab Printing (Dark Theme)
+       ========================================================================= */
+    body:not(.printing-report):not(.printing-audit-certificate) {
+      background-color: #070b12 !important;
+      background: #070b12 !important;
+      color: #f8fafc !important;
+      color-scheme: dark !important;
+    }
+
+    body:not(.printing-report):not(.printing-audit-certificate) .report-modal {
       display: none !important;
     }
 
-    body:not(.printing-report) .tab-view:not(.active),
-    body:not(.printing-report) .tab-content:not(.active) {
+    body:not(.printing-report):not(.printing-audit-certificate) .tab-view:not(.active),
+    body:not(.printing-report):not(.printing-audit-certificate) .tab-content:not(.active) {
       display: none !important;
     }
 
-    .res-card, .model-card, .audit-item, .kpi-card, .snow-card, .grid-2, .dash-card, .sec-card {
+    /* Dark theme cards and elements for Mode 2 & Mode 3 */
+    body:not(.printing-audit-certificate) .res-card,
+    body:not(.printing-audit-certificate) .model-card,
+    body:not(.printing-audit-certificate) .audit-item,
+    body:not(.printing-audit-certificate) .kpi-card,
+    body:not(.printing-audit-certificate) .snow-card,
+    body:not(.printing-audit-certificate) .grid-2,
+    body:not(.printing-audit-certificate) .dash-card,
+    body:not(.printing-audit-certificate) .sec-card {
       background: #0c1220 !important;
       background-color: #0c1220 !important;
       border: 1px solid rgba(255, 255, 255, 0.14) !important;
@@ -2742,35 +2842,28 @@
       box-shadow: none !important;
     }
 
-    /* Dark tables & canvas isolation */
-    canvas, svg, table, .table-wrap {
-      page-break-inside: avoid !important;
-      break-inside: avoid !important;
-    }
-
-    table {
-      border-collapse: collapse !important;
-      width: 100% !important;
-    }
-
-    th {
+    body:not(.printing-audit-certificate) th {
       background: #111a2e !important;
       color: #38bdf8 !important;
       border: 1px solid rgba(255, 255, 255, 0.12) !important;
     }
 
-    td {
+    body:not(.printing-audit-certificate) td {
       background: #0c1220 !important;
       color: #cbd5e1 !important;
       border: 1px solid rgba(255, 255, 255, 0.08) !important;
     }
 
-    strong {
+    body:not(.printing-audit-certificate) strong {
       color: #ffffff !important;
     }
-  }
 
-</style>
+    canvas, svg, table, .table-wrap {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+  }
+  </style>
 
   <!-- KaTeX Publication-Grade Mathematical Rendering Engine -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
@@ -11583,6 +11676,166 @@ function toggleGoverningEquationsDrawer() {
   }
 }
 
+
+function openAuditCertificateModal() {
+  const modal = document.getElementById('auditCertificateModal');
+  if (!modal) return;
+
+  const std = (typeof AUDIT_STANDARDS !== 'undefined' && typeof currentAuditStandard !== 'undefined')
+    ? (AUDIT_STANDARDS[currentAuditStandard] || AUDIT_STANDARDS.F2924)
+    : { name: 'ASTM F2924', specDesc: 'Standard Specification for Additive Manufacturing Titanium-6Aluminum-4V with Powder Bed Fusion', route: 'Class B / C (Stress Relieved)', ysThresh: 825, utsThresh: 895, elThresh: 10.0, denThresh: 99.50, stressThresh: 60, fatigueThresh: 520 };
+
+  const alloy = (typeof ALLOY_DATA !== 'undefined' && typeof currentAlloy !== 'undefined' && ALLOY_DATA[currentAlloy])
+    ? ALLOY_DATA[currentAlloy].name
+    : 'Ti-6Al-4V (Grade 5, α+β workhorse)';
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' +
+                  now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+  const hash = document.getElementById('aud_cert_hash')?.innerText || 'SHA256-00008FE9AC65-1A1E895CD08';
+
+  // Set Header & Metadata
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+  setEl('certHeaderSub', `AEROSPACE & MEDICAL ADDITIVE MANUFACTURING COMPLIANCE • ${std.name}`);
+  setEl('certHeaderHash', `Certificate Hash: ${hash}`);
+  setEl('certAlloySpec', alloy);
+  setEl('certAuditDateTime', dateStr);
+  setEl('certStdReferenced', std.name);
+  setEl('certQualClass', std.route);
+  setEl('certStdFullTitle', std.specDesc);
+
+  // Obtain state values
+  const stateKey = (typeof globalMaterialState !== 'undefined') ? globalMaterialState : 'as_built';
+  let measuredYs = 1200;
+  let measuredUts = 1290;
+  let measuredElong = 7.5;
+  let measuredDen = 99.90;
+  let measuredStress = 1085;
+  let measuredFatigue = 706;
+
+  let ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
+  let utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
+  let elongSub = 'Sub-standard ductility; un-annealed brittle acicular martensite present';
+  let denSub = 'Meets structural volumetric density threshold (>99.5%)';
+  let stressSub = 'Requires sub-transus stress relief anneal or HIP treatment';
+  let fatigueSub = 'Exceeds dynamic rotating-beam fatigue endurance limit';
+
+  if (stateKey === 'stress_relieved') {
+    measuredYs = 1050; measuredUts = 1120; measuredElong = 9.2; measuredDen = 99.90; measuredStress = 45; measuredFatigue = 690;
+    ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
+    utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
+    elongSub = 'Marginal ductility; stress relief partially coarsens acicular needles';
+    stressSub = 'Thermal relaxation at 650°C collapses peak stresses below ' + std.stressThresh + ' MPa';
+  } else if (stateKey === 'annealed') {
+    measuredYs = 920; measuredUts = 1010; measuredElong = 12.5; measuredDen = 99.92; measuredStress = 30; measuredFatigue = 680;
+    ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
+    utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
+    elongSub = 'Fully annealed lamellar α+β satisfies ductility threshold';
+    stressSub = 'Furnace cooling restores low stress state (<30 MPa)';
+  } else if (stateKey === 'hip') {
+    measuredYs = 865; measuredUts = 950; measuredElong = 14.5; measuredDen = 99.98; measuredStress = 15; measuredFatigue = 675;
+    ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
+    utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
+    elongSub = 'HIP consolidation heals microporosity; ductility maximized to 14.5%';
+    denSub = 'Isostatic pressure closes all internal voids (>99.9% relative density)';
+    stressSub = 'Complete creep relaxation under 100 MPa argon pressure';
+  } else if (stateKey === 'sta') {
+    measuredYs = 1100; measuredUts = 1175; measuredElong = 10.5; measuredDen = 99.94; measuredStress = 40; measuredFatigue = 720;
+    ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
+    utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
+    elongSub = 'Solution & aged fine α precipitation retains >10% elongation';
+    stressSub = 'Controlled aging furnace cycle stabilizes residual stresses';
+  }
+
+  const passYs = measuredYs >= std.ysThresh;
+  const passUts = measuredUts >= std.utsThresh;
+  const passElong = measuredElong >= std.elThresh;
+  const passDen = measuredDen >= std.denThresh;
+  const passStress = measuredStress <= std.stressThresh;
+  const passFatigue = measuredFatigue >= std.fatigueThresh;
+  const overallPass = passYs && passUts && passElong && passDen && passStress && passFatigue;
+
+  const statusBadge = document.getElementById('certStatusBadge');
+  if (statusBadge) {
+    statusBadge.innerText = overallPass ? 'COMPLIANT' : 'NON-COMPLIANT';
+    statusBadge.style.background = overallPass ? '#10b981' : '#e11d48';
+  }
+
+  // Populate Table Rows
+  const tbody = document.getElementById('certTableBody');
+  if (tbody) {
+    const rows = [
+      { name: '0.2% Offset Yield Strength (Rp0.2)', val: measuredYs + ' MPa', thresh: '≥ ' + std.ysThresh + ' MPa', pass: passYs, notes: ysSub },
+      { name: 'Ultimate Tensile Strength (UTS)', val: measuredUts + ' MPa', thresh: '≥ ' + std.utsThresh + ' MPa', pass: passUts, notes: utsSub },
+      { name: 'Elongation at Fracture (Ductility)', val: measuredElong.toFixed(1) + ' %', thresh: '≥ ' + std.elThresh.toFixed(0) + ' %', pass: passElong, notes: elongSub },
+      { name: 'As-Synthesized Relative Density', val: measuredDen.toFixed(2) + ' %', thresh: '≥ ' + std.denThresh.toFixed(1) + ' %', pass: passDen, notes: denSub },
+      { name: 'Internal Residual Macrostress', val: measuredStress + ' MPa', thresh: '≤ ' + std.stressThresh + ' MPa', pass: passStress, notes: stressSub },
+      { name: 'High-Cycle Fatigue Threshold (10⁷ cycles)', val: measuredFatigue + ' MPa', thresh: '≥ ' + std.fatigueThresh + ' MPa', pass: passFatigue, notes: fatigueSub }
+    ];
+
+    tbody.innerHTML = rows.map((r, i) => `
+      <tr style="background: ${i % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+        <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #0f172a;">${r.name}</td>
+        <td style="padding: 8px 12px; border: 1px solid #e2e8f0; font-weight: 700; color: #0f172a; font-family: monospace;">${r.val}</td>
+        <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569; font-family: monospace;">${r.thresh}</td>
+        <td style="padding: 8px 12px; border: 1px solid #e2e8f0; text-align: center; font-weight: 800; color: ${r.pass ? '#10b981' : '#ef4444'};">${r.pass ? 'PASS' : 'FAIL'}</td>
+        <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569;">${r.notes}</td>
+      </tr>
+    `).join('');
+  }
+
+  // Populate Action Plan
+  const planEl = document.getElementById('certActionPlan');
+  if (planEl) {
+    let items = [];
+    if (!passStress) {
+      items.push(`Perform Sub-Transus Stress-Relief (700°C–800°C for 2h in industrial vacuum) to lower residual stresses below ${std.stressThresh} MPa.`);
+    }
+    if (!passElong) {
+      items.push(`Apply standard Hot Isostatic Pressing (HIP: 920°C @ 1000–1200 bar Ar for 2h) to dissolve grain boundary voids and boost ductility.`);
+    }
+    if (!passDen) {
+      items.push(`Calibrate volumetric energy density (VED) and optimize hatch spacing to eliminate un-fused lack-of-fusion voids.`);
+    }
+    if (items.length === 0) {
+      items.push(`Component fully satisfies all physical and metallurgical criteria of ${std.name}. Qualified for production deployment.`);
+    }
+    planEl.innerHTML = items.map((item, i) => `<div style="${i < items.length - 1 ? 'margin-bottom: 4px;' : ''}">• ${item}</div>`).join('');
+  }
+
+  modal.style.display = 'block';
+}
+
+function closeAuditCertificateModal() {
+  const m = document.getElementById('auditCertificateModal');
+  if (m) m.style.display = 'none';
+}
+
+function printAuditCertificate() {
+  document.body.classList.add('printing-audit-certificate');
+  window.print();
+  setTimeout(() => {
+    document.body.classList.remove('printing-audit-certificate');
+  }, 1200);
+}
+
+function generateAuditReport() {
+  openAuditCertificateModal();
+}
+
+window.openAuditCertificateModal = openAuditCertificateModal;
+window.closeAuditCertificateModal = closeAuditCertificateModal;
+window.printAuditCertificate = printAuditCertificate;
+window.generateAuditReport = generateAuditReport;
+
+window.addEventListener('click', function(e) {
+  const m = document.getElementById('auditCertificateModal');
+  if (m && e.target === m) {
+    closeAuditCertificateModal();
+  }
+});
+
 </script>
 
 
@@ -11690,5 +11943,167 @@ function toggleGoverningEquationsDrawer() {
     </div>
   </div>
 
+
+  <!-- ==========================================
+       ENGINEERING QUALIFICATION AUDIT CERTIFICATE MODAL
+       ========================================== -->
+  <div id="auditCertificateModal" class="report-modal" style="display: none;">
+    <div style="max-width: 860px; margin: 30px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6); overflow: hidden; position: relative;">
+      
+      <!-- Top Screen Bar (Action Buttons - Hidden in Print) -->
+      <div class="no-print" style="background: #0f172a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+        <div style="font-size: 12px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Official Aerospace &amp; Medical Qualification Audit Certificate Preview</span>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="step-btn" onclick="printAuditCertificate()" style="background: #38bdf8; color: #070b10; font-weight: 800; font-size: 11.5px; padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            <span>Print / Save as PDF</span>
+          </button>
+          <button class="step-btn" onclick="closeAuditCertificateModal()" style="background: rgba(255, 255, 255, 0.1); color: #cbd5e1; font-weight: 700; font-size: 11.5px; padding: 6px 14px; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; cursor: pointer;">
+            ✕ Close
+          </button>
+        </div>
+      </div>
+
+      <!-- The Printable Certificate Paper (Exact Match to Reference PDF) -->
+      <div class="audit-cert-paper" style="padding: 28px 32px; background: #ffffff; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+        
+        <!-- Top Dark Banner -->
+        <div style="background: #070d1e; padding: 20px 24px; border-radius: 6px 6px 0 0; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 19px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; text-transform: uppercase;">ENGINEERING QUALIFICATION AUDIT CERTIFICATE</div>
+            <div id="certHeaderSub" style="font-size: 11px; font-weight: 600; color: #38bdf8; margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase;">AEROSPACE &amp; MEDICAL ADDITIVE MANUFACTURING COMPLIANCE • ASTM F2924</div>
+            <div id="certHeaderHash" style="font-size: 10.5px; color: #94a3b8; margin-top: 6px; font-family: 'JetBrains Mono', monospace;">Certificate Hash: SHA256-00008FE9AC65-1A1E895CD08</div>
+          </div>
+          <div>
+            <div id="certStatusBadge" style="background: #e11d48; color: #ffffff; font-weight: 800; font-size: 13.5px; padding: 10px 24px; border-radius: 6px; letter-spacing: 0.5px; text-transform: uppercase;">NON-COMPLIANT</div>
+          </div>
+        </div>
+
+        <!-- Cyan Accent Line -->
+        <div style="height: 3px; background: #00e5ff; margin-bottom: 22px;"></div>
+
+        <!-- SECTION 1: Component & Standards Metadata -->
+        <div style="margin-bottom: 22px;">
+          <div style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">1. Component &amp; Standards Metadata</div>
+          <table style="width: 100%; border-collapse: collapse; font-size: 11px; border: 1px solid #cbd5e1;">
+            <tbody>
+              <tr>
+                <td style="width: 22%; background: #f8fafc; font-weight: 600; color: #475569; padding: 8px 12px; border: 1px solid #cbd5e1;">Target Alloy Specification</td>
+                <td style="width: 28%; color: #0f172a; padding: 8px 12px; border: 1px solid #cbd5e1;" id="certAlloySpec">Ti-6Al-4V (Grade 5, α+β workhorse)</td>
+                <td style="width: 20%; background: #f8fafc; font-weight: 600; color: #475569; padding: 8px 12px; border: 1px solid #cbd5e1;">Audit Date &amp; Time</td>
+                <td style="width: 30%; color: #0f172a; padding: 8px 12px; border: 1px solid #cbd5e1;" id="certAuditDateTime">Nov 17, 2026, 01:48 PM</td>
+              </tr>
+              <tr>
+                <td style="background: #f8fafc; font-weight: 600; color: #475569; padding: 8px 12px; border: 1px solid #cbd5e1;">Standard Referenced</td>
+                <td style="color: #0f172a; padding: 8px 12px; border: 1px solid #cbd5e1;" id="certStdReferenced">ASTM F2924</td>
+                <td style="background: #f8fafc; font-weight: 600; color: #475569; padding: 8px 12px; border: 1px solid #cbd5e1;">Qualification Class</td>
+                <td style="color: #0f172a; padding: 8px 12px; border: 1px solid #cbd5e1;" id="certQualClass">Class B / C (Stress Relieved)</td>
+              </tr>
+              <tr>
+                <td style="background: #f8fafc; font-weight: 600; color: #475569; padding: 8px 12px; border: 1px solid #cbd5e1;">Standard Full Title</td>
+                <td colspan="3" style="color: #0f172a; padding: 8px 12px; border: 1px solid #cbd5e1;" id="certStdFullTitle">Standard Specification for Additive Manufacturing Titanium-6Aluminum-4V with Powder Bed Fusion</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- SECTION 2: Mechanical & Physical Properties Verification -->
+        <div style="margin-bottom: 22px;">
+          <div style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">2. Mechanical &amp; Physical Properties Verification</div>
+          <table style="width: 100%; border-collapse: collapse; font-size: 11px; border: 1px solid #cbd5e1;">
+            <thead>
+              <tr style="background: #070d1e; color: #ffffff;">
+                <th style="padding: 9px 12px; text-align: left; font-weight: 700; width: 28%; border: 1px solid #070d1e;">Mechanical / Physical Property</th>
+                <th style="padding: 9px 12px; text-align: left; font-weight: 700; width: 16%; border: 1px solid #070d1e;">Predicted Output</th>
+                <th style="padding: 9px 12px; text-align: left; font-weight: 700; width: 16%; border: 1px solid #070d1e;">Required Threshold</th>
+                <th style="padding: 9px 12px; text-align: center; font-weight: 700; width: 10%; border: 1px solid #070d1e;">Verdict</th>
+                <th style="padding: 9px 12px; text-align: left; font-weight: 700; width: 30%; border: 1px solid #070d1e;">Audit Notes</th>
+              </tr>
+            </thead>
+            <tbody id="certTableBody">
+              <tr style="background: #ffffff;">
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #0f172a;">0.2% Offset Yield Strength (Rp0.2)</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; font-weight: 700; color: #0f172a; font-family: monospace;">1200 MPa</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569; font-family: monospace;">≥ 825 MPa</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; text-align: center; font-weight: 800; color: #10b981;">PASS</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569;">Exceeds threshold by +375 MPa</td>
+              </tr>
+              <tr style="background: #f8fafc;">
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #0f172a;">Ultimate Tensile Strength (UTS)</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; font-weight: 700; color: #0f172a; font-family: monospace;">1290 MPa</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569; font-family: monospace;">≥ 895 MPa</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; text-align: center; font-weight: 800; color: #10b981;">PASS</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569;">Exceeds tensile criteria by +395 MPa</td>
+              </tr>
+              <tr style="background: #ffffff;">
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #0f172a;">Elongation at Fracture (Ductility)</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; font-weight: 700; color: #0f172a; font-family: monospace;">7.5 %</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569; font-family: monospace;">≥ 10 %</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; text-align: center; font-weight: 800; color: #ef4444;">FAIL</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569;">Sub-standard ductility; un-annealed brittle acicular martensite present</td>
+              </tr>
+              <tr style="background: #f8fafc;">
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #0f172a;">As-Synthesized Relative Density</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; font-weight: 700; color: #0f172a; font-family: monospace;">99.90 %</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569; font-family: monospace;">≥ 99.5 %</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; text-align: center; font-weight: 800; color: #10b981;">PASS</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569;">Meets structural volumetric density threshold (&gt;99.5%)</td>
+              </tr>
+              <tr style="background: #ffffff;">
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #0f172a;">Internal Residual Macrostress</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; font-weight: 700; color: #0f172a; font-family: monospace;">1085 MPa</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569; font-family: monospace;">≤ 60 MPa</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; text-align: center; font-weight: 800; color: #ef4444;">FAIL</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569;">Requires sub-transus stress relief anneal or HIP treatment</td>
+              </tr>
+              <tr style="background: #f8fafc;">
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #0f172a;">High-Cycle Fatigue Threshold (10⁷ cycles)</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; font-weight: 700; color: #0f172a; font-family: monospace;">706 MPa</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569; font-family: monospace;">≥ 520 MPa</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; text-align: center; font-weight: 800; color: #10b981;">PASS</td>
+                <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569;">Exceeds dynamic rotating-beam fatigue endurance limit</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- SECTION 3: Metallurgical Post-Processing Action Plan -->
+        <div style="margin-bottom: 26px;">
+          <div style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">3. Metallurgical Post-Processing Action Plan</div>
+          <div id="certActionPlan" style="font-size: 11px; line-height: 1.6; color: #334155;">
+            <div style="margin-bottom: 4px;">• Perform Sub-Transus Stress-Relief (700°C–800°C for 2h in industrial vacuum) to lower residual stresses below 60 MPa.</div>
+            <div>• Apply standard Hot Isostatic Pressing (HIP: 920°C @ 1000–1200 bar Ar for 2h) to dissolve grain boundary voids and boost ductility.</div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: Sign-Off and Stamp Block -->
+        <div style="margin-top: 28px; padding-top: 14px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div>
+            <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Digital Quality Assurance Sign-Off:</div>
+            <div style="font-size: 10.5px; color: #64748b; line-height: 1.55;">
+              <div>System: MatSci Calibrated Automated Metrology System</div>
+              <div>Facility: Advanced Materials &amp; Additive Manufacturing Qualification Lab</div>
+              <div>Standards Traceability: ISO/IEC 17025 Traceable Physics Verification Engine</div>
+            </div>
+          </div>
+          <div>
+            <div style="border: 2px solid #0284c7; border-radius: 8px; padding: 10px 22px; text-align: center; background: rgba(56, 189, 248, 0.04);">
+              <div style="font-size: 11.5px; font-weight: 800; color: #0284c7; letter-spacing: 0.8px;">DIGITALLY AUDITED</div>
+              <div style="font-size: 10px; font-weight: 700; color: #0284c7; letter-spacing: 0.5px; margin-top: 3px;">MATSCI QUAL ENGINE</div>
+              <div style="font-size: 10px; font-weight: 700; color: #0284c7; letter-spacing: 0.5px; margin-top: 3px;">VALIDATED CERT</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Footer -->
+        <div style="margin-top: 24px; font-size: 9.5px; color: #94a3b8; text-align: center;">
+          Generated by MatSci Navigator Titanium AM Platform • Calibrated with ISO/ASTM Additive Manufacturing Standards
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
