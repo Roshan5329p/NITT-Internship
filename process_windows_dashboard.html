@@ -2334,6 +2334,160 @@
     color: #f1f5f9;
   }
 
+  /* ========================================================
+     ENGINEERING TECHNICAL REPORT MODAL & DARK PRINT STYLES
+     ======================================================== */
+  .report-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(3, 7, 18, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    overflow-y: auto;
+    padding: 32px 16px;
+    box-sizing: border-box;
+  }
+
+  .report-paper {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #090e1a;
+    background-color: #090e1a;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 40px rgba(56, 189, 248, 0.12);
+    border-radius: 12px;
+    padding: 32px 36px;
+    color: #f8fafc;
+    box-sizing: border-box;
+  }
+
+  /* RESEARCH-GRADE HIGH-CONTRAST DARK THEME PRINT ENGINE */
+  @media print {
+    @page {
+      margin: 8mm 10mm;
+      size: auto;
+      background-color: #070b12 !important;
+    }
+
+    /* Force all layout engines (WebKit, Blink, Gecko) to retain exact dark background graphics */
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
+    html, body {
+      background-color: #070b12 !important;
+      background: #070b12 !important;
+      color: #f8fafc !important;
+      color-scheme: dark !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      font-size: 10.5pt !important;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Non-printable screen UI controls */
+    .no-print,
+    .report-footer-actions,
+    .top-nav,
+    .snow-breadcrumbs,
+    .sidebar,
+    .orbit-badge,
+    .camera-controls,
+    button:not(.print-keep),
+    input[type="range"] {
+      display: none !important;
+    }
+
+    /* --- MODE A: Dedicated Technical Assessment Report Printing --- */
+    body.printing-report main,
+    body.printing-report footer,
+    body.printing-report .tabs-bar-wrapper,
+    body.printing-report .dash-view,
+    body.printing-report header,
+    body.printing-report .snow-header-actions {
+      display: none !important;
+    }
+
+    body.printing-report .report-modal {
+      display: block !important;
+      position: static !important;
+      inset: auto !important;
+      background: #070b12 !important;
+      background-color: #070b12 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      overflow: visible !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    body.printing-report .report-paper {
+      max-width: 100% !important;
+      width: 100% !important;
+      background: #090e1a !important;
+      background-color: #090e1a !important;
+      border: 1.5px solid rgba(56, 189, 248, 0.45) !important;
+      box-shadow: none !important;
+      padding: 24px 28px !important;
+      margin: 0 !important;
+      border-radius: 8px !important;
+      color: #f8fafc !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    /* --- MODE B: Direct Dashboard / Tab Printing in Dark Theme --- */
+    body:not(.printing-report) .report-modal {
+      display: none !important;
+    }
+
+    body:not(.printing-report) .tab-view:not(.active),
+    body:not(.printing-report) .tab-content:not(.active) {
+      display: none !important;
+    }
+
+    .res-card, .model-card, .audit-item, .kpi-card, .snow-card, .grid-2, .dash-card, .sec-card {
+      background: #0c1220 !important;
+      background-color: #0c1220 !important;
+      border: 1px solid rgba(255, 255, 255, 0.14) !important;
+      color: #f8fafc !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      box-shadow: none !important;
+    }
+
+    /* Dark tables & canvas isolation */
+    canvas, svg, table, .table-wrap {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    table {
+      border-collapse: collapse !important;
+      width: 100% !important;
+    }
+
+    th {
+      background: #111a2e !important;
+      color: #38bdf8 !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    }
+
+    td {
+      background: #0c1220 !important;
+      color: #cbd5e1 !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+
+    strong {
+      color: #ffffff !important;
+    }
+  }
+
 </style>
 
   <!-- KaTeX Publication-Grade Mathematical Rendering Engine -->
@@ -2659,10 +2813,16 @@ function openEngineeringReportModal() {
   const elHv = document.getElementById('kpi_hv');
   const elUts = document.getElementById('kpi_uts');
 
-  const p = elP ? elP.value : 280;
-  const v = elV ? elV.value : 960;
-  const h = elH ? elH.value : 110;
-  const t = elT ? elT.value : 40;
+  const p = Number(elP ? elP.value : 280);
+  const v = Number(elV ? elV.value : 960);
+  const h = Number(elH ? elH.value : 110);
+  const t = Number(elT ? elT.value : 40);
+
+  // VED calculated directly: VED = P / (v * (h/1000) * (t/1000)) J/mm^3
+  const calcVed = (h > 0 && t > 0 && v > 0) ? (p / (v * (h / 1000.0) * (t / 1000.0))) : 0;
+  const tgtVed = 72.4;
+  const diffVed = calcVed - tgtVed;
+  const diffSign = diffVed >= 0 ? '+' : '';
 
   const stateData = (typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY[globalMaterialState])
     ? MATERIAL_STATE_REGISTRY[globalMaterialState]
@@ -2670,10 +2830,13 @@ function openEngineeringReportModal() {
 
   const setT = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
 
+  setT('repDate', new Date().toISOString().split('T')[0]);
   setT('repP', p + ' W');
   setT('repV', v + ' mm/s');
   setT('repH', h + ' µm');
   setT('repT', t + ' µm');
+  setT('repTgtVed', tgtVed.toFixed(1) + ' J/mm³');
+  setT('repAchVed', calcVed.toFixed(1) + ' J/mm³ (Δ ' + diffSign + diffVed.toFixed(1) + ' J/mm³)');
   setT('repState', stateData.label);
   setT('repLath', stateData.lathWidth);
   setT('repPhases', stateData.alphaPrime > 0 ? (stateData.alphaPrime + "% α' · " + stateData.beta + "% β · " + stateData.alpha + "% α") : (stateData.alpha + "% α · " + stateData.beta + "% β"));
@@ -2683,12 +2846,39 @@ function openEngineeringReportModal() {
   setT('repEl', stateData.elongPct.toFixed(1) + ' %');
 
   modal.style.display = 'block';
+  document.body.classList.add('report-modal-open');
 }
 
 function closeEngineeringReportModal() {
   const modal = document.getElementById('engineeringReportModal');
   if (modal) modal.style.display = 'none';
+  document.body.classList.remove('report-modal-open');
+  document.body.classList.remove('printing-report');
 }
+
+function printTechnicalReport() {
+  document.body.classList.add('printing-report');
+  window.print();
+  setTimeout(() => {
+    document.body.classList.remove('printing-report');
+  }, 1200);
+}
+
+function printFullDashboard() {
+  document.body.classList.remove('printing-report');
+  const m = document.getElementById('engineeringReportModal');
+  const wasOpen = m && m.style.display === 'block';
+  if (wasOpen) m.style.display = 'none';
+  window.print();
+  if (wasOpen) m.style.display = 'block';
+}
+
+window.addEventListener('click', function(e) {
+  const m = document.getElementById('engineeringReportModal');
+  if (m && e.target === m) {
+    closeEngineeringReportModal();
+  }
+});
 
 </script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" crossorigin="anonymous"
@@ -7018,7 +7208,7 @@ function exportPredictionsCsv() {
 }
 
 function generateAuditReport() {
-  window.print();
+  openEngineeringReportModal();
 }
 
 // ==========================================
@@ -10745,7 +10935,7 @@ function toggleGoverningEquationsDrawer() {
             <div>Hatch Spacing (h): <strong id="repH">110 µm</strong></div>
             <div>Layer Height (t): <strong id="repT">40 µm</strong></div>
             <div>Target VED: <strong id="repTgtVed">72.4 J/mm³</strong></div>
-            <div>Achieved VED: <strong style="color:#34d399;" id="repAchVed">73.0 J/mm³</strong> (Δ +0.6 J/mm³)</div>
+            <div>Achieved VED: <strong style="color:#34d399;" id="repAchVed">73.0 J/mm³ (Δ +0.6 J/mm³)</strong></div>
             <div>Process Window: <span style="color:#34d399; font-weight:bold;">CONDUCTION SAFE (55–85 J/mm³)</span></div>
           </div>
         </div>
@@ -10804,14 +10994,20 @@ function toggleGoverningEquationsDrawer() {
         </div>
       </div>
 
-      <!-- Footer Buttons -->
-      <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px;">
-        <button class="step-btn" onclick="window.print()" style="background: var(--accent-emerald); color: #070b10; font-weight: 700; padding: 8px 18px;">
-          🖨️ Print / Save as PDF
-        </button>
-        <button class="step-btn" onclick="closeEngineeringReportModal()" style="padding: 8px 18px;">
-          Close
-        </button>
+      <!-- Footer Buttons & Certification Legend -->
+      <div class="no-print report-footer-actions" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px;">
+        <div style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 8px;">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow: 0 0 8px #10b981;"></span>
+          <span>Dark-Theme Vector PDF Export Active • NIT Tiruchirappalli AM Division</span>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="step-btn" onclick="printTechnicalReport()" style="background: var(--accent-emerald); color: #070b10; font-weight: 700; padding: 8px 18px; border-radius: 6px; cursor: pointer; border: none; font-size: 12px;">
+            🖨️ Print / Save as PDF
+          </button>
+          <button class="step-btn" onclick="closeEngineeringReportModal()" style="padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+            Close
+          </button>
+        </div>
       </div>
     </div>
   </div>
