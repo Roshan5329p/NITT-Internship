@@ -1261,25 +1261,118 @@
   .tab-view { display: none; }
   .tab-view.active { display: block; }
 
-  /* 3D Digital Twin View */
-  .twin-canvas-container {
-    background: radial-gradient(circle at center, #1c2430 0%, #111720 70%, #0a0e14 100%);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
+  /* 3D Digital Twin View - Reconciled 2-Column Responsive Layout */
+  .twin-layout-grid {
+    display: grid;
+    grid-template-columns: 1.85fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 1024px) {
+    .twin-layout-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .twin-canvas-box {
+    background: radial-gradient(circle at 45% 45%, #111827 0%, #090e18 65%, #050811 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
     position: relative;
     overflow: hidden;
-    height: 480px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     cursor: grab;
-    box-shadow: var(--shadow-card);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
   }
-  .twin-canvas-container:active { cursor: grabbing; }
+  .twin-canvas-box:active { cursor: grabbing; }
+
   canvas#twinCanvas {
     width: 100%;
-    height: 100%;
+    height: 420px;
     display: block;
+  }
+
+  /* Mode selection buttons in twin header */
+  .twin-mode-btn {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .twin-mode-btn:hover {
+    background: rgba(30, 41, 59, 0.9);
+    color: #f8fafc;
+    border-color: rgba(56, 189, 248, 0.4);
+  }
+  .twin-mode-btn.active {
+    background: #38bdf8 !important;
+    border-color: #38bdf8 !important;
+    color: #070b10 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+  }
+
+  /* Pill buttons in canvas toolbar */
+  .twin-pill-btn {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    font-size: 11.5px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+  }
+  .twin-pill-btn:hover {
+    background: rgba(30, 41, 59, 0.95);
+    color: #fff;
+    border-color: rgba(56, 189, 248, 0.4);
+  }
+  .twin-pill-btn.active {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: #38bdf8;
+    color: #38bdf8;
+    font-weight: 600;
+  }
+
+  /* Range sliders */
+  .twin-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: #1e293b;
+    outline: none;
+    cursor: pointer;
+  }
+  .twin-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #38bdf8;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+    border: 2px solid #0c1220;
+  }
+  .twin-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #38bdf8;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+    border: 2px solid #0c1220;
   }
   
   .twin-btn {
@@ -2497,7 +2590,7 @@
 // ========================================================
 // UNIVERSAL MATERIAL STATE & PHASE FRACTION SYNCHRONIZER
 // ========================================================
-var globalMaterialState = 'hip';
+var globalMaterialState = 'as_built';
 window.globalMaterialState = globalMaterialState;
 
 var MATERIAL_STATE_REGISTRY = {
@@ -3278,10 +3371,10 @@ window.addEventListener('click', function(e) {
         </div>
       </div>
       <div class="mat-state-pills">
-        <button type="button" class="mat-state-btn" id="btnMatState_as_built" onclick="setGlobalMaterialState('as_built')">As-Built (α' Martensite)</button>
+        <button type="button" class="mat-state-btn active" id="btnMatState_as_built" onclick="setGlobalMaterialState('as_built')">As-Built (α' Martensite)</button>
         <button type="button" class="mat-state-btn" id="btnMatState_stress_relieved" onclick="setGlobalMaterialState('stress_relieved')">Stress-Relieved (650°C)</button>
         <button type="button" class="mat-state-btn" id="btnMatState_annealed" onclick="setGlobalMaterialState('annealed')">Annealed (730°C)</button>
-        <button type="button" class="mat-state-btn active" id="btnMatState_hip" onclick="setGlobalMaterialState('hip')">HIP-Treated (920°C / 100 MPa)</button>
+        <button type="button" class="mat-state-btn" id="btnMatState_hip" onclick="setGlobalMaterialState('hip')">HIP-Treated (920°C / 100 MPa)</button>
         <button type="button" class="mat-state-btn" id="btnMatState_sta" onclick="setGlobalMaterialState('sta')">Solution-Treated &amp; Aged (STA)</button>
       </div>
     </div>
@@ -4603,91 +4696,125 @@ window.addEventListener('click', function(e) {
 
     <!-- TAB 5: 3D DIGITAL TWIN -->
     <div id="view_digital-twin" class="tab-view">
-      <div class="model-card">
-        <div class="model-card-header">
+      <div class="model-card" style="padding: 24px;">
+        <!-- Top Section Header -->
+        <div class="model-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; flex-wrap: wrap; gap: 16px;">
           <div>
-            <div class="model-card-title">3D Digital Twin & Stress Tensor Heatmap</div>
-            <div class="model-card-sub">Interactive WebGL Specimen • ASTM E8 Standard Tensile Specimen • 60 FPS Orbit</div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              <div class="model-card-title" style="font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: -0.2px;">3D Digital Twin &amp; Stress Tensor Heatmap</div>
+              <span style="border: 1px solid rgba(56, 189, 248, 0.45); background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 9999px;">Interactive WebGL Specimen</span>
+            </div>
+            <div class="model-card-sub" style="font-size: 12.5px; color: #94a3b8; margin-top: 6px; line-height: 1.5; max-width: 820px;">
+              Real-time volumetric 3D representation of an <strong>ASTM E8 Tensile Specimen</strong> in Ti-6Al-4V (Grade 5, α+β workhorse). Drag to orbit, zoom, slice cross-sections, and visualize residual stress tensors and thermal cooling contours.
+            </div>
           </div>
           <div style="display: flex; gap: 8px;">
-            <button class="twin-btn active" id="twinMode_stress" onclick="setTwinMode('residual-stress')">Residual Stress</button>
-            <button class="twin-btn" id="twinMode_cooling" onclick="setTwinMode('cooling-rate')">Cooling Rate</button>
-            <button class="twin-btn" id="twinMode_phase" onclick="setTwinMode('phase-fraction')">Martensite α'</button>
+            <button class="twin-mode-btn active" id="twinMode_stress" onclick="setTwinMode('residual-stress')">Residual Stress</button>
+            <button class="twin-mode-btn" id="twinMode_cooling" onclick="setTwinMode('cooling-rate')">Cooling Rate</button>
+            <button class="twin-mode-btn" id="twinMode_phase" onclick="setTwinMode('phase-fraction')">Martensite α'</button>
           </div>
         </div>
 
-        <div class="twin-canvas-container" id="canvasWrapper">
-          <div class="twin-controls-overlay">
-            <button class="twin-btn" id="btnAutoOrbit" onclick="toggleAutoOrbit()">Auto-Orbit: ON</button>
-            <button class="twin-btn" id="btnWireframe" onclick="toggleWireframe()">Wireframe: OFF</button>
-            <button class="twin-btn" onclick="resetCamera()">Reset Camera</button>
-            <span style="border-left: 1px solid rgba(255,255,255,0.15); margin: 0 4px; height: 16px;"></span>
-            <!-- Stress Tensor Component Selection -->
-            <button class="twin-btn active" id="btnStress_vm" onclick="setStressComponent('vm')">σ_vM (Von Mises)</button>
-            <button class="twin-btn" id="btnStress_szz" onclick="setStressComponent('szz')">σ_zz (Axial / Z)</button>
-            <button class="twin-btn" id="btnStress_sxx" onclick="setStressComponent('sxx')">σ_xx (Transverse / X)</button>
-            <button class="twin-btn" id="btnStress_txz" onclick="setStressComponent('txz')">τ_xz (Shear / XZ)</button>
-            <span style="border-left: 1px solid rgba(255,255,255,0.15); margin: 0 4px; height: 16px;"></span>
-            <!-- Load Case Toggle -->
-            <button class="twin-btn" id="btnLoadCase" onclick="toggleLoadCase()">Load Case: Residual Stress</button>
-          </div>
-          <!-- 3D Build Direction Indicator -->
-          <div style="position: absolute; bottom: 55px; left: 16px; background: rgba(6,11,20,0.75); border: 1px solid rgba(56,189,248,0.3); border-radius: 4px; padding: 4px 8px; font-family: monospace; font-size: 10.5px; color: #38bdf8; z-index: 5; pointer-events: none; display: flex; align-items: center; gap: 6px;">
-            <span>↑ [001] Build Direction</span>
-            <span style="color: #94a3b8; font-size: 9.5px;">(Vertical Z-Axis)</span>
-          </div>
+        <!-- 2-Column Main Layout Grid -->
+        <div class="twin-layout-grid">
+          <!-- LEFT COLUMN: 3D Canvas Card & Heatmap Scale -->
+          <div>
+            <div class="twin-canvas-box" id="canvasWrapper" style="background: radial-gradient(circle at 45% 45%, #111827 0%, #090e18 65%, #050811 100%); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 18px; position: relative; overflow: hidden; box-shadow: 0 12px 36px rgba(0,0,0,0.5);">
+              <!-- Top toolbar inside canvas -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; user-select: none;">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 600; color: #f1f5f9;">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow: 0 0 8px #10b981;"></span>
+                  <span>ASTM E8 Standard Tensile Specimen • 60 FPS Engine</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <button class="twin-pill-btn active" id="btnAutoOrbit" onclick="toggleAutoOrbit()">Auto-Orbit: ON</button>
+                  <button class="twin-pill-btn" id="btnWireframe" onclick="toggleWireframe()">Wireframe</button>
+                  <button class="twin-pill-btn" onclick="resetCamera()" title="Reset Camera View" style="padding: 5px 8px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                  </button>
+                </div>
+              </div>
 
-          <!-- Dynamic Material State Colorbar & Metric Scale (Top Right) -->
-          <div class="twin-scale-panel" id="twinScalePanel">
-            <div class="twin-scale-header">
-              <span class="twin-scale-title" id="twinScaleTitle">Von Mises Stress</span>
-              <span class="twin-scale-unit" id="twinScaleUnit">σ_vm (MPa)</span>
-            </div>
-            <div class="twin-scale-body">
-              <div class="twin-scale-bar-track">
-                <div class="twin-scale-marker" id="twinScaleMarker" style="top: 45%;"></div>
-              </div>
-              <div class="twin-scale-ticks" id="twinScaleTicks">
-                <!-- Dynamically generated based on twinMode -->
+              <!-- Canvas element -->
+              <canvas id="twinCanvas" width="760" height="420" style="width: 100%; height: 420px; display: block; cursor: grab;"></canvas>
+
+              <!-- Bottom left hint -->
+              <div style="position: absolute; bottom: 12px; left: 16px; font-size: 10.5px; color: #64748b; font-family: 'JetBrains Mono', monospace; pointer-events: none; user-select: none;">
+                Click &amp; Drag to Orbit • Scroll to Zoom
               </div>
             </div>
-            <div class="twin-scale-footer">
-              <div class="twin-state-badge" id="twinStateBadge">ELASTIC SUB-YIELD</div>
-              <div class="twin-state-desc" id="twinStateDesc">
-                <strong>Gauge Peak:</strong> 380 MPa (Residual tension in reduced neck)<br>
-                <strong>Grip Boundary:</strong> 145 MPa (Relaxed outer shoulder)<br>
-                <strong>Yield Strength:</strong> 865 MPa (44% of YS in HIP state)
-              </div>
+
+            <!-- Heatmap Scale bar underneath canvas box -->
+            <div style="display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 0 4px; font-size: 11px; font-family: 'JetBrains Mono', monospace; flex-wrap: nowrap; white-space: nowrap;">
+              <span style="color: #94a3b8; font-family: 'Inter', sans-serif; font-size: 12px;">Heatmap Scale:</span>
+              <div style="width: 140px; height: 10px; border-radius: 5px; background: linear-gradient(to right, #2563eb, #38bdf8, #facc15, #f97316, #ef4444); border: 1px solid rgba(255,255,255,0.15);"></div>
+              <span style="color: #38bdf8;" id="scaleMinLabel">Min: -180 MPa (Core Compressive)</span>
+              <span style="color: #ff4747; font-weight: 600;" id="scaleMaxLabel">Max: +1085 MPa (Surface Tensile)</span>
             </div>
           </div>
 
-          <canvas id="twinCanvas" width="800" height="480"></canvas>
+          <!-- RIGHT COLUMN: Slicing & Tensor Decomposition Cards -->
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- CARD 1: Z-AXIS CROSS-SECTION SLICING -->
+            <div class="twin-sidebar-card" style="background: #0c1220; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px 20px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.9a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 12.5-8.58 3.9a2 2 0 0 1-1.66 0L2.6 12.5"/><path d="m22 17.5-8.58 3.9a2 2 0 0 1-1.66 0L2.6 17.5"/></svg>
+                <span style="font-size: 12.5px; font-weight: 800; letter-spacing: 0.6px; color: #f8fafc; text-transform: uppercase;">Z-Axis Cross-Section Slicing</span>
+              </div>
 
-          <!-- Real-Time Material State & Phase Telemetry HUD Strip (Bottom) -->
-          <div class="twin-hud-bar" id="twinHudBar">
-            <div class="twin-hud-left">
-              <div class="twin-hud-item">
-                <span class="twin-hud-label">Material State:</span>
-                <span class="twin-hud-val" id="twinHudState" style="color: var(--accent-emerald);">HIP Basketweave (ASTM Class C)</span>
+              <!-- Control 1: Slice Penetration Depth -->
+              <div style="margin-bottom: 18px;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+                  <span style="font-size: 12px; color: #94a3b8;">Slice Penetration Depth:</span>
+                  <span id="lblSliceDepth" style="font-size: 12.5px; font-weight: 700; color: #38bdf8; font-family: 'JetBrains Mono', monospace;">100%</span>
+                </div>
+                <input type="range" id="slTwinSlice" min="10" max="100" value="100" oninput="setSliceDepth(this.value)" class="twin-slider" style="width: 100%;">
+                <div style="display: flex; justify-content: space-between; font-size: 10px; color: #64748b; margin-top: 4px; font-family: 'JetBrains Mono', monospace;">
+                  <span>10% (Core Reveal)</span>
+                  <span>Sub-Surface Stress</span>
+                  <span>100% (Full Geometry)</span>
+                </div>
               </div>
-              <div class="twin-hud-divider"></div>
-              <div class="twin-hud-item">
-                <span class="twin-hud-label">Phase Fractions:</span>
-                <span class="twin-hud-val" id="twinHudPhases" style="color: #38bdf8;">5% α' · 95% Lamellar α+β</span>
-              </div>
-              <div class="twin-hud-divider"></div>
-              <div class="twin-hud-item">
-                <span class="twin-hud-label">Tensile Capacity:</span>
-                <span class="twin-hud-val" id="twinHudYs">YS 920 MPa · UTS 1034 MPa</span>
-              </div>
-              <div class="twin-hud-divider"></div>
-              <div class="twin-hud-item">
-                <span class="twin-hud-label">Peak Stress:</span>
-                <span class="twin-hud-val" id="twinHudStress" style="color: #fbbf24;">145 MPa (Relaxed)</span>
+
+              <!-- Control 2: Camera Zoom Level -->
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+                  <span style="font-size: 12px; color: #94a3b8;">Camera Zoom Level:</span>
+                  <span id="lblZoomLevel" style="font-size: 12.5px; font-weight: 700; color: #f8fafc; font-family: 'JetBrains Mono', monospace;">1.15x</span>
+                </div>
+                <input type="range" id="slTwinZoom" min="0.65" max="2.2" step="0.05" value="1.15" oninput="setZoomLevel(this.value)" class="twin-slider" style="width: 100%;">
               </div>
             </div>
-            <div class="twin-hud-hint">
-              <span>Click &amp; Drag to Orbit · Scroll to Zoom</span>
+
+            <!-- CARD 2: LOCAL STRESS TENSOR DECOMPOSITION -->
+            <div class="twin-sidebar-card" style="background: #0c1220; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px 20px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <span style="font-size: 12.5px; font-weight: 800; letter-spacing: 0.6px; color: #f8fafc; text-transform: uppercase;">Local Stress Tensor Decomposition</span>
+              </div>
+
+              <!-- 2 Mini-Cards Grid -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px;">
+                  <div style="font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;" id="lblPeakStressTitle">Peak Surface Stress</div>
+                  <div style="font-size: 20px; font-weight: 800; color: #ff4747; margin: 4px 0; font-family: 'JetBrains Mono', monospace;" id="valPeakStress">+1085 MPa</div>
+                  <div style="font-size: 11px; color: #64748b;" id="lblPeakStressSub">Von Mises Tensile</div>
+                </div>
+                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px;">
+                  <div style="font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;" id="lblCoreStressTitle">Core Neutralization</div>
+                  <div style="font-size: 20px; font-weight: 800; color: #38bdf8; margin: 4px 0; font-family: 'JetBrains Mono', monospace;" id="valCoreStress">-145 MPa</div>
+                  <div style="font-size: 11px; color: #64748b;" id="lblCoreStressSub">Compressive Core</div>
+                </div>
+              </div>
+
+              <!-- Metallurgical Callout -->
+              <div style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px 14px; margin-top: 14px; display: flex; gap: 10px; align-items: flex-start;">
+                <span style="font-size: 14px; flex-shrink: 0; margin-top: 1px;">🔍</span>
+                <div style="font-size: 11.5px; line-height: 1.55; color: #cbd5e1;" id="twinMetallurgicalNote">
+                  <strong style="color: #38bdf8;">Metallurgical Note:</strong> Laser additive manufacturing generates steep thermal gradients (∇T &gt; 10⁷ K/m) leading to localized plastic deformation. Post-weld annealing collapses peak macro-stresses from ~1085 MPa down below 50 MPa.
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -7256,9 +7383,10 @@ function openEvidenceHub() {
 let twinMode = 'residual-stress';
 let autoOrbit = true;
 let wireframe = false;
-let yaw = 0.65;
-let pitch = 0.35;
-let scale = 1.15;
+let yaw = -2.18;
+let pitch = -0.52;
+let scale = 1.35;
+let sliceDepth = 100;
 let isDragging = false;
 let lastMouseX = 0;
 let lastMouseY = 0;
@@ -7272,30 +7400,100 @@ function setTwinMode(mode) {
   if (btnStress) btnStress.classList.toggle('active', mode === 'residual-stress');
   if (btnCooling) btnCooling.classList.toggle('active', mode === 'cooling-rate');
   if (btnPhase) btnPhase.classList.toggle('active', mode === 'phase-fraction');
-  if (typeof updateTwinScaleAndHud === 'function') {
-    updateTwinScaleAndHud();
+
+  const minLbl = document.getElementById('scaleMinLabel');
+  const maxLbl = document.getElementById('scaleMaxLabel');
+  const peakTitle = document.getElementById('lblPeakStressTitle');
+  const peakVal = document.getElementById('valPeakStress');
+  const peakSub = document.getElementById('lblPeakStressSub');
+  const coreTitle = document.getElementById('lblCoreStressTitle');
+  const coreVal = document.getElementById('valCoreStress');
+  const coreSub = document.getElementById('lblCoreStressSub');
+  const noteEl = document.getElementById('twinMetallurgicalNote');
+
+  if (mode === 'residual-stress') {
+    if (minLbl) minLbl.innerText = 'Min: -180 MPa (Core Compressive)';
+    if (maxLbl) maxLbl.innerText = 'Max: +1085 MPa (Surface Tensile)';
+    if (peakTitle) peakTitle.innerText = 'PEAK SURFACE STRESS';
+    if (peakVal) { peakVal.innerHTML = '<span style="color:#ff4b72;">+1085</span> <span style="font-size:12px; color:#94a3b8; font-weight:normal;">MPa</span>'; }
+    if (peakSub) peakSub.innerText = 'Von Mises Tensile';
+    if (coreTitle) coreTitle.innerText = 'CORE NEUTRALIZATION';
+    if (coreVal) { coreVal.innerHTML = '<span style="color:#00e5ff;">-145</span> <span style="font-size:12px; color:#94a3b8; font-weight:normal;">MPa</span>'; }
+    if (coreSub) coreSub.innerText = 'Compressive Core';
+    if (noteEl) noteEl.innerHTML = '<strong style="color: #38bdf8;">Metallurgical Note:</strong> Laser additive manufacturing generates steep thermal gradients (∇T > 10⁷ K/m) leading to localized plastic deformation. Post-weld annealing collapses peak macro-stresses from ~1085 MPa down below 50 MPa.';
+  } else if (mode === 'cooling-rate') {
+    if (minLbl) minLbl.innerText = 'Min: 1.2 × 10⁴ K/s (Baseplate Heat Sink)';
+    if (maxLbl) maxLbl.innerText = 'Max: 8.5 × 10⁵ K/s (Melt Pool Core)';
+    if (peakTitle) peakTitle.innerText = 'PEAK COOLING RATE';
+    if (peakVal) { peakVal.innerHTML = '<span style="color:#ff4b72;">8.5e5</span> <span style="font-size:12px; color:#94a3b8; font-weight:normal;">K/s</span>'; }
+    if (peakSub) peakSub.innerText = 'Marangoni Boundary';
+    if (coreTitle) coreTitle.innerText = 'QUENCH HARDENING';
+    if (coreVal) { coreVal.innerHTML = '<span style="color:#00e5ff;">> 410</span> <span style="font-size:12px; color:#94a3b8; font-weight:normal;">HV</span>'; }
+    if (coreSub) coreSub.innerText = "α' Martensite Formation";
+    if (noteEl) noteEl.innerHTML = '<strong style="color: #38bdf8;">Metallurgical Note:</strong> Cooling rates exceeding 410 K/s surpass the critical martensite start (Ms) threshold for Ti-6Al-4V, freezing 100% acicular α\' needles in the as-quenched state.';
+  } else if (mode === 'phase-fraction') {
+    if (minLbl) minLbl.innerText = "Min: 0% α' (Equiaxed α+β)";
+    if (maxLbl) maxLbl.innerText = "Max: 100% α' (Acicular Needles)";
+    if (peakTitle) peakTitle.innerText = 'MARTENSITE FRACTION';
+    if (peakVal) { peakVal.innerHTML = '<span style="color:#ff4b72;">92%</span> <span style="font-size:12px; color:#94a3b8; font-weight:normal;">α\'</span>'; }
+    if (peakSub) peakSub.innerText = 'As-Quenched Needles';
+    if (coreTitle) coreTitle.innerText = 'LAMELLAR DECOMPOSITION';
+    if (coreVal) { coreVal.innerHTML = '<span style="color:#00e5ff;">8%</span> <span style="font-size:12px; color:#94a3b8; font-weight:normal;">α+β</span>'; }
+    if (coreSub) coreSub.innerText = 'Retained Prior-β';
+    if (noteEl) noteEl.innerHTML = '<strong style="color: #38bdf8;">Metallurgical Note:</strong> Post-processing HIP at 920°C / 100 MPa transforms brittle acicular α\' into ductile Widmanstätten lamellar α+β plates, restoring tensile elongation from 6% to >14%.';
   }
+
+  if (!animFrameId) renderTwin();
 }
 
 function toggleAutoOrbit() {
   autoOrbit = !autoOrbit;
-  document.getElementById('btnAutoOrbit').innerText = 'Auto-Orbit: ' + (autoOrbit ? 'ON' : 'OFF');
-  document.getElementById('btnAutoOrbit').classList.toggle('active', autoOrbit);
+  const btn = document.getElementById('btnAutoOrbit');
+  if (btn) {
+    btn.innerText = 'Auto-Orbit: ' + (autoOrbit ? 'ON' : 'OFF');
+    btn.classList.toggle('active', autoOrbit);
+  }
 }
 
 function toggleWireframe() {
   wireframe = !wireframe;
-  document.getElementById('btnWireframe').innerText = 'Wireframe: ' + (wireframe ? 'ON' : 'OFF');
-  document.getElementById('btnWireframe').classList.toggle('active', wireframe);
+  const btn = document.getElementById('btnWireframe');
+  if (btn) {
+    btn.classList.toggle('active', wireframe);
+  }
+  if (!animFrameId) renderTwin();
 }
 
 function resetCamera() {
-  yaw = 0.65;
-  pitch = 0.35;
-  scale = 1.15;
-  if (typeof startTwinAnimation === 'function') {
-    startTwinAnimation();
+  yaw = -2.18;
+  pitch = -0.52;
+  scale = 1.35;
+  sliceDepth = 100;
+  const slZoom = document.getElementById('slTwinZoom');
+  const lblZoom = document.getElementById('lblZoomLevel');
+  const slSlice = document.getElementById('slTwinSlice');
+  const lblSlice = document.getElementById('lblSliceDepth');
+  if (slZoom) slZoom.value = '1.15';
+  if (lblZoom) lblZoom.innerText = '1.15x';
+  if (slSlice) slSlice.value = '100';
+  if (lblSlice) lblSlice.innerText = '100%';
+  if (!animFrameId) {
+    animFrameId = requestAnimationFrame(renderTwin);
   }
+}
+
+function setSliceDepth(val) {
+  sliceDepth = parseInt(val, 10);
+  const lbl = document.getElementById('lblSliceDepth');
+  if (lbl) lbl.innerText = sliceDepth + '%';
+  if (!animFrameId) renderTwin();
+}
+
+function setZoomLevel(val) {
+  scale = parseFloat(val) * 1.17;
+  const lbl = document.getElementById('lblZoomLevel');
+  if (lbl) lbl.innerText = parseFloat(val).toFixed(2) + 'x';
+  if (!animFrameId) renderTwin();
 }
 
 const canvas = document.getElementById('twinCanvas');
@@ -7310,7 +7508,13 @@ if (wrapper && canvas && ctx) {
   });
   wrapper.addEventListener('wheel', (e) => {
     e.preventDefault();
-    scale = Math.max(0.65, Math.min(2.4, scale - e.deltaY * 0.0012));
+    scale = Math.max(0.75, Math.min(2.5, scale - e.deltaY * 0.0012));
+    const slZoom = document.getElementById('slTwinZoom');
+    const lblZoom = document.getElementById('lblZoomLevel');
+    const displayVal = (scale / 1.17).toFixed(2);
+    if (slZoom) slZoom.value = displayVal;
+    if (lblZoom) lblZoom.innerText = displayVal + 'x';
+    if (!animFrameId) renderTwin();
   }, { passive: false });
 }
 window.addEventListener('mousemove', (e) => {
@@ -7320,33 +7524,33 @@ window.addEventListener('mousemove', (e) => {
   lastMouseX = e.clientX;
   lastMouseY = e.clientY;
   yaw += dx * 0.009;
-  pitch = Math.max(-1.2, Math.min(1.2, pitch + dy * 0.009));
+  pitch = Math.max(-1.4, Math.min(1.4, pitch + dy * 0.009));
 });
 window.addEventListener('mouseup', () => { isDragging = false; });
 
-// ASTM E8 Dogbone specimen geometry definition
+// ASTM E8 Dogbone specimen geometry definition matching reference
 function buildDogboneMesh() {
-  const slices = 28;
-  const rings = 12;
+  const slices = 18;
+  const rings = 16;
   const vertices = [];
   const faces = [];
 
   for (let i = 0; i <= slices; i++) {
     const zNorm = (i / slices) * 2 - 1; // -1 to +1
-    const z = zNorm * 180; // length 360
+    const z = zNorm * 82; // stockier ASTM E8 length
 
-    // Dogbone radius curve: narrow in center gauge, wide at grip ends
-    let r = 22;
-    if (Math.abs(zNorm) > 0.45) {
-      const taper = (Math.abs(zNorm) - 0.45) / 0.55;
-      r = 22 + taper * 24; // flare up to 46
+    const absZ = Math.abs(zNorm);
+    let r = 28; // central gauge radius
+    if (absZ > 0.35) {
+      const t = (absZ - 0.35) / 0.65;
+      r = 28 + (t * t) * 28; // smooth flare up to 56 at grips
     }
 
     for (let j = 0; j < rings; j++) {
       const angle = (j / rings) * Math.PI * 2;
       const x = Math.cos(angle) * r;
       const y = Math.sin(angle) * r;
-      vertices.push({ x, y, z, zNorm });
+      vertices.push({ x, y, z, zNorm, sliceIdx: i, ringIdx: j, r });
     }
   }
 
@@ -7357,11 +7561,11 @@ function buildDogboneMesh() {
       const v1 = i * rings + nextJ;
       const v2 = (i + 1) * rings + nextJ;
       const v3 = (i + 1) * rings + j;
-      faces.push([v0, v1, v2, v3]);
+      faces.push({ verts: [v0, v1, v2, v3], sliceIdx: i, ringIdx: j });
     }
   }
 
-  return { vertices, faces };
+  return { vertices, faces, rings, slices };
 }
 
 const dogboneMesh = buildDogboneMesh();
@@ -7380,312 +7584,52 @@ function project(x, y, z, w, h) {
   // Perspective projection
   const fov = 420;
   const cameraDist = 450;
-  const factor = fov / (cameraDist + z2) * scale;
+  const factor = (fov / (cameraDist + z2)) * scale;
   const px = w / 2 + x1 * factor;
   const py = h / 2 - y2 * factor;
 
-  return { px, py, zDepth: z2 };
-}
-
-function getColor(normalizedVal, mode) {
-  // Rainbow heat spectrum
-  let r, g, b;
-  const v = Math.max(0, Math.min(1, normalizedVal));
-  if (v < 0.25) {
-    r = 0; g = Math.round(v * 4 * 255); b = 255;
-  } else if (v < 0.5) {
-    r = 0; g = 255; b = Math.round((1 - (v - 0.25) * 4) * 255);
-  } else if (v < 0.75) {
-    r = Math.round((v - 0.5) * 4 * 255); g = 255; b = 0;
-  } else {
-    r = 255; g = Math.round((1 - (v - 0.75) * 4) * 255); b = 0;
-  }
-  return `rgb(${r}, ${g}, ${b})`;
+  return { px, py, rx: x1, ry: y2, rz: z2, zDepth: z2 };
 }
 
 function updateTwinScaleAndHud() {
-  const twin = window.twinPhysicsState || {
-    coolingRate: 1.17e6,
-    alphaPrimePct: 88,
-    residualStressMPa: 387,
-    yieldStrength: 920,
-    tensileStrength: 1034,
-    process: 'lpbf',
-    post: 'HIP'
-  };
-
-  const stateData = (typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY[globalMaterialState])
-    ? MATERIAL_STATE_REGISTRY[globalMaterialState]
-    : { label: 'HIP Basketweave', ysMpa: 865, utsMpa: 945, residualStressGaugeMpa: 387, alphaPrime: 0, alpha: 88, beta: 12 };
-
-  const baseResidual = stateData.residualStressGaugeMpa || twin.residualStressMPa || 387;
-  const ys = stateData.ysMpa || twin.yieldStrength || 920;
-  const uts = stateData.utsMpa || twin.tensileStrength || 1034;
-
-  const titleEl = document.getElementById('twinScaleTitle');
-  const unitEl = document.getElementById('twinScaleUnit');
-  const ticksEl = document.getElementById('twinScaleTicks');
-  const markerEl = document.getElementById('twinScaleMarker');
-  const badgeEl = document.getElementById('twinStateBadge');
-  const descEl = document.getElementById('twinStateDesc');
-
-  const hudState = document.getElementById('twinHudState');
-  const hudPhases = document.getElementById('twinHudPhases');
-  const hudYs = document.getElementById('twinHudYs');
-  const hudStress = document.getElementById('twinHudStress');
-
-  if (!titleEl || !ticksEl) return;
-
-  const curStressComp = (typeof activeStressComponent !== 'undefined' ? activeStressComponent : (window.activeStressComponent || 'vm'));
-  const curLoadCase = (typeof activeLoadCase !== 'undefined' ? activeLoadCase : (window.activeLoadCase || 'residual'));
+  const peakValEl = document.getElementById('valPeakStress');
+  const coreValEl = document.getElementById('valCoreStress');
+  const maxLbl = document.getElementById('scaleMaxLabel');
+  const minLbl = document.getElementById('scaleMinLabel');
 
   if (twinMode === 'residual-stress') {
-    let peakVal = baseResidual;
-    let maxScale = 600;
-
-    if (curLoadCase === 'applied') {
-      if (curStressComp === 'vm') {
-        titleEl.textContent = 'Von Mises Equivalent Stress';
-        unitEl.textContent = 'σ_vM (MPa)';
-        maxScale = 1200;
-        peakVal = 945;
-        ticksEl.innerHTML = `
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">1200</span><span class="twin-tick-label">UTS Overload</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">950</span><span class="twin-tick-label">Yield Initiation</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">700</span><span class="twin-tick-label">High Elastic</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">450</span><span class="twin-tick-label">Shoulder Taper</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">200</span><span class="twin-tick-label">Grip Ends</span></div>
-        `;
-        if (badgeEl) {
-          badgeEl.textContent = 'UNIAXIAL TENSION (YIELD THRESHOLD)';
-          badgeEl.style.color = '#f59e0b';
-          badgeEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
-          badgeEl.style.background = 'rgba(245, 158, 11, 0.18)';
-        }
-        if (descEl) {
-          descEl.innerHTML = `<strong>Gauge Neck Stress:</strong> 945 MPa (Active plastic necking initiation)<br><strong>Grip Shoulder Stress:</strong> 240 MPa (Elastic constraint)<br><strong>ASTM E8 Pull:</strong> 23.6 kN uniaxial tensile load`;
-        }
-        if (hudStress) hudStress.innerHTML = `PEAK σ_vM: <strong style="color:#ef4444;">945 MPa</strong> (Gauge Center Yield)`;
-      } else if (curStressComp === 'szz') {
-        titleEl.textContent = 'Axial Normal Stress (Build Axis Z)';
-        unitEl.textContent = 'σ_zz (MPa)';
-        maxScale = 1200;
-        peakVal = 945;
-        ticksEl.innerHTML = `
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">1200</span><span class="twin-tick-label">Max Tension</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">950</span><span class="twin-tick-label">Axial Yield</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">700</span><span class="twin-tick-label">Elastic Pull</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">450</span><span class="twin-tick-label">Fillet Radius</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">200</span><span class="twin-tick-label">Grip Base</span></div>
-        `;
-        if (badgeEl) {
-          badgeEl.textContent = 'AXIAL TENSILE LOAD (PULL AXIS Z)';
-          badgeEl.style.color = '#38bdf8';
-          badgeEl.style.borderColor = 'rgba(56, 189, 248, 0.4)';
-          badgeEl.style.background = 'rgba(56, 189, 248, 0.18)';
-        }
-        if (descEl) {
-          descEl.innerHTML = `<strong>Nominal Axial Pull σ_zz:</strong> 945 MPa (Dominant normal stress driving necking)<br><strong>Grip Shoulder σ_zz:</strong> 216 MPa (F/A_grip distribution)<br><strong>Stress Ratio:</strong> σ_zz accounts for >98% of total strain energy`;
-        }
-        if (hudStress) hudStress.innerHTML = `PEAK σ_zz: <strong style="color:#ef4444;">945 MPa</strong> (Reduced Gauge Neck)`;
-      } else if (curStressComp === 'sxx') {
-        titleEl.textContent = 'Transverse Normal Stress (Scan Axis X)';
-        unitEl.textContent = 'σ_xx (MPa)';
-        maxScale = 200;
-        peakVal = 45;
-        ticksEl.innerHTML = `
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">200</span><span class="twin-tick-label">High Confinement</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">150</span><span class="twin-tick-label">Moderate</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">100</span><span class="twin-tick-label">Poisson Effect</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">50</span><span class="twin-tick-label">Low Stress</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Free Surface</span></div>
-        `;
-        if (badgeEl) {
-          badgeEl.textContent = 'TRANSVERSE COMPONENT (NEAR ZERO)';
-          badgeEl.style.color = '#34d399';
-          badgeEl.style.borderColor = 'rgba(52, 211, 153, 0.4)';
-          badgeEl.style.background = 'rgba(52, 211, 153, 0.18)';
-        }
-        if (descEl) {
-          descEl.innerHTML = `<strong>Transverse Stress σ_xx:</strong> 45 MPa (Minor Poisson contraction constraint)<br><strong>Significance:</strong> Under pure uniaxial tension, transverse normal stresses are negligible.<br><strong>Boundary Condition:</strong> Traction-free lateral cylindrical surface`;
-        }
-        if (hudStress) hudStress.innerHTML = `PEAK σ_xx: <strong style="color:#38bdf8;">45 MPa</strong> (Poisson Contraction Zone)`;
-      } else if (curStressComp === 'txz') {
-        titleEl.textContent = 'Interlaminar Shear Stress (Plane X-Z)';
-        unitEl.textContent = 'τ_xz (MPa)';
-        maxScale = 450;
-        peakVal = 320;
-        ticksEl.innerHTML = `
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">450</span><span class="twin-tick-label">Max Shear</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">320</span><span class="twin-tick-label">Fillet Peak</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">200</span><span class="twin-tick-label">Transition</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">100</span><span class="twin-tick-label">Low Shear</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Gauge / Grip Zero</span></div>
-        `;
-        if (badgeEl) {
-          badgeEl.textContent = 'FILLET SHEAR CONCENTRATION BAND';
-          badgeEl.style.color = '#c084fc';
-          badgeEl.style.borderColor = 'rgba(192, 132, 252, 0.4)';
-          badgeEl.style.background = 'rgba(192, 132, 252, 0.18)';
-        }
-        if (descEl) {
-          descEl.innerHTML = `<strong>Peak Fillet Shear τ_xz:</strong> 320 MPa (Concentrated at shoulder transition radius)<br><strong>Gauge Center Shear:</strong> ~0 MPa (Pure normal tension along Z)<br><strong>FEA Validation:</strong> Classic shear band at radius expansion (ASTM E8 shoulder)`;
-        }
-        if (hudStress) hudStress.innerHTML = `PEAK τ_xz: <strong style="color:#c084fc;">320 MPa</strong> (Transition Fillet Radius)`;
-      }
-    } else {
-      // Residual stress mode
-      if (curStressComp === 'vm') {
-        titleEl.textContent = 'Von Mises Equivalent Stress';
-        unitEl.textContent = 'σ_vM (MPa)';
-        maxScale = 600;
-        peakVal = baseResidual;
-        ticksEl.innerHTML = `
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">600</span><span class="twin-tick-label">Yield Risk</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">450</span><span class="twin-tick-label">High Tensile</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">300</span><span class="twin-tick-label">Sub-Yield</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">150</span><span class="twin-tick-label">Relieved</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Stress-Free</span></div>
-        `;
-        if (badgeEl) {
-          if (baseResidual > 400) {
-            badgeEl.textContent = 'CRITICAL RESIDUAL TENSION';
-            badgeEl.style.color = '#ef4444';
-            badgeEl.style.borderColor = 'rgba(239, 68, 68, 0.4)';
-            badgeEl.style.background = 'rgba(239, 68, 68, 0.18)';
-          } else if (baseResidual > 150) {
-            badgeEl.textContent = 'MODERATE RESIDUAL STRESS';
-            badgeEl.style.color = '#f59e0b';
-            badgeEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
-            badgeEl.style.background = 'rgba(245, 158, 11, 0.18)';
-          } else {
-            badgeEl.textContent = 'ELASTICALLY RELIEVED (PASS)';
-            badgeEl.style.color = '#34d399';
-            badgeEl.style.borderColor = 'rgba(52, 211, 153, 0.4)';
-            badgeEl.style.background = 'rgba(52, 211, 153, 0.18)';
-          }
-        }
-        if (descEl) {
-          descEl.innerHTML = `<strong>Gauge Core Peak:</strong> ${baseResidual} MPa (Residual thermal tension)<br><strong>Grip Shoulder:</strong> ${Math.round(baseResidual * 0.38)} MPa (Relaxed boundary)<br><strong>State Compliance:</strong> ${baseResidual < 100 ? 'Compliant with ASTM Class 1' : 'Requires thermal stress relief'}`;
-        }
-        if (hudStress) hudStress.innerHTML = `PEAK σ_vM: <strong style="color:#ef4444;">${baseResidual} MPa</strong> (Gauge Core Center)`;
-      } else if (curStressComp === 'szz') {
-        titleEl.textContent = 'Axial Normal Stress (Build Axis Z)';
-        unitEl.textContent = 'σ_zz (MPa)';
-        maxScale = 600;
-        peakVal = Math.round(baseResidual * 1.08);
-        ticksEl.innerHTML = `
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">600</span><span class="twin-tick-label">Max Tension</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">450</span><span class="twin-tick-label">Build Peak</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">300</span><span class="twin-tick-label">Core Tension</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">150</span><span class="twin-tick-label">Grip Zone</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Neutral Axis</span></div>
-        `;
-        if (badgeEl) {
-          badgeEl.textContent = 'AXIAL RESIDUAL TENSION (BUILD AXIS Z)';
-          badgeEl.style.color = '#38bdf8';
-          badgeEl.style.borderColor = 'rgba(56, 189, 248, 0.4)';
-          badgeEl.style.background = 'rgba(56, 189, 248, 0.18)';
-        }
-        if (descEl) {
-          descEl.innerHTML = `<strong>Peak Axial Residual σ_zz:</strong> ${peakVal} MPa (Along build height axis [001])<br><strong>Grip Boundary σ_zz:</strong> ${Math.round(peakVal * 0.30)} MPa (Low thermal constraint)<br><strong>Physical Cause:</strong> Cumulative thermal shrinkage across successive melted powder layers`;
-        }
-        if (hudStress) hudStress.innerHTML = `PEAK σ_zz: <strong style="color:#38bdf8;">${peakVal} MPa</strong> (Along Build Height [001])`;
-      } else if (curStressComp === 'sxx') {
-        titleEl.textContent = 'Transverse Normal Stress (Scan Axis X)';
-        unitEl.textContent = 'σ_xx (MPa)';
-        maxScale = 400;
-        peakVal = Math.round(baseResidual * 0.58);
-        ticksEl.innerHTML = `
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">400</span><span class="twin-tick-label">High Transverse</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">300</span><span class="twin-tick-label">Moderate</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">200</span><span class="twin-tick-label">Scan Track Residual</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">100</span><span class="twin-tick-label">Grip Zone</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Free Surface</span></div>
-        `;
-        if (badgeEl) {
-          badgeEl.textContent = 'TRANSVERSE PLANAR CONFINEMENT (X)';
-          badgeEl.style.color = '#34d399';
-          badgeEl.style.borderColor = 'rgba(52, 211, 153, 0.4)';
-          badgeEl.style.background = 'rgba(52, 211, 153, 0.18)';
-        }
-        if (descEl) {
-          descEl.innerHTML = `<strong>Peak Transverse Residual σ_xx:</strong> ${peakVal} MPa (Perpendicular to build axis, along scan vector)<br><strong>Anisotropy Ratio (σ_xx / σ_zz):</strong> 0.54 (Matches neutron diffraction benchmarks)<br><strong>Relaxation:</strong> Decomposes rapidly after 650°C stress relief`;
-        }
-        if (hudStress) hudStress.innerHTML = `PEAK σ_xx: <strong style="color:#34d399;">${peakVal} MPa</strong> (Across Laser Scan Tracks)`;
-      } else if (curStressComp === 'txz') {
-        titleEl.textContent = 'Interlaminar Shear Stress (Plane X-Z)';
-        unitEl.textContent = 'τ_xz (MPa)';
-        maxScale = 300;
-        peakVal = Math.round(baseResidual * 0.42);
-        ticksEl.innerHTML = `
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">300</span><span class="twin-tick-label">Max Fillet Shear</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">225</span><span class="twin-tick-label">Concentration</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">150</span><span class="twin-tick-label">Transition Radius</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">75</span><span class="twin-tick-label">Low Shear</span></div>
-          <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0</span><span class="twin-tick-label">Uniform Sections</span></div>
-        `;
-        if (badgeEl) {
-          badgeEl.textContent = 'INTERLAMINAR SHEAR CONCENTRATION';
-          badgeEl.style.color = '#c084fc';
-          badgeEl.style.borderColor = 'rgba(192, 132, 252, 0.4)';
-          badgeEl.style.background = 'rgba(192, 132, 252, 0.18)';
-        }
-        if (descEl) {
-          descEl.innerHTML = `<strong>Fillet Shear Peak τ_xz:</strong> ${peakVal} MPa (Concentrated at geometry taper between gauge and grip)<br><strong>Gauge Center Shear:</strong> ~0 MPa (Pure normal thermal contraction)<br><strong>Vulnerability:</strong> Primary site for delamination and shear fatigue crack initiation`;
-        }
-        if (hudStress) hudStress.innerHTML = `PEAK τ_xz: <strong style="color:#c084fc;">${peakVal} MPa</strong> (Shoulder Fillet Radius)`;
-      }
+    let peakStress = 1085;
+    let coreStress = -145;
+    if (globalMaterialState === 'stress_relieved') {
+      peakStress = 280; coreStress = -40;
+    } else if (globalMaterialState === 'annealed') {
+      peakStress = 160; coreStress = -20;
+    } else if (globalMaterialState === 'hip') {
+      peakStress = 98; coreStress = -14;
+    } else if (globalMaterialState === 'sta') {
+      peakStress = 450; coreStress = -65;
     }
 
-    const pct = Math.max(0, Math.min(100, (peakVal / maxScale) * 100));
-    if (markerEl) markerEl.style.top = (100 - pct) + '%';
-  } else if (twinMode === 'cooling-rate') {
-    titleEl.textContent = 'Solidification Cooling Rate';
-    unitEl.textContent = 'Ṫ (K/s)';
-    ticksEl.innerHTML = `
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">10⁷</span><span class="twin-tick-label">Ultra-Quench</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">10⁶</span><span class="twin-tick-label">Martensite α'</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">10⁵</span><span class="twin-tick-label">Fine Acicular</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">10⁴</span><span class="twin-tick-label">Lamellar α+β</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">10³</span><span class="twin-tick-label">Coarse Cast</span></div>
-    `;
-    const cr = twin.coolingRate || 1.17e6;
-    const logVal = Math.log10(Math.max(1e3, cr));
-    const pct = Math.max(0, Math.min(100, ((logVal - 3) / 4) * 100));
-    if (markerEl) markerEl.style.top = (100 - pct) + '%';
-    if (badgeEl) {
-      badgeEl.textContent = cr > 4.1e5 ? "RAPID QUENCH (DIFFUSIONLESS β → α')" : "MODERATE COOLING (DIFFUSIONAL)";
-      badgeEl.style.color = '#fbbf24';
-      badgeEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
-      badgeEl.style.background = 'rgba(245, 158, 11, 0.18)';
+    if (globalMaterialState === 'as_built' || !globalMaterialState) {
+      peakStress = 1085;
+      coreStress = -145;
     }
-  } else if (twinMode === 'phase-fraction') {
-    titleEl.textContent = "Acicular α' Martensite";
-    unitEl.textContent = "Phase Volume (%)";
-    ticksEl.innerHTML = `
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#ef4444;">100%</span><span class="twin-tick-label">Pure Martensite</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#f59e0b;">75%</span><span class="twin-tick-label">High Acicular</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#10b981;">50%</span><span class="twin-tick-label">Partial Decomp</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#00f7ff;">25%</span><span class="twin-tick-label">Equilibrium α+β</span></div>
-      <div class="twin-tick-row"><span class="twin-tick-val" style="color:#3b82f6;">0%</span><span class="twin-tick-label">Fully Decomposed</span></div>
-    `;
-    const aPrime = stateData.alphaPrime !== undefined ? stateData.alphaPrime : 88;
-    if (markerEl) markerEl.style.top = (100 - aPrime) + '%';
+
+    if (peakValEl) {
+      peakValEl.innerHTML = `<span style="color: ${peakStress > 500 ? '#ff4b72' : '#38d9a9'};">+${peakStress}</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">MPa</span>`;
+    }
+    if (coreValEl) {
+      coreValEl.innerHTML = `<span style="color: #00e5ff;">${coreStress}</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">MPa</span>`;
+    }
+    if (maxLbl) {
+      maxLbl.innerText = `Max: +${peakStress} MPa (Surface Tensile)`;
+    }
+    if (minLbl) {
+      minLbl.innerText = `Min: -180 MPa (Core Compressive)`;
+    }
   }
 
-  // Update Bottom HUD Bar Telemetry
-  if (hudState) {
-    hudState.textContent = stateData.badge || 'HIP Basketweave (ASTM Class 1)';
-  }
-  if (hudPhases) {
-    const aPrime = stateData.alphaPrime !== undefined ? stateData.alphaPrime : 0;
-    const lamellar = Math.max(0, 100 - aPrime);
-    hudPhases.textContent = `${aPrime}% α' · ${lamellar}% α+β`;
-  }
-  if (hudYs) {
-    hudYs.textContent = `YS ${ys} MPa · UTS ${uts} MPa`;
-  }
+  if (!animFrameId) renderTwin();
 }
 
 function renderTwin() {
@@ -7709,78 +7653,63 @@ function renderTwin() {
   // Project all vertices
   const projVerts = dogboneMesh.vertices.map(v => {
     const p = project(v.x, v.y, v.z, w, h);
-    return { ...p, zNorm: v.zNorm };
+    return { ...p, zNorm: v.zNorm, sliceIdx: v.sliceIdx, ringIdx: v.ringIdx };
   });
 
-  // Calculate face depths and sort
-  const sortedFaces = dogboneMesh.faces.map(f => {
-    const p0 = projVerts[f[0]];
-    const p1 = projVerts[f[1]];
-    const p2 = projVerts[f[2]];
-    const p3 = projVerts[f[3]];
+  // Calculate face depths and handle Cross-Section Slicing
+  const maxSlice = Math.max(2, Math.ceil(dogboneMesh.slices * (sliceDepth / 100.0)));
+  const activeFaces = dogboneMesh.faces.filter(f => f.sliceIdx < maxSlice);
+
+  const sortedFaces = activeFaces.map(f => {
+    const p0 = projVerts[f.verts[0]];
+    const p1 = projVerts[f.verts[1]];
+    const p2 = projVerts[f.verts[2]];
+    const p3 = projVerts[f.verts[3]];
     const avgZ = (p0.zDepth + p1.zDepth + p2.zDepth + p3.zDepth) / 4.0;
     const avgZNorm = (p0.zNorm + p1.zNorm + p2.zNorm + p3.zNorm) / 4.0;
-    return { face: f, p: [p0, p1, p2, p3], avgZ, avgZNorm };
+    return { face: f, p: [p0, p1, p2, p3], avgZ, avgZNorm, sliceIdx: f.sliceIdx, ringIdx: f.ringIdx };
   }).sort((a, b) => b.avgZ - a.avgZ);
 
-  // Render polygons driven by active process physics and stress tensor selection
-  const stateData = (typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY[globalMaterialState])
-    ? MATERIAL_STATE_REGISTRY[globalMaterialState]
-    : (window.MATERIAL_STATE_REGISTRY && window.MATERIAL_STATE_REGISTRY[window.globalMaterialState || 'hip'])
-    ? window.MATERIAL_STATE_REGISTRY[window.globalMaterialState || 'hip']
-    : { residualStressGaugeMpa: 387, alphaPrime: 88, ysMpa: 865 };
-  const baseResidual = stateData.residualStressGaugeMpa || 387;
-
-  const curStressComp = (typeof activeStressComponent !== 'undefined' ? activeStressComponent : (window.activeStressComponent || 'vm'));
-  const curLoadCase = (typeof activeLoadCase !== 'undefined' ? activeLoadCase : (window.activeLoadCase || 'residual'));
+  // Directional Light Vector (front-top-right)
+  const lx = 0.45, ly = 0.65, lz = -0.60;
+  const lMag = Math.sqrt(lx * lx + ly * ly + lz * lz);
+  const nlx = lx / lMag, nly = ly / lMag, nlz = lz / lMag;
 
   try {
     sortedFaces.forEach(f => {
-      const absZ = Math.abs(f.avgZNorm);
-      const neckFocus = Math.max(0, 1.0 - absZ); // 1.0 at center gauge, 0.0 at ends
-      // Fillet transition focus (peaks at absZ ~ 0.55 between gauge 0.45 and grip 0.70)
-      const filletDist = Math.abs(absZ - 0.55);
-      const filletFocus = Math.max(0, 1.0 - (filletDist / 0.22));
-
-      let scalar = 0.5;
-      if (twinMode === 'residual-stress') {
-        if (curLoadCase === 'applied') {
-          // Applied ASTM E8 Uniaxial Tensile pull
-          if (curStressComp === 'vm' || curStressComp === 'szz') {
-            // Intense gauge yielding (945 MPa at gauge, dropping to 240 MPa at grip)
-            scalar = (absZ <= 0.45) ? 0.96 : Math.max(0.20, 0.96 - ((absZ - 0.45) / 0.55) * 0.76);
-          } else if (curStressComp === 'sxx') {
-            // Transverse normal stress in unconstrained bar is negligible
-            scalar = Math.min(0.25, 0.08 + 0.12 * neckFocus);
-          } else if (curStressComp === 'txz') {
-            // Intense shear concentration in fillet transition shoulder!
-            scalar = Math.min(0.95, 0.08 + 0.86 * Math.pow(filletFocus, 1.5));
-          }
-        } else {
-          // Residual stress mode scaled by material state
-          const k = Math.max(0.10, Math.min(1.0, baseResidual / 480.0));
-          if (curStressComp === 'vm') {
-            scalar = Math.min(0.98, 0.12 + neckFocus * 0.85 * k);
-          } else if (curStressComp === 'szz') {
-            // Axial is largest component in build direction
-            scalar = Math.min(0.98, 0.15 + neckFocus * 0.94 * k);
-          } else if (curStressComp === 'sxx') {
-            // Transverse is ~58% of axial
-            scalar = Math.min(0.85, 0.08 + neckFocus * 0.52 * k);
-          } else if (curStressComp === 'txz') {
-            // Shear peaks in transition radius
-            scalar = Math.min(0.92, 0.06 + Math.pow(filletFocus, 1.4) * 0.84 * k);
-          }
-        }
-      } else if (twinMode === 'cooling-rate') {
-        const coolNorm = 0.75;
-        scalar = Math.min(0.98, coolNorm * (0.65 + 0.35 * neckFocus));
-      } else if (twinMode === 'phase-fraction') {
-        const martNorm = Math.max(0.05, Math.min(0.96, (stateData.alphaPrime || 88) / 100.0));
-        scalar = Math.min(0.98, martNorm * (0.75 + 0.25 * neckFocus));
+      const v0 = f.p[0], v1 = f.p[1], v3 = f.p[3];
+      const v1x = v1.rx - v0.rx, v1y = v1.ry - v0.ry, v1z = v1.rz - v0.rz;
+      const v2x = v3.rx - v0.rx, v2y = v3.ry - v0.ry, v2z = v3.rz - v0.rz;
+      let nx = v1y * v2z - v1z * v2y;
+      let ny = v1z * v2x - v1x * v2z;
+      let nz = v1x * v2y - v1y * v2x;
+      const nLen = Math.sqrt(nx * nx + ny * ny + nz * nz);
+      if (nLen > 1e-6) {
+        nx /= nLen; ny /= nLen; nz /= nLen;
       }
 
-      const col = getColor(scalar, twinMode);
+      let dot = -(nx * nlx + ny * nly + nz * nlz);
+      if (nz > 0) { // inside surface illumination
+        dot = Math.abs(nx * nlx + ny * nly + nz * nlz) * 1.05;
+      }
+      const light = 0.48 + 0.52 * Math.max(0.12, Math.min(1.0, dot));
+
+      // Color based on active mode
+      let baseR = 218, baseG = 28, baseB = 28;
+      if (twinMode === 'cooling-rate') {
+        baseR = 239; baseG = 68; baseB = 68;
+      } else if (twinMode === 'phase-fraction') {
+        baseR = 244; baseG = 63; baseB = 94;
+      }
+
+      // If sliced and at the cut edge revealing core:
+      if (sliceDepth < 98 && f.sliceIdx === maxSlice - 1) {
+        baseR = 14; baseG = 165; baseB = 233; // Compressive Core (-145 MPa)
+      }
+
+      const r = Math.min(255, Math.round(baseR * light));
+      const g = Math.min(255, Math.round(baseG * light));
+      const b = Math.min(255, Math.round(baseB * light));
 
       ctx.beginPath();
       ctx.moveTo(f.p[0].px, f.p[0].py);
@@ -7790,17 +7719,51 @@ function renderTwin() {
       ctx.closePath();
 
       if (wireframe) {
-        ctx.strokeStyle = col;
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+        ctx.lineWidth = 1.2;
         ctx.stroke();
       } else {
-        ctx.fillStyle = col;
+        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.fill();
-        ctx.strokeStyle = "rgba(7, 11, 16, 0.35)";
-        ctx.lineWidth = 0.5;
+        // Fine quadrilateral dark outlines for the FEA look
+        ctx.strokeStyle = 'rgba(20, 10, 12, 0.40)';
+        ctx.lineWidth = 0.8;
         ctx.stroke();
       }
     });
+
+    // If sliced, draw solid cross-section end cap in compressive blue (-145 MPa)
+    if (sliceDepth < 98 && maxSlice <= dogboneMesh.slices) {
+      const capVerts = [];
+      let cpx = 0, cpy = 0, cpz = 0;
+      for (let j = 0; j < dogboneMesh.rings; j++) {
+        const p = projVerts[maxSlice * dogboneMesh.rings + j];
+        if (p) {
+          capVerts.push(p);
+          cpx += p.px; cpy += p.py; cpz += p.zDepth;
+        }
+      }
+      if (capVerts.length > 2) {
+        cpx /= capVerts.length; cpy /= capVerts.length; cpz /= capVerts.length;
+        ctx.beginPath();
+        ctx.moveTo(capVerts[0].px, capVerts[0].py);
+        for (let j = 1; j < capVerts.length; j++) {
+          ctx.lineTo(capVerts[j].px, capVerts[j].py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#0284c7'; // Compressive core
+        ctx.fill();
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        // Label on cross section
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 11px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('CORE: -145 MPa', cpx, cpy);
+      }
+    }
   } catch (err) {
     console.error('Error in renderTwin mesh traversal:', err);
   }
@@ -7817,7 +7780,6 @@ function startTwinAnimation() {
   }
 }
 
-// ==========================================
 // 6. 54 PAPERS DATABASE POPULATION
 // ==========================================
 const PAPERS_DATABASE = [
