@@ -1,6 +1,7 @@
 /**
  * Automated Verification Suite for NIT Trichy AM Platform APIs
- * Tests input validation, scientific models, database stats, and ML inference.
+ * Tests input validation, scientific models, database stats, ML inference,
+ * and Ti-6Al-4V AM Physics & ASTM F2924 Compliance Rules.
  */
 
 const assert = require('assert');
@@ -71,10 +72,10 @@ async function runTests() {
     assert.strictEqual(res.body.status, 'success');
     assert(res.body.simulation_id.startsWith('SIM-'));
     assert.strictEqual(res.body.qualification.component_class, 'Class 1');
-    assert(res.body.qualification.assessment.includes('PASS'));
+    assert(res.body.qualification.assessment.includes('PASS') || res.body.qualification.assessment.includes('QUALIFIED'));
   });
 
-  // 2. Meltpool API - Separate Scientific Models
+  // 2. Meltpool API - Separate Scientific Models & Baseline Constants
   await test('api/meltpool.js calculates pure Rosenthal (1946) analytical model with aspect ratio 0.50', async () => {
     const { req, res } = createMockReqRes('GET', { model: 'rosenthal', power: '280', speed: '960', spot: '80' });
     await meltpoolHandler(req, res);
@@ -82,6 +83,9 @@ async function runTests() {
     assert(res.body.model_name.includes('Rosenthal (1946)'));
     assert.strictEqual(res.body.melt_pool.aspect_ratio, 0.5);
     assert.strictEqual(res.body.melt_pool.depth_um, Math.round(res.body.melt_pool.width_um * 0.5));
+    assert.strictEqual(res.body.thermophysical_constants.density_kg_m3, 4430);
+    assert.strictEqual(res.body.thermophysical_constants.specific_heat_j_kg_k, 670);
+    assert.strictEqual(res.body.thermophysical_constants.thermal_conductivity_w_m_k, 21.9);
   });
 
   await test('api/meltpool.js calculates KU Leuven Coen (2022) hybrid model with normalized enthalpy', async () => {
@@ -144,14 +148,88 @@ async function runTests() {
     assert(res.body.predictions.prediction_interval_95.half_width_hv > 12);
   });
 
-  // 5. Materials API - Standardized Specification
-  await test('api/materials.js reports Grade 5 and Grade 23 ELI with ASTM standards', async () => {
+  // 5. Materials API - Standardized Specification & Baseline Thermophysical Constants
+  await test('api/materials.js reports Grade 5 and Grade 23 ELI with validated baseline constants', async () => {
     const { req, res } = createMockReqRes('GET');
     await materialsHandler(req, res);
     assert.strictEqual(res.statusCode, 200);
     assert.strictEqual(res.body.total_variants, 209);
-    assert(res.body.primary_alloys.some(a => a.id === 'ti64_gr5' && a.standard.includes('ASTM F2924')));
-    assert(res.body.primary_alloys.some(a => a.id === 'ti64_eli' && a.standard.includes('ASTM F3001')));
+    assert.strictEqual(res.body.baseline_thermophysical_constants.density_kg_m3, 4430);
+    assert.strictEqual(res.body.baseline_thermophysical_constants.specific_heat_capacity_j_kg_k, 670);
+    assert.strictEqual(res.body.baseline_thermophysical_constants.thermal_conductivity_w_m_k, 21.9);
+    assert.strictEqual(res.body.baseline_thermophysical_constants.solidus_temperature_c, 1604);
+    assert.strictEqual(res.body.baseline_thermophysical_constants.liquidus_temperature_c, 1660);
+    assert.strictEqual(res.body.baseline_thermophysical_constants.latent_heat_of_fusion_j_kg, 286000);
+    assert.strictEqual(res.body.baseline_thermophysical_constants.effective_laser_absorptivity_conduction, 0.42);
+
+    const gr5 = res.body.primary_alloys.find(a => a.id === 'ti64_gr5');
+    assert(gr5);
+    assert.strictEqual(gr5.beta_transus_c, 995);
+    assert.strictEqual(gr5.chemistry_wt_pct.o.max, 0.20);
+
+    const eli = res.body.primary_alloys.find(a => a.id === 'ti64_eli');
+    assert(eli);
+    assert.strictEqual(eli.beta_transus_c, 975);
+    assert.strictEqual(eli.chemistry_wt_pct.o.max, 0.13);
+  });
+
+  // 6. Physics Rules - VED Processing Windows (Section 3)
+  await test('api/evaluate.js categorizes LPBF regimes strictly per VED thresholds', async () => {
+    // Ev < 40 J/mm³ -> Severe LOF
+    let { req, res } = createMockReqRes('GET', { process: 'lpbf', power: '100', speed: '1500', hatch: '120', layer: '50' });
+    await evaluateHandler(req, res);
+    assert(res.body.defect_indices.regime.includes('Severe Lack-of-Fusion'));
+
+    // 55 <= Ev <= 85 J/mm³ -> Optimal Conduction Window
+    ({ req, res } = createMockReqRes('GET', { process: 'lpbf', power: '280', speed: '960', hatch: '110', layer: '40', condition: 'hip' }));
+    await evaluateHandler(req, res);
+    assert.strictEqual(res.body.defect_indices.regime, 'Optimal Conduction Window');
+    assert.strictEqual(res.body.defect_indices.safe_processing_window, true);
+
+    // Ev > 110 J/mm³ -> Severe Keyhole
+    ({ req, res } = createMockReqRes('GET', { process: 'lpbf', power: '380', speed: '500', hatch: '80', layer: '30' }));
+    await evaluateHandler(req, res);
+    assert(res.body.defect_indices.regime.includes('Severe Keyhole'));
+  });
+
+  // 7. Compliance Rules - ASTM F2924 Guardrails & Ductility Warning (Section 4 & 5)
+  await test('api/evaluate.js enforces ASTM F2924 guardrails: As-Built fails elongation, HIP passes', async () => {
+    // As-built state fails elongation < 10%
+    let { req, res } = createMockReqRes('GET', { process: 'lpbf', power: '280', speed: '960', hatch: '110', layer: '40', condition: 'as_built' });
+    await evaluateHandler(req, res);
+    assert.strictEqual(res.body.qualification.is_qualified, false);
+    assert(res.body.qualification.assessment.includes('NON-COMPLIANT'));
+    assert(res.body.qualification.assessment.includes('Ductility Failure'));
+    assert(res.body.mechanical_properties.elongation_pct < 10.0);
+
+    // HIP state satisfies all criteria
+    ({ req, res } = createMockReqRes('GET', { process: 'lpbf', power: '280', speed: '960', hatch: '110', layer: '40', condition: 'hip' }));
+    await evaluateHandler(req, res);
+    assert.strictEqual(res.body.qualification.is_qualified, true);
+    assert(res.body.qualification.assessment.includes('QUALIFIED'));
+    assert(res.body.mechanical_properties.elongation_pct >= 10.0);
+    assert(res.body.defect_indices.estimated_relative_density_pct >= 99.5);
+  });
+
+  // 8. Mechanical Rules - Tabor Scaling & ASTM E140 HRC Disclaimer (Section 3)
+  await test('api/predict.js applies Tabor scaling and mandatory ASTM E140 HRC disclaimer', async () => {
+    const { req, res } = createMockReqRes('GET', { power: '280', speed: '960', hatch: '110', layer: '40', condition: 'hip' });
+    await predictHandler(req, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert(res.body.predictions.tabor_scaling.tabor_factor >= 2.95 && res.body.predictions.tabor_scaling.tabor_factor <= 3.15);
+    assert(res.body.predictions.approximate_rockwell_c_hrc > 0);
+    assert.strictEqual(res.body.predictions.hrc_disclaimer, '*approximate for Ti alloys via ASTM E140 steel reference');
+  });
+
+  // 9. Numerical Safety - Zero NaN / Infinity Tolerance (Section 6)
+  await test('api/evaluate.js and api/meltpool.js guard against zero division without NaN or Infinity', async () => {
+    const { req, res } = createMockReqRes('GET', { process: 'lpbf', power: '200', speed: '50', hatch: '20', layer: '10', spot: '20' });
+    await evaluateHandler(req, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert(!Number.isNaN(res.body.inputs.ved_j_mm3));
+    assert(Number.isFinite(res.body.inputs.ved_j_mm3));
+    assert(!Number.isNaN(res.body.melt_pool.width_um));
+    assert(Number.isFinite(res.body.melt_pool.width_um));
   });
 
   console.log(`\n📊 Verification Summary: ${passed} / ${total} tests passed (100% success rate).\n`);

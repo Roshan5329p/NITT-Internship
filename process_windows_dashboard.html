@@ -3730,10 +3730,10 @@ window.addEventListener('click', function(e) {
       <div class="kpi-card kpi-card-2">
         <div class="kpi-label">
           <span>~ Rockwell C</span>
-          <span class="kpi-badge" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8;" title="ASTM E140 table calibrated for steels; approximate for Ti alloys">ASTM E140 *</span>
+          <span class="kpi-badge" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8;" title="*approximate for Ti alloys via ASTM E140 steel reference">ASTM E140 *</span>
         </div>
         <div class="kpi-value" id="kpi_hrc">34 HRC</div>
-        <div class="kpi-sub">ASTM E140 Conv. (*approximate for Ti alloys)</div>
+        <div class="kpi-sub">ASTM E140 Conv. (*approximate for Ti alloys via ASTM E140 steel reference)</div>
       </div>
 
       <div class="kpi-card kpi-card-3">
@@ -6663,32 +6663,44 @@ let lastBonthaResult = null;
 
 const ALLOY_DATA = {
   ti64_gr5: {
-    name: "Ti-6Al-4V (Grade 5)",
+    name: "Ti-6Al-4V (Grade 5, α+β workhorse)",
+    uns: "R56400",
+    standard: "ASTM F2924 / AMS 4928",
     density: 4430, // kg/m^3
-    specificHeat: 526, // J/(kg K)
-    thermalConductivity: 6.7, // W/(m K)
-    liquidusC: 1668,
+    specificHeat: 670, // J/(kg K) [solid-liquid average]
+    thermalConductivity: 21.9, // W/(m K) [near solidus]
+    thermalDiffusivity: 7.38e-6, // m^2/s [alpha = k / (rho * cp)]
+    solidusC: 1604,
+    liquidusC: 1660,
     betaTransusC: 995,
+    latentHeat: 286000, // J/kg
     baseHardnessHV: 345,
     nominalUTS: 950,
     hallPetchSlope: 68,
-    laserAbsorptivity: 0.448,
+    laserAbsorptivity: 0.42, // Canonical LPBF powder bed conduction baseline
     cellSpacingFactor: 18.5,
-    cellSpacingExponent: 0.38
+    cellSpacingExponent: 0.38,
+    chemistry: { al: [5.50, 6.75], v: [3.50, 4.50], oMax: 0.20, feMax: 0.40 }
   },
   ti64_eli: {
-    name: "Ti-6Al-4V ELI (Grade 23)",
-    density: 4420,
-    specificHeat: 530,
-    thermalConductivity: 7.1,
+    name: "Ti-6Al-4V ELI (Grade 23, medical & aerospace)",
+    uns: "R56401",
+    standard: "ASTM F3001 / ASTM F136",
+    density: 4430,
+    specificHeat: 670,
+    thermalConductivity: 21.9,
+    thermalDiffusivity: 7.38e-6,
+    solidusC: 1604,
     liquidusC: 1660,
     betaTransusC: 975,
+    latentHeat: 286000,
     baseHardnessHV: 330,
     nominalUTS: 890,
     hallPetchSlope: 64,
-    laserAbsorptivity: 0.442,
+    laserAbsorptivity: 0.42,
     cellSpacingFactor: 19.2,
-    cellSpacingExponent: 0.38
+    cellSpacingExponent: 0.38,
+    chemistry: { al: [5.50, 6.75], v: [3.50, 4.50], oMax: 0.13, feMax: 0.25 }
   }
 };
 
@@ -7138,26 +7150,59 @@ function calculatePhysics() {
   let regimeDesc = isWaam
     ? '— Balanced wire-arc heat input (120–600 J/mm) with uniform bead tie-in and minimal distortion.'
     : (isDed ? '— Controlled substrate dilution and full metallurgical bonding without vapor cavity porosity.' : '— Stable, optimal melt pool dynamics with high relative density and minimal porosity.');
-  if (lofIndex > 1.05) {
-    regime = 'lof';
-    regimeLabel = 'Lack of Fusion (LoF) detected';
-    regimeDesc = isWaam || isDed
-      ? '— Linear heat input or penetration is too low to wet and fuse into the substrate/previous bead. Increase power or reduce travel speed.'
-      : '— Melt pool depth is insufficient to penetrate underlying powder layer. Increase laser power or decrease scan speed.';
-  } else if (keyholeRatio > 1.0 || normalizedEnthalpy >= 8.5 || (meltPoolDepth / meltPoolWidth) >= 0.80) {
-    regime = 'keyhole';
-    regimeLabel = isWaam ? 'Overheating / Coarse-β instability' : (isDed ? 'Over-dilution / Keyhole risk' : 'Keyhole threshold exceeded');
-    regimeDesc = isWaam
-      ? '— Excessive arc linear heat input (>600 J/mm) causes remelt sag, heavy residual stress, and coarse prior-β grains.'
-      : '— Excessive localized energy or linear heat input deepens penetration excessively and increases gas pore entrapment.';
-  } else if (normalizedEnthalpy >= 5.5 || (meltPoolDepth / meltPoolWidth) >= 0.58) {
-    regime = 'transition';
-    regimeLabel = isWaam ? 'WAAM Transition mode' : (isDed ? 'DED Transition mode' : 'Transition Mode (Incipient Vapor Depression)');
-    regimeDesc = `— Normalized enthalpy (ΔH/hs ~ ${normalizedEnthalpy.toFixed(1)}) marks the boundary between conduction and incipient keyhole vapor cavity formation.`;
-  } else if (ballingRatio > 1.05) {
-    regime = 'balling';
-    regimeLabel = 'Plateau-Rayleigh Balling instability';
-    regimeDesc = '— Elongated melt pool breaks into discrete molten beads. Reduce speed or widen beam/arc spot diameter.';
+  if (!isWaam && !isDed) {
+    // LPBF Processing Windows strictly per Ti-6Al-4V AM Physics Rules (Section 3):
+    // - Severe Lack-of-Fusion (LOF): Ev < 40 J/mm³ (porous, unmelted powder particles)
+    // - Sub-optimal / Transition LOF: 40 <= Ev < 55 J/mm³
+    // - Optimal Conduction Window: 55 <= Ev <= 85 J/mm³ (fully dense > 99.8%)
+    // - Transition / Mild Keyhole: 85 < Ev <= 110 J/mm³
+    // - Severe Keyhole / Vaporization Instability: Ev > 110 J/mm³
+    if (ved < 40.0 || lofIndex > 1.35) {
+      regime = 'lof';
+      regimeLabel = 'Severe Lack-of-Fusion (LOF) [Ev < 40 J/mm³]';
+      regimeDesc = '— Severe lack-of-fusion detected with unmelted powder particles. Melt pool depth is insufficient to penetrate underlying layer. Increase laser power or decrease scan speed.';
+    } else if (ved < 55.0 || lofIndex > 1.05) {
+      regime = 'transition_lof';
+      regimeLabel = 'Sub-optimal / Transition LOF [40 ≤ Ev < 55 J/mm³]';
+      regimeDesc = '— Operating in the sub-optimal transition zone. Marginal layer penetration risks un-fused void formation. Parameter adjustment to Ev ≥ 55 J/mm³ recommended.';
+    } else if (ved > 110.0 || (meltPoolDepth / Math.max(1, meltPoolWidth)) >= 0.85) {
+      regime = 'keyhole';
+      regimeLabel = 'Severe Keyhole / Vaporization Instability [Ev > 110 J/mm³]';
+      regimeDesc = '— Deep recoil vapor cavity formation active. Severe risk of trapped gas pores and aluminium vaporization loss. Reduce laser power or increase scan speed.';
+    } else if (ved > 85.0 || normalizedEnthalpy >= 5.5 || (meltPoolDepth / Math.max(1, meltPoolWidth)) >= 0.60) {
+      regime = 'transition';
+      regimeLabel = 'Transition / Mild Keyhole [85 < Ev ≤ 110 J/mm³]';
+      regimeDesc = `— Normalized enthalpy (ΔH/hs ~ ${normalizedEnthalpy.toFixed(1)}) marks incipient keyhole vapor depression. Incipient vapor depression monitored.`;
+    } else if (ballingRatio > 1.05) {
+      regime = 'balling';
+      regimeLabel = 'Plateau-Rayleigh Balling instability';
+      regimeDesc = '— Elongated melt pool breaks into discrete molten beads. Reduce speed or widen beam spot diameter.';
+    } else {
+      regime = 'conduction';
+      regimeLabel = 'Optimal Conduction Window [55 ≤ Ev ≤ 85 J/mm³]';
+      regimeDesc = '— Stable, optimal melt pool dynamics producing fully dense material (>99.8%) with minimal defect risk.';
+    }
+  } else {
+    // DED / WAAM Regimes
+    if (lofIndex > 1.05) {
+      regime = 'lof';
+      regimeLabel = 'Lack of Fusion (LoF) detected';
+      regimeDesc = '— Linear heat input or penetration is too low to wet and fuse into the substrate/previous bead. Increase power or reduce travel speed.';
+    } else if (keyholeRatio > 1.0 || (meltPoolDepth / Math.max(1, meltPoolWidth)) >= 0.80) {
+      regime = 'keyhole';
+      regimeLabel = isWaam ? 'Overheating / Coarse-β instability' : 'Over-dilution / Keyhole risk';
+      regimeDesc = isWaam
+        ? '— Excessive arc linear heat input (>600 J/mm) causes remelt sag, heavy residual stress, and coarse prior-β grains.'
+        : '— Excessive localized energy or linear heat input deepens penetration excessively and increases gas pore entrapment.';
+    } else if (normalizedEnthalpy >= 5.5 || (meltPoolDepth / Math.max(1, meltPoolWidth)) >= 0.58) {
+      regime = 'transition';
+      regimeLabel = isWaam ? 'WAAM Transition mode' : 'DED Transition mode';
+      regimeDesc = `— Normalized enthalpy (ΔH/hs ~ ${normalizedEnthalpy.toFixed(1)}) marks the boundary between conduction and incipient keyhole vapor cavity formation.`;
+    } else if (ballingRatio > 1.05) {
+      regime = 'balling';
+      regimeLabel = 'Plateau-Rayleigh Balling instability';
+      regimeDesc = '— Elongated melt pool breaks into discrete molten beads. Reduce speed or widen beam/arc spot diameter.';
+    }
   }
 
   // Update Regime Banner
@@ -7321,7 +7366,8 @@ function calculatePhysics() {
 
   const primaryHv = hvGpr;
   const hrcEquiv = hvToHrcStandard(primaryHv);
-  const utsTabor = Math.round(primaryHv * 3.05);
+  const taborFactor = (post === 'None' || post === 'As-Built') ? 3.15 : (post === 'HIP' ? 2.95 : 3.05);
+  const utsTabor = Math.round(primaryHv * taborFactor);
   const yieldStrength = Math.round(utsTabor * (post === 'None' ? 0.91 : (post === 'HIP' ? 0.89 : 0.90)));
 
   // Dynamic Elongation with process-specific α+β vs α' as-built ductility & porosity knockdown

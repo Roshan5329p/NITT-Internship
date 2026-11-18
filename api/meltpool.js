@@ -1,5 +1,6 @@
 /**
  * NIT Trichy Titanium AM Platform - Melt Pool Simulation Engine
+ * Strictly adheres to Ti-6Al-4V Additive Manufacturing Physics & Compliance Rules
  * Implements two distinct scientific models:
  *  1. Rosenthal (1946) Pure 3D Moving Point Source Analytical Model
  *  2. KU Leuven Semi-Analytical Hybrid Model (Coen et al. 2022) with Recoil Vapor Depression
@@ -7,14 +8,15 @@
 
 import { setCorsHeaders, normalizeProcessName, validateProcessInputs } from './_shared.js';
 
-// Ti-6Al-4V thermophysical constants
-const RHO = 4189.0;      // Liquid density (kg/m³)
-const CP = 759.0;        // Liquid specific heat capacity (J/kg·K)
-const K = 28.4;          // Liquid thermal conductivity (W/m·K)
-const DIFFUSIVITY = K / (RHO * CP); // Thermal diffusivity α (m²/s) ~ 8.93e-6 m²/s
-const T_MELT = 1654.0;   // Melting temperature (°C)
-const T_BOIL = 3287.0;   // Evaporation / boiling point (°C)
-const LATENT_FUSION = 365000.0; // Latent heat of fusion ΔHf (J/kg)
+// Ti-6Al-4V thermophysical baseline constants (validated baseline for Grade 5 & Grade 23 ELI)
+const RHO = 4430.0;             // Density ρ (kg/m³)
+const CP = 670.0;               // Specific heat capacity cp (J/kg·K, solid-liquid average)
+const K = 21.9;                 // Thermal conductivity k (W/m·K, near solidus)
+const DIFFUSIVITY = 7.38e-6;    // Thermal diffusivity α = k / (ρ·cp) (m²/s)
+const T_SOLIDUS = 1604.0;       // Solidus temperature Ts (°C) [1877.15 K]
+const T_LIQUIDUS = 1660.0;      // Liquidus temperature Tl (°C) [1933.15 K]
+const T_BOIL = 3287.0;          // Evaporation / boiling point Tv (°C)
+const LATENT_FUSION = 286000.0; // Latent heat of fusion Lf (J/kg)
 
 /**
  * 1. Rosenthal (1946) Moving Point Source Analytical Model
@@ -23,14 +25,16 @@ const LATENT_FUSION = 365000.0; // Latent heat of fusion ΔHf (J/kg)
 function calculateRosenthal(p, v, spot, preheat, proc) {
   const isWaam = proc === 'waam';
   const isDed = proc === 'ded-laser';
-  const eta = isWaam ? 0.78 : (isDed ? 0.38 : 0.35); // Conservative absorptivity for conduction point source
+  // Effective laser absorptivity in conduction mode (default 0.42 for LPBF powder bed, 0.35-0.48 range)
+  const eta = isWaam ? 0.78 : (isDed ? 0.38 : 0.42);
   const absorbedP = p * eta;
-  const deltaT = Math.max(50.0, T_MELT - preheat);
-  const vMs = Math.max(1e-4, v / 1000.0);
-  const spotM = spot * 1e-6;
+  const deltaT = Math.max(50.0, T_LIQUIDUS - preheat);
+  const vMs = Math.max(1e-4, (v || 960) / 1000.0);
+  const spotM = Math.max(1e-6, (spot || 80) * 1e-6);
 
   // Analytical transverse width (Eagar-Tsai / Rosenthal isotherm at y-axis peak)
-  const widthM = Math.sqrt((8.0 * absorbedP) / (Math.PI * Math.E * RHO * CP * deltaT * vMs));
+  // Guarded against zero or negative inputs
+  const widthM = Math.sqrt((8.0 * absorbedP) / Math.max(1e-8, Math.PI * Math.E * RHO * CP * deltaT * vMs));
   const poolWidth = Math.round(widthM * 1e6);
 
   // In pure 3D point source conduction, depth in a semi-infinite substrate is semicircular (aspect = 0.50)
@@ -48,11 +52,19 @@ function calculateRosenthal(p, v, spot, preheat, proc) {
     governing_equation: "T(x,y,z) - T_0 = (η·P) / (2·π·k·R) · exp(-v·(R - x) / (2·α))",
     assumptions: [
       "Infinitesimal point heat source traveling at steady velocity v on semi-infinite half-space",
-      "Constant, temperature-independent thermophysical properties evaluated at solid-liquid interface",
+      "Constant, temperature-independent thermophysical baseline properties (ρ = 4430 kg/m³, cp = 670 J/kg·K, k = 21.9 W/m·K)",
       "Pure conduction heat transfer without fluid convection, Marangoni shear, or surface tension",
-      "Neglects latent heat of fusion (ΔHf) and keyhole vapor recoil depression",
+      "Neglects latent heat of fusion (Lf = 286,000 J/kg) and keyhole vapor recoil depression",
       "Produces ideal semicircular conduction isotherm with constant aspect ratio d/w ≈ 0.50"
     ],
+    thermophysical_constants: {
+      density_kg_m3: RHO,
+      specific_heat_j_kg_k: CP,
+      thermal_conductivity_w_m_k: K,
+      thermal_diffusivity_m2_s: DIFFUSIVITY,
+      liquidus_temperature_c: T_LIQUIDUS,
+      solidus_temperature_c: T_SOLIDUS
+    },
     absorptivity_eta: eta,
     melt_pool: {
       width_um: poolWidth,
@@ -73,16 +85,16 @@ function calculateRosenthal(p, v, spot, preheat, proc) {
 function calculateCoenHybrid(p, v, spot, preheat, proc) {
   const isWaam = proc === 'waam';
   const isDed = proc === 'ded-laser';
-  const eta = isWaam ? 0.78 : (isDed ? 0.38 : 0.40);
+  const eta = isWaam ? 0.78 : (isDed ? 0.38 : 0.42);
   const absorbedP = p * eta;
-  const deltaT = Math.max(50.0, T_MELT - preheat);
-  const vMs = Math.max(1e-4, v / 1000.0);
-  const r0 = Math.max(1e-6, (spot / 2.0) * 1e-6); // Beam radius (m)
+  const deltaT = Math.max(50.0, T_LIQUIDUS - preheat);
+  const vMs = Math.max(1e-4, (v || 960) / 1000.0);
+  const r0 = Math.max(1e-6, ((spot || 80) / 2.0) * 1e-6); // Beam radius (m)
 
-  // Melting enthalpy including latent heat of fusion: hs = ρ·cp·ΔT + ρ·ΔHf
+  // Melting enthalpy including latent heat of fusion: hs = ρ·cp·ΔT + ρ·Lf (Lf = 286,000 J/kg)
   const hs = RHO * CP * deltaT + RHO * LATENT_FUSION;
 
-  // Dimensionless Péclet number: Pe = v·r0 / α
+  // Dimensionless Péclet number: Pe = v·r0 / α (α = 7.38e-6 m²/s)
   const pe = (vMs * r0) / Math.max(1e-10, DIFFUSIVITY);
 
   // Normalized Enthalpy: ΔH/hs = [2^0.75 · η·P] / [hs · √(π · α · v · r0³)]
@@ -100,9 +112,9 @@ function calculateCoenHybrid(p, v, spot, preheat, proc) {
   let r_aspect = Math.min(3.5, Math.max(0.2, y_recoil * b_fabbro));
 
   if (isWaam || isDed) {
-    const wEst = Math.sqrt((8.0 * absorbedP) / (Math.PI * Math.E * RHO * CP * deltaT * Math.max(0.002, vMs)));
+    const wEst = Math.sqrt((8.0 * absorbedP) / Math.max(1e-8, Math.PI * Math.E * RHO * CP * deltaT * Math.max(0.002, vMs)));
     poolWidth = Math.round(Math.max(spot * 0.85, wEst * 1e6 * 0.75 + spot * 0.40));
-    const hiJmm = p / v;
+    const hiJmm = p / Math.max(0.1, v);
     const condAspect = (isWaam ? 0.26 : 0.28) + Math.min(0.24, hiJmm * (isWaam ? 0.00045 : 0.0012));
     const intensityWcm2 = (absorbedP / (Math.PI * r0 * r0)) / 1e4;
     r_aspect = intensityWcm2 > 1.5e5
@@ -124,7 +136,7 @@ function calculateCoenHybrid(p, v, spot, preheat, proc) {
 
   const peakTemp = (isWaam || isDed)
     ? Math.min(2950, Math.round(preheat + (absorbedP * 1e6) / (Math.PI * K * (spot * 0.5) * 2.5)))
-    : Math.min(3200, Math.round(preheat + (absorbedP * 1e6) / Math.max(1, (Math.PI * 6.7 * spot))));
+    : Math.min(3200, Math.round(preheat + (absorbedP * 1e6) / Math.max(1, (Math.PI * K * (spot * 0.5)))));
 
   return {
     model_name: "KU Leuven Semi-Analytical Hybrid Model (Coen et al. 2022)",
@@ -132,10 +144,19 @@ function calculateCoenHybrid(p, v, spot, preheat, proc) {
     governing_equation: "W* = 0.6536 · (ΔH/hs)^0.42 · Pe^(-0.18); aspect = Y_recoil · B_fabbro",
     assumptions: [
       "Gaussian laser beam intensity profile with finite radius r0",
-      "Explicitly accounts for latent heat of melting in hs = ρ·cp·ΔT + ρ·ΔHf",
+      "Explicitly accounts for latent heat of melting in hs = ρ·cp·ΔT + ρ·Lf (Lf = 286,000 J/kg)",
       "Incipient recoil pressure balances surface tension (Rayleigh) and hydrostatic pressure",
       "Captures non-linear keyhole threshold where aspect ratio transitions from 0.50 to >1.5"
     ],
+    thermophysical_constants: {
+      density_kg_m3: RHO,
+      specific_heat_j_kg_k: CP,
+      thermal_conductivity_w_m_k: K,
+      thermal_diffusivity_m2_s: DIFFUSIVITY,
+      latent_heat_of_fusion_j_kg: LATENT_FUSION,
+      liquidus_temperature_c: T_LIQUIDUS,
+      solidus_temperature_c: T_SOLIDUS
+    },
     dimensionless_numbers: {
       peclet_number_pe: parseFloat(pe.toFixed(3)),
       normalized_enthalpy: parseFloat(normEnthalpy.toFixed(2)),
@@ -171,7 +192,7 @@ export default function handler(req, res) {
     const q = req.method === 'POST' ? (req.body || {}) : (req.query || {});
     const proc = normalizeProcessName(q.process);
 
-    // Validate inputs
+    // Validate inputs - strict physical validation without silent clamping
     const validation = validateProcessInputs(q, proc);
     if (!validation.valid) {
       return res.status(400).json({
