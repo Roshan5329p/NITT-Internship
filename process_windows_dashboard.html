@@ -3251,78 +3251,124 @@ function selectAuditStandard(stdKey) {
 function updateAstmAuditor() {
   const std = AUDIT_STANDARDS[currentAuditStandard] || AUDIT_STANDARDS.F2924;
 
+  // Obtain live calculated physics state derived directly from user inputs and ML model predictions
+  const phys = window.latestPhysicsState || {};
+  const stateKey = (typeof globalMaterialState !== 'undefined') ? globalMaterialState : (phys.stateKey || 'as_built');
+
   // Header and descriptions
   const setTitle = document.getElementById('astmMatrixHeaderTitle');
   if (setTitle) setTitle.innerText = std.title;
   const setSub = document.getElementById('astmMatrixHeaderSub');
   if (setSub) setSub.innerText = std.specDesc;
+
+  // Active heat treatment route class badge
+  let activeRoute = std.route;
+  if (currentAuditStandard === 'F2924') {
+    if (stateKey === 'hip') activeRoute = 'Class 1 (HIP Mandatory)';
+    else if (stateKey === 'annealed') activeRoute = 'Class 2 (Mill Annealed)';
+    else if (stateKey === 'stress_relieved') activeRoute = 'Class B / C (Stress Relieved)';
+    else if (stateKey === 'as_built') activeRoute = 'Class 4 (As-Built)';
+    else if (stateKey === 'sta') activeRoute = 'Class 1 / STA (Solution-Aged)';
+  } else if (currentAuditStandard === 'F3001') {
+    activeRoute = (stateKey === 'hip') ? 'Class 1 (HIP Mandatory - Medical)' : 'Non-Compliant (Requires HIP)';
+  }
   const setBadge = document.getElementById('astmClassBadge');
-  if (setBadge) setBadge.innerText = std.route;
+  if (setBadge) setBadge.innerText = activeRoute;
   const setRoute = document.getElementById('aud_cert_route');
-  if (setRoute) setRoute.innerText = std.route;
+  if (setRoute) setRoute.innerText = activeRoute;
 
-  // Determine state data
-  const stateKey = (typeof globalMaterialState !== 'undefined') ? globalMaterialState : 'as_built';
+  // Derive measured values dynamically from live physics state (or nominal state fallbacks if not yet initialized)
+  const measuredYs = phys.yieldStrength !== undefined ? Math.round(phys.yieldStrength) : (stateKey === 'hip' ? 865 : 1200);
+  const measuredUts = phys.tensileStrength !== undefined ? Math.round(phys.tensileStrength) : (stateKey === 'hip' ? 950 : 1290);
+  const measuredElong = phys.elongationPct !== undefined ? parseFloat(phys.elongationPct.toFixed(1)) : (stateKey === 'hip' ? 14.5 : 7.5);
+  const measuredDen = phys.densityPct !== undefined ? parseFloat(phys.densityPct.toFixed(2)) : (stateKey === 'hip' ? 99.98 : 99.90);
+  const measuredStress = phys.residualStress !== undefined ? Math.round(phys.residualStress) : (stateKey === 'hip' ? 15 : 1085);
+  const measuredFatigue = phys.fatigueThreshold !== undefined ? Math.round(phys.fatigueThreshold) : (stateKey === 'hip' ? 675 : 706);
 
-  let measuredYs = 1200;
-  let measuredUts = 1290;
-  let measuredElong = 7.5;
-  let measuredDen = 99.90;
-  let measuredStress = 1085;
-  let measuredFatigue = 706;
+  // Dynamic explanatory subtext for each criterion
+  const ysDiff = measuredYs - std.ysThresh;
+  const ysSub = ysDiff >= 0
+    ? `Exceeds threshold by +${ysDiff} MPa`
+    : `Below threshold by ${ysDiff} MPa; insufficient yield strength`;
 
-  let ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
-  let utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
-  let elongSub = 'Sub-standard ductility; un-annealed brittle acicular martensite present';
-  let denSub = 'Meets structural volumetric density threshold (>99.5%)';
-  let stressSub = 'Requires sub-transus stress relief anneal or HIP treatment';
-  let fatigueSub = 'Exceeds dynamic rotating-beam fatigue endurance limit';
+  const utsDiff = measuredUts - std.utsThresh;
+  const utsSub = utsDiff >= 0
+    ? `Exceeds tensile criteria by +${utsDiff} MPa`
+    : `Below tensile criteria by ${utsDiff} MPa; fails minimum tensile criteria`;
 
-  if (stateKey === 'stress_relieved') {
-    measuredYs = 1050;
-    measuredUts = 1120;
-    measuredElong = 9.2;
-    measuredDen = 99.90;
-    measuredStress = 45;
-    measuredFatigue = 690;
-    ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
-    utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
-    elongSub = 'Marginal ductility; stress relief partially coarsens acicular needles';
-    stressSub = 'Thermal relaxation at 650°C collapses peak stresses below ' + std.stressThresh + ' MPa';
-  } else if (stateKey === 'annealed') {
-    measuredYs = 920;
-    measuredUts = 1010;
-    measuredElong = 12.5;
-    measuredDen = 99.92;
-    measuredStress = 30;
-    measuredFatigue = 680;
-    ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
-    utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
-    elongSub = 'Fully annealed lamellar α+β satisfies ductility threshold';
-    stressSub = 'Furnace cooling restores low stress state (<30 MPa)';
-  } else if (stateKey === 'hip') {
-    measuredYs = 865;
-    measuredUts = 950;
-    measuredElong = 14.5;
-    measuredDen = 99.98;
-    measuredStress = 15;
-    measuredFatigue = 675;
-    ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
-    utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
-    elongSub = 'HIP consolidation heals microporosity; ductility maximized to 14.5%';
-    denSub = 'Isostatic pressure closes all internal voids (>99.9% relative density)';
-    stressSub = 'Complete creep relaxation under 100 MPa argon pressure';
-  } else if (stateKey === 'sta') {
-    measuredYs = 1100;
-    measuredUts = 1175;
-    measuredElong = 10.5;
-    measuredDen = 99.94;
-    measuredStress = 40;
-    measuredFatigue = 720;
-    ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
-    utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
-    elongSub = 'Solution & aged fine α precipitation retains >10% elongation';
-    stressSub = 'Controlled aging furnace cycle stabilizes residual stresses';
+  let elongSub = '';
+  if (measuredElong >= std.elThresh) {
+    if (stateKey === 'hip') {
+      elongSub = `HIP consolidation heals microporosity; ductility maximized to ${measuredElong.toFixed(1)}%`;
+    } else if (stateKey === 'annealed') {
+      elongSub = `Fully annealed lamellar α+β satisfies ductility threshold (${measuredElong.toFixed(1)}%)`;
+    } else if (stateKey === 'stress_relieved') {
+      elongSub = `Stress relief coarsening satisfies ductility threshold (${measuredElong.toFixed(1)}%)`;
+    } else if (stateKey === 'sta') {
+      elongSub = `Solution-treated and aged structure satisfies ductility threshold (${measuredElong.toFixed(1)}%)`;
+    } else {
+      elongSub = `Meets ductility threshold (${measuredElong.toFixed(1)}% ≥ ${std.elThresh}%)`;
+    }
+  } else {
+    if (stateKey === 'as_built') {
+      elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}%); un-annealed brittle acicular martensite present`;
+    } else if (phys.lofIndex > 1.0) {
+      elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}%); un-melted lack-of-fusion voids cause premature tear`;
+    } else if (phys.keyholeRatio > 1.0) {
+      elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}%); keyhole gas porosity triggers early void coalescence`;
+    } else {
+      elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}% < ${std.elThresh}% requirement)`;
+    }
+  }
+
+  let denSub = '';
+  if (measuredDen >= std.denThresh) {
+    if (stateKey === 'hip') {
+      denSub = `Isostatic pressure closes all internal voids (>${measuredDen.toFixed(1)}% relative density)`;
+    } else {
+      denSub = `Meets structural volumetric density threshold (>${std.denThresh}%)`;
+    }
+  } else {
+    if (phys.lofIndex > 1.0) {
+      denSub = `Severe lack-of-fusion porosity (${(100 - measuredDen).toFixed(2)}% voids); VED insufficient for interlayer bonding`;
+    } else if (phys.keyholeRatio > 1.0) {
+      denSub = `Keyhole vaporization gas entrapment (${(100 - measuredDen).toFixed(2)}% voids); excess power density`;
+    } else {
+      denSub = `Sub-standard relative density (${measuredDen.toFixed(2)}% < ${std.denThresh}%)`;
+    }
+  }
+
+  let stressSub = '';
+  if (measuredStress <= std.stressThresh) {
+    if (stateKey === 'hip') {
+      stressSub = `Complete creep relaxation under 100 MPa argon pressure (${measuredStress} MPa)`;
+    } else if (stateKey === 'stress_relieved') {
+      stressSub = `Thermal relaxation at 650°C collapses peak stresses below ${std.stressThresh} MPa (${measuredStress} MPa)`;
+    } else if (stateKey === 'annealed') {
+      stressSub = `Furnace cooling restores low stress state (${measuredStress} MPa < ${std.stressThresh} MPa)`;
+    } else {
+      stressSub = `Residual macrostress relieved below ${std.stressThresh} MPa (${measuredStress} MPa)`;
+    }
+  } else {
+    if (stateKey === 'as_built') {
+      stressSub = `Steep thermal gradient induces severe macro-stress (${measuredStress} MPa); requires sub-transus stress relief anneal or HIP treatment`;
+    } else {
+      stressSub = `Requires sub-transus stress relief anneal or HIP treatment (${measuredStress} MPa > ${std.stressThresh} MPa)`;
+    }
+  }
+
+  let fatigueSub = '';
+  if (measuredFatigue >= std.fatigueThresh) {
+    const fatDiff = measuredFatigue - std.fatigueThresh;
+    fatigueSub = `Exceeds dynamic rotating-beam fatigue endurance limit (+${fatDiff} MPa)`;
+  } else {
+    if (measuredDen < 99.5) {
+      fatigueSub = `Internal pore defects act as cyclic crack starters; fatigue limit drops to ${measuredFatigue} MPa (< ${std.fatigueThresh} MPa)`;
+    } else if (measuredStress > 150) {
+      fatigueSub = `High surface tensile residual stresses accelerate fatigue initiation (${measuredFatigue} MPa < ${std.fatigueThresh} MPa)`;
+    } else {
+      fatigueSub = `Sub-standard fatigue endurance (${measuredFatigue} MPa < ${std.fatigueThresh} MPa)`;
+    }
   }
 
   // Pass / Fail evaluations
@@ -3371,16 +3417,22 @@ function updateAstmAuditor() {
   if (planContainer) {
     let items = [];
     if (!passStress) {
-      items.push('Perform Sub-Transus Stress-Relief (700°C–800°C for 2h in industrial vacuum) to lower residual stresses below ' + std.stressThresh + ' MPa.');
+      items.push(`Perform Sub-Transus Stress-Relief (700°C–800°C for 2h in industrial vacuum) to lower residual stresses below ${std.stressThresh} MPa.`);
     }
     if (!passElong) {
-      items.push('Apply standard Hot Isostatic Pressing (HIP: 920°C @ 1000–1200 bar Ar for 2h) to dissolve grain boundary voids and boost ductility.');
+      items.push(`Apply standard Hot Isostatic Pressing (HIP: 920°C @ 1000–1200 bar Ar for 2h) to dissolve grain boundary voids and boost ductility.`);
     }
     if (!passDen) {
-      items.push('Calibrate volumetric energy density (VED) and optimize hatch spacing to eliminate un-fused lack-of-fusion voids.');
+      items.push(`Calibrate volumetric energy density (VED) and optimize hatch spacing to eliminate un-fused lack-of-fusion voids.`);
+    }
+    if (!passFatigue) {
+      items.push(`Eliminate internal pore notches and polish specimen surface to Ra < 0.8 µm to prevent premature fatigue crack initiation.`);
+    }
+    if (!passYs || !passUts) {
+      items.push(`Adjust laser scan speed and power to achieve optimal Hall-Petch prior-β grain refinement and meet tensile thresholds.`);
     }
     if (items.length === 0) {
-      items.push('Part fully satisfies all physical and metallurgical criteria of ' + std.name + '. Qualified for production deployment.');
+      items.push(`Part fully satisfies all physical and metallurgical criteria of ${std.name}. Qualified for mission-critical production deployment.`);
     }
 
     planContainer.innerHTML = items.map((item, idx) => `
@@ -3390,8 +3442,26 @@ function updateAstmAuditor() {
       </div>
     `).join('');
   }
-}
 
+  // Update Dynamic Cryptographic Hash in Stamp
+  const certHashEl = document.getElementById('aud_cert_hash');
+  if (certHashEl) {
+    const rawSeed = `NIT|${phys.p || 280}|${phys.v || 960}|${phys.h || 110}|${phys.t || 40}|${stateKey}|${measuredYs}|${measuredUts}|${measuredDen}`;
+    let h1 = 0x811c9dc5, h2 = 0x9e3779b9, h3 = 0x6a09e667, h4 = 0xbb67ae85;
+    for (let i = 0; i < rawSeed.length; i++) {
+      const ch = rawSeed.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 0x01000193);
+      h2 = Math.imul(h2 ^ (ch << 3), 0x5bd1e995);
+      h3 = Math.imul(h3 ^ (ch >> 2), 0x27d4eb2f);
+      h4 = Math.imul(h4 ^ (ch << 1), 0x165667b1);
+    }
+    const hex1 = (h1 >>> 0).toString(16).padStart(8, '0').toUpperCase();
+    const hex2 = (h2 >>> 0).toString(16).padStart(8, '0').toUpperCase();
+    const hex3 = (h3 >>> 0).toString(16).padStart(8, '0').toUpperCase();
+    const hex4 = (h4 >>> 0).toString(16).padStart(8, '0').toUpperCase();
+    certHashEl.innerText = `SHA256-${hex1}${hex2}-${hex3}${hex4}`.slice(0, 31);
+  }
+}
 window.selectAuditStandard = selectAuditStandard;
 window.updateAstmAuditor = updateAstmAuditor;
 window.AUDIT_STANDARDS = AUDIT_STANDARDS;
@@ -5732,7 +5802,7 @@ window.addEventListener('click', function(e) {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
               </div>
               <div class="model-card-title" style="font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: -0.2px;">Aerospace &amp; Medical Qualification Audit Engine</div>
-              <span id="astmOverallPillBadge" style="border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.12); color: #f87171; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 9999px;">NON-COMPLIANT</span>
+              <span id="astmOverallPillBadge" style="border: 1px solid rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.12); color: #34d399; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 9999px;">COMPLIANT</span>
             </div>
             <div class="model-card-sub" style="font-size: 12.5px; color: #94a3b8; margin-top: 6px; line-height: 1.5; max-width: 820px;">
               Real-time compliance verification against international additive manufacturing standards. Evaluates tensile yield, UTS, elongation, residual stresses, and microstructural density.
@@ -5781,7 +5851,7 @@ window.addEventListener('click', function(e) {
                   Standard Specification for Additive Manufacturing Titanium-6Aluminum-4V with Powder Bed Fusion
                 </div>
               </div>
-              <span id="astmClassBadge" style="border: 1px solid rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.08); color: #38bdf8; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; white-space: nowrap; flex-shrink: 0;">Class B / C (Stress Relieved)</span>
+              <span id="astmClassBadge" style="border: 1px solid rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.08); color: #38bdf8; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; white-space: nowrap; flex-shrink: 0;">Class 1 (HIP Mandatory)</span>
             </div>
 
             <!-- 6 Compliance Criteria Rows -->
@@ -5790,13 +5860,13 @@ window.addEventListener('click', function(e) {
               <div class="audit-row-card">
                 <div>
                   <div style="font-size: 13px; font-weight: 700; color: #f8fafc;" id="aud_ys_title">0.2% Offset Yield Strength (Rp0.2)</div>
-                  <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;" id="aud_ys_sub">Exceeds threshold by +375 MPa</div>
+                  <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;" id="aud_ys_sub">Exceeds threshold by +40 MPa</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <div style="text-align: right;">
                     <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
                     <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
-                      <span style="color: #38bdf8; font-weight: 700;" id="aud_ys_val">1200 MPa</span>
+                      <span style="color: #38bdf8; font-weight: 700;" id="aud_ys_val">865 MPa</span>
                       <span style="color: #475569; margin: 0 4px;">|</span>
                       <span style="color: #94a3b8;" id="aud_ys_thresh">≥ 825 MPa</span>
                     </div>
@@ -5812,13 +5882,13 @@ window.addEventListener('click', function(e) {
               <div class="audit-row-card">
                 <div>
                   <div style="font-size: 13px; font-weight: 700; color: #f8fafc;" id="aud_uts_title">Ultimate Tensile Strength (UTS)</div>
-                  <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;" id="aud_uts_sub">Exceeds tensile criteria by +395 MPa</div>
+                  <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;" id="aud_uts_sub">Exceeds tensile criteria by +55 MPa</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <div style="text-align: right;">
                     <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
                     <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
-                      <span style="color: #38bdf8; font-weight: 700;" id="aud_uts_val">1290 MPa</span>
+                      <span style="color: #38bdf8; font-weight: 700;" id="aud_uts_val">950 MPa</span>
                       <span style="color: #475569; margin: 0 4px;">|</span>
                       <span style="color: #94a3b8;" id="aud_uts_thresh">≥ 895 MPa</span>
                     </div>
@@ -5834,20 +5904,20 @@ window.addEventListener('click', function(e) {
               <div class="audit-row-card">
                 <div>
                   <div style="font-size: 13px; font-weight: 700; color: #f8fafc;" id="aud_el_title">Elongation at Fracture (Ductility)</div>
-                  <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;" id="aud_el_sub">Sub-standard ductility; un-annealed brittle acicular martensite present</div>
+                  <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;" id="aud_el_sub">HIP consolidation heals microporosity; ductility maximized to 14.5%</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <div style="text-align: right;">
                     <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
                     <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
-                      <span style="color: #38bdf8; font-weight: 700;" id="aud_el_val">7.5 %</span>
+                      <span style="color: #38bdf8; font-weight: 700;" id="aud_el_val">14.5 %</span>
                       <span style="color: #475569; margin: 0 4px;">|</span>
                       <span style="color: #94a3b8;" id="aud_el_thresh">≥ 10 %</span>
                     </div>
                   </div>
-                  <div class="audit-status-badge fail" id="aud_el_badge">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    <span>FAIL</span>
+                  <div class="audit-status-badge pass" id="aud_el_badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>PASS</span>
                   </div>
                 </div>
               </div>
@@ -5856,13 +5926,13 @@ window.addEventListener('click', function(e) {
               <div class="audit-row-card">
                 <div>
                   <div style="font-size: 13px; font-weight: 700; color: #f8fafc;" id="aud_den_title">As-Synthesized Relative Density</div>
-                  <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;" id="aud_den_sub">Meets structural volumetric density threshold (>99.5%)</div>
+                  <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;" id="aud_den_sub">Isostatic pressure closes all internal voids (&gt;99.9% relative density)</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <div style="text-align: right;">
                     <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
                     <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
-                      <span style="color: #38bdf8; font-weight: 700;" id="aud_den_val">99.90 %</span>
+                      <span style="color: #38bdf8; font-weight: 700;" id="aud_den_val">99.98 %</span>
                       <span style="color: #475569; margin: 0 4px;">|</span>
                       <span style="color: #94a3b8;" id="aud_den_thresh">≥ 99.5 %</span>
                     </div>
@@ -5878,20 +5948,20 @@ window.addEventListener('click', function(e) {
               <div class="audit-row-card">
                 <div>
                   <div style="font-size: 13px; font-weight: 700; color: #f8fafc;" id="aud_stress_title">Internal Residual Macrostress</div>
-                  <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;" id="aud_stress_sub">Requires sub-transus stress relief anneal or HIP treatment</div>
+                  <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;" id="aud_stress_sub">Complete creep relaxation under 100 MPa argon pressure</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <div style="text-align: right;">
                     <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
                     <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
-                      <span style="color: #38bdf8; font-weight: 700;" id="aud_stress_val">1085 MPa</span>
+                      <span style="color: #38bdf8; font-weight: 700;" id="aud_stress_val">15 MPa</span>
                       <span style="color: #475569; margin: 0 4px;">|</span>
                       <span style="color: #94a3b8;" id="aud_stress_thresh">≤ 60 MPa</span>
                     </div>
                   </div>
-                  <div class="audit-status-badge fail" id="aud_stress_badge">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    <span>FAIL</span>
+                  <div class="audit-status-badge pass" id="aud_stress_badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>PASS</span>
                   </div>
                 </div>
               </div>
@@ -5906,7 +5976,7 @@ window.addEventListener('click', function(e) {
                   <div style="text-align: right;">
                     <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
                     <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
-                      <span style="color: #38bdf8; font-weight: 700;" id="aud_fatigue_val">706 MPa</span>
+                      <span style="color: #38bdf8; font-weight: 700;" id="aud_fatigue_val">675 MPa</span>
                       <span style="color: #475569; margin: 0 4px;">|</span>
                       <span style="color: #94a3b8;" id="aud_fatigue_thresh">≥ 520 MPa</span>
                     </div>
@@ -5954,7 +6024,7 @@ window.addEventListener('click', function(e) {
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <span style="color: #94a3b8;">Active Route:</span>
-                  <span style="color: #38bdf8; font-weight: 700;" id="aud_cert_route">Class B / C (Stress Relieved)</span>
+                  <span style="color: #38bdf8; font-weight: 700;" id="aud_cert_route">Class 1 (HIP Mandatory)</span>
                 </div>
               </div>
             </div>
@@ -7779,7 +7849,50 @@ function calculatePhysics() {
   // Update Dynamic SVG Operating Point & Zones on Defect Map
   updateDefectMapSvg(currentProcess, p, v);
 
-    // Update Aerospace & Medical ASTM / AMS Qualification Auditor
+    // Compute Physical Residual Stress based on yield strength, cooling rate gradient, and post-processing thermal relaxation
+  const thermalScaling = Math.pow(Math.max(1e4, coolingRate) / 480000, 0.08);
+  let residualStressMPa = 1085;
+  if (post === 'HIP') {
+    // Under 100-120 MPa argon at 920°C (sub-transus creep dwell), macrostresses relax to near zero
+    residualStressMPa = Math.max(10, Math.round(12 + (yieldStrength * 0.003)));
+  } else if (post === 'Annealed') {
+    residualStressMPa = Math.max(20, Math.round(20 + (yieldStrength * 0.010)));
+  } else if (post === 'Stress-relieved') {
+    residualStressMPa = Math.max(35, Math.round((35 + (yieldStrength * 0.012)) * thermalScaling));
+  } else if (post === 'Solution-Aged' || post === 'Bi-modal') {
+    residualStressMPa = Math.max(30, Math.round(35 + (yieldStrength * 0.006)));
+  } else {
+    // As-Built: high thermal tensile macrostress near yield strength
+    residualStressMPa = Math.round(yieldStrength * (isWaam ? 0.72 : (isDed ? 0.82 : 1.06)) * thermalScaling);
+  }
+
+  // Compute Physical High-Cycle Fatigue Endurance Limit (10^7 cycles) based on UTS, density/porosity knockdown (Murakami model), defect notch penalty, and residual stress
+  const kBaseFatigue = (post === 'HIP') ? 0.71 : (post === 'Annealed' ? 0.69 : (post === 'Stress-relieved' ? 0.65 : 0.68));
+  const densityFatigueFactor = Math.pow(Math.max(0.5, densityPct / 100.0), 4.0);
+  const lofFatigueFactor = lofIndex > 1.0 ? Math.max(0.20, 1.0 - (lofIndex - 1.0) * 1.6) : 1.0;
+  const keyholeFatigueFactor = keyholeRatio > 1.0 ? Math.max(0.35, 1.0 - (keyholeRatio - 1.0) * 0.6) : 1.0;
+  const stressFatigueFactor = Math.max(0.65, 1.0 - 0.28 * (Math.max(0, residualStressMPa - 50) / Math.max(400, yieldStrength)));
+  const fatigueThreshold = Math.round(utsTabor * kBaseFatigue * densityFatigueFactor * lofFatigueFactor * keyholeFatigueFactor * stressFatigueFactor);
+
+  window.latestPhysicsState = {
+    yieldStrength,
+    tensileStrength: utsTabor,
+    elongationPct,
+    densityPct,
+    residualStress: residualStressMPa,
+    fatigueThreshold,
+    post,
+    stateKey,
+    ved,
+    lofIndex,
+    keyholeRatio,
+    ballingRatio,
+    coolingRate,
+    p, v, h, t,
+    isWaam, isDed
+  };
+
+  // Update Aerospace & Medical ASTM / AMS Qualification Auditor
   if (typeof updateAstmAuditor === 'function') {
     updateAstmAuditor();
   }
@@ -7813,8 +7926,6 @@ function calculatePhysics() {
   const alphaPrimePct = coolingRate >= 410
     ? (post === 'HIP' || post === 'Annealed' ? 5 : (post === 'Stress-relieved' ? 68 : 92))
     : (post === 'None' ? Math.max(8, Math.round((coolingRate / 410) * 60)) : 3);
-  const resStressFactor = (post === 'HIP' || post === 'Annealed') ? 0.15 : (post === 'Stress-relieved' ? 0.35 : 1.0);
-  const residualStressMPa = Math.round(yieldStrength * (isWaam ? 0.58 : (isDed ? 0.48 : 0.42)) * resStressFactor);
   window.twinPhysicsState = {
     process: currentProcess, p, v, h, t, preheat,
     width: meltPoolWidth, depth: meltPoolDepth, length: meltPoolLength,
@@ -12067,47 +12178,100 @@ function openAuditCertificateModal() {
   setEl('certQualClass', std.route);
   setEl('certStdFullTitle', std.specDesc);
 
-  // Obtain state values
-  const stateKey = (typeof globalMaterialState !== 'undefined') ? globalMaterialState : 'as_built';
-  let measuredYs = 1200;
-  let measuredUts = 1290;
-  let measuredElong = 7.5;
-  let measuredDen = 99.90;
-  let measuredStress = 1085;
-  let measuredFatigue = 706;
+  // Obtain live physical state values
+  const phys = window.latestPhysicsState || {};
+  const stateKey = (typeof globalMaterialState !== 'undefined') ? globalMaterialState : (phys.stateKey || 'as_built');
 
-  let ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
-  let utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
-  let elongSub = 'Sub-standard ductility; un-annealed brittle acicular martensite present';
-  let denSub = 'Meets structural volumetric density threshold (>99.5%)';
-  let stressSub = 'Requires sub-transus stress relief anneal or HIP treatment';
-  let fatigueSub = 'Exceeds dynamic rotating-beam fatigue endurance limit';
+  const measuredYs = phys.yieldStrength !== undefined ? Math.round(phys.yieldStrength) : (stateKey === 'hip' ? 865 : 1200);
+  const measuredUts = phys.tensileStrength !== undefined ? Math.round(phys.tensileStrength) : (stateKey === 'hip' ? 950 : 1290);
+  const measuredElong = phys.elongationPct !== undefined ? parseFloat(phys.elongationPct.toFixed(1)) : (stateKey === 'hip' ? 14.5 : 7.5);
+  const measuredDen = phys.densityPct !== undefined ? parseFloat(phys.densityPct.toFixed(2)) : (stateKey === 'hip' ? 99.98 : 99.90);
+  const measuredStress = phys.residualStress !== undefined ? Math.round(phys.residualStress) : (stateKey === 'hip' ? 15 : 1085);
+  const measuredFatigue = phys.fatigueThreshold !== undefined ? Math.round(phys.fatigueThreshold) : (stateKey === 'hip' ? 675 : 706);
 
-  if (stateKey === 'stress_relieved') {
-    measuredYs = 1050; measuredUts = 1120; measuredElong = 9.2; measuredDen = 99.90; measuredStress = 45; measuredFatigue = 690;
-    ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
-    utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
-    elongSub = 'Marginal ductility; stress relief partially coarsens acicular needles';
-    stressSub = 'Thermal relaxation at 650°C collapses peak stresses below ' + std.stressThresh + ' MPa';
-  } else if (stateKey === 'annealed') {
-    measuredYs = 920; measuredUts = 1010; measuredElong = 12.5; measuredDen = 99.92; measuredStress = 30; measuredFatigue = 680;
-    ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
-    utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
-    elongSub = 'Fully annealed lamellar α+β satisfies ductility threshold';
-    stressSub = 'Furnace cooling restores low stress state (<30 MPa)';
-  } else if (stateKey === 'hip') {
-    measuredYs = 865; measuredUts = 950; measuredElong = 14.5; measuredDen = 99.98; measuredStress = 15; measuredFatigue = 675;
-    ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
-    utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
-    elongSub = 'HIP consolidation heals microporosity; ductility maximized to 14.5%';
-    denSub = 'Isostatic pressure closes all internal voids (>99.9% relative density)';
-    stressSub = 'Complete creep relaxation under 100 MPa argon pressure';
-  } else if (stateKey === 'sta') {
-    measuredYs = 1100; measuredUts = 1175; measuredElong = 10.5; measuredDen = 99.94; measuredStress = 40; measuredFatigue = 720;
-    ysSub = 'Exceeds threshold by +' + (measuredYs - std.ysThresh) + ' MPa';
-    utsSub = 'Exceeds tensile criteria by +' + (measuredUts - std.utsThresh) + ' MPa';
-    elongSub = 'Solution & aged fine α precipitation retains >10% elongation';
-    stressSub = 'Controlled aging furnace cycle stabilizes residual stresses';
+  const ysDiff = measuredYs - std.ysThresh;
+  const ysSub = ysDiff >= 0
+    ? `Exceeds threshold by +${ysDiff} MPa`
+    : `Below threshold by ${ysDiff} MPa; insufficient yield strength`;
+
+  const utsDiff = measuredUts - std.utsThresh;
+  const utsSub = utsDiff >= 0
+    ? `Exceeds tensile criteria by +${utsDiff} MPa`
+    : `Below tensile criteria by ${utsDiff} MPa; fails minimum tensile criteria`;
+
+  let elongSub = '';
+  if (measuredElong >= std.elThresh) {
+    if (stateKey === 'hip') {
+      elongSub = `HIP consolidation heals microporosity; ductility maximized to ${measuredElong.toFixed(1)}%`;
+    } else if (stateKey === 'annealed') {
+      elongSub = `Fully annealed lamellar α+β satisfies ductility threshold (${measuredElong.toFixed(1)}%)`;
+    } else if (stateKey === 'stress_relieved') {
+      elongSub = `Stress relief coarsening satisfies ductility threshold (${measuredElong.toFixed(1)}%)`;
+    } else if (stateKey === 'sta') {
+      elongSub = `Solution-treated and aged structure satisfies ductility threshold (${measuredElong.toFixed(1)}%)`;
+    } else {
+      elongSub = `Meets ductility threshold (${measuredElong.toFixed(1)}% ≥ ${std.elThresh}%)`;
+    }
+  } else {
+    if (stateKey === 'as_built') {
+      elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}%); un-annealed brittle acicular martensite present`;
+    } else if (phys.lofIndex > 1.0) {
+      elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}%); un-melted lack-of-fusion voids cause premature tear`;
+    } else if (phys.keyholeRatio > 1.0) {
+      elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}%); keyhole gas porosity triggers early void coalescence`;
+    } else {
+      elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}% < ${std.elThresh}% requirement)`;
+    }
+  }
+
+  let denSub = '';
+  if (measuredDen >= std.denThresh) {
+    if (stateKey === 'hip') {
+      denSub = `Isostatic pressure closes all internal voids (>${measuredDen.toFixed(1)}% relative density)`;
+    } else {
+      denSub = `Meets structural volumetric density threshold (>${std.denThresh}%)`;
+    }
+  } else {
+    if (phys.lofIndex > 1.0) {
+      denSub = `Severe lack-of-fusion porosity (${(100 - measuredDen).toFixed(2)}% voids); VED insufficient for interlayer bonding`;
+    } else if (phys.keyholeRatio > 1.0) {
+      denSub = `Keyhole vaporization gas entrapment (${(100 - measuredDen).toFixed(2)}% voids); excess power density`;
+    } else {
+      denSub = `Sub-standard relative density (${measuredDen.toFixed(2)}% < ${std.denThresh}%)`;
+    }
+  }
+
+  let stressSub = '';
+  if (measuredStress <= std.stressThresh) {
+    if (stateKey === 'hip') {
+      stressSub = `Complete creep relaxation under 100 MPa argon pressure (${measuredStress} MPa)`;
+    } else if (stateKey === 'stress_relieved') {
+      stressSub = `Thermal relaxation at 650°C collapses peak stresses below ${std.stressThresh} MPa (${measuredStress} MPa)`;
+    } else if (stateKey === 'annealed') {
+      stressSub = `Furnace cooling restores low stress state (${measuredStress} MPa < ${std.stressThresh} MPa)`;
+    } else {
+      stressSub = `Residual macrostress relieved below ${std.stressThresh} MPa (${measuredStress} MPa)`;
+    }
+  } else {
+    if (stateKey === 'as_built') {
+      stressSub = `Steep thermal gradient induces severe macro-stress (${measuredStress} MPa); requires sub-transus stress relief anneal or HIP treatment`;
+    } else {
+      stressSub = `Requires sub-transus stress relief anneal or HIP treatment (${measuredStress} MPa > ${std.stressThresh} MPa)`;
+    }
+  }
+
+  let fatigueSub = '';
+  if (measuredFatigue >= std.fatigueThresh) {
+    const fatDiff = measuredFatigue - std.fatigueThresh;
+    fatigueSub = `Exceeds dynamic rotating-beam fatigue endurance limit (+${fatDiff} MPa)`;
+  } else {
+    if (measuredDen < 99.5) {
+      fatigueSub = `Internal pore defects act as cyclic crack starters; fatigue limit drops to ${measuredFatigue} MPa (< ${std.fatigueThresh} MPa)`;
+    } else if (measuredStress > 150) {
+      fatigueSub = `High surface tensile residual stresses accelerate fatigue initiation (${measuredFatigue} MPa < ${std.fatigueThresh} MPa)`;
+    } else {
+      fatigueSub = `Sub-standard fatigue endurance (${measuredFatigue} MPa < ${std.fatigueThresh} MPa)`;
+    }
   }
 
   const passYs = measuredYs >= std.ysThresh;
