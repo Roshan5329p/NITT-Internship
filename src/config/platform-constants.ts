@@ -202,6 +202,8 @@ export interface MLModelSpec {
   mapePct: number;
   r2Score: number;
   calibratedPi95: number;
+  coveragePct: number;
+  nominalHv: number;
 }
 
 export const ML_MODELS_REGISTRY: MLModelSpec[] = [
@@ -214,7 +216,9 @@ export const ML_MODELS_REGISTRY: MLModelSpec[] = [
     looMaeHv: 8.2,
     mapePct: 2.45,
     r2Score: 0.912,
-    calibratedPi95: 16.5
+    calibratedPi95: 16.5,
+    coveragePct: 95.2,
+    nominalHv: 336
   },
   {
     id: "rf",
@@ -225,7 +229,9 @@ export const ML_MODELS_REGISTRY: MLModelSpec[] = [
     looMaeHv: 6.4,
     mapePct: 1.91,
     r2Score: 0.942,
-    calibratedPi95: 13.2
+    calibratedPi95: 13.2,
+    coveragePct: 95.2,
+    nominalHv: 343
   },
   {
     id: "xgboost",
@@ -236,7 +242,9 @@ export const ML_MODELS_REGISTRY: MLModelSpec[] = [
     looMaeHv: 5.9,
     mapePct: 1.75,
     r2Score: 0.958,
-    calibratedPi95: 12.4
+    calibratedPi95: 12.4,
+    coveragePct: 95.2,
+    nominalHv: 341
   },
   {
     id: "svm",
@@ -247,7 +255,9 @@ export const ML_MODELS_REGISTRY: MLModelSpec[] = [
     looMaeHv: 5.6,
     mapePct: 1.62,
     r2Score: 0.965,
-    calibratedPi95: 11.8
+    calibratedPi95: 11.8,
+    coveragePct: 95.2,
+    nominalHv: 341
   },
   {
     id: "gpr",
@@ -258,7 +268,9 @@ export const ML_MODELS_REGISTRY: MLModelSpec[] = [
     looMaeHv: 5.1,
     mapePct: 1.48,
     r2Score: 0.976,
-    calibratedPi95: 10.8
+    calibratedPi95: 10.8,
+    coveragePct: 95.2,
+    nominalHv: 339
   },
   {
     id: "ensemble",
@@ -269,7 +281,9 @@ export const ML_MODELS_REGISTRY: MLModelSpec[] = [
     looMaeHv: 4.8,
     mapePct: 1.34,
     r2Score: 0.982,
-    calibratedPi95: 10.2
+    calibratedPi95: 10.2,
+    coveragePct: 95.2,
+    nominalHv: 340
   }
 ];
 

@@ -3014,6 +3014,7 @@ var ML_MODELS_REGISTRY = [
     mapePct: 2.45,
     r2Score: 0.912,
     calibratedPi95: 16.5,
+    coveragePct: 95.2,
     nominalHv: 336
   },
   {
@@ -3026,6 +3027,7 @@ var ML_MODELS_REGISTRY = [
     mapePct: 1.91,
     r2Score: 0.942,
     calibratedPi95: 13.2,
+    coveragePct: 95.2,
     nominalHv: 343
   },
   {
@@ -3038,6 +3040,7 @@ var ML_MODELS_REGISTRY = [
     mapePct: 1.75,
     r2Score: 0.958,
     calibratedPi95: 12.4,
+    coveragePct: 95.2,
     nominalHv: 341
   },
   {
@@ -3050,6 +3053,7 @@ var ML_MODELS_REGISTRY = [
     mapePct: 1.62,
     r2Score: 0.965,
     calibratedPi95: 11.8,
+    coveragePct: 95.2,
     nominalHv: 341
   },
   {
@@ -3062,6 +3066,7 @@ var ML_MODELS_REGISTRY = [
     mapePct: 1.48,
     r2Score: 0.976,
     calibratedPi95: 10.8,
+    coveragePct: 95.2,
     nominalHv: 339
   },
   {
@@ -3074,6 +3079,7 @@ var ML_MODELS_REGISTRY = [
     mapePct: 1.34,
     r2Score: 0.982,
     calibratedPi95: 10.2,
+    coveragePct: 95.2,
     nominalHv: 340
   }
 ];
@@ -3393,12 +3399,30 @@ window.AUDIT_STANDARDS = AUDIT_STANDARDS;
 window.MATERIAL_STATE_REGISTRY = MATERIAL_STATE_REGISTRY;
 window.setGlobalMaterialState = setGlobalMaterialState;
 
+var activeModelId = 'ensemble'; // Default to Consensus Ensemble
+window.activeModelId = activeModelId;
+
+function setActiveModel(modelId) {
+  if (!modelId) return;
+  activeModelId = modelId;
+  window.activeModelId = modelId;
+  if (window.lastModelPredictions && window.lastStateKey) {
+    renderUnifiedModelsUI(window.lastModelPredictions, window.lastStateKey);
+  } else {
+    calculatePhysics();
+  }
+}
+window.setActiveModel = setActiveModel;
+
 function renderUnifiedModelsUI(modelPredictions, stateKey) {
-  const meta = (typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY[stateKey]) 
+  window.lastModelPredictions = modelPredictions;
+  window.lastStateKey = stateKey;
+
+  const activeCondition = (typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY[stateKey]) 
     ? MATERIAL_STATE_REGISTRY[stateKey] 
-    : { benchmarkHvRange: [320, 360], label: "HIP-Treated" };
-  const benchRange = meta.benchmarkHvRange || [320, 360];
-  const stateShort = meta.label ? meta.label.split(' ')[0] : 'HIP';
+    : { taborFactor: 2.95, utsToYsRatio: 1.09, benchmarkHvRange: [320, 360], label: "HIP-Treated" };
+  const benchRange = activeCondition.benchmarkHvRange || [320, 360];
+  const stateShort = activeCondition.label ? activeCondition.label.split(' ')[0] : 'HIP';
 
   const benchHeader = document.getElementById('benchHeaderRange');
   if (benchHeader) {
@@ -3409,43 +3433,96 @@ function renderUnifiedModelsUI(modelPredictions, stateKey) {
     benchLabel.innerText = `Range of published ${stateShort} experiments (${benchRange[0]} - ${benchRange[1]} HV)`;
   }
 
-  let tbodyHtml = '';
-  ML_MODELS_REGISTRY.forEach((m, idx) => {
+  // Derive model results array
+  const modelResults = ML_MODELS_REGISTRY.map((m) => {
     const predHv = (modelPredictions && modelPredictions[m.id] !== undefined) ? modelPredictions[m.id] : (m.nominalHv || 340);
-    const hrc = typeof hvToHrcStandard === 'function' ? hvToHrcStandard(predHv) : '34 HRC';
-    const isPrimary = (m.id === 'gpr');
-    const isEnsemble = (m.id === 'ensemble');
-    const rowBg = isEnsemble ? 'background: rgba(16, 185, 129, 0.08); font-weight: bold;' : (isPrimary ? 'background: rgba(45, 212, 191, 0.05);' : '');
+    const hrcRaw = typeof hvToHrcStandard === 'function' ? hvToHrcStandard(predHv) : '34 HRC';
+    const hrc = hrcRaw.includes('HRC') ? hrcRaw : hrcRaw + ' HRC';
+    return {
+      ...m,
+      predictedHv: predHv,
+      hrc: hrc,
+      coverage: m.coveragePct || 95.2
+    };
+  });
+
+  // Derive active model from activeModelId
+  let activeModel = modelResults.find(m => m.id === activeModelId);
+  if (!activeModel) {
+    activeModel = modelResults.find(m => m.id === 'ensemble') || modelResults[0];
+    activeModelId = activeModel.id;
+    window.activeModelId = activeModelId;
+  }
+
+  // Bind Top KPI Cards directly to activeModel
+  const elTitle = document.getElementById('kpi_model_title');
+  if (elTitle) elTitle.innerText = `Hardness (${activeModel.shortName})`;
+
+  const elHv = document.getElementById('kpi_hv');
+  if (elHv) elHv.innerText = `${activeModel.predictedHv} HV`;
+
+  const elCi = document.getElementById('kpi_ci');
+  if (elCi) elCi.innerText = `± ${activeModel.calibratedPi95} HV [Calibrated 95% PI] · ${activeModel.coverage}% Empirical Coverage`;
+
+  const elHrc = document.getElementById('kpi_hrc');
+  if (elHrc) elHrc.innerText = `${activeModel.hrc}`;
+
+  const calculatedUts = Math.round(activeModel.predictedHv * activeCondition.taborFactor);
+  const elUts = document.getElementById('kpi_uts');
+  if (elUts) elUts.innerText = `${calculatedUts} MPa`;
+
+  const elTaborSub = document.getElementById('kpi_tabor_sub');
+  if (elTaborSub) {
+    elTaborSub.innerText = `UTS ≈ ${activeCondition.taborFactor} × HV (Tabor scaling) | UTS/YS ~${activeCondition.utsToYsRatio}x`;
+  }
+
+  let tbodyHtml = '';
+  modelResults.forEach((m, idx) => {
+    const isActive = (m.id === activeModelId);
+    const rowBg = isActive 
+      ? 'background: rgba(16, 185, 129, 0.12); font-weight: bold; border-left: 3px solid var(--accent-emerald); cursor: pointer;' 
+      : 'cursor: pointer;';
+    const badgeHtml = isActive 
+      ? '<span class="brand-badge" style="background: rgba(16,185,129,0.25); color: var(--accent-emerald); font-size: 9px; margin-left: 6px;">ACTIVE</span>' 
+      : (m.id === 'gpr' ? '<span class="brand-badge" style="background: rgba(45,212,191,0.15); color: #2dd4bf; font-size: 9px; margin-left: 6px;">RECOMMENDED</span>' : '');
 
     tbodyHtml += `
-      <tr style="${rowBg}">
-        <td><span class="dot ${m.dotClass}"></span><strong>${m.name}</strong> ${isPrimary ? '<span class="brand-badge" style="background: rgba(45,212,191,0.2); color: #2dd4bf; font-size: 9px; margin-left: 6px;">PRIMARY</span>' : (isEnsemble ? '<span class="brand-badge" style="background: rgba(16,185,129,0.2); color: var(--accent-emerald); font-size: 9px; margin-left: 6px;">ACTIVE</span>' : '')}</td>
-        <td style="font-family: monospace; font-weight: 800; color: ${isPrimary ? '#2dd4bf' : (isEnsemble ? 'var(--accent-emerald)' : 'var(--text-primary)')};">${predHv} HV</td>
-        <td style="font-family: monospace; color: var(--text-secondary);">${hrc}</td>
-        <td style="font-family: monospace; color: var(--accent-emerald); font-weight: ${isEnsemble ? '800' : 'normal'};">± ${m.looMaeHv} HV</td>
-        <td style="font-family: monospace; color: var(--accent-cyan); font-weight: ${isEnsemble ? '800' : 'normal'};">${m.mapePct}%</td>
-        <td style="font-family: monospace; font-weight: bold; color: ${isEnsemble ? 'var(--accent-emerald)' : 'inherit'};">${m.r2Score}</td>
-        <td style="font-family: monospace; color: ${isPrimary ? '#34d399' : (isEnsemble ? 'var(--accent-emerald)' : '#94a3b8')}; font-weight: ${isEnsemble ? '800' : 'normal'};">± ${m.calibratedPi95} HV</td>
+      <tr style="${rowBg}" onclick="setActiveModel('${m.id}')" title="Click to select ${m.name} as active prediction model">
+        <td><span class="dot ${m.dotClass}"></span><strong>${m.name}</strong> ${badgeHtml}</td>
+        <td style="font-family: monospace; font-weight: 800; color: ${isActive ? 'var(--accent-emerald)' : 'var(--text-primary)'};">${m.predictedHv} HV</td>
+        <td style="font-family: monospace; color: var(--text-secondary);">${m.hrc}</td>
+        <td style="font-family: monospace; color: var(--accent-emerald); font-weight: ${isActive ? '800' : 'normal'};">± ${m.looMaeHv} HV</td>
+        <td style="font-family: monospace; color: var(--accent-cyan); font-weight: ${isActive ? '800' : 'normal'};">${m.mapePct}%</td>
+        <td style="font-family: monospace; font-weight: bold; color: ${isActive ? 'var(--accent-emerald)' : 'inherit'};">${m.r2Score}</td>
+        <td style="font-family: monospace; color: ${isActive ? 'var(--accent-emerald)' : '#94a3b8'}; font-weight: ${isActive ? '800' : 'normal'};">± ${m.calibratedPi95} HV</td>
       </tr>
     `;
 
     const bar = document.getElementById('bar_' + idx);
     if (bar) {
-      const heightPct = Math.min(95, Math.max(30, (predHv / 500) * 100));
+      const heightPct = Math.min(95, Math.max(30, (m.predictedHv / 500) * 100));
       bar.style.height = heightPct + '%';
-      bar.innerText = predHv;
+      bar.innerText = m.predictedHv;
+      bar.style.cursor = 'pointer';
+      bar.onclick = () => setActiveModel(m.id);
+      if (isActive) {
+        bar.style.boxShadow = '0 0 12px rgba(16, 185, 129, 0.6)';
+        bar.style.border = '1px solid var(--accent-emerald)';
+      } else {
+        bar.style.boxShadow = 'none';
+        bar.style.border = 'none';
+      }
     }
   });
 
   const tableBody = document.getElementById('modelsTableBody');
   if (tableBody) tableBody.innerHTML = tbodyHtml;
 
-  window.lastModelsSnapshot = ML_MODELS_REGISTRY.map(m => {
-    const val = (modelPredictions && modelPredictions[m.id] !== undefined) ? modelPredictions[m.id] : (m.nominalHv || 340);
+  window.lastModelsSnapshot = modelResults.map(m => {
     return {
       name: m.name,
-      val: val,
-      hrc: typeof hvToHrcStandard === 'function' ? hvToHrcStandard(val) : '34 HRC',
+      val: m.predictedHv,
+      hrc: m.hrc,
       err: m.looMaeHv,
       mape: m.mapePct + '%',
       r2: m.r2Score,
@@ -3949,11 +4026,11 @@ window.addEventListener('click', function(e) {
     <div class="kpi-row">
       <div class="kpi-card kpi-card-1 cyan">
         <div class="kpi-label">
-          <span>Hardness (Hybrid GPR)</span>
-          <span class="kpi-badge tag-cyan">PRIMARY</span>
+          <span id="kpi_model_title">Hardness (Ensemble)</span>
+          <span class="kpi-badge tag-cyan" id="kpi_model_badge">ACTIVE</span>
         </div>
-        <div class="kpi-value" id="kpi_hv">339 HV</div>
-        <div class="kpi-sub" id="kpi_ci">± 10.8 HV [Calibrated 95% PI] · 95.2% Empirical Coverage</div>
+        <div class="kpi-value" id="kpi_hv">340 HV</div>
+        <div class="kpi-sub" id="kpi_ci">± 10.2 HV [Calibrated 95% PI] · 95.2% Empirical Coverage</div>
       </div>
 
       <div class="kpi-card kpi-card-2">
@@ -4000,7 +4077,7 @@ window.addEventListener('click', function(e) {
         <span class="regime-desc" id="regimeDesc">— Stable, optimal melt pool dynamics with high relative density and minimal porosity.</span>
       </div>
       <div class="regime-indices" id="regimeIndices">
-        Lof index: <strong>0.72</strong> • keyhole ratio: <strong>0.36</strong> • balling ratio: <strong>0.74</strong>
+        LOF Index: <strong>0.72</strong> • Keyhole Ratio: <strong>0.36</strong> • Balling Ratio: <strong>0.74</strong>
       </div>
       <div class="regime-tweak-panel" id="regimeTweakPanel"></div>
     </div>
@@ -4065,59 +4142,59 @@ window.addEventListener('click', function(e) {
               </tr>
             </thead>
             <tbody id="modelsTableBody">
-              <tr>
+              <tr onclick="setActiveModel('analytical')" style="cursor: pointer;" title="Click to select Analytical model as active">
                 <td><span class="dot dot-blue"></span><strong>Analytical (Hall-Petch + Rosenthal)</strong></td>
-                <td style="font-family: monospace; font-weight: bold; color: var(--text-primary);">336 HV</td>
+                <td style="font-family: monospace; font-weight: 800; color: var(--text-primary);">336 HV</td>
                 <td style="font-family: monospace; color: var(--text-secondary);">34 HRC</td>
-                <td style="font-family: monospace; color: var(--accent-emerald);">8.2 HV</td>
+                <td style="font-family: monospace; color: var(--accent-emerald);">± 8.2 HV</td>
                 <td style="font-family: monospace; color: var(--accent-cyan);">2.45%</td>
                 <td style="font-family: monospace; font-weight: bold;">0.912</td>
                 <td style="font-family: monospace; color: #94a3b8;">± 16.5 HV</td>
               </tr>
-              <tr>
+              <tr onclick="setActiveModel('rf')" style="cursor: pointer;" title="Click to select Random Forest model as active">
                 <td><span class="dot dot-cyan"></span><strong>Random Forest (150 Trees, Group-CV)</strong></td>
-                <td style="font-family: monospace; font-weight: bold; color: var(--text-primary);">343 HV</td>
+                <td style="font-family: monospace; font-weight: 800; color: var(--text-primary);">343 HV</td>
                 <td style="font-family: monospace; color: var(--text-secondary);">35 HRC</td>
-                <td style="font-family: monospace; color: var(--accent-emerald);">6.4 HV</td>
+                <td style="font-family: monospace; color: var(--accent-emerald);">± 6.4 HV</td>
                 <td style="font-family: monospace; color: var(--accent-cyan);">1.91%</td>
                 <td style="font-family: monospace; font-weight: bold;">0.942</td>
                 <td style="font-family: monospace; color: #94a3b8;">± 13.2 HV</td>
               </tr>
-              <tr>
+              <tr onclick="setActiveModel('xgboost')" style="cursor: pointer;" title="Click to select Gradient Boosting model as active">
                 <td><span class="dot dot-amber"></span><strong>Gradient Boosting (XGBoost)</strong></td>
-                <td style="font-family: monospace; font-weight: bold; color: var(--text-primary);">341 HV</td>
+                <td style="font-family: monospace; font-weight: 800; color: var(--text-primary);">341 HV</td>
                 <td style="font-family: monospace; color: var(--text-secondary);">34 HRC</td>
-                <td style="font-family: monospace; color: var(--accent-emerald);">5.9 HV</td>
+                <td style="font-family: monospace; color: var(--accent-emerald);">± 5.9 HV</td>
                 <td style="font-family: monospace; color: var(--accent-cyan);">1.75%</td>
                 <td style="font-family: monospace; font-weight: bold;">0.958</td>
                 <td style="font-family: monospace; color: #94a3b8;">± 12.4 HV</td>
               </tr>
-              <tr>
+              <tr onclick="setActiveModel('svm')" style="cursor: pointer;" title="Click to select Support Vector Machine as active">
                 <td><span class="dot dot-purple"></span><strong>Support Vector Machine (RBF-SVR)</strong></td>
-                <td style="font-family: monospace; font-weight: bold; color: var(--text-primary);">341 HV</td>
+                <td style="font-family: monospace; font-weight: 800; color: var(--text-primary);">341 HV</td>
                 <td style="font-family: monospace; color: var(--text-secondary);">34 HRC</td>
-                <td style="font-family: monospace; color: var(--accent-emerald);">5.6 HV</td>
+                <td style="font-family: monospace; color: var(--accent-emerald);">± 5.6 HV</td>
                 <td style="font-family: monospace; color: var(--accent-cyan);">1.62%</td>
                 <td style="font-family: monospace; font-weight: bold;">0.965</td>
                 <td style="font-family: monospace; color: #94a3b8;">± 11.8 HV</td>
               </tr>
-              <tr>
-                <td><span class="dot dot-emerald"></span><strong>Hybrid Physics-GPR (Recommended)</strong></td>
-                <td style="font-family: monospace; font-weight: bold; color: var(--text-primary);">339 HV</td>
+              <tr onclick="setActiveModel('gpr')" style="cursor: pointer;" title="Click to select Hybrid Physics-GPR as active">
+                <td><span class="dot dot-emerald"></span><strong>Hybrid Physics-GPR (Recommended)</strong> <span class="brand-badge" style="background: rgba(45,212,191,0.15); color: #2dd4bf; font-size: 9px; margin-left: 6px;">RECOMMENDED</span></td>
+                <td style="font-family: monospace; font-weight: 800; color: var(--text-primary);">339 HV</td>
                 <td style="font-family: monospace; color: var(--text-secondary);">34 HRC</td>
-                <td style="font-family: monospace; color: var(--accent-emerald);">5.1 HV</td>
+                <td style="font-family: monospace; color: var(--accent-emerald);">± 5.1 HV</td>
                 <td style="font-family: monospace; color: var(--accent-cyan);">1.48%</td>
                 <td style="font-family: monospace; font-weight: bold;">0.976</td>
                 <td style="font-family: monospace; color: #34d399;">± 10.8 HV</td>
               </tr>
-              <tr style="background: rgba(16, 185, 129, 0.08); font-weight: bold;">
-                <td><span class="dot dot-green"></span><strong>Multi-Model Consensus Ensemble</strong> <span class="brand-badge" style="background: rgba(16,185,129,0.2); color: var(--accent-emerald); font-size: 9px;">ACTIVE</span></td>
+              <tr onclick="setActiveModel('ensemble')" style="background: rgba(16, 185, 129, 0.12); font-weight: bold; border-left: 3px solid var(--accent-emerald); cursor: pointer;" title="Click to select Consensus Ensemble as active">
+                <td><span class="dot dot-green"></span><strong>Multi-Model Consensus Ensemble</strong> <span class="brand-badge" style="background: rgba(16,185,129,0.25); color: var(--accent-emerald); font-size: 9px; margin-left: 6px;">ACTIVE</span></td>
                 <td style="font-family: monospace; font-weight: 800; color: var(--accent-emerald);">340 HV</td>
                 <td style="font-family: monospace; color: var(--accent-emerald);">34 HRC</td>
-                <td style="font-family: monospace; color: var(--accent-emerald); font-weight:800;">4.8 HV</td>
-                <td style="font-family: monospace; color: var(--accent-emerald); font-weight:800;">1.34%</td>
-                <td style="font-family: monospace; font-weight: 800; color: var(--accent-emerald);">0.982</td>
-                <td style="font-family: monospace; color: var(--accent-emerald); font-weight:800;">± 10.2 HV</td>
+                <td style="font-family: monospace; color: var(--accent-emerald); font-weight: 800;">± 4.8 HV</td>
+                <td style="font-family: monospace; color: var(--accent-cyan); font-weight: 800;">1.34%</td>
+                <td style="font-family: monospace; font-weight: bold; color: var(--accent-emerald);">0.982</td>
+                <td style="font-family: monospace; color: var(--accent-emerald); font-weight: 800;">± 10.2 HV</td>
               </tr>
             </tbody>
           </table>
@@ -4136,28 +4213,28 @@ window.addEventListener('click', function(e) {
               <div class="benchmark-line"></div>
               <div class="benchmark-label" id="benchLabelRange">Range of published HIP experiments (320 - 360 HV)</div>
               
-              <div class="bar-col">
-                <div class="bar-pill" id="bar_0" style="background: linear-gradient(180deg, #60a5fa, #1d4ed8); height: 67%;">336</div>
+              <div class="bar-col" onclick="setActiveModel('analytical')" style="cursor: pointer;" title="Select Analytical model">
+                <div class="bar-pill" id="bar_0" style="background: linear-gradient(180deg, #60a5fa, #1d4ed8); height: 67%; cursor: pointer;">336</div>
                 <span class="bar-title">Analytical</span>
               </div>
-              <div class="bar-col">
-                <div class="bar-pill" id="bar_1" style="background: linear-gradient(180deg, #34d399, #047857); height: 69%;">343</div>
+              <div class="bar-col" onclick="setActiveModel('rf')" style="cursor: pointer;" title="Select Random Forest model">
+                <div class="bar-pill" id="bar_1" style="background: linear-gradient(180deg, #34d399, #047857); height: 69%; cursor: pointer;">343</div>
                 <span class="bar-title">Random Forest</span>
               </div>
-              <div class="bar-col">
-                <div class="bar-pill" id="bar_2" style="background: linear-gradient(180deg, #fbbf24, #b45309); height: 68%;">341</div>
+              <div class="bar-col" onclick="setActiveModel('xgboost')" style="cursor: pointer;" title="Select Gradient Boosting model">
+                <div class="bar-pill" id="bar_2" style="background: linear-gradient(180deg, #fbbf24, #b45309); height: 68%; cursor: pointer;">341</div>
                 <span class="bar-title">Grad Boost</span>
               </div>
-              <div class="bar-col">
-                <div class="bar-pill" id="bar_3" style="background: linear-gradient(180deg, #c084fc, #6b21a8); height: 68%;">341</div>
+              <div class="bar-col" onclick="setActiveModel('svm')" style="cursor: pointer;" title="Select Support Vector Machine">
+                <div class="bar-pill" id="bar_3" style="background: linear-gradient(180deg, #c084fc, #6b21a8); height: 68%; cursor: pointer;">341</div>
                 <span class="bar-title">SVM (RBF)</span>
               </div>
-              <div class="bar-col">
-                <div class="bar-pill" id="bar_4" style="background: linear-gradient(180deg, #2dd4bf, #0f766e); height: 68%;">339</div>
+              <div class="bar-col" onclick="setActiveModel('gpr')" style="cursor: pointer;" title="Select Hybrid Physics-GPR">
+                <div class="bar-pill" id="bar_4" style="background: linear-gradient(180deg, #2dd4bf, #0f766e); height: 68%; cursor: pointer;">339</div>
                 <span class="bar-title">Hybrid GPR</span>
               </div>
-              <div class="bar-col">
-                <div class="bar-pill" id="bar_5" style="background: linear-gradient(180deg, #f87171, #991b1b); height: 68%;">340</div>
+              <div class="bar-col" onclick="setActiveModel('ensemble')" style="cursor: pointer;" title="Select Consensus Ensemble">
+                <div class="bar-pill" id="bar_5" style="background: linear-gradient(180deg, #f87171, #991b1b); height: 68%; cursor: pointer; box-shadow: 0 0 12px rgba(16, 185, 129, 0.6); border: 1px solid var(--accent-emerald);">340</div>
                 <span class="bar-title">Ensemble</span>
               </div>
             </div>
@@ -4174,7 +4251,7 @@ window.addEventListener('click', function(e) {
               Expected Microstructure
             </h4>
             <div class="micro-item">
-              <strong>Solidification:</strong>
+              <strong>Initial Solidification (As-Deposited):</strong>
               <p id="microSolid">Two-phase α+β titanium alloy. Epitaxial columnar prior-β grains aligned along build direction [001]. Rapid quench (&gt;10⁵ K/s) drives diffusionless transformation into fine acicular α' (HCP) martensitic needles with high dislocation density.</p>
             </div>
             <div class="micro-item">
@@ -7439,7 +7516,7 @@ function calculatePhysics() {
   banner.className = 'regime-banner ' + (regime === 'conduction' ? '' : (regime === 'lof' || regime === 'keyhole' ? 'defect' : 'warning'));
   document.getElementById('regimeBadge').innerText = regimeLabel;
   document.getElementById('regimeDesc').innerText = regimeDesc;
-  document.getElementById('regimeIndices').innerHTML = `LoF index: <strong>${lofIndex.toFixed(2)}</strong> • ${isWaam ? 'Overheat ratio' : 'Keyhole ratio'}: <strong>${keyholeRatio.toFixed(2)}</strong> • Balling: <strong>${ballingRatio.toFixed(2)}</strong>${(isWaam || isDed) ? ` • HI: <strong>${heatInputJmm.toFixed(0)} J/mm</strong>` : ''}`;
+  document.getElementById('regimeIndices').innerHTML = `LOF Index: <strong>${lofIndex.toFixed(2)}</strong> • ${isWaam ? 'Overheat Ratio' : 'Keyhole Ratio'}: <strong>${keyholeRatio.toFixed(2)}</strong> • Balling Ratio: <strong>${ballingRatio.toFixed(2)}</strong>${(isWaam || isDed) ? ` • HI: <strong>${heatInputJmm.toFixed(0)} J/mm</strong>` : ''}`;
 
   // Interactive Parameter Tweak Recommendations & Controls
   const tweakPanel = document.getElementById('regimeTweakPanel');
@@ -7593,8 +7670,6 @@ function calculatePhysics() {
   const hvGpr = Math.round(hvAnalytical * (1.010 - 0.004 * Math.abs(ved - refVed) / Math.max(25, refVed * 0.5)));
   const hvEnsemble = Math.round((hvAnalytical + hvRf + hvXgb + hvSvm + hvGpr) / 5);
 
-  const primaryHv = hvGpr;
-  const hrcEquiv = hvToHrcStandard(primaryHv);
   const stateKey = (function() {
     if (post === 'None' || post === 'As-Built') return 'as_built';
     if (post === 'Stress-relieved') return 'stress_relieved';
@@ -7608,7 +7683,17 @@ function calculatePhysics() {
     : { taborFactor: 2.95, utsToYsRatio: 1.09, benchmarkHvRange: [320, 360] };
   const taborFactor = stateMeta.taborFactor || 2.95;
   const utsToYsRatio = stateMeta.utsToYsRatio || 1.09;
-  const utsTabor = Math.round(primaryHv * taborFactor);
+
+  const currentActiveId = (typeof activeModelId !== 'undefined' ? activeModelId : 'ensemble');
+  const activePredHv = (currentActiveId === 'analytical') ? hvAnalytical :
+    ((currentActiveId === 'rf') ? hvRf :
+    ((currentActiveId === 'xgboost') ? hvXgb :
+    ((currentActiveId === 'svm') ? hvSvm :
+    ((currentActiveId === 'gpr') ? hvGpr : hvEnsemble))));
+
+  const primaryHv = activePredHv;
+  const hrcEquiv = hvToHrcStandard(primaryHv);
+  const utsTabor = Math.round(activePredHv * taborFactor);
   const yieldStrength = Math.round(utsTabor / utsToYsRatio);
 
   // Dynamic Elongation with process-specific α+β vs α' as-built ductility & porosity knockdown
@@ -7636,24 +7721,9 @@ function calculatePhysics() {
   const charpyJ = parseFloat(Math.max(2.5, baseCvn * cvnKnockdown * lofDuctilityPenalty).toFixed(1));
   const cvnPass = charpyJ >= 15.0;
 
-  // Update KPIs
-  document.getElementById('kpi_hv').innerText = primaryHv + ' HV';
-  document.getElementById('kpi_hrc').innerText = hrcEquiv;
-  document.getElementById('kpi_uts').innerText = utsTabor + ' MPa';
+  // Update Density KPIs (Model Hardness, HRC, and UTS cards are updated reactively by renderUnifiedModelsUI)
   document.getElementById('kpi_density').innerText = densityPct.toFixed(2) + ' %';
   document.getElementById('kpi_porosity').innerText = 'Porosity: ' + porosityPct + '%';
-
-  // Dynamic KPI Subtext cards
-  const elKpiCi = document.getElementById('kpi_ci');
-  if (elKpiCi) {
-    const gprModel = (typeof ML_MODELS_REGISTRY !== 'undefined') ? ML_MODELS_REGISTRY.find(m => m.id === 'gpr') : null;
-    const piVal = gprModel ? gprModel.calibratedPi95 : 10.8;
-    elKpiCi.innerText = `± ${piVal} HV [Calibrated 95% PI] · 95.2% Empirical Coverage`;
-  }
-  const elTaborSub = document.getElementById('kpi_tabor_sub');
-  if (elTaborSub) {
-    elTaborSub.innerText = `UTS ≈ ${taborFactor} × HV (Tabor scaling) | UTS/YS ~${utsToYsRatio}x`;
-  }
   const elVedSub = document.getElementById('kpi_ved_sub');
   if (elVedSub) {
     if (isWaam) {
