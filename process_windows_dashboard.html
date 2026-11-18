@@ -8508,49 +8508,7 @@ function setTwinMode(mode) {
   if (btnCooling) btnCooling.classList.toggle('active', mode === 'cooling-rate');
   if (btnPhase) btnPhase.classList.toggle('active', mode === 'phase-fraction');
 
-  const minLbl = document.getElementById('scaleMinLabel');
-  const maxLbl = document.getElementById('scaleMaxLabel');
-  const peakTitle = document.getElementById('lblPeakStressTitle');
-  const peakVal = document.getElementById('valPeakStress');
-  const peakSub = document.getElementById('lblPeakStressSub');
-  const coreTitle = document.getElementById('lblCoreStressTitle');
-  const coreVal = document.getElementById('valCoreStress');
-  const coreSub = document.getElementById('lblCoreStressSub');
-  const noteEl = document.getElementById('twinMetallurgicalNote');
-
-  if (mode === 'residual-stress') {
-    if (minLbl) minLbl.innerText = 'Min: -180 MPa (Core Compressive)';
-    if (maxLbl) maxLbl.innerText = 'Max: +1085 MPa (Surface Tensile)';
-    if (peakTitle) peakTitle.innerText = 'PEAK SURFACE STRESS';
-    if (peakVal) { peakVal.innerHTML = '<span style="color:#ff4b72;">+1085</span> <span style="font-size:12px; color:#94a3b8; font-weight:normal;">MPa</span>'; }
-    if (peakSub) peakSub.innerText = 'Von Mises Tensile';
-    if (coreTitle) coreTitle.innerText = 'CORE NEUTRALIZATION';
-    if (coreVal) { coreVal.innerHTML = '<span style="color:#00e5ff;">-145</span> <span style="font-size:12px; color:#94a3b8; font-weight:normal;">MPa</span>'; }
-    if (coreSub) coreSub.innerText = 'Compressive Core';
-    if (noteEl) noteEl.innerHTML = '<strong style="color: #38bdf8;">Metallurgical Note:</strong> Laser additive manufacturing generates steep thermal gradients (∇T > 10⁷ K/m) leading to localized plastic deformation. Post-weld annealing collapses peak macro-stresses from ~1085 MPa down below 50 MPa.';
-  } else if (mode === 'cooling-rate') {
-    if (minLbl) minLbl.innerText = 'Min: 1.2 × 10⁴ K/s (Baseplate Heat Sink)';
-    if (maxLbl) maxLbl.innerText = 'Max: 8.5 × 10⁵ K/s (Melt Pool Core)';
-    if (peakTitle) peakTitle.innerText = 'PEAK COOLING RATE';
-    if (peakVal) { peakVal.innerHTML = '<span style="color:#ff4b72;">8.5e5</span> <span style="font-size:12px; color:#94a3b8; font-weight:normal;">K/s</span>'; }
-    if (peakSub) peakSub.innerText = 'Marangoni Boundary';
-    if (coreTitle) coreTitle.innerText = 'QUENCH HARDENING';
-    if (coreVal) { coreVal.innerHTML = '<span style="color:#00e5ff;">> 410</span> <span style="font-size:12px; color:#94a3b8; font-weight:normal;">HV</span>'; }
-    if (coreSub) coreSub.innerText = "α' Martensite Formation";
-    if (noteEl) noteEl.innerHTML = '<strong style="color: #38bdf8;">Metallurgical Note:</strong> Cooling rates exceeding 410 K/s surpass the critical martensite start (Ms) threshold for Ti-6Al-4V, freezing 100% acicular α\' needles in the as-quenched state.';
-  } else if (mode === 'phase-fraction') {
-    if (minLbl) minLbl.innerText = "Min: 0% α' (Equiaxed α+β)";
-    if (maxLbl) maxLbl.innerText = "Max: 100% α' (Acicular Needles)";
-    if (peakTitle) peakTitle.innerText = 'MARTENSITE FRACTION';
-    if (peakVal) { peakVal.innerHTML = '<span style="color:#ff4b72;">92%</span> <span style="font-size:12px; color:#94a3b8; font-weight:normal;">α\'</span>'; }
-    if (peakSub) peakSub.innerText = 'As-Quenched Needles';
-    if (coreTitle) coreTitle.innerText = 'LAMELLAR DECOMPOSITION';
-    if (coreVal) { coreVal.innerHTML = '<span style="color:#00e5ff;">8%</span> <span style="font-size:12px; color:#94a3b8; font-weight:normal;">α+β</span>'; }
-    if (coreSub) coreSub.innerText = 'Retained Prior-β';
-    if (noteEl) noteEl.innerHTML = '<strong style="color: #38bdf8;">Metallurgical Note:</strong> Post-processing HIP at 920°C / 100 MPa transforms brittle acicular α\' into ductile Widmanstätten lamellar α+β plates, restoring tensile elongation from 6% to >14%.';
-  }
-
-  if (!animFrameId) renderTwin();
+  updateTwinScaleAndHud();
 }
 
 function toggleAutoOrbit() {
@@ -8635,29 +8593,29 @@ window.addEventListener('mousemove', (e) => {
 });
 window.addEventListener('mouseup', () => { isDragging = false; });
 
-// ASTM E8 Dogbone specimen geometry definition matching reference
+// ASTM E8 Dogbone specimen geometry definition matching engineering standard
 function buildDogboneMesh() {
-  const slices = 18;
-  const rings = 16;
+  const slices = 24;
+  const rings = 20;
   const vertices = [];
   const faces = [];
 
   for (let i = 0; i <= slices; i++) {
     const zNorm = (i / slices) * 2 - 1; // -1 to +1
-    const z = zNorm * 82; // stockier ASTM E8 length
+    const z = zNorm * 82; // ASTM E8 length
 
     const absZ = Math.abs(zNorm);
     let r = 28; // central gauge radius
     if (absZ > 0.35) {
       const t = (absZ - 0.35) / 0.65;
-      r = 28 + (t * t) * 28; // smooth flare up to 56 at grips
+      r = 28 + (t * t) * 28; // smooth transition fillet up to 56 at grips
     }
 
     for (let j = 0; j < rings; j++) {
       const angle = (j / rings) * Math.PI * 2;
       const x = Math.cos(angle) * r;
       const y = Math.sin(angle) * r;
-      vertices.push({ x, y, z, zNorm, sliceIdx: i, ringIdx: j, r });
+      vertices.push({ x, y, z, zNorm, sliceIdx: i, ringIdx: j, r, angle });
     }
   }
 
@@ -8698,6 +8656,32 @@ function project(x, y, z, w, h) {
   return { px, py, rx: x1, ry: y2, rz: z2, zDepth: z2 };
 }
 
+// Continuous 5-stop colormap matching the UI scale bar:
+// Blue (#2563eb) -> Cyan (#38bdf8) -> Yellow (#facc15) -> Orange (#f97316) -> Red (#ef4444)
+function getTwinColormapColor(u) {
+  u = Math.max(0, Math.min(1, u));
+  const stops = [
+    { u: 0.00, r: 37,  g: 99,  b: 235 }, // Blue #2563eb
+    { u: 0.25, r: 56,  g: 189, b: 248 }, // Cyan #38bdf8
+    { u: 0.50, r: 250, g: 204, b: 21  }, // Yellow #facc15
+    { u: 0.75, r: 249, g: 115, b: 22  }, // Orange #f97316
+    { u: 1.00, r: 239, g: 68,  b: 68  }  // Red #ef4444
+  ];
+  let i = 0;
+  while (i < stops.length - 1 && stops[i + 1].u < u) {
+    i++;
+  }
+  const s0 = stops[i];
+  const s1 = stops[Math.min(stops.length - 1, i + 1)];
+  const span = s1.u - s0.u;
+  const t = span > 1e-5 ? (u - s0.u) / span : 0;
+  return {
+    r: Math.round(s0.r + (s1.r - s0.r) * t),
+    g: Math.round(s0.g + (s1.g - s0.g) * t),
+    b: Math.round(s0.b + (s1.b - s0.b) * t)
+  };
+}
+
 function updateTwinScaleAndHud() {
   const peakValEl = document.getElementById('valPeakStress');
   const coreValEl = document.getElementById('valCoreStress');
@@ -8707,25 +8691,30 @@ function updateTwinScaleAndHud() {
   const peakSub = document.getElementById('lblPeakStressSub');
   const coreTitle = document.getElementById('lblCoreStressTitle');
   const coreSub = document.getElementById('lblCoreStressSub');
+  const noteEl = document.getElementById('twinMetallurgicalNote');
 
-  // Pull actual physics state calculated from user sliders (P, v, h, t, process)
-  const phys = window.twinPhysicsState || {};
+  // Pull actual physics state calculated from live user inputs
+  const phys = window.latestPhysicsState || window.twinPhysicsState || {};
   const currentCooling = phys.coolingRate || 480000;
-  const currentYs = phys.yieldStrength || 1020;
-  const currentAlphaPrime = phys.alphaPrimePct !== undefined ? phys.alphaPrimePct : (globalMaterialState === 'as_built' ? 88.5 : 0.0);
+  const currentYs = phys.yieldStrength || 865;
+  const stateKey = (typeof globalMaterialState !== 'undefined') ? globalMaterialState : (phys.stateKey || 'hip');
+  const stateData = (typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY[stateKey]) ? MATERIAL_STATE_REGISTRY[stateKey] : null;
 
-  // Post-processing relief factor
-  let resFactor = 1.0;
-  if (globalMaterialState === 'stress_relieved') resFactor = 0.26;
-  else if (globalMaterialState === 'annealed') resFactor = 0.15;
-  else if (globalMaterialState === 'hip') resFactor = 0.09;
-  else if (globalMaterialState === 'sta') resFactor = 0.42;
+  // Derive peak residual stress: prefer live physics calculation
+  let peakStress = (phys.residualStress !== undefined) ? Math.round(phys.residualStress) : (phys.residualStressMPa !== undefined ? Math.round(phys.residualStressMPa) : (stateData ? stateData.residualStressGaugeMpa : 35));
+  if (isNaN(peakStress) || peakStress <= 0) peakStress = 35;
+  const coreStress = -Math.max(2, Math.round(peakStress * 0.134));
 
-  // Real-time calculated Peak Surface Residual Stress:
-  // Scales with yield strength and thermal gradient / cooling rate, modified by heat treatment
-  const thermalScaling = Math.pow(Math.max(1e4, currentCooling) / 480000, 0.08);
-  const peakStress = Math.round(currentYs * 1.06 * resFactor * thermalScaling);
-  const coreStress = -Math.round(peakStress * 0.134);
+  // Derive phase fraction
+  let alphaPrime = (phys.alphaPrimePct !== undefined) ? phys.alphaPrimePct : (stateData ? stateData.alphaPrime : 0.0);
+  if (stateKey === 'hip' || stateKey === 'annealed') alphaPrime = 0.0;
+  const lamellar = Math.max(0, 100 - alphaPrime);
+
+  // Store globally for 3D renderer colormap
+  window.currentTwinPeakStress = peakStress;
+  window.currentTwinCoreStress = coreStress;
+  window.currentTwinCooling = currentCooling;
+  window.currentTwinAlphaPrime = alphaPrime;
 
   if (twinMode === 'residual-stress') {
     if (peakTitle) peakTitle.innerText = 'PEAK SURFACE STRESS';
@@ -8733,61 +8722,80 @@ function updateTwinScaleAndHud() {
     if (coreTitle) coreTitle.innerText = 'CORE NEUTRALIZATION';
     if (coreSub) coreSub.innerText = 'Compressive Core';
 
+    const peakColor = peakStress > 500 ? '#ff4747' : (peakStress > 60 ? '#f59e0b' : '#34d399');
     if (peakValEl) {
-      peakValEl.innerHTML = `<span style="color: ${peakStress > 500 ? '#ff4b72' : (peakStress > 180 ? '#f59e0b' : '#38d9a9')};">+${peakStress}</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">MPa</span>`;
+      peakValEl.innerHTML = `<span style="color: ${peakColor};">+${peakStress}</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">MPa</span>`;
     }
     if (coreValEl) {
-      coreValEl.innerHTML = `<span style="color: #00e5ff;">${coreStress}</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">MPa</span>`;
+      coreValEl.innerHTML = `<span style="color: #38bdf8;">${coreStress}</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">MPa</span>`;
     }
     if (maxLbl) {
       maxLbl.innerText = `Max: +${peakStress} MPa (Surface Tensile)`;
     }
     if (minLbl) {
-      minLbl.innerText = `Min: -180 MPa (Core Compressive)`;
+      minLbl.innerText = `Min: ${coreStress} MPa (Core Compressive)`;
+    }
+    if (noteEl) {
+      if (peakStress > 500) {
+        noteEl.innerHTML = '<strong style="color: #f43f5e;">Metallurgical Note:</strong> Steep thermal quench gradients (∇T > 10⁷ K/m) lock in severe tensile macro-stresses (~' + peakStress + ' MPa) exceeding the 0.2% yield offset. Requires thermal post-processing.';
+      } else if (peakStress > 60) {
+        noteEl.innerHTML = '<strong style="color: #fbbf24;">Metallurgical Note:</strong> Sub-transus stress-relief anneal (650°C / 2h) collapses peak macro-stresses down to ~' + peakStress + ' MPa, relieving ~70–80% of internal plastic contraction strain.';
+      } else {
+        noteEl.innerHTML = '<strong style="color: #34d399;">Metallurgical Note:</strong> High-pressure HIP consolidation (920°C / 100 MPa Ar) drives complete creep relaxation of residual stresses down to ~' + peakStress + ' MPa while closing internal micro-voids.';
+      }
     }
   } else if (twinMode === 'cooling-rate') {
-    const crExp = currentCooling.toExponential(1);
+    const peakCooling = currentCooling;
+    const coreCooling = Math.max(1.0e4, Math.round(peakCooling * 0.025));
+    const crExp = peakCooling.toExponential(1);
+    const crCoreExp = coreCooling.toExponential(1);
+
     if (peakTitle) peakTitle.innerText = 'PEAK COOLING RATE';
-    if (peakSub) peakSub.innerText = 'Melt Pool Boundary';
-    if (coreTitle) coreTitle.innerText = 'CORE COOLING';
-    if (coreSub) coreSub.innerText = 'Baseplate Heat Sink';
+    if (peakSub) peakSub.innerText = 'Melt Pool Surface Boundary';
+    if (coreTitle) coreTitle.innerText = 'CORE CONDUCTION';
+    if (coreSub) coreSub.innerText = 'Bulk Thermal Dissipation';
 
     if (peakValEl) {
-      peakValEl.innerHTML = `<span style="color: #ff4b72;">${crExp}</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">K/s</span>`;
+      peakValEl.innerHTML = `<span style="color: #ff4747;">${crExp}</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">K/s</span>`;
     }
     if (coreValEl) {
-      coreValEl.innerHTML = `<span style="color: #00e5ff;">1.2e4</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">K/s</span>`;
+      coreValEl.innerHTML = `<span style="color: #38bdf8;">${crCoreExp}</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">K/s</span>`;
     }
     if (maxLbl) {
       maxLbl.innerText = `Max: ${crExp} K/s (Surface Solidification)`;
     }
     if (minLbl) {
-      minLbl.innerText = `Min: 1.2e4 K/s (Bulk Core)`;
+      minLbl.innerText = `Min: ${crCoreExp} K/s (Baseplate Heat Sink)`;
+    }
+    if (noteEl) {
+      noteEl.innerHTML = `<strong style="color: #38bdf8;">Metallurgical Note:</strong> Solidification cooling rate ~${crExp} K/s surpasses the critical 410 K/s threshold required for diffusionless martensitic transformation in Ti-6Al-4V.`;
     }
   } else if (twinMode === 'phase-fraction') {
-    const aPrime = currentAlphaPrime;
-    const lamellar = Math.max(0, 100 - aPrime);
     if (peakTitle) peakTitle.innerText = "MARTENSITE FRACTION";
     if (peakSub) peakSub.innerText = "Acicular α' Needles";
-    if (coreTitle) coreTitle.innerText = "LAMELLAR FRACTION";
-    if (coreSub) coreSub.innerText = "Ductile α+β Colonies";
+    if (coreTitle) coreTitle.innerText = "LAMELLAR α+β";
+    if (coreSub) coreSub.innerText = "Ductile Equilibrium Phase";
 
     if (peakValEl) {
-      peakValEl.innerHTML = `<span style="color: #ff4b72;">${aPrime.toFixed(1)}%</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">α'</span>`;
+      peakValEl.innerHTML = `<span style="color: ${alphaPrime > 20 ? '#ff4747' : '#38bdf8'};">${alphaPrime.toFixed(1)}%</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">α'</span>`;
     }
     if (coreValEl) {
-      coreValEl.innerHTML = `<span style="color: #00e5ff;">${lamellar.toFixed(1)}%</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">α+β</span>`;
+      coreValEl.innerHTML = `<span style="color: #34d399;">${lamellar.toFixed(1)}%</span> <span style="font-size: 12px; color: #94a3b8; font-weight: normal;">α+β</span>`;
     }
     if (maxLbl) {
-      maxLbl.innerText = `Max: ${aPrime.toFixed(1)}% α' (Surface Quench)`;
+      maxLbl.innerText = `Max: ${alphaPrime.toFixed(1)}% α' (Acicular Needles)`;
     }
     if (minLbl) {
       minLbl.innerText = `Min: ${lamellar.toFixed(1)}% α+β (Equilibrium)`;
     }
+    if (noteEl) {
+      if (alphaPrime > 20) {
+        noteEl.innerHTML = `<strong style="color: #f43f5e;">Metallurgical Note:</strong> Rapid quenching freezes ${alphaPrime.toFixed(1)}% brittle acicular α' martensite. Requires thermal decomposition into Widmanstätten α+β lamellae to restore ASTM F2924 ductility (>10%).`;
+      } else {
+        noteEl.innerHTML = `<strong style="color: #34d399;">Metallurgical Note:</strong> Microstructure consists of 100% ductile Widmanstätten / basketweave α+β plates with 0% brittle α' needles, satisfying ASTM F2924 Class 1 ductility requirements.`;
+      }
+    }
   }
-
-  // Store calculated peakStress for 3D renderer colormap
-  window.currentTwinPeakStress = peakStress;
 
   if (!animFrameId) renderTwin();
 }
@@ -8813,7 +8821,7 @@ function renderTwin() {
   // Project all vertices
   const projVerts = dogboneMesh.vertices.map(v => {
     const p = project(v.x, v.y, v.z, w, h);
-    return { ...p, zNorm: v.zNorm, sliceIdx: v.sliceIdx, ringIdx: v.ringIdx };
+    return { ...p, zNorm: v.zNorm, sliceIdx: v.sliceIdx, ringIdx: v.ringIdx, angle: v.angle };
   });
 
   // Calculate face depths and handle Cross-Section Slicing
@@ -8835,10 +8843,30 @@ function renderTwin() {
   const lMag = Math.sqrt(lx * lx + ly * ly + lz * lz);
   const nlx = lx / lMag, nly = ly / lMag, nlz = lz / lMag;
 
-  const peakStress = window.currentTwinPeakStress || 1085;
-  const stressRatio = Math.max(0.08, Math.min(1.0, peakStress / 1120));
+  const aPrimeVal = window.currentTwinAlphaPrime !== undefined ? window.currentTwinAlphaPrime : 0.0;
 
   try {
+    // 1. Draw Bottom Cap at slice 0 for solid watertight appearance
+    const botVerts = [];
+    for (let j = 0; j < dogboneMesh.rings; j++) {
+      const p = projVerts[j];
+      if (p) botVerts.push(p);
+    }
+    if (botVerts.length > 2) {
+      ctx.beginPath();
+      ctx.moveTo(botVerts[0].px, botVerts[0].py);
+      for (let j = 1; j < botVerts.length; j++) {
+        ctx.lineTo(botVerts[j].px, botVerts[j].py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = '#0a101f';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // 2. Render all sorted quadrilateral surface faces
     sortedFaces.forEach(f => {
       const v0 = f.p[0], v1 = f.p[1], v3 = f.p[3];
       const v1x = v1.rx - v0.rx, v1y = v1.ry - v0.ry, v1z = v1.rz - v0.rz;
@@ -8852,42 +8880,65 @@ function renderTwin() {
       }
 
       let dot = -(nx * nlx + ny * nly + nz * nlz);
-      if (nz > 0) { // inside surface illumination
+      if (nz > 0) {
         dot = Math.abs(nx * nlx + ny * nly + nz * nlz) * 1.05;
       }
-      const light = 0.48 + 0.52 * Math.max(0.12, Math.min(1.0, dot));
+      const light = 0.45 + 0.55 * Math.max(0.10, Math.min(1.0, dot));
 
-      // Color dynamically based on user parameters & active mode
-      let baseR = 218, baseG = 28, baseB = 28;
+      // Calculate localized physics coordinate u in [0, 1] matching the heatmap scale:
+      const absZ = Math.abs(f.avgZNorm);
+      const angle = (f.ringIdx / dogboneMesh.rings) * Math.PI * 2;
+      let u = 0.5;
+
       if (twinMode === 'residual-stress') {
-        if (stressRatio > 0.65) {
-          baseR = 218; baseG = 28; baseB = 28; // High tensile red
-        } else if (stressRatio > 0.28) {
-          baseR = 245; baseG = 158; baseB = 11; // Sub-yield amber
+        // Physical residual stress distribution across ASTM E8 specimen:
+        // Central gauge (|z| <= 0.35) has high tensile surface stresses (u ~ 0.82-0.96)
+        // Transition fillets (0.35 < |z| <= 0.70) diffuse stress into yellow (u ~ 0.50-0.75)
+        // Flared grip ends (|z| > 0.70) have lower stress in cyan/blue (u ~ 0.20-0.35)
+        const uGauge = 0.88 + 0.08 * Math.cos(2 * angle);
+        if (absZ <= 0.35) {
+          u = uGauge;
+        } else if (absZ <= 0.70) {
+          const t = (absZ - 0.35) / 0.35;
+          u = uGauge * (1.0 - t) + 0.48 * t;
         } else {
-          baseR = 16; baseG = 185; baseB = 129; // Fully relieved green/emerald
+          const t = (absZ - 0.70) / 0.30;
+          u = 0.48 * (1.0 - t) + 0.20 * t;
         }
       } else if (twinMode === 'cooling-rate') {
-        baseR = 239; baseG = 68; baseB = 68;
-      } else if (twinMode === 'phase-fraction') {
-        const aRatio = (window.twinPhysicsState && window.twinPhysicsState.alphaPrimePct !== undefined)
-          ? window.twinPhysicsState.alphaPrimePct / 100
-          : (globalMaterialState === 'as_built' ? 0.885 : 0.0);
-        if (aRatio > 0.5) {
-          baseR = 244; baseG = 63; baseB = 94; // Quenched acicular martensite
+        // Cooling rate distribution:
+        // Rapid thin-section radial quench in gauge, slower conductive cooling at grips
+        const uGauge = 0.88 + 0.07 * Math.cos(2 * angle);
+        if (absZ <= 0.35) {
+          u = uGauge;
+        } else if (absZ <= 0.70) {
+          const t = (absZ - 0.35) / 0.35;
+          u = uGauge * (1.0 - t) + 0.50 * t;
         } else {
-          baseR = 56; baseG = 189; baseB = 248; // Transformed lamellar alpha+beta
+          const t = (absZ - 0.70) / 0.30;
+          u = 0.50 * (1.0 - t) + 0.18 * t;
+        }
+      } else if (twinMode === 'phase-fraction') {
+        const aRatio = aPrimeVal / 100.0;
+        if (aRatio > 0.20) {
+          // As-built / stress-relieved: high martensite needle distribution
+          if (absZ <= 0.35) {
+            u = 0.90 * aRatio;
+          } else if (absZ <= 0.70) {
+            u = 0.65 * aRatio;
+          } else {
+            u = 0.40 * aRatio;
+          }
+        } else {
+          // HIP / Annealed: 100% ductile lamellar alpha+beta plates (relaxed cyan/sky-blue palette)
+          u = 0.14 + 0.06 * Math.cos(4 * angle) + 0.04 * (1.0 - absZ);
         }
       }
 
-      // If sliced and at the cut edge revealing core:
-      if (sliceDepth < 98 && f.sliceIdx === maxSlice - 1) {
-        baseR = 14; baseG = 165; baseB = 233; // Compressive Core
-      }
-
-      const r = Math.min(255, Math.round(baseR * light));
-      const g = Math.min(255, Math.round(baseG * light));
-      const b = Math.min(255, Math.round(baseB * light));
+      const baseColor = getTwinColormapColor(u);
+      const r = Math.min(255, Math.round(baseColor.r * light));
+      const g = Math.min(255, Math.round(baseColor.g * light));
+      const b = Math.min(255, Math.round(baseColor.b * light));
 
       ctx.beginPath();
       ctx.moveTo(f.p[0].px, f.p[0].py);
@@ -8903,13 +8954,35 @@ function renderTwin() {
       } else {
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(20, 10, 12, 0.40)';
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.45)';
         ctx.lineWidth = 0.8;
         ctx.stroke();
       }
     });
 
-    // If sliced, draw solid cross-section end cap in compressive blue (-145 MPa)
+    // 3. Render Top Cap if specimen is intact (sliceDepth >= 98)
+    if (sliceDepth >= 98) {
+      const topVerts = [];
+      for (let j = 0; j < dogboneMesh.rings; j++) {
+        const p = projVerts[dogboneMesh.slices * dogboneMesh.rings + j];
+        if (p) topVerts.push(p);
+      }
+      if (topVerts.length > 2) {
+        ctx.beginPath();
+        ctx.moveTo(topVerts[0].px, topVerts[0].py);
+        for (let j = 1; j < topVerts.length; j++) {
+          ctx.lineTo(topVerts[j].px, topVerts[j].py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#0a101f';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+
+    // 4. If Sliced (sliceDepth < 98), render the internal cross-section cap with concentric radial gradient
     if (sliceDepth < 98 && maxSlice <= dogboneMesh.slices) {
       const capVerts = [];
       let cpx = 0, cpy = 0, cpz = 0;
@@ -8922,24 +8995,66 @@ function renderTwin() {
       }
       if (capVerts.length > 2) {
         cpx /= capVerts.length; cpy /= capVerts.length; cpz /= capVerts.length;
+        const capRadiusPx = capVerts.reduce((sum, v) => sum + Math.hypot(v.px - cpx, v.py - cpy), 0) / capVerts.length;
+
+        // Radial gradient: Compressive Blue core in center -> Cyan -> Yellow -> Orange -> Tensile Red surface rim
+        const radGrad = ctx.createRadialGradient(cpx, cpy, 0, cpx, cpy, Math.max(8, capRadiusPx));
+        radGrad.addColorStop(0.00, '#2563eb'); // Core Compressive Blue
+        radGrad.addColorStop(0.32, '#38bdf8'); // Neutral / Low Stress Cyan
+        radGrad.addColorStop(0.65, '#facc15'); // Transition Yellow
+        radGrad.addColorStop(0.85, '#f97316'); // Tensile Sub-surface Orange
+        radGrad.addColorStop(1.00, '#ef4444'); // Surface Tensile Skin Red
+
         ctx.beginPath();
         ctx.moveTo(capVerts[0].px, capVerts[0].py);
         for (let j = 1; j < capVerts.length; j++) {
           ctx.lineTo(capVerts[j].px, capVerts[j].py);
         }
         ctx.closePath();
-        ctx.fillStyle = '#0284c7'; // Compressive core
+        ctx.fillStyle = radGrad;
         ctx.fill();
         ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 1.2;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Label on cross section
-        const coreVal = -Math.round(peakStress * 0.134);
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = 'bold 11px JetBrains Mono, monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(`CORE: ${coreVal} MPa`, cpx, cpy);
+        // Concentric neutral stress contour
+        ctx.beginPath();
+        ctx.arc(cpx, cpy, capRadiusPx * 0.45, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Core reticle point
+        ctx.beginPath();
+        ctx.arc(cpx, cpy, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+
+        // Core annotation callout badge
+        const coreVal = window.currentTwinCoreStress !== undefined ? window.currentTwinCoreStress : -14;
+        const tagText = `CORE: ${coreVal} MPa`;
+        ctx.font = 'bold 11px "JetBrains Mono", monospace';
+        const tw = ctx.measureText(tagText).width;
+        const tagX = cpx + 12;
+        const tagY = cpy - 8;
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(tagX - 5, tagY - 13, tw + 10, 18, 4);
+        } else {
+          ctx.rect(tagX - 5, tagY - 13, tw + 10, 18);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.textAlign = 'left';
+        ctx.fillText(tagText, tagX, tagY);
       }
     }
   } catch (err) {
