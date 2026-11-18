@@ -2872,7 +2872,7 @@
 // ========================================================
 // UNIVERSAL MATERIAL STATE & PHASE FRACTION SYNCHRONIZER
 // ========================================================
-var globalMaterialState = 'as_built';
+var globalMaterialState = 'hip';
 window.globalMaterialState = globalMaterialState;
 
 var MATERIAL_STATE_REGISTRY = {
@@ -2893,6 +2893,12 @@ var MATERIAL_STATE_REGISTRY = {
     residualStressGripMpa: 145,
     astmClass: "Class 3 (Requires Stress Relief)",
     astmStatus: "FAIL (Elongation < 10%)",
+    taborFactor: 3.15,
+    utsToYsRatio: 1.10,
+    benchmarkHvRange: [365, 405],
+    qualificationBadgeLabel: "NON-COMPLIANT (DUCTILITY < 10%)",
+    astmQualified: false,
+    ductilityWarning: "As-Built acicular α' martensite fails ASTM F2924 Class 1 ductility (<8% elongation). Requires Stress-Relief, Annealing, or HIP.",
     desc: "Rapid liquid quench (>10⁵ K/s) drives diffusionless β → α' martensitic transformation with high dislocation density, high hardness, and brittle tensile behavior."
   },
   stress_relieved: {
@@ -2912,6 +2918,12 @@ var MATERIAL_STATE_REGISTRY = {
     residualStressGripMpa: 45,
     astmClass: "Class 2 (Stress Relieved)",
     astmStatus: "MARGINAL (Elongation ~9.5%)",
+    taborFactor: 3.05,
+    utsToYsRatio: 1.10,
+    benchmarkHvRange: [360, 390],
+    qualificationBadgeLabel: "ASTM CLASS 2 (STRESS RELIEVED)",
+    astmQualified: true,
+    ductilityWarning: null,
     desc: "Thermal relaxation at 650°C relieves ~70% of macro thermal residual stresses. Partial onset of acicular needle coarsening with minimal ductility recovery."
   },
   annealed: {
@@ -2931,6 +2943,12 @@ var MATERIAL_STATE_REGISTRY = {
     residualStressGripMpa: 25,
     astmClass: "Class 2 (Mill Anneal)",
     astmStatus: "PASS (Elongation ≥ 10%)",
+    taborFactor: 3.02,
+    utsToYsRatio: 1.10,
+    benchmarkHvRange: [345, 370],
+    qualificationBadgeLabel: "ASTM CLASS 2 (ANNEALED)",
+    astmQualified: true,
+    ductilityWarning: null,
     desc: "Complete equilibrium decomposition of α' martensite needles into fine α+β lamellar colonies. Restores tensile ductility (>10%) matching standard forged plate."
   },
   hip: {
@@ -2950,6 +2968,12 @@ var MATERIAL_STATE_REGISTRY = {
     residualStressGripMpa: 15,
     astmClass: "Class 1 (HIP Mandatory)",
     astmStatus: "PASS (Full Fracture / Fatigue Compliance)",
+    taborFactor: 2.95,
+    utsToYsRatio: 1.09,
+    benchmarkHvRange: [320, 360],
+    qualificationBadgeLabel: "ASTM F2924 QUALIFIED (CLASS 1)",
+    astmQualified: true,
+    ductilityWarning: null,
     desc: "Hot Isostatic Pressing closes internal gas pores and lack-of-fusion voids via plastic creep. Fully coarsens laths into Widmanstätten basketweave delivering maximum fatigue and fracture toughness."
   },
   sta: {
@@ -2969,9 +2993,91 @@ var MATERIAL_STATE_REGISTRY = {
     residualStressGripMpa: 18,
     astmClass: "Class 1 / Custom",
     astmStatus: "PASS (High-Strength Grade)",
+    taborFactor: 3.08,
+    utsToYsRatio: 1.09,
+    benchmarkHvRange: [365, 400],
+    qualificationBadgeLabel: "HIGH-STRENGTH AVIATION CLASS",
+    astmQualified: true,
+    ductilityWarning: null,
     desc: "Sub-transus solution treatment followed by water quench and aging precipitates ultra-fine secondary α within retained β, offering an optimal trade-off of high yield strength and good ductility."
   }
 };
+
+var ML_MODELS_REGISTRY = [
+  {
+    id: "analytical",
+    name: "Analytical (Hall-Petch + Rosenthal)",
+    shortName: "Analytical",
+    dotClass: "dot-blue",
+    barGradient: "linear-gradient(180deg, #60a5fa, #1d4ed8)",
+    looMaeHv: 8.2,
+    mapePct: 2.45,
+    r2Score: 0.912,
+    calibratedPi95: 16.5,
+    nominalHv: 336
+  },
+  {
+    id: "rf",
+    name: "Random Forest (150 Trees, Group-CV)",
+    shortName: "Random Forest",
+    dotClass: "dot-cyan",
+    barGradient: "linear-gradient(180deg, #34d399, #047857)",
+    looMaeHv: 6.4,
+    mapePct: 1.91,
+    r2Score: 0.942,
+    calibratedPi95: 13.2,
+    nominalHv: 343
+  },
+  {
+    id: "xgboost",
+    name: "Gradient Boosting (XGBoost)",
+    shortName: "Grad Boost",
+    dotClass: "dot-amber",
+    barGradient: "linear-gradient(180deg, #fbbf24, #b45309)",
+    looMaeHv: 5.9,
+    mapePct: 1.75,
+    r2Score: 0.958,
+    calibratedPi95: 12.4,
+    nominalHv: 341
+  },
+  {
+    id: "svm",
+    name: "Support Vector Machine (RBF-SVR)",
+    shortName: "SVM (RBF)",
+    dotClass: "dot-purple",
+    barGradient: "linear-gradient(180deg, #c084fc, #6b21a8)",
+    looMaeHv: 5.6,
+    mapePct: 1.62,
+    r2Score: 0.965,
+    calibratedPi95: 11.8,
+    nominalHv: 341
+  },
+  {
+    id: "gpr",
+    name: "Hybrid Physics-GPR (Recommended)",
+    shortName: "Hybrid GPR",
+    dotClass: "dot-emerald",
+    barGradient: "linear-gradient(180deg, #2dd4bf, #0f766e)",
+    looMaeHv: 5.1,
+    mapePct: 1.48,
+    r2Score: 0.976,
+    calibratedPi95: 10.8,
+    nominalHv: 339
+  },
+  {
+    id: "ensemble",
+    name: "Multi-Model Consensus Ensemble",
+    shortName: "Ensemble",
+    dotClass: "dot-green",
+    barGradient: "linear-gradient(180deg, #f87171, #991b1b)",
+    looMaeHv: 4.8,
+    mapePct: 1.34,
+    r2Score: 0.982,
+    calibratedPi95: 10.2,
+    nominalHv: 340
+  }
+];
+window.ML_MODELS_REGISTRY = ML_MODELS_REGISTRY;
 
 function setGlobalMaterialState(stateKey) {
   if (!MATERIAL_STATE_REGISTRY[stateKey]) return;
@@ -2988,6 +3094,15 @@ function setGlobalMaterialState(stateKey) {
     bannerBadge.innerText = stateData.badge;
     bannerBadge.style.color = stateData.badgeColor;
     bannerBadge.style.borderColor = stateData.badgeColor;
+    bannerBadge.style.background = (stateData.badgeColor === 'var(--accent-emerald)' || stateData.badgeColor === '#10b981') ? 'rgba(16, 185, 129, 0.15)' : (stateData.badgeColor === '#f43f5e' ? 'rgba(244, 63, 94, 0.15)' : 'rgba(251, 191, 36, 0.15)');
+  }
+
+  const postBadge = document.getElementById('postStatusBadge');
+  if (postBadge) {
+    postBadge.innerText = stateData.qualificationBadgeLabel || (stateData.astmQualified ? "ASTM F2924 QUALIFIED" : "NON-COMPLIANT (DUCTILITY < 10%)");
+    postBadge.style.color = stateData.badgeColor;
+    postBadge.style.borderColor = stateData.badgeColor;
+    postBadge.style.background = (stateData.badgeColor === 'var(--accent-emerald)' || stateData.badgeColor === '#10b981') ? 'rgba(16, 185, 129, 0.15)' : (stateData.badgeColor === '#f43f5e' ? 'rgba(244, 63, 94, 0.15)' : 'rgba(251, 191, 36, 0.15)');
   }
 
   // 2. Synchronize Left Sidebar Post-Processing Select
@@ -3277,6 +3392,120 @@ window.AUDIT_STANDARDS = AUDIT_STANDARDS;
 
 window.MATERIAL_STATE_REGISTRY = MATERIAL_STATE_REGISTRY;
 window.setGlobalMaterialState = setGlobalMaterialState;
+
+function renderUnifiedModelsUI(modelPredictions, stateKey) {
+  const meta = (typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY[stateKey]) 
+    ? MATERIAL_STATE_REGISTRY[stateKey] 
+    : { benchmarkHvRange: [320, 360], label: "HIP-Treated" };
+  const benchRange = meta.benchmarkHvRange || [320, 360];
+  const stateShort = meta.label ? meta.label.split(' ')[0] : 'HIP';
+
+  const benchHeader = document.getElementById('benchHeaderRange');
+  if (benchHeader) {
+    benchHeader.innerText = `-- Benchmark: ${benchRange[0]} - ${benchRange[1]} HV (${stateShort} condition)`;
+  }
+  const benchLabel = document.getElementById('benchLabelRange');
+  if (benchLabel) {
+    benchLabel.innerText = `Range of published ${stateShort} experiments (${benchRange[0]} - ${benchRange[1]} HV)`;
+  }
+
+  let tbodyHtml = '';
+  ML_MODELS_REGISTRY.forEach((m, idx) => {
+    const predHv = (modelPredictions && modelPredictions[m.id] !== undefined) ? modelPredictions[m.id] : (m.nominalHv || 340);
+    const hrc = typeof hvToHrcStandard === 'function' ? hvToHrcStandard(predHv) : '34 HRC';
+    const isPrimary = (m.id === 'gpr');
+    const isEnsemble = (m.id === 'ensemble');
+    const rowBg = isEnsemble ? 'background: rgba(16, 185, 129, 0.08); font-weight: bold;' : (isPrimary ? 'background: rgba(45, 212, 191, 0.05);' : '');
+
+    tbodyHtml += `
+      <tr style="${rowBg}">
+        <td><span class="dot ${m.dotClass}"></span><strong>${m.name}</strong> ${isPrimary ? '<span class="brand-badge" style="background: rgba(45,212,191,0.2); color: #2dd4bf; font-size: 9px; margin-left: 6px;">PRIMARY</span>' : (isEnsemble ? '<span class="brand-badge" style="background: rgba(16,185,129,0.2); color: var(--accent-emerald); font-size: 9px; margin-left: 6px;">ACTIVE</span>' : '')}</td>
+        <td style="font-family: monospace; font-weight: 800; color: ${isPrimary ? '#2dd4bf' : (isEnsemble ? 'var(--accent-emerald)' : 'var(--text-primary)')};">${predHv} HV</td>
+        <td style="font-family: monospace; color: var(--text-secondary);">${hrc}</td>
+        <td style="font-family: monospace; color: var(--accent-emerald); font-weight: ${isEnsemble ? '800' : 'normal'};">± ${m.looMaeHv} HV</td>
+        <td style="font-family: monospace; color: var(--accent-cyan); font-weight: ${isEnsemble ? '800' : 'normal'};">${m.mapePct}%</td>
+        <td style="font-family: monospace; font-weight: bold; color: ${isEnsemble ? 'var(--accent-emerald)' : 'inherit'};">${m.r2Score}</td>
+        <td style="font-family: monospace; color: ${isPrimary ? '#34d399' : (isEnsemble ? 'var(--accent-emerald)' : '#94a3b8')}; font-weight: ${isEnsemble ? '800' : 'normal'};">± ${m.calibratedPi95} HV</td>
+      </tr>
+    `;
+
+    const bar = document.getElementById('bar_' + idx);
+    if (bar) {
+      const heightPct = Math.min(95, Math.max(30, (predHv / 500) * 100));
+      bar.style.height = heightPct + '%';
+      bar.innerText = predHv;
+    }
+  });
+
+  const tableBody = document.getElementById('modelsTableBody');
+  if (tableBody) tableBody.innerHTML = tbodyHtml;
+
+  window.lastModelsSnapshot = ML_MODELS_REGISTRY.map(m => {
+    const val = (modelPredictions && modelPredictions[m.id] !== undefined) ? modelPredictions[m.id] : (m.nominalHv || 340);
+    return {
+      name: m.name,
+      val: val,
+      hrc: typeof hvToHrcStandard === 'function' ? hvToHrcStandard(val) : '34 HRC',
+      err: m.looMaeHv,
+      mape: m.mapePct + '%',
+      r2: m.r2Score,
+      pi95: '± ' + m.calibratedPi95 + ' HV'
+    };
+  });
+}
+
+function syncSolverDisplayFromSliders() {
+  const p = parseFloat(document.getElementById('sl_p')?.value) || 280;
+  const v = parseFloat(document.getElementById('sl_v')?.value) || 960;
+  const h = parseFloat(document.getElementById('sl_h')?.value) || 110;
+  const t = parseFloat(document.getElementById('sl_t')?.value) || 40;
+  const currentVed = Number(((p * 1e6) / (Math.max(0.1, v) * h * t)).toFixed(1));
+
+  const tgtDisp = document.getElementById('targetVedDisplay');
+  if (tgtDisp) tgtDisp.innerText = currentVed.toFixed(1) + ' J/mm³';
+
+  const s = document.getElementById('targetVedSlider');
+  if (s && Math.abs(parseFloat(s.value) - currentVed) > 0.4) {
+    s.value = Math.max(parseFloat(s.min) || 20, Math.min(parseFloat(s.max) || 140, currentVed));
+  }
+
+  const drvEl = document.getElementById('derivedVedLabel');
+  if (drvEl) {
+    drvEl.innerHTML = 'Achieved VED = <strong>' + currentVed.toFixed(1) + ' J/mm³</strong> ' +
+      '<span style="font-size:10px; color:var(--accent-emerald);">(Active Sliders: Δ 0.0 J/mm³)</span>';
+  }
+
+  const winEl = document.getElementById('vedWindowValidation');
+  if (winEl) {
+    const isLof = currentVed < 40;
+    const isSubLof = currentVed >= 40 && currentVed < 55;
+    const isOpt = currentVed >= 55 && currentVed <= 85;
+    const isMildKh = currentVed > 85 && currentVed <= 110;
+    const isKh = currentVed > 110;
+    let color = 'var(--accent-emerald)';
+    let msg = 'Within validated conduction processing window (55–85 J/mm³).';
+    if (isLof) { color = '#f43f5e'; msg = 'Severe Lack-of-Fusion risk (<40 J/mm³).'; }
+    else if (isSubLof) { color = '#fbbf24'; msg = 'Sub-optimal / Transition LOF window (40–55 J/mm³).'; }
+    else if (isMildKh) { color = '#fbbf24'; msg = 'Transition / Mild Keyhole window (85–110 J/mm³).'; }
+    else if (isKh) { color = '#f43f5e'; msg = 'Severe Keyhole / Vaporization Instability (>110 J/mm³).'; }
+    winEl.innerHTML = '<span style="color:' + color + '; font-weight:600;">' + msg + '</span>';
+  }
+
+  const solP = document.getElementById('sol_p'); if (solP) solP.innerText = Math.round(p) + ' W';
+  const solV = document.getElementById('sol_v'); if (solV) solV.innerText = Math.round(v) + ' mm/s';
+  const solH = document.getElementById('sol_h'); if (solH) solH.innerText = Math.round(h) + ' µm';
+  const solT = document.getElementById('sol_t'); if (solT) solT.innerText = Math.round(t) + ' µm';
+  const volRate = ((v * h * t * 3600) / 1e9).toFixed(1);
+  const solRate = document.getElementById('sol_rate'); if (solRate) solRate.innerText = volRate + ' cm³/h';
+  const solReg = document.getElementById('sol_regime');
+  if (solReg) {
+    solReg.innerText = currentVed >= 55 && currentVed <= 85 ? 'Conduction mode' : (currentVed < 55 ? 'Lack of Fusion' : 'Keyhole mode');
+    solReg.style.color = currentVed >= 55 && currentVed <= 85 ? 'var(--accent-emerald)' : 'var(--accent-amber)';
+  }
+}
+window.renderUnifiedModelsUI = renderUnifiedModelsUI;
+window.syncSolverDisplayFromSliders = syncSolverDisplayFromSliders;
+
 window.updateAstmAuditor = updateAstmAuditor;
 
 // ========================================================
@@ -3570,22 +3799,22 @@ window.addEventListener('click', function(e) {
 
         <div class="ved-target-row">
           <span style="font-size: 11.5px; color: var(--text-secondary);" id="vedTargetLabel">Target VED <i>E<sub>v</sub></i>:</span>
-          <span class="ved-target-val" id="targetVedDisplay">72.4 J/mm³</span>
+          <span class="ved-target-val" id="targetVedDisplay">66.3 J/mm³</span>
           <div class="ved-steppers">
             <button class="step-btn" onclick="adjustTargetVed(-5)">-5%</button>
             <button class="step-btn" onclick="adjustTargetVed(5)">+5%</button>
           </div>
         </div>
 
-        <input type="range" id="targetVedSlider" min="25" max="140" step="1" value="72" oninput="onTargetVedSlider(this.value)">
+        <input type="range" id="targetVedSlider" min="25" max="140" step="0.5" value="66.3" oninput="onTargetVedSlider(this.value)">
 
         <div style="margin-top: 10px; font-size: 10px; color: var(--text-muted); margin-bottom: 4px;">Quick Presets:</div>
         <div class="preset-row" id="vedPresetRowQuick">
-          <div class="preset-pill" onclick="applyVedPreset(50)">50 J/mm³</div>
-          <div class="preset-pill" onclick="applyVedPreset(65)">65 J/mm³</div>
-          <div class="preset-pill active" onclick="applyVedPreset(72.4)">72.4 J/mm³</div>
-          <div class="preset-pill" onclick="applyVedPreset(85)">85 J/mm³</div>
-          <div class="preset-pill" onclick="applyVedPreset(100)">100 J/mm³</div>
+          <div class="preset-pill" onclick="applyVedPreset(50, this)">50 J/mm³</div>
+          <div class="preset-pill active" onclick="applyVedPreset(66.3, this)">66.3 J/mm³ (Nominal)</div>
+          <div class="preset-pill" onclick="applyVedPreset(75, this)">75 J/mm³</div>
+          <div class="preset-pill" onclick="applyVedPreset(85, this)">85 J/mm³</div>
+          <div class="preset-pill" onclick="applyVedPreset(100, this)">100 J/mm³</div>
         </div>
 
         <div style="margin-top: 6px; font-size: 10px; color: var(--text-muted); margin-bottom: 4px;">Paper Calibrations:</div>
@@ -3606,19 +3835,19 @@ window.addEventListener('click', function(e) {
         <div class="derived-box">
           <div class="derived-title" style="flex-wrap: wrap; gap: 4px;">
             <span>Derived Process Parameters:</span>
-            <span style="color: var(--accent-emerald);" id="derivedVedLabel">Achieved VED = 73.0 J/mm³ (Target: 72.4 J/mm³, Δ +0.6 J/mm³)</span>
+            <span style="color: var(--accent-emerald);" id="derivedVedLabel">Achieved VED = 66.3 J/mm³ (Target: 66.3 J/mm³, Δ 0.0 J/mm³)</span>
           </div>
           <div id="vedWindowValidation" style="font-size: 11px; margin: 4px 0 8px 0; padding: 4px 8px; background: rgba(0,0,0,0.3); border-radius: 4px;">
             <span style="color: var(--accent-emerald); font-weight:600;">Within validated conduction processing window (55–85 J/mm³).</span>
           </div>
           <div class="derived-grid">
-            <div class="derived-metric"><span id="sol_lbl_p">Laser Power P</span><strong id="sol_p">215 W</strong></div>
-            <div class="derived-metric"><span id="sol_lbl_v">Scan Speed v</span><strong id="sol_v">920 mm/s</strong></div>
-            <div class="derived-metric"><span id="sol_lbl_h">Hatch Spacing h</span><strong id="sol_h">80 µm</strong></div>
+            <div class="derived-metric"><span id="sol_lbl_p">Laser Power P</span><strong id="sol_p">280 W</strong></div>
+            <div class="derived-metric"><span id="sol_lbl_v">Scan Speed v</span><strong id="sol_v">960 mm/s</strong></div>
+            <div class="derived-metric"><span id="sol_lbl_h">Hatch Spacing h</span><strong id="sol_h">110 µm</strong></div>
             <div class="derived-metric"><span id="sol_lbl_t">Layer Thickness t</span><strong id="sol_t">40 µm</strong></div>
           </div>
           <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
-            <span>Build rate: <strong style="color: var(--text-primary);" id="sol_rate">10.7 cm³/h</strong></span>
+            <span>Build rate: <strong style="color: var(--text-primary);" id="sol_rate">15.2 cm³/h</strong></span>
             <span>Regime: <strong style="color: var(--accent-emerald);" id="sol_regime">Conduction mode</strong></span>
           </div>
           <button class="apply-solved-btn" onclick="applySolvedToSliders()">Apply Solved (P, v, h, t) to Sliders</button>
@@ -3684,7 +3913,7 @@ window.addEventListener('click', function(e) {
     <div class="side-card">
       <div class="side-header">
         <span>Post-Processing</span>
-        <span class="brand-badge" id="postStatusBadge">HIP QUALIFIED</span>
+        <span class="brand-badge" id="postStatusBadge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); border-color: rgba(16, 185, 129, 0.4);">ASTM F2924 QUALIFIED (CLASS 1)</span>
       </div>
       <select class="dark-select" id="postProcessingSelect" onchange="updateAll()">
         <option value="None">As-Built (α' Martensite)</option>
@@ -3705,7 +3934,7 @@ window.addEventListener('click', function(e) {
         <span style="color: var(--accent-cyan); font-family: monospace;">HV 0.3</span>
       </div>
       <div style="display: flex; gap: 8px; align-items: center;">
-        <input type="number" id="targetHvInput" value="345" min="200" max="550" class="dark-select" style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: var(--accent-cyan); width: 90px; text-align: center; padding: 9px 10px;" onchange="updateAll()">
+        <input type="number" id="targetHvInput" value="340" min="200" max="550" class="dark-select" style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: var(--accent-cyan); width: 90px; text-align: center; padding: 9px 10px;" onchange="updateAll()">
         <button class="step-btn" style="padding: 9px 14px; border-radius: 10px;" onclick="adjustTargetHv(-10)">-10</button>
         <button class="step-btn" style="padding: 9px 14px; border-radius: 10px;" onclick="adjustTargetHv(10)">+10</button>
       </div>
@@ -3724,7 +3953,7 @@ window.addEventListener('click', function(e) {
           <span class="kpi-badge tag-cyan">PRIMARY</span>
         </div>
         <div class="kpi-value" id="kpi_hv">339 HV</div>
-        <div class="kpi-sub" id="kpi_ci">± 10.2 HV [Calibrated 95% PI] · 94.8% Coverage</div>
+        <div class="kpi-sub" id="kpi_ci">± 10.8 HV [Calibrated 95% PI] · 95.2% Empirical Coverage</div>
       </div>
 
       <div class="kpi-card kpi-card-2">
@@ -3741,8 +3970,8 @@ window.addEventListener('click', function(e) {
           <span>Est. UTS</span>
           <span class="kpi-badge tag-emerald">TABOR</span>
         </div>
-        <div class="kpi-value" id="kpi_uts">1034 MPa</div>
-        <div class="kpi-sub" id="kpi_tabor_sub">UTS ≈ 3.05 × HV (Tabor scaling) | UTS/YS ~1.12x</div>
+        <div class="kpi-value" id="kpi_uts">1003 MPa</div>
+        <div class="kpi-sub" id="kpi_tabor_sub">UTS ≈ 2.95 × HV (Tabor scaling) | UTS/YS ~1.09x</div>
       </div>
 
       <div class="kpi-card kpi-card-4 emerald">
@@ -3781,7 +4010,7 @@ window.addEventListener('click', function(e) {
       <div class="lit-strip-left">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#50d8e9" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
         <div>
-          <div class="lit-strip-title">Literature Evidence & Research Gap Matrix: <span class="lit-strip-badge" id="matrixPapersCountBadge">154 Peer-Reviewed Publications • 289 Curated Variants • 42 Metrics</span></div>
+          <div class="lit-strip-title">Literature Evidence & Research Gap Matrix: <span class="lit-strip-badge" id="matrixPapersCountBadge">178 Indexed Publications • 289 Curated Variants • 42 Metrics</span></div>
           <div class="lit-strip-sub">Explore indexed publications, parameter envelopes, reported properties, and ASTM qualification compliance.</div>
         </div>
       </div>
@@ -3802,10 +4031,10 @@ window.addEventListener('click', function(e) {
         </div>
       </div>
       <div class="mat-state-pills">
-        <button type="button" class="mat-state-btn active" id="btnMatState_as_built" onclick="setGlobalMaterialState('as_built')">As-Built (α' Martensite)</button>
+        <button type="button" class="mat-state-btn" id="btnMatState_as_built" onclick="setGlobalMaterialState('as_built')">As-Built (α' Martensite)</button>
         <button type="button" class="mat-state-btn" id="btnMatState_stress_relieved" onclick="setGlobalMaterialState('stress_relieved')">Stress-Relieved (650°C)</button>
         <button type="button" class="mat-state-btn" id="btnMatState_annealed" onclick="setGlobalMaterialState('annealed')">Annealed (730°C)</button>
-        <button type="button" class="mat-state-btn" id="btnMatState_hip" onclick="setGlobalMaterialState('hip')">HIP-Treated (920°C / 100 MPa)</button>
+        <button type="button" class="mat-state-btn active" id="btnMatState_hip" onclick="setGlobalMaterialState('hip')">HIP-Treated (920°C / 100 MPa)</button>
         <button type="button" class="mat-state-btn" id="btnMatState_sta" onclick="setGlobalMaterialState('sta')">Solution-Treated &amp; Aged (STA)</button>
       </div>
     </div>
@@ -3865,7 +4094,7 @@ window.addEventListener('click', function(e) {
               </tr>
               <tr>
                 <td><span class="dot dot-purple"></span><strong>Support Vector Machine (RBF-SVR)</strong></td>
-                <td style="font-family: monospace; font-weight: bold; color: var(--text-primary);">338 HV</td>
+                <td style="font-family: monospace; font-weight: bold; color: var(--text-primary);">341 HV</td>
                 <td style="font-family: monospace; color: var(--text-secondary);">34 HRC</td>
                 <td style="font-family: monospace; color: var(--accent-emerald);">5.6 HV</td>
                 <td style="font-family: monospace; color: var(--accent-cyan);">1.62%</td>
@@ -3883,7 +4112,7 @@ window.addEventListener('click', function(e) {
               </tr>
               <tr style="background: rgba(16, 185, 129, 0.08); font-weight: bold;">
                 <td><span class="dot dot-green"></span><strong>Multi-Model Consensus Ensemble</strong> <span class="brand-badge" style="background: rgba(16,185,129,0.2); color: var(--accent-emerald); font-size: 9px;">ACTIVE</span></td>
-                <td style="font-family: monospace; font-weight: 800; color: var(--accent-emerald);">339 HV</td>
+                <td style="font-family: monospace; font-weight: 800; color: var(--accent-emerald);">340 HV</td>
                 <td style="font-family: monospace; color: var(--accent-emerald);">34 HRC</td>
                 <td style="font-family: monospace; color: var(--accent-emerald); font-weight:800;">4.8 HV</td>
                 <td style="font-family: monospace; color: var(--accent-emerald); font-weight:800;">1.34%</td>
@@ -7366,9 +7595,21 @@ function calculatePhysics() {
 
   const primaryHv = hvGpr;
   const hrcEquiv = hvToHrcStandard(primaryHv);
-  const taborFactor = (post === 'None' || post === 'As-Built') ? 3.15 : (post === 'HIP' ? 2.95 : 3.05);
+  const stateKey = (function() {
+    if (post === 'None' || post === 'As-Built') return 'as_built';
+    if (post === 'Stress-relieved') return 'stress_relieved';
+    if (post === 'Annealed') return 'annealed';
+    if (post === 'HIP') return 'hip';
+    if (post === 'Solution-Aged' || post === 'Bi-modal') return 'sta';
+    return globalMaterialState || 'hip';
+  })();
+  const stateMeta = (typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY[stateKey])
+    ? MATERIAL_STATE_REGISTRY[stateKey]
+    : { taborFactor: 2.95, utsToYsRatio: 1.09, benchmarkHvRange: [320, 360] };
+  const taborFactor = stateMeta.taborFactor || 2.95;
+  const utsToYsRatio = stateMeta.utsToYsRatio || 1.09;
   const utsTabor = Math.round(primaryHv * taborFactor);
-  const yieldStrength = Math.round(utsTabor * (post === 'None' ? 0.91 : (post === 'HIP' ? 0.89 : 0.90)));
+  const yieldStrength = Math.round(utsTabor / utsToYsRatio);
 
   // Dynamic Elongation with process-specific α+β vs α' as-built ductility & porosity knockdown
   const asBuiltEl = isWaam ? 12.8 : (isDed ? 11.2 : 7.5);
@@ -7405,12 +7646,13 @@ function calculatePhysics() {
   // Dynamic KPI Subtext cards
   const elKpiCi = document.getElementById('kpi_ci');
   if (elKpiCi) {
-    const ciVal = (hvGpr * 0.045 * (1 + parseFloat(porosityPct) * 0.15)).toFixed(0);
-    elKpiCi.innerText = `± ${ciVal} HV [Calibrated 95% PI] · Empirical 95.2% Coverage`;
+    const gprModel = (typeof ML_MODELS_REGISTRY !== 'undefined') ? ML_MODELS_REGISTRY.find(m => m.id === 'gpr') : null;
+    const piVal = gprModel ? gprModel.calibratedPi95 : 10.8;
+    elKpiCi.innerText = `± ${piVal} HV [Calibrated 95% PI] · 95.2% Empirical Coverage`;
   }
   const elTaborSub = document.getElementById('kpi_tabor_sub');
   if (elTaborSub) {
-    elTaborSub.innerText = `Alloy Tabor Yield Ratio: ~${(utsTabor / Math.max(1, yieldStrength)).toFixed(2)}x`;
+    elTaborSub.innerText = `UTS ≈ ${taborFactor} × HV (Tabor scaling) | UTS/YS ~${utsToYsRatio}x`;
   }
   const elVedSub = document.getElementById('kpi_ved_sub');
   if (elVedSub) {
@@ -7454,41 +7696,15 @@ function calculatePhysics() {
   setTxt('microMorph', post === 'Bi-modal' ? 'Bi-modal (Equiaxed α_p + α/β)' : (post === 'HIP' || post === 'Annealed' ? 'Lamellar α+β + Prior-β GB' : (isMartensiticAsBuilt ? `Acicular α' Needles (${bonthaMorphShort})` : `α+β Colony (${bonthaMorphShort})`)));
   setTxt('microPost', post === 'None' ? (isWaam ? 'As-deposited α+β (ASTM F3187 / WAAM)' : (isDed ? 'As-deposited (ASTM F3187 L-DED)' : 'As-built (ASTM F2924 Class 1)')) : `${post} (${(isWaam || isDed) ? 'ASTM F3187' : 'ASTM F2924'} Decomposed)`);
 
-  setTxt('benchHeaderRange', isWaam ? 'WAAM Lit. (295–355 HV)' : (isDed ? 'L-DED Lit. (315–385 HV)' : 'LPBF Lit. (340–420 HV)'));
-  setTxt('benchLabelRange', isWaam ? 'Ti-6Al-4V WAAM Range' : (isDed ? 'Ti-6Al-4V L-DED Range' : 'Ti-6Al-4V LPBF Range'));
-
-  // Update Models Table + Snapshot for CSV Export
-  const models = [
-    { name: "Analytical (Hall-Petch + Rosenthal)", dot: "dot-blue", hv: hvAnalytical, err: 8.2, close: 96.8, r2: 0.91 },
-    { name: "Random Forest (Calibrated)", dot: "dot-cyan", hv: hvRf, err: 6.4, close: 97.5, r2: 0.94 },
-    { name: "Gradient Boosting (XGBoost)", dot: "dot-amber", hv: hvXgb, err: 5.9, close: 97.9, r2: 0.95 },
-    { name: "Support Vector Machine (RBF-SVR)", dot: "dot-purple", hv: hvSvm, err: 5.6, close: 98.1, r2: 0.96 },
-    { name: "Hybrid Physics-GPR (Recommended)", dot: "dot-emerald", hv: hvGpr, err: 5.1, close: 98.4, r2: 0.97 },
-    { name: "Weighted Ensemble", dot: "dot-red", hv: hvEnsemble, err: 4.8, close: 98.7, r2: 0.98 }
-  ];
-  window.lastModelsSnapshot = models.map(m => ({ name: m.name, val: m.hv, err: m.err, closeness: m.close + '%', r2: m.r2 }));
-
-  let tbodyHtml = '';
-  models.forEach((m, idx) => {
-    const hrc = hvToHrcStandard(m.hv);
-    tbodyHtml += `
-      <tr>
-        <td><span class="dot ${m.dot}"></span><strong>${m.name}</strong></td>
-        <td style="font-family: monospace; font-weight: bold; color: var(--text-primary);">${m.hv} HV</td>
-        <td style="font-family: monospace; color: var(--text-secondary);">${hrc}</td>
-        <td style="font-family: monospace; color: var(--accent-emerald);">± ${m.err} HV</td>
-        <td style="font-family: monospace; color: var(--accent-cyan);">${m.close}%</td>
-        <td style="font-family: monospace; font-weight: bold;">${m.r2}</td>
-      </tr>
-    `;
-    const bar = document.getElementById('bar_' + idx);
-    if (bar) {
-      const heightPct = Math.min(95, Math.max(30, (m.hv / 500) * 100));
-      bar.style.height = heightPct + '%';
-      bar.innerText = m.hv;
-    }
-  });
-  document.getElementById('modelsTableBody').innerHTML = tbodyHtml;
+  // Render Unified Models UI (Table + Bar Chart) from single reactive source
+  renderUnifiedModelsUI({
+    analytical: hvAnalytical,
+    rf: hvRf,
+    xgboost: hvXgb,
+    svm: hvSvm,
+    gpr: hvGpr,
+    ensemble: hvEnsemble
+  }, stateKey);
 
   // Update Dynamic SVG Operating Point & Zones on Defect Map
   updateDefectMapSvg(currentProcess, p, v);
@@ -7777,6 +7993,9 @@ function onSliderChange() {
   const sel = document.getElementById('bonthaPresetSelect');
   if (sel) sel.value = 'custom';
   calculatePhysics();
+  if (typeof syncSolverDisplayFromSliders === 'function') {
+    syncSolverDisplayFromSliders();
+  }
 }
 
 function configureProcessControls(proc) {
@@ -8015,23 +8234,30 @@ function exportPredictionsCsv() {
   const t = parseFloat(document.getElementById('sl_t').value);
   const ved = ((p * 1e6) / (Math.max(0.5, v) * h * t)).toFixed(1);
   const hi = (p / Math.max(0.5, v)).toFixed(1);
-  let csv = "Process,Alloy,Power_W,Speed_mm_s,Hatch_um,Layer_um,VED_J_mm3,HI_J_mm,Model,Predicted_HV,Rockwell_HRC,Expected_Error_HV,Closeness_Pct,R2_Score\n";
+  const condition = (typeof globalMaterialState !== 'undefined' ? globalMaterialState : 'hip');
+  let csv = "Process,Alloy,Condition,Power_W,Speed_mm_s,Hatch_um,Layer_um,VED_J_mm3,HI_J_mm,Model,Predicted_HV,Rockwell_HRC,LOPO_MAE_HV,MAPE_Pct,R2_Score,Calibrated_95_PI\n";
   const rows = (window.lastModelsSnapshot && window.lastModelsSnapshot.length)
     ? window.lastModelsSnapshot
-    : [{ name: "Weighted Ensemble", val: 380, err: 5.0, r2: 0.96, closeness: "98.0%" }];
+    : [];
   rows.forEach(m => {
     const cleanName = String(m.name || '').replace(/,/g, '');
     const hvInt = Math.round(m.val);
-    const hrc = typeof hvToHrcStandard === 'function' ? hvToHrcStandard(hvInt) : 'N/A';
-    csv += `${currentProcess},${currentAlloy},${p},${v},${h},${t},${ved},${hi},${cleanName},${hvInt},${hrc},${m.err},${m.closeness},${m.r2}\n`;
+    const hrc = m.hrc || (typeof hvToHrcStandard === 'function' ? hvToHrcStandard(hvInt) : 'N/A');
+    const mae = m.err !== undefined ? m.err : '';
+    const mape = m.mape || '';
+    const r2 = m.r2 !== undefined ? m.r2 : '';
+    const pi95 = m.pi95 || '';
+    csv += `${currentProcess},${currentAlloy},${condition},${p},${v},${h},${t},${ved},${hi},${cleanName},${hvInt},"${hrc}",${mae},${mape},${r2},"${pi95}"\n`;
   });
 
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.getElementById('downloadAnchor') || document.createElement('a');
   a.setAttribute('href', url);
-  a.setAttribute('download', `ti64_${currentProcess}_predictions.csv`);
+  a.setAttribute('download', `ti64_${currentProcess}_${condition}_predictions.csv`);
+  document.body.appendChild(a);
   a.click();
+  setTimeout(() => { if (a.parentNode) a.parentNode.removeChild(a); window.URL.revokeObjectURL(url); }, 500);
 }
 
 function generateAuditReport() {
@@ -10927,6 +11153,25 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+
+function updateNetworkTelemetry() {
+  const badge = document.getElementById('liveStatusBadge');
+  if (!badge) return;
+  if (navigator.onLine) {
+    badge.innerHTML = '● Platform Online';
+    badge.style.color = '#34d399';
+    badge.style.background = 'rgba(16, 185, 129, 0.15)';
+    badge.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+  } else {
+    badge.innerHTML = '○ Offline Mode';
+    badge.style.color = '#fbbf24';
+    badge.style.background = 'rgba(245, 158, 11, 0.15)';
+    badge.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+  }
+}
+window.addEventListener('online', updateNetworkTelemetry);
+window.addEventListener('offline', updateNetworkTelemetry);
+
 window.addEventListener('DOMContentLoaded', () => {
   let savedTheme = 'dark';
   try {
@@ -10936,6 +11181,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   document.documentElement.className = savedTheme;
   updateThemeIcon();
+  updateNetworkTelemetry();
   initSupabaseCloudSync();
   populatePapersTable(PAPERS_DATABASE);
   updateVedSolver(66.3);

@@ -5,6 +5,7 @@
  */
 
 import { setCorsHeaders } from './_shared.js';
+import { APP_METADATA, LITERATURE_DATASET_META } from './_platform_constants.js';
 
 export default async function handler(req, res) {
   if (setCorsHeaders(req, res)) return;
@@ -65,9 +66,9 @@ export default async function handler(req, res) {
   }
 
   res.status(200).json({
-    platform: 'NIT Trichy Titanium Additive Manufacturing Platform',
-    version: '2.5.0',
-    deployment: 'Vercel Cloud Serverless (Node.js)',
+    platform: APP_METADATA.name,
+    version: APP_METADATA.version,
+    deployment: APP_METADATA.deploymentTarget,
     service_health: {
       api: 'operational',
       database: dbStatus,
@@ -75,8 +76,12 @@ export default async function handler(req, res) {
       verified_live_papers_count: verifiedLiveCount
     },
     curated_benchmark_dataset: {
-      peer_reviewed_papers: 54,
-      experimental_alloy_variants: 209,
+      total_indexed_publications: LITERATURE_DATASET_META.totalPublications,
+      loo_benchmark_papers: LITERATURE_DATASET_META.looBenchmarkCount,
+      peer_reviewed_papers: LITERATURE_DATASET_META.looBenchmarkCount,
+      experimental_alloy_variants: LITERATURE_DATASET_META.totalVariants,
+      tracked_metrics_count: LITERATURE_DATASET_META.trackedMetricsCount,
+      date_range: LITERATURE_DATASET_META.dateRange,
       data_integrity: '100% parameter verified against original literature DOIs',
       primary_alloys: ['Ti-6Al-4V Grade 5 (UNS R56400)', 'Ti-6Al-4V ELI Grade 23 (UNS R56401)'],
       qualification_standards: ['ASTM F2924-21 (Class 1, Class 2, Class 3)', 'ASTM F3001-20 (Medical ELI)']
