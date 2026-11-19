@@ -3315,7 +3315,9 @@ function updateAstmAuditor() {
     } else if (phys.lofIndex > 1.0) {
       elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}%); un-melted lack-of-fusion voids cause premature tear`;
     } else if (phys.keyholeRatio > 1.0) {
-      elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}%); keyhole gas porosity triggers early void coalescence`;
+      elongSub = phys.isWaam
+        ? `Sub-standard ductility (${measuredElong.toFixed(1)}%); excessive linear heat input coarsens prior-β grains`
+        : `Sub-standard ductility (${measuredElong.toFixed(1)}%); keyhole gas porosity triggers early void coalescence`;
     } else {
       elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}% < ${std.elThresh}% requirement)`;
     }
@@ -3332,7 +3334,9 @@ function updateAstmAuditor() {
     if (phys.lofIndex > 1.0) {
       denSub = `Severe lack-of-fusion porosity (${(100 - measuredDen).toFixed(2)}% voids); VED insufficient for interlayer bonding`;
     } else if (phys.keyholeRatio > 1.0) {
-      denSub = `Keyhole vaporization gas entrapment (${(100 - measuredDen).toFixed(2)}% voids); excess power density`;
+      denSub = phys.isWaam
+        ? `Overheating remelt sag and gas porosity (${(100 - measuredDen).toFixed(2)}% voids); excessive arc linear heat input`
+        : `Keyhole vaporization gas entrapment (${(100 - measuredDen).toFixed(2)}% voids); excess power density`;
     } else {
       denSub = `Sub-standard relative density (${measuredDen.toFixed(2)}% < ${std.denThresh}%)`;
     }
@@ -3468,6 +3472,537 @@ window.AUDIT_STANDARDS = AUDIT_STANDARDS;
 
 window.MATERIAL_STATE_REGISTRY = MATERIAL_STATE_REGISTRY;
 window.setGlobalMaterialState = setGlobalMaterialState;
+
+// ========================================================
+// SINGLE-SOURCE LITERATURE METADATA & REGIME CLASSIFIER
+// ========================================================
+var LITERATURE_META = {
+  totalPublications: 178,
+  looBenchmarkCount: 54,
+  totalVariants: 289,
+  trackedMetricsCount: 42,
+  dateRange: '2016–2026'
+};
+window.LITERATURE_META = LITERATURE_META;
+window.LITERATURE_DATASET_META = LITERATURE_META;
+
+var MELT_POOL_PRESETS = [
+  { id: '200w', buttonId: 'btnMpPreset200', label: 'KU Leuven (200W)', processId: 'lpbf', P: 200, v: 950 },
+  { id: '300w', buttonId: 'btnMpPreset300', label: 'Concept Laser M2 (300W)', processId: 'lpbf', P: 300, v: 1050 },
+  { id: 'ded',  buttonId: 'btnMpPresetDed', label: 'L-DED (1.6 kW)', processId: 'lded', P: 1600, v: 15 },
+  { id: 'waam', buttonId: 'btnMpPresetWaam', label: 'WAAM CMT (2.4 kW)', processId: 'waam', P: 2400, v: 8 }
+];
+window.MELT_POOL_PRESETS = MELT_POOL_PRESETS;
+
+function normalizeCanonicalProcessId(rawProcessId) {
+  const norm = String(rawProcessId || 'lpbf').toLowerCase().trim();
+  if (norm === 'waam') return 'waam';
+  if (norm === 'lded' || norm === 'ded-laser' || norm === 'ded' || norm === 'l-ded') return 'lded';
+  if (norm === 'binder_jetting' || norm === 'binder-jetting' || norm === 'bj' || norm === 'bjt') return 'binder_jetting';
+  return 'lpbf';
+}
+window.normalizeCanonicalProcessId = normalizeCanonicalProcessId;
+
+function classifyProcessRegime(processIdInput, params, metricsInput) {
+  const processId = normalizeCanonicalProcessId(processIdInput);
+  const pObj = params || {};
+  const metrics = metricsInput || {};
+  const P = Number.isFinite(Number(pObj.P)) ? Number(pObj.P) : 280;
+  const v = Number.isFinite(Number(pObj.v)) ? Math.max(0.1, Number(pObj.v)) : 960;
+  const h = Number.isFinite(Number(pObj.h)) ? Math.max(1, Number(pObj.h)) : 110;
+  const t = Number.isFinite(Number(pObj.t)) ? Math.max(1, Number(pObj.t)) : 40;
+  const T0 = Number.isFinite(Number(pObj.T0)) ? Number(pObj.T0) : 200;
+
+  const computedVed = (P * 1e6) / Math.max(1e-3, v * h * t);
+  const ved = Number.isFinite(Number(metrics.ved)) ? Number(metrics.ved) : Number(computedVed.toFixed(1));
+  const computedHi = P / Math.max(0.1, v);
+  const heatInput = Number.isFinite(Number(metrics.heatInput)) ? Number(metrics.heatInput) : Number(computedHi.toFixed(1));
+
+  // 1. BINDER JETTING: Governed strictly by sintering temperature and binder saturation bounds
+  if (processId === 'binder_jetting') {
+    const sinteringTempC = Number.isFinite(Number(metrics.sinteringTempC)) ? Number(metrics.sinteringTempC) : 1250;
+    const binderSat = Number.isFinite(Number(metrics.binderSaturationPct))
+      ? Number(metrics.binderSaturationPct)
+      : Number(((P / 120.0) * 65.0).toFixed(1));
+
+    if (P < 70 || T0 < 80 || binderSat < 40 || sinteringTempC < 1180) {
+      return {
+        processId: processId,
+        code: 'under_sinter',
+        severity: 'warning',
+        regimeLabel: 'Under-Sintered / Low Binder Saturation',
+        shortLabel: 'Low Binder Saturation',
+        solverRegimeLabel: 'Low Binder Saturation',
+        solverWindowMessage: 'Low binder saturation (' + binderSat.toFixed(0) + '%) or curing temperature (' + T0 + '°C) risks green-body fragility.',
+        bannerDescription: '— Binder saturation or bed drying temperature is below optimal bounds, risking fragile green parts or incomplete neck growth during vacuum sintering (1250°C).',
+        remediationHeading: 'Low binder saturation / under-cure active! Adjust green-state curing into nominal bounds:',
+        tweakCtaLabel: 'Auto-Tweak to Nominal Sinter Window',
+        kpiBadgeLabel: 'Low Saturation',
+        governingMetricLabel: 'Binder Saturation & Sinter Temp',
+        governingMetricValue: binderSat.toFixed(0) + '% Sat · ' + sinteringTempC + '°C',
+        ved: ved,
+        heatInput: heatInput
+      };
+    }
+
+    if (P > 200 || T0 > 210 || binderSat > 110 || sinteringTempC > 1350) {
+      return {
+        processId: processId,
+        code: 'over_sinter',
+        severity: 'danger',
+        regimeLabel: 'Excess Binder Saturation / Slumping Distortion Risk',
+        shortLabel: 'Excess Saturation / Slumping',
+        solverRegimeLabel: 'Slumping / Excess Binder',
+        solverWindowMessage: 'Excessive binder saturation (' + binderSat.toFixed(0) + '%) or curing temperature (' + T0 + '°C) risks green-part bleeding and slumping distortion.',
+        bannerDescription: '— Excessive binder saturation or curing heat causes powder bed bleeding, residual carbon contamination, and dimensional slumping during vacuum sintering.',
+        remediationHeading: 'Excess binder saturation active! Reduce binder energy / bed drying temp below limit:',
+        tweakCtaLabel: 'Auto-Tweak to Nominal Sinter Window',
+        kpiBadgeLabel: 'High (Slumping)',
+        governingMetricLabel: 'Binder Saturation & Sinter Temp',
+        governingMetricValue: binderSat.toFixed(0) + '% Sat · ' + sinteringTempC + '°C',
+        ved: ved,
+        heatInput: heatInput
+      };
+    }
+
+    return {
+      processId: processId,
+      code: 'sintering',
+      severity: 'optimal',
+      regimeLabel: 'Solid-State Sintering Mode (No Melt Pool)',
+      shortLabel: 'Solid-State Sintering',
+      solverRegimeLabel: 'Optimal Sintering',
+      solverWindowMessage: 'Within validated Binder Jetting saturation (' + binderSat.toFixed(0) + '%) & vacuum sintering window (' + sinteringTempC + '°C).',
+      bannerDescription: '— Binder Jetting utilizes room-temperature liquid binder deposition followed by vacuum sintering (1250°C). Melt pool physics and laser keyholing are non-applicable.',
+      remediationHeading: 'Binder Jetting Solid-State Sintering: Room-temperature inkjet print bed with subsequent vacuum sintering furnace (1250°C). Hydrodynamic melt defects (LoF, Keyhole, Balling) do not apply.',
+      tweakCtaLabel: 'Auto-Tweak to Nominal Sinter Window',
+      kpiBadgeLabel: 'Optimal (Sinter)',
+      governingMetricLabel: 'Binder Saturation & Sinter Temp',
+      governingMetricValue: binderSat.toFixed(0) + '% Sat · ' + sinteringTempC + '°C',
+      ved: ved,
+      heatInput: heatInput
+    };
+  }
+
+  // Edge Case: Emitter / Arc Off (P <= 0)
+  if (P <= 0) {
+    const isWaam = processId === 'waam';
+    return {
+      processId: processId,
+      code: 'cold',
+      severity: 'warning',
+      regimeLabel: isWaam ? 'Cold Ambient State (Arc Off / P=0)' : 'Cold Ambient State (Laser Off / P=0)',
+      shortLabel: 'Emitter Off (0 W)',
+      solverRegimeLabel: 'Cold State (0 W)',
+      solverWindowMessage: 'Zero power input. Substrate remains at preheat temperature with no melting.',
+      bannerDescription: '— Power input is zero. Substrate remains at preheat temperature with no melting.',
+      remediationHeading: 'Emitter Off (0 W): Zero power input. Turn on power slider or auto-tune to nominal operating window.',
+      tweakCtaLabel: isWaam ? 'Auto-Tweak to Nominal Heat Input' : 'Auto-Tweak to Conduction',
+      kpiBadgeLabel: 'Cold (0 W)',
+      governingMetricLabel: isWaam ? 'Linear Heat Input (HI)' : 'Volumetric Energy Density (VED)',
+      governingMetricValue: isWaam ? '0 J/mm' : '0.0 J/mm³',
+      ved: 0,
+      heatInput: 0
+    };
+  }
+
+  // 2. WAAM: Governed strictly by Linear Heat Input (HI = P / v in J/mm)
+  // Never emits LPBF "Keyhole active!", ">110 J/mm³", or "Auto-Tweak to Conduction".
+  if (processId === 'waam') {
+    const hiRounded = Math.round(heatInput);
+    if (heatInput < 120.0) {
+      return {
+        processId: processId,
+        code: 'lof',
+        severity: 'warning',
+        regimeLabel: 'Lack of Fusion / Cold Lap',
+        shortLabel: 'Lack of Fusion / Cold Lap',
+        solverRegimeLabel: 'Lack of Fusion / Cold Lap',
+        solverWindowMessage: 'Lack of Fusion / Cold Lap (<120 J/mm): Linear heat input (' + hiRounded + ' J/mm) is below optimal WAAM arc window (120–600 J/mm).',
+        bannerDescription: '— Linear heat input (' + hiRounded + ' J/mm < 120 J/mm) is too low to wet and fuse into the substrate or previous wire-arc bead. Increase arc power or reduce travel speed.',
+        remediationHeading: 'Lack of Fusion / Cold Lap active! Increase Linear Heat Input into 120–600 J/mm:',
+        tweakCtaLabel: 'Auto-Tweak to Nominal Heat Input',
+        kpiBadgeLabel: 'Low (Cold Lap)',
+        governingMetricLabel: 'Linear Heat Input (HI)',
+        governingMetricValue: hiRounded + ' J/mm',
+        ved: ved,
+        heatInput: heatInput
+      };
+    }
+
+    if (heatInput > 600.0) {
+      return {
+        processId: processId,
+        code: 'overheating',
+        severity: 'danger',
+        regimeLabel: 'Overheating / Coarse-β Instability',
+        shortLabel: 'Overheating / Coarse-β Instability',
+        solverRegimeLabel: 'Overheating / Coarse-β Instability',
+        solverWindowMessage: 'Excessive arc linear heat input (>600 J/mm) causes remelt sag, heavy residual stress, and coarse prior-β grains.',
+        bannerDescription: '— Excessive arc linear heat input (>600 J/mm) causes remelt sag, heavy residual stress, and coarse prior-β grains.',
+        remediationHeading: 'Overheating active! Reduce Linear Heat Input below 600 J/mm:',
+        tweakCtaLabel: 'Auto-Tweak to Nominal Heat Input',
+        kpiBadgeLabel: 'High (Overheat)',
+        governingMetricLabel: 'Linear Heat Input (HI)',
+        governingMetricValue: hiRounded + ' J/mm',
+        ved: ved,
+        heatInput: heatInput
+      };
+    }
+
+    return {
+      processId: processId,
+      code: 'conduction',
+      severity: 'optimal',
+      regimeLabel: 'Optimal Arc Deposition',
+      shortLabel: 'Optimal Arc Deposition',
+      solverRegimeLabel: 'Optimal Arc Deposition',
+      solverWindowMessage: 'Within validated WAAM Optimal Arc Deposition window (120–600 J/mm, HI = ' + hiRounded + ' J/mm).',
+      bannerDescription: '— Balanced wire-arc heat input (' + hiRounded + ' J/mm within 120–600 J/mm) with uniform bead tie-in and minimal distortion.',
+      remediationHeading: 'Optimal Operating Window: Stable WAAM arc deposition active (HI = ' + hiRounded + ' J/mm within 120–600 J/mm). Melt pool wetting and inter-pass tie-in are balanced.',
+      tweakCtaLabel: 'Auto-Tweak to Nominal Heat Input',
+      kpiBadgeLabel: 'Optimal',
+      governingMetricLabel: 'Linear Heat Input (HI)',
+      governingMetricValue: hiRounded + ' J/mm',
+      ved: ved,
+      heatInput: heatInput
+    };
+  }
+
+  // 3. L-DED: Governed by VED, Linear Heat Input & Keyhole Ratio
+  if (processId === 'lded') {
+    const lofIndex = Number.isFinite(Number(metrics.lofIndex)) ? Number(metrics.lofIndex) : (75.0 / Math.max(1.0, heatInput));
+    const keyholeRatio = Number.isFinite(Number(metrics.keyholeRatio)) ? Number(metrics.keyholeRatio) : (heatInput / 240.0);
+    const aspectRatio = Number.isFinite(Number(metrics.aspectRatio)) ? Number(metrics.aspectRatio) : 0.45;
+    const normalizedEnthalpy = Number.isFinite(Number(metrics.normalizedEnthalpy)) ? Number(metrics.normalizedEnthalpy) : 3.5;
+    const ballingRatio = Number.isFinite(Number(metrics.ballingRatio)) ? Number(metrics.ballingRatio) : 0.65;
+
+    if (heatInput < 75.0 || lofIndex > 1.05) {
+      return {
+        processId: processId,
+        code: 'lof',
+        severity: 'danger',
+        regimeLabel: 'Lack of Fusion (LoF) detected',
+        shortLabel: 'Lack of Fusion',
+        solverRegimeLabel: 'Lack of Fusion',
+        solverWindowMessage: 'Lack of Fusion risk (<75 J/mm): Linear heat input (' + Math.round(heatInput) + ' J/mm) insufficient for L-DED substrate dilution.',
+        bannerDescription: '— Linear heat input or penetration is too low to wet and fuse into the substrate/previous bead. Increase power or reduce travel speed.',
+        remediationHeading: 'Lack of Fusion active! Melt depth < layer thickness:',
+        tweakCtaLabel: 'Auto-Tweak to Conduction',
+        kpiBadgeLabel: 'Low (LOF)',
+        governingMetricLabel: 'Linear Heat Input & VED',
+        governingMetricValue: Math.round(heatInput) + ' J/mm · ' + ved.toFixed(1) + ' J/mm³',
+        ved: ved,
+        heatInput: heatInput
+      };
+    }
+
+    if (heatInput > 240.0 || keyholeRatio > 1.0 || aspectRatio >= 0.80) {
+      return {
+        processId: processId,
+        code: 'keyhole',
+        severity: 'danger',
+        regimeLabel: 'Over-dilution / Keyhole risk',
+        shortLabel: 'Over-dilution / Keyhole',
+        solverRegimeLabel: 'Keyhole mode',
+        solverWindowMessage: 'Over-dilution / Keyhole risk (>240 J/mm): Excessive L-DED heat input (' + Math.round(heatInput) + ' J/mm).',
+        bannerDescription: '— Excessive localized energy or linear heat input deepens penetration excessively and increases gas pore entrapment.',
+        remediationHeading: 'Keyhole active! Tweaks to prevent gas pore entrapment:',
+        tweakCtaLabel: 'Auto-Tweak to Conduction',
+        kpiBadgeLabel: 'High (Keyhole)',
+        governingMetricLabel: 'Linear Heat Input & VED',
+        governingMetricValue: Math.round(heatInput) + ' J/mm · ' + ved.toFixed(1) + ' J/mm³',
+        ved: ved,
+        heatInput: heatInput
+      };
+    }
+
+    if (normalizedEnthalpy >= 5.5 || aspectRatio >= 0.58) {
+      return {
+        processId: processId,
+        code: 'transition',
+        severity: 'warning',
+        regimeLabel: 'DED Transition mode',
+        shortLabel: 'DED Transition',
+        solverRegimeLabel: 'Transition mode',
+        solverWindowMessage: 'Operating in L-DED transition / high-dilution window.',
+        bannerDescription: '— Normalized enthalpy (ΔH/hs ~ ' + normalizedEnthalpy.toFixed(1) + ') marks the boundary between conduction and incipient keyhole vapor cavity formation.',
+        remediationHeading: 'Recommended parameter tweaks to return to Normal Conduction Mode:',
+        tweakCtaLabel: 'Auto-Tweak to Conduction',
+        kpiBadgeLabel: 'Transition',
+        governingMetricLabel: 'Linear Heat Input & VED',
+        governingMetricValue: Math.round(heatInput) + ' J/mm · ' + ved.toFixed(1) + ' J/mm³',
+        ved: ved,
+        heatInput: heatInput
+      };
+    }
+
+    if (ballingRatio > 1.05) {
+      return {
+        processId: processId,
+        code: 'balling',
+        severity: 'danger',
+        regimeLabel: 'Plateau-Rayleigh Balling instability',
+        shortLabel: 'Balling Instability',
+        solverRegimeLabel: 'Balling mode',
+        solverWindowMessage: 'Plateau-Rayleigh Balling instability (L/W > π).',
+        bannerDescription: '— Elongated melt pool breaks into discrete molten beads. Reduce speed or widen beam spot diameter.',
+        remediationHeading: 'Balling instability! Length/Width ratio > π:',
+        tweakCtaLabel: 'Auto-Tweak to Conduction',
+        kpiBadgeLabel: 'Balling Risk',
+        governingMetricLabel: 'Linear Heat Input & VED',
+        governingMetricValue: Math.round(heatInput) + ' J/mm · ' + ved.toFixed(1) + ' J/mm³',
+        ved: ved,
+        heatInput: heatInput
+      };
+    }
+
+    return {
+      processId: processId,
+      code: 'conduction',
+      severity: 'optimal',
+      regimeLabel: 'Conduction-dilution mode — fully dense',
+      shortLabel: 'Conduction Mode',
+      solverRegimeLabel: 'Conduction mode',
+      solverWindowMessage: 'Within validated L-DED conduction-dilution processing window (75–240 J/mm, HI = ' + Math.round(heatInput) + ' J/mm).',
+      bannerDescription: '— Controlled substrate dilution and full metallurgical bonding without vapor cavity porosity.',
+      remediationHeading: 'Optimal Operating Window: Stable L-DED conduction-dilution melting active (HI = ' + Math.round(heatInput) + ' J/mm · VED = ' + ved.toFixed(1) + ' J/mm³).',
+      tweakCtaLabel: 'Auto-Tweak to Conduction',
+      kpiBadgeLabel: 'Optimal',
+      governingMetricLabel: 'Linear Heat Input & VED',
+      governingMetricValue: Math.round(heatInput) + ' J/mm · ' + ved.toFixed(1) + ' J/mm³',
+      ved: ved,
+      heatInput: heatInput
+    };
+  }
+
+  // 4. LPBF: Governed by VED (< 40, 40-55, 55-85, 85-110, > 110 J/mm³) & Keyhole Ratio
+  const lofIndex = Number.isFinite(Number(metrics.lofIndex)) ? Number(metrics.lofIndex) : 0.72;
+  const aspectRatio = Number.isFinite(Number(metrics.aspectRatio)) ? Number(metrics.aspectRatio) : 0.51;
+  const normalizedEnthalpy = Number.isFinite(Number(metrics.normalizedEnthalpy)) ? Number(metrics.normalizedEnthalpy) : 4.8;
+  const ballingRatio = Number.isFinite(Number(metrics.ballingRatio)) ? Number(metrics.ballingRatio) : 0.74;
+
+  if (ved < 40.0 || lofIndex > 1.35) {
+    return {
+      processId: 'lpbf',
+      code: 'lof',
+      severity: 'danger',
+      regimeLabel: 'Severe Lack-of-Fusion (LOF) [Ev < 40 J/mm³]',
+      shortLabel: 'Lack of Fusion',
+      solverRegimeLabel: 'Lack of Fusion',
+      solverWindowMessage: 'Severe Lack-of-Fusion risk (<40 J/mm³).',
+      bannerDescription: '— Severe lack-of-fusion detected with unmelted powder particles. Melt pool depth is insufficient to penetrate underlying layer. Increase laser power or decrease scan speed.',
+      remediationHeading: 'Lack of Fusion active! Melt depth < layer thickness:',
+      tweakCtaLabel: 'Auto-Tweak to Conduction',
+      kpiBadgeLabel: 'Low (LOF)',
+      governingMetricLabel: 'Volumetric Energy Density (VED)',
+      governingMetricValue: ved.toFixed(1) + ' J/mm³',
+      ved: ved,
+      heatInput: heatInput
+    };
+  }
+
+  if (ved < 55.0 || lofIndex > 1.05) {
+    return {
+      processId: 'lpbf',
+      code: 'transition_lof',
+      severity: 'warning',
+      regimeLabel: 'Sub-optimal / Transition LOF [40 ≤ Ev < 55 J/mm³]',
+      shortLabel: 'Transition LOF',
+      solverRegimeLabel: 'Lack of Fusion',
+      solverWindowMessage: 'Sub-optimal / Transition LOF window (40–55 J/mm³).',
+      bannerDescription: '— Operating in the sub-optimal transition zone. Marginal layer penetration risks un-fused void formation. Parameter adjustment to Ev ≥ 55 J/mm³ recommended.',
+      remediationHeading: 'Lack of Fusion active! Melt depth < layer thickness:',
+      tweakCtaLabel: 'Auto-Tweak to Conduction',
+      kpiBadgeLabel: 'Low (LOF)',
+      governingMetricLabel: 'Volumetric Energy Density (VED)',
+      governingMetricValue: ved.toFixed(1) + ' J/mm³',
+      ved: ved,
+      heatInput: heatInput
+    };
+  }
+
+  if (ved > 110.0 || aspectRatio >= 0.85) {
+    return {
+      processId: 'lpbf',
+      code: 'keyhole',
+      severity: 'danger',
+      regimeLabel: 'Severe Keyhole / Vaporization Instability [Ev > 110 J/mm³]',
+      shortLabel: 'Keyhole Mode',
+      solverRegimeLabel: 'Keyhole mode',
+      solverWindowMessage: 'Severe Keyhole / Vaporization Instability (>110 J/mm³).',
+      bannerDescription: '— Deep recoil vapor cavity formation active. Severe risk of trapped gas pores and aluminium vaporization loss. Reduce laser power or increase scan speed.',
+      remediationHeading: 'Keyhole active! Tweaks to prevent gas pore entrapment:',
+      tweakCtaLabel: 'Auto-Tweak to Conduction',
+      kpiBadgeLabel: 'High (Keyhole)',
+      governingMetricLabel: 'Volumetric Energy Density (VED)',
+      governingMetricValue: ved.toFixed(1) + ' J/mm³',
+      ved: ved,
+      heatInput: heatInput
+    };
+  }
+
+  if (ved > 85.0 || normalizedEnthalpy >= 5.5 || aspectRatio >= 0.60) {
+    return {
+      processId: 'lpbf',
+      code: 'transition',
+      severity: 'warning',
+      regimeLabel: 'Transition / Mild Keyhole [85 < Ev ≤ 110 J/mm³]',
+      shortLabel: 'Transition Keyhole',
+      solverRegimeLabel: 'Transition Keyhole',
+      solverWindowMessage: 'Transition / Mild Keyhole window (85–110 J/mm³).',
+      bannerDescription: '— Normalized enthalpy (ΔH/hs ~ ' + normalizedEnthalpy.toFixed(1) + ') marks incipient keyhole vapor depression. Incipient vapor depression monitored.',
+      remediationHeading: 'Recommended parameter tweaks to return to Normal Conduction Mode:',
+      tweakCtaLabel: 'Auto-Tweak to Conduction',
+      kpiBadgeLabel: 'High (Keyhole)',
+      governingMetricLabel: 'Volumetric Energy Density (VED)',
+      governingMetricValue: ved.toFixed(1) + ' J/mm³',
+      ved: ved,
+      heatInput: heatInput
+    };
+  }
+
+  if (ballingRatio > 1.05) {
+    return {
+      processId: 'lpbf',
+      code: 'balling',
+      severity: 'danger',
+      regimeLabel: 'Plateau-Rayleigh Balling instability',
+      shortLabel: 'Balling Instability',
+      solverRegimeLabel: 'Balling mode',
+      solverWindowMessage: 'Plateau-Rayleigh Balling instability (L/W > π).',
+      bannerDescription: '— Elongated melt pool breaks into discrete molten beads. Reduce speed or widen beam spot diameter.',
+      remediationHeading: 'Balling instability! Length/Width ratio > π:',
+      tweakCtaLabel: 'Auto-Tweak to Conduction',
+      kpiBadgeLabel: 'Balling Risk',
+      governingMetricLabel: 'Volumetric Energy Density (VED)',
+      governingMetricValue: ved.toFixed(1) + ' J/mm³',
+      ved: ved,
+      heatInput: heatInput
+    };
+  }
+
+  return {
+    processId: 'lpbf',
+    code: 'conduction',
+    severity: 'optimal',
+    regimeLabel: 'Optimal Conduction Window [55 ≤ Ev ≤ 85 J/mm³]',
+    shortLabel: 'Conduction Mode',
+    solverRegimeLabel: 'Conduction mode',
+    solverWindowMessage: 'Within validated conduction processing window (55–85 J/mm³).',
+    bannerDescription: '— Stable, optimal melt pool dynamics producing fully dense material (>99.8%) with minimal defect risk.',
+    remediationHeading: 'Optimal Operating Window: Stable conduction melting active (ΔH/hs = ' + normalizedEnthalpy.toFixed(1) + ' < 5.5 · VED = ' + ved.toFixed(1) + ' J/mm³). Melt pool depth/width is balanced with full interlayer fusion.',
+    tweakCtaLabel: 'Auto-Tweak to Conduction',
+    kpiBadgeLabel: 'Optimal',
+    governingMetricLabel: 'Volumetric Energy Density (VED)',
+    governingMetricValue: ved.toFixed(1) + ' J/mm³',
+    ved: ved,
+    heatInput: heatInput
+  };
+}
+window.classifyProcessRegime = classifyProcessRegime;
+
+function formatRosenthalAspectCallout(aspectRatio, regime, mpModelInput) {
+  const aspectNum = typeof aspectRatio === 'number' ? aspectRatio : parseFloat(String(aspectRatio));
+  const aspectText = Number.isFinite(aspectNum) ? aspectNum.toFixed(2) : String(aspectRatio);
+  const reg = regime || { severity: 'optimal', shortLabel: 'Conduction Mode', processId: 'lpbf', bannerDescription: '' };
+  const isPointSourceModel = String(mpModelInput || 'rosenthal').toLowerCase() === 'rosenthal' || reg.processId === 'waam';
+
+  if (reg.severity === 'optimal') {
+    const subLabel = 'Conduction / Stable Pool';
+    return {
+      aspectText: aspectText,
+      subLabel: subLabel,
+      fullText: aspectText + ' — ' + subLabel,
+      color: '#10b981',
+      borderColor: 'rgba(16, 185, 129, 0.45)',
+      bgColor: '#070c14',
+      tooltip: 'Validated conduction / stable melt pool geometry with uniform depth-to-width ratio.'
+    };
+  }
+
+  if (reg.severity === 'danger') {
+    if (isPointSourceModel || aspectNum <= 0.65) {
+      const subLabel = 'Point-Source Bound (' + reg.shortLabel + ')';
+      return {
+        aspectText: aspectText,
+        subLabel: subLabel,
+        fullText: aspectText + ' — ' + subLabel,
+        color: '#f43f5e',
+        borderColor: 'rgba(244, 63, 94, 0.55)',
+        bgColor: '#190a12',
+        tooltip: 'Classic Rosenthal (1946) assumes conduction-mode point-source geometry in a semi-infinite medium (~0.50–0.55 d/W) and underpredicts depth/sag at high heat inputs.'
+      };
+    }
+    return {
+      aspectText: aspectText,
+      subLabel: reg.shortLabel,
+      fullText: aspectText + ' — ' + reg.shortLabel,
+      color: '#f43f5e',
+      borderColor: 'rgba(244, 63, 94, 0.55)',
+      bgColor: '#190a12',
+      tooltip: reg.bannerDescription || 'Severe thermal instability detected.'
+    };
+  }
+
+  const warnSub = isPointSourceModel ? ('Point-Source Bound (' + reg.shortLabel + ')') : reg.shortLabel;
+  return {
+    aspectText: aspectText,
+    subLabel: warnSub,
+    fullText: aspectText + ' — ' + warnSub,
+    color: '#fbbf24',
+    borderColor: 'rgba(251, 191, 36, 0.5)',
+    bgColor: '#171208',
+    tooltip: 'Classic Rosenthal (1946) assumes conduction-mode point-source geometry and does not directly model boundary transition defects.'
+  };
+}
+window.formatRosenthalAspectCallout = formatRosenthalAspectCallout;
+
+function getHeatSourceLongitudinalLabel(processIdInput) {
+  const proc = normalizeCanonicalProcessId(processIdInput);
+  if (proc === 'waam') {
+    return 'Longitudinal Distance from Arc Center x (µm / mm)';
+  }
+  return 'Longitudinal Distance from Laser Center x (µm / mm)';
+}
+window.getHeatSourceLongitudinalLabel = getHeatSourceLongitudinalLabel;
+
+function getActiveMeltPoolPresetId(processIdInput, P, v, tolerance) {
+  const tol = Number.isFinite(Number(tolerance)) ? Number(tolerance) : 0.01;
+  const proc = normalizeCanonicalProcessId(processIdInput);
+  const pNum = Number(P);
+  const vNum = Number(v);
+  if (!Number.isFinite(pNum) || !Number.isFinite(vNum)) return null;
+
+  for (let i = 0; i < MELT_POOL_PRESETS.length; i++) {
+    const preset = MELT_POOL_PRESETS[i];
+    if (preset.processId !== proc) continue;
+    const pDiff = Math.abs(pNum - preset.P) / Math.max(1e-6, preset.P);
+    const vDiff = Math.abs(vNum - preset.v) / Math.max(1e-6, preset.v);
+    if (pDiff <= tol && vDiff <= tol) {
+      return preset.id;
+    }
+  }
+  return null;
+}
+window.getActiveMeltPoolPresetId = getActiveMeltPoolPresetId;
+
+function syncMpPresetButtons(processIdInput, P, v) {
+  const proc = processIdInput || (typeof currentProcess !== 'undefined' ? currentProcess : 'lpbf');
+  const pVal = Number.isFinite(Number(P)) ? Number(P) : parseFloat(document.getElementById('sl_p')?.value);
+  const vVal = Number.isFinite(Number(v)) ? Number(v) : parseFloat(document.getElementById('sl_v')?.value);
+  const activeId = getActiveMeltPoolPresetId(proc, pVal, vVal, 0.01);
+
+  for (let i = 0; i < MELT_POOL_PRESETS.length; i++) {
+    const preset = MELT_POOL_PRESETS[i];
+    const btn = document.getElementById(preset.buttonId);
+    if (btn) {
+      btn.classList.toggle('active', preset.id === activeId);
+    }
+  }
+  return activeId;
+}
+window.syncMpPresetButtons = syncMpPresetButtons;
 
 // ========================================================
 // OUT-OF-DISTRIBUTION (OOD) EXTRAPOLATION DETECTOR (N=178)
@@ -4108,52 +4643,71 @@ function renderUnifiedModelsUI(modelPredictions, stateKey, oodResultInput) {
 }
 
 function syncSolverDisplayFromSliders() {
+  const proc = (typeof currentProcess !== 'undefined' && currentProcess) ? currentProcess : 'lpbf';
+  const normProc = normalizeCanonicalProcessId(proc);
   const p = parseFloat(document.getElementById('sl_p')?.value) || 280;
   const v = parseFloat(document.getElementById('sl_v')?.value) || 960;
   const h = parseFloat(document.getElementById('sl_h')?.value) || 110;
   const t = parseFloat(document.getElementById('sl_t')?.value) || 40;
+  const spot = parseFloat(document.getElementById('sl_spot')?.value) || 80;
+  const preheat = parseFloat(document.getElementById('sl_preheat')?.value) || 200;
   const currentVed = Number(((p * 1e6) / (Math.max(0.1, v) * h * t)).toFixed(1));
+  const currentHi = Number((p / Math.max(0.1, v)).toFixed(1));
+  const regimeInfo = classifyProcessRegime(proc, { P: p, v: v, h: h, t: t, T0: preheat, db: spot }, { ved: currentVed, heatInput: currentHi });
 
   const tgtDisp = document.getElementById('targetVedDisplay');
-  if (tgtDisp) tgtDisp.innerText = currentVed.toFixed(1) + ' J/mm³';
+  if (tgtDisp) {
+    tgtDisp.innerText = normProc === 'waam'
+      ? (Math.round(currentHi) + ' J/mm (' + currentVed.toFixed(1) + ' J/mm³)')
+      : (currentVed.toFixed(1) + ' J/mm³');
+  }
 
   const s = document.getElementById('targetVedSlider');
   if (s && Math.abs(parseFloat(s.value) - currentVed) > 0.4) {
-    s.value = Math.max(parseFloat(s.min) || 20, Math.min(parseFloat(s.max) || 140, currentVed));
+    s.value = Math.max(parseFloat(s.min) || 20, Math.min(parseFloat(s.max) || 260, currentVed));
   }
+
+  // Clear stale VED preset highlights when sliders diverge (>1% from preset)
+  document.querySelectorAll('#vedPresetRowQuick .preset-pill, #vedPresetRowPapers .preset-pill').forEach(pill => {
+    const presetVal = parseFloat(pill.dataset?.ved || pill.textContent);
+    const matches = Number.isFinite(presetVal) && presetVal > 0 && (Math.abs(currentVed - presetVal) / presetVal <= 0.01);
+    pill.classList.toggle('active', matches);
+  });
+
+  // Sync Rosenthal Melt Pool preset buttons (±1% tolerance)
+  syncMpPresetButtons(proc, p, v);
 
   const drvEl = document.getElementById('derivedVedLabel');
   if (drvEl) {
-    drvEl.innerHTML = 'Achieved VED = <strong>' + currentVed.toFixed(1) + ' J/mm³</strong> ' +
-      '<span style="font-size:10px; color:var(--accent-emerald);">(Active Sliders: Δ 0.0 J/mm³)</span>';
+    if (normProc === 'waam') {
+      drvEl.innerHTML = 'Achieved HI = <strong>' + Math.round(currentHi) + ' J/mm</strong> ' +
+        '<span style="font-size:10px; color:var(--text-secondary);">(VED = ' + currentVed.toFixed(1) + ' J/mm³)</span>';
+    } else {
+      drvEl.innerHTML = 'Achieved VED = <strong>' + currentVed.toFixed(1) + ' J/mm³</strong> ' +
+        '<span style="font-size:10px; color:var(--accent-emerald);">(Active Sliders: Δ 0.0 J/mm³)</span>';
+    }
   }
 
   const winEl = document.getElementById('vedWindowValidation');
   if (winEl) {
-    const isLof = currentVed < 40;
-    const isSubLof = currentVed >= 40 && currentVed < 55;
-    const isOpt = currentVed >= 55 && currentVed <= 85;
-    const isMildKh = currentVed > 85 && currentVed <= 110;
-    const isKh = currentVed > 110;
-    let color = 'var(--accent-emerald)';
-    let msg = 'Within validated conduction processing window (55–85 J/mm³).';
-    if (isLof) { color = '#f43f5e'; msg = 'Severe Lack-of-Fusion risk (<40 J/mm³).'; }
-    else if (isSubLof) { color = '#fbbf24'; msg = 'Sub-optimal / Transition LOF window (40–55 J/mm³).'; }
-    else if (isMildKh) { color = '#fbbf24'; msg = 'Transition / Mild Keyhole window (85–110 J/mm³).'; }
-    else if (isKh) { color = '#f43f5e'; msg = 'Severe Keyhole / Vaporization Instability (>110 J/mm³).'; }
-    winEl.innerHTML = '<span style="color:' + color + '; font-weight:600;">' + msg + '</span>';
+    const color = regimeInfo.severity === 'optimal'
+      ? 'var(--accent-emerald)'
+      : (regimeInfo.severity === 'danger' ? '#f43f5e' : '#fbbf24');
+    winEl.innerHTML = '<span style="color:' + color + '; font-weight:600;">' + regimeInfo.solverWindowMessage + '</span>';
   }
 
   const solP = document.getElementById('sol_p'); if (solP) solP.innerText = Math.round(p) + ' W';
-  const solV = document.getElementById('sol_v'); if (solV) solV.innerText = Math.round(v) + ' mm/s';
+  const solV = document.getElementById('sol_v'); if (solV) solV.innerText = (v >= 100 || v % 1 === 0 ? Math.round(v) : v.toFixed(1)) + ' mm/s';
   const solH = document.getElementById('sol_h'); if (solH) solH.innerText = Math.round(h) + ' µm';
   const solT = document.getElementById('sol_t'); if (solT) solT.innerText = Math.round(t) + ' µm';
-  const volRate = ((v * h * t * 3600) / 1e9).toFixed(1);
+  const volRate = ((v * h * t * 3600) / 1e9).toFixed(normProc === 'waam' || normProc === 'lded' ? 0 : 1);
   const solRate = document.getElementById('sol_rate'); if (solRate) solRate.innerText = volRate + ' cm³/h';
   const solReg = document.getElementById('sol_regime');
   if (solReg) {
-    solReg.innerText = currentVed >= 55 && currentVed <= 85 ? 'Conduction mode' : (currentVed < 55 ? 'Lack of Fusion' : 'Keyhole mode');
-    solReg.style.color = currentVed >= 55 && currentVed <= 85 ? 'var(--accent-emerald)' : 'var(--accent-amber)';
+    solReg.innerText = regimeInfo.solverRegimeLabel;
+    solReg.style.color = regimeInfo.severity === 'optimal'
+      ? 'var(--accent-emerald)'
+      : (regimeInfo.severity === 'danger' ? 'var(--accent-rose)' : 'var(--accent-amber)');
   }
 }
 window.renderUnifiedModelsUI = renderUnifiedModelsUI;
@@ -4369,7 +4923,7 @@ window.addEventListener('click', function(e) {
     </button>
     <button class="tab-btn" onclick="switchTab('literature', this)" id="navBtnLit">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
-      Literature Evidence (154 Papers)
+      Literature Evidence (178 Papers)
     </button>
   </div>
 </nav>
@@ -4666,7 +5220,7 @@ window.addEventListener('click', function(e) {
       <div class="lit-strip-left">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#50d8e9" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
         <div>
-          <div class="lit-strip-title">Literature Evidence & Research Gap Matrix: <span class="lit-strip-badge" id="matrixPapersCountBadge">178 Indexed Publications • 289 Curated Variants • 42 Metrics</span></div>
+          <div class="lit-strip-title">Literature Evidence & Research Gap Matrix: <span class="lit-strip-badge" id="matrixPapersCountBadge">178 Peer-Reviewed Publications • 289 Curated Variants • 42 Metrics</span></div>
           <div class="lit-strip-sub">Explore indexed publications, parameter envelopes, reported properties, and ASTM qualification compliance.</div>
         </div>
       </div>
@@ -4702,7 +5256,7 @@ window.addEventListener('click', function(e) {
           <div class="model-card-header">
             <div>
               <div class="model-card-title">Hardness from Each Model</div>
-              <div class="model-card-sub">Calibrated against 54 Leave-One-Out (LOO) Benchmark Papers across 178 Indexed Studies &amp; 289 Variants</div>
+              <div class="model-card-sub" id="modelTableSubtitle">Calibrated against 54 Leave-One-Out (LOO) Benchmark Papers across 178 Indexed Studies &amp; 289 Variants</div>
             </div>
             <button class="step-btn" onclick="exportPredictionsCsv()">📥 Download CSV</button>
           </div>
@@ -5071,7 +5625,7 @@ window.addEventListener('click', function(e) {
             </div>
             <div class="res-card-sub">Inspect the exact peer-reviewed literature records closest to your current operating point in Euclidean parameter space</div>
           </div>
-          <button class="step-btn" onclick="openEvidenceHub()">Browse All 154 Papers →</button>
+          <button class="step-btn" id="browseAllPapersBtn" onclick="openEvidenceHub()">Browse All 178 Papers →</button>
         </div>
 
         <table class="knn-table">
@@ -5613,12 +6167,12 @@ window.addEventListener('click', function(e) {
             <div style="font-size: 9.5px; color: var(--text-muted); margin-top: 4px;">Threshold: &gt; 1.0 indicates LoF voids</div>
           </div>
 
-          <!-- Keyhole Porosity Dial -->
+          <!-- Keyhole / Overheat Instability Dial -->
           <div style="background: #080d16; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; text-align: center;">
-            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Keyhole Aspect Ratio (d / W)</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;" id="dialKeyholeTitle">Keyhole Aspect Ratio (d / W)</div>
             <div style="font-size: 20px; font-weight: 800; font-family: monospace; color: #34d399; margin: 4px 0;" id="dialKeyhole">0.51</div>
             <div style="font-size: 10px; color: #34d399;" id="dialKeyholeStatus">Conduction Regime (d/W &lt; 0.55)</div>
-            <div style="font-size: 9.5px; color: var(--text-muted); margin-top: 4px;">Threshold: &gt; 0.80 indicates keyhole collapse</div>
+            <div style="font-size: 9.5px; color: var(--text-muted); margin-top: 4px;" id="dialKeyholeSub">Threshold: &gt; 0.80 indicates keyhole collapse</div>
           </div>
 
           <!-- Balling Ratio Dial -->
@@ -7409,12 +7963,12 @@ window.addEventListener('click', function(e) {
       <div class="model-card">
         <div class="model-card-header" style="flex-wrap: wrap; gap: 12px;">
           <div>
-            <div class="model-card-title" id="litTabTitle">Indexed Literature Evidence Database (154 Research Papers)</div>
+            <div class="model-card-title" id="litTabTitle">Indexed Literature Evidence Database (178 Research Papers)</div>
             <div class="model-card-sub">Peer-Reviewed Experimental Records for Ti-6Al-4V Additive Manufacturing (LPBF, L-DED, WAAM & Binder Jetting)</div>
           </div>
           <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
             <div class="mp-control-group" style="padding: 2px 4px; display: inline-flex;">
-              <button type="button" class="mp-toggle-btn active" id="btnFilterAll" onclick="filterByProcess('ALL', this)">All (154)</button>
+              <button type="button" class="mp-toggle-btn active" id="btnFilterAll" onclick="filterByProcess('ALL', this)">All (178)</button>
               <button type="button" class="mp-toggle-btn" id="btnFilterLpbf" onclick="filterByProcess('LPBF', this)">LPBF</button>
               <button type="button" class="mp-toggle-btn" id="btnFilterDed" onclick="filterByProcess('DED', this)">L-DED</button>
               <button type="button" class="mp-toggle-btn" id="btnFilterWaam" onclick="filterByProcess('WAAM', this)">WAAM</button>
@@ -7661,66 +8215,57 @@ function solveParamsForTargetVed(targetVed) {
   const heatInputJmm = p / Math.max(0.5, v);
   const buildRate = ((v * h * t * 3600) / 1e9).toFixed(currentProcess === 'waam' || currentProcess === 'ded-laser' ? 0 : 1);
 
-  // Validate whether parameters fall within validated process window
-  let windowStatus = 'VALIDATED';
-  let windowMessage = 'Within validated conduction processing window (55–85 J/mm³).';
-  let windowColor = 'var(--accent-emerald)';
+  // Validate whether parameters fall within validated process window via unified classifier
+  const solvedRegime = classifyProcessRegime(
+    currentProcess,
+    { P: p, v: v, h: h, t: t, db: cfg.spot },
+    { ved: actualVed, heatInput: heatInputJmm }
+  );
+  const windowMessage = solvedRegime.solverWindowMessage;
+  const windowColor = solvedRegime.severity === 'optimal'
+    ? 'var(--accent-emerald)'
+    : (solvedRegime.severity === 'danger' ? '#ef4444' : '#f59e0b');
+  const regime = solvedRegime.code;
+  const regimeLabel = solvedRegime.solverRegimeLabel;
 
-  if (actualVed < 50.0) {
-    windowStatus = 'LOF_RISK';
-    windowMessage = '⚠️ Below safe process window: Lack of Fusion porosity risk.';
-    windowColor = '#ef4444';
-  } else if (actualVed > 90.0) {
-    windowStatus = 'KEYHOLE_RISK';
-    windowMessage = '⚠️ Above safe process window: Keyhole vapor depression & spatter risk.';
-    windowColor = '#f59e0b';
-  }
-
-  let regime = "conduction";
-  let regimeLabel = "Conduction mode — fully dense";
-  if (currentProcess === 'waam') {
-    regimeLabel = "Optimal WAAM arc window (HI " + heatInputJmm.toFixed(0) + " J/mm)";
-    if (heatInputJmm < 120) {
-      regime = "lof";
-      regimeLabel = "Lack of Fusion risk (low HI " + heatInputJmm.toFixed(0) + " J/mm)";
-    } else if (heatInputJmm > 600) {
-      regime = "keyhole";
-      regimeLabel = "Excessive Heat Input / Coarse-β risk (" + heatInputJmm.toFixed(0) + " J/mm)";
-    }
-  } else if (currentProcess === 'ded-laser') {
-    regimeLabel = "Conduction-dilution window (HI " + heatInputJmm.toFixed(0) + " J/mm)";
-    if (heatInputJmm < 75) {
-      regime = "lof";
-      regimeLabel = "Lack of Fusion risk (low HI " + heatInputJmm.toFixed(0) + " J/mm)";
-    } else if (heatInputJmm > 240) {
-      regime = "keyhole";
-      regimeLabel = "Over-dilution / Keyhole risk (" + heatInputJmm.toFixed(0) + " J/mm)";
-    }
-  } else {
-    if (actualVed < 55) {
-      regime = "lof";
-      regimeLabel = "Lack of Fusion risk";
-    } else if (actualVed > 95) {
-      regime = "keyhole";
-      regimeLabel = "Keyholing threshold risk";
-    }
-  }
-
-  return { p, v, h, t, spot: cfg.spot, actualVed: actualVed.toFixed(1), heatInput: heatInputJmm.toFixed(0), buildRate, regime, regimeLabel };
+  return {
+    p, v, h, t,
+    spot: cfg.spot,
+    actualVed: actualVed.toFixed(1),
+    deltaVed,
+    deltaPct,
+    heatInput: heatInputJmm.toFixed(0),
+    buildRate,
+    regime,
+    regimeLabel,
+    regimeSeverity: solvedRegime.severity,
+    windowMessage,
+    windowColor
+  };
 }
 
 let solvedCache = null;
 
 function updateVedSolver(targetVed) {
   solvedCache = solveParamsForTargetVed(targetVed);
+  const normProc = normalizeCanonicalProcessId(currentProcess);
   const tgtDisp = document.getElementById('targetVedDisplay');
-  if (tgtDisp) tgtDisp.innerText = targetVed.toFixed(1) + ' J/mm³';
+  if (tgtDisp) {
+    tgtDisp.innerText = normProc === 'waam'
+      ? (solvedCache.heatInput + ' J/mm (' + solvedCache.actualVed + ' J/mm³)')
+      : (targetVed.toFixed(1) + ' J/mm³');
+  }
   const drvEl = document.getElementById('derivedVedLabel');
   if (drvEl) {
-    const dSign = solvedCache.deltaVed >= 0 ? '+' : '';
-    drvEl.innerHTML = 'Achieved VED = <strong>' + solvedCache.actualVed + ' J/mm³</strong> ' +
-      '<span style="font-size:10px; color:' + (Math.abs(solvedCache.deltaPct) < 2 ? 'var(--accent-emerald)' : '#fbbf24') + ';">' +
-      '(Target: ' + targetVed.toFixed(1) + ', Δ ' + dSign + solvedCache.deltaVed + ' J/mm³ [' + dSign + solvedCache.deltaPct + '%])</span>';
+    if (normProc === 'waam') {
+      drvEl.innerHTML = 'Achieved HI = <strong>' + solvedCache.heatInput + ' J/mm</strong> ' +
+        '<span style="font-size:10px; color:var(--text-secondary);">(VED = ' + solvedCache.actualVed + ' J/mm³)</span>';
+    } else {
+      const dSign = solvedCache.deltaVed >= 0 ? '+' : '';
+      drvEl.innerHTML = 'Achieved VED = <strong>' + solvedCache.actualVed + ' J/mm³</strong> ' +
+        '<span style="font-size:10px; color:' + (Math.abs(solvedCache.deltaPct) < 2 ? 'var(--accent-emerald)' : '#fbbf24') + ';">' +
+        '(Target: ' + targetVed.toFixed(1) + ', Δ ' + dSign + solvedCache.deltaVed + ' J/mm³ [' + dSign + solvedCache.deltaPct + '%])</span>';
+    }
   }
 
   const winEl = document.getElementById('vedWindowValidation');
@@ -7733,7 +8278,9 @@ function updateVedSolver(targetVed) {
   document.getElementById('sol_t').innerText = solvedCache.t + ' µm';
   document.getElementById('sol_rate').innerText = solvedCache.buildRate + ' cm³/h';
   document.getElementById('sol_regime').innerText = solvedCache.regimeLabel;
-  document.getElementById('sol_regime').style.color = solvedCache.regime === 'conduction' ? 'var(--accent-emerald)' : 'var(--accent-amber)';
+  document.getElementById('sol_regime').style.color = solvedCache.regimeSeverity === 'optimal'
+    ? 'var(--accent-emerald)'
+    : (solvedCache.regimeSeverity === 'danger' ? 'var(--accent-rose)' : 'var(--accent-amber)');
 
   if (autoSync) {
     applySolvedToSliders();
@@ -7862,7 +8409,19 @@ function calculatePhysics() {
 
   // Edge Case 1: Binder Jetting (Non-melting solid-state sintering route)
   if (isBinderJetting) {
+    const bjRegime = classifyProcessRegime(
+      currentProcess,
+      { P: p, v: v, h: h, t: t, T0: preheat, db: spot },
+      { sinteringTempC: 1250, binderSaturationPct: Number(((p / 120.0) * 65.0).toFixed(1)) }
+    );
+    window.latestRegimeClassification = bjRegime;
     setTxt('kpi_ved', 'N/A (Sinter)');
+    const vedBadgeBj = document.getElementById('kpi_ved_badge');
+    if (vedBadgeBj) {
+      vedBadgeBj.innerText = bjRegime.kpiBadgeLabel;
+      vedBadgeBj.style.background = bjRegime.severity === 'optimal' ? 'rgba(16,185,129,0.2)' : (bjRegime.severity === 'danger' ? 'rgba(239,68,68,0.2)' : 'rgba(251,191,36,0.2)');
+      vedBadgeBj.style.color = bjRegime.severity === 'optimal' ? 'var(--accent-emerald)' : (bjRegime.severity === 'danger' ? 'var(--accent-rose)' : 'var(--accent-amber)');
+    }
     const densityPct = post === 'HIP' ? 99.85 : 96.50;
     const porosityPct = (100 - densityPct).toFixed(2);
     const primaryHv = post === 'HIP' ? 335 : 310;
@@ -7872,19 +8431,27 @@ function calculatePhysics() {
     const elongationPct = post === 'HIP' ? 14.0 : 6.0;
 
     const banner = document.getElementById('regimeBanner');
-    if (banner) banner.className = 'regime-banner';
-    setTxt('regimeBadge', 'Solid-State Sintering Mode (No Melt Pool)');
-    setTxt('regimeDesc', '— Binder Jetting utilizes room-temperature liquid binder deposition followed by vacuum sintering (1250°C). Melt pool physics and laser keyholing are non-applicable.');
+    if (banner) {
+      banner.className = 'regime-banner ' + (bjRegime.severity === 'optimal' ? '' : (bjRegime.severity === 'danger' ? 'defect' : 'warning'));
+    }
+    setTxt('regimeBadge', bjRegime.regimeLabel);
+    setTxt('regimeDesc', bjRegime.bannerDescription);
     const elRegIndices = document.getElementById('regimeIndices');
-    if (elRegIndices) elRegIndices.innerHTML = 'Process: <strong>Liquid Binder Inkjet + Vacuum Furnace Sintering</strong> • Standard: <strong>ISO/ASTM 52900 / MPIF 35</strong>';
+    if (elRegIndices) elRegIndices.innerHTML = 'Process: <strong>Liquid Binder Inkjet + Vacuum Furnace Sintering</strong> • Saturation: <strong>' + bjRegime.governingMetricValue + '</strong>';
     const tweakPanel = document.getElementById('regimeTweakPanel');
     if (tweakPanel) {
-      tweakPanel.className = 'regime-tweak-panel conduction-border';
+      const bCls = bjRegime.severity === 'optimal' ? 'conduction-border' : (bjRegime.severity === 'danger' ? 'defect-border' : 'warning-border');
+      const tCol = bjRegime.severity === 'optimal' ? 'var(--accent-emerald)' : (bjRegime.severity === 'danger' ? 'var(--accent-rose)' : 'var(--accent-amber)');
+      tweakPanel.className = 'regime-tweak-panel ' + bCls;
       tweakPanel.innerHTML = `
-        <div class="regime-tweak-text" style="color: var(--accent-emerald);">
+        <div class="regime-tweak-text" style="color: ${tCol};">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink: 0;"><polyline points="20 6 9 17 4 12"/></svg>
-          <span><strong>Binder Jetting Solid-State Sintering:</strong> Room-temperature inkjet print bed with subsequent vacuum sintering furnace (1250°C). Hydrodynamic melt defects (LoF, Keyhole, Balling) do not apply.</span>
+          <span><strong>${bjRegime.remediationHeading}</strong></span>
         </div>
+        ${bjRegime.severity !== 'optimal' ? `
+        <div class="regime-tweak-buttons">
+          <button type="button" class="tweak-btn primary" onclick="tweakToConduction()">${bjRegime.tweakCtaLabel}</button>
+        </div>` : ''}
       `;
     }
 
@@ -7927,6 +8494,7 @@ function calculatePhysics() {
       ensemble: primaryHv
     }, bjStateKey, bjOod);
 
+    if (typeof syncSolverDisplayFromSliders === 'function') syncSolverDisplayFromSliders();
     updateDefectMapSvg(currentProcess, p, v);
     updateMeltPoolAndThermal();
     if (typeof renderBonthaProfileTable === 'function') renderBonthaProfileTable();
@@ -8059,72 +8627,30 @@ function calculatePhysics() {
   densityPct = Math.max(88.0, Math.min(99.98, densityPct));
   const porosityPct = (100 - densityPct).toFixed(2);
 
-  // Regime classification
-  let regime = 'conduction';
-  let regimeLabel = isWaam
-    ? 'Stable WAAM arc conduction — fully dense'
-    : (isDed ? 'Conduction-dilution mode — fully dense' : 'Conduction mode — fully dense');
-  let regimeDesc = isWaam
-    ? '— Balanced wire-arc heat input (120–600 J/mm) with uniform bead tie-in and minimal distortion.'
-    : (isDed ? '— Controlled substrate dilution and full metallurgical bonding without vapor cavity porosity.' : '— Stable, optimal melt pool dynamics with high relative density and minimal porosity.');
-  if (!isWaam && !isDed) {
-    // LPBF Processing Windows strictly per Ti-6Al-4V AM Physics Rules (Section 3):
-    // - Severe Lack-of-Fusion (LOF): Ev < 40 J/mm³ (porous, unmelted powder particles)
-    // - Sub-optimal / Transition LOF: 40 <= Ev < 55 J/mm³
-    // - Optimal Conduction Window: 55 <= Ev <= 85 J/mm³ (fully dense > 99.8%)
-    // - Transition / Mild Keyhole: 85 < Ev <= 110 J/mm³
-    // - Severe Keyhole / Vaporization Instability: Ev > 110 J/mm³
-    if (ved < 40.0 || lofIndex > 1.35) {
-      regime = 'lof';
-      regimeLabel = 'Severe Lack-of-Fusion (LOF) [Ev < 40 J/mm³]';
-      regimeDesc = '— Severe lack-of-fusion detected with unmelted powder particles. Melt pool depth is insufficient to penetrate underlying layer. Increase laser power or decrease scan speed.';
-    } else if (ved < 55.0 || lofIndex > 1.05) {
-      regime = 'transition_lof';
-      regimeLabel = 'Sub-optimal / Transition LOF [40 ≤ Ev < 55 J/mm³]';
-      regimeDesc = '— Operating in the sub-optimal transition zone. Marginal layer penetration risks un-fused void formation. Parameter adjustment to Ev ≥ 55 J/mm³ recommended.';
-    } else if (ved > 110.0 || (meltPoolDepth / Math.max(1, meltPoolWidth)) >= 0.85) {
-      regime = 'keyhole';
-      regimeLabel = 'Severe Keyhole / Vaporization Instability [Ev > 110 J/mm³]';
-      regimeDesc = '— Deep recoil vapor cavity formation active. Severe risk of trapped gas pores and aluminium vaporization loss. Reduce laser power or increase scan speed.';
-    } else if (ved > 85.0 || normalizedEnthalpy >= 5.5 || (meltPoolDepth / Math.max(1, meltPoolWidth)) >= 0.60) {
-      regime = 'transition';
-      regimeLabel = 'Transition / Mild Keyhole [85 < Ev ≤ 110 J/mm³]';
-      regimeDesc = `— Normalized enthalpy (ΔH/hs ~ ${normalizedEnthalpy.toFixed(1)}) marks incipient keyhole vapor depression. Incipient vapor depression monitored.`;
-    } else if (ballingRatio > 1.05) {
-      regime = 'balling';
-      regimeLabel = 'Plateau-Rayleigh Balling instability';
-      regimeDesc = '— Elongated melt pool breaks into discrete molten beads. Reduce speed or widen beam spot diameter.';
-    } else {
-      regime = 'conduction';
-      regimeLabel = 'Optimal Conduction Window [55 ≤ Ev ≤ 85 J/mm³]';
-      regimeDesc = '— Stable, optimal melt pool dynamics producing fully dense material (>99.8%) with minimal defect risk.';
+  // Unified Process-Specific Regime Classification (Consumed by both Sidebar Solver & Middle Banner)
+  const regimeInfo = classifyProcessRegime(
+    currentProcess,
+    { P: p, v: v, h: h, t: t, T0: preheat, db: spot },
+    {
+      ved: ved,
+      heatInput: heatInputJmm,
+      lofIndex: lofIndex,
+      keyholeRatio: keyholeRatio,
+      ballingRatio: ballingRatio,
+      normalizedEnthalpy: normalizedEnthalpy,
+      aspectRatio: meltPoolDepth / Math.max(1, meltPoolWidth)
     }
-  } else {
-    // DED / WAAM Regimes
-    if (lofIndex > 1.05) {
-      regime = 'lof';
-      regimeLabel = 'Lack of Fusion (LoF) detected';
-      regimeDesc = '— Linear heat input or penetration is too low to wet and fuse into the substrate/previous bead. Increase power or reduce travel speed.';
-    } else if (keyholeRatio > 1.0 || (meltPoolDepth / Math.max(1, meltPoolWidth)) >= 0.80) {
-      regime = 'keyhole';
-      regimeLabel = isWaam ? 'Overheating / Coarse-β instability' : 'Over-dilution / Keyhole risk';
-      regimeDesc = isWaam
-        ? '— Excessive arc linear heat input (>600 J/mm) causes remelt sag, heavy residual stress, and coarse prior-β grains.'
-        : '— Excessive localized energy or linear heat input deepens penetration excessively and increases gas pore entrapment.';
-    } else if (normalizedEnthalpy >= 5.5 || (meltPoolDepth / Math.max(1, meltPoolWidth)) >= 0.58) {
-      regime = 'transition';
-      regimeLabel = isWaam ? 'WAAM Transition mode' : 'DED Transition mode';
-      regimeDesc = `— Normalized enthalpy (ΔH/hs ~ ${normalizedEnthalpy.toFixed(1)}) marks the boundary between conduction and incipient keyhole vapor cavity formation.`;
-    } else if (ballingRatio > 1.05) {
-      regime = 'balling';
-      regimeLabel = 'Plateau-Rayleigh Balling instability';
-      regimeDesc = '— Elongated melt pool breaks into discrete molten beads. Reduce speed or widen beam/arc spot diameter.';
-    }
-  }
+  );
+  window.latestRegimeClassification = regimeInfo;
+  const regime = regimeInfo.code;
+  const regimeLabel = regimeInfo.regimeLabel;
+  const regimeDesc = regimeInfo.bannerDescription;
 
   // Update Regime Banner
   const banner = document.getElementById('regimeBanner');
-  banner.className = 'regime-banner ' + (regime === 'conduction' ? '' : (regime === 'lof' || regime === 'keyhole' ? 'defect' : 'warning'));
+  if (banner) {
+    banner.className = 'regime-banner ' + (regimeInfo.severity === 'optimal' ? '' : (regimeInfo.severity === 'danger' ? 'defect' : 'warning'));
+  }
   document.getElementById('regimeBadge').innerText = regimeLabel;
   document.getElementById('regimeDesc').innerText = regimeDesc;
   document.getElementById('regimeIndices').innerHTML = `LOF Index: <strong>${lofIndex.toFixed(2)}</strong> • ${isWaam ? 'Overheat Ratio' : 'Keyhole Ratio'}: <strong>${keyholeRatio.toFixed(2)}</strong> • Balling Ratio: <strong>${ballingRatio.toFixed(2)}</strong>${(isWaam || isDed) ? ` • HI: <strong>${heatInputJmm.toFixed(0)} J/mm</strong>` : ''}`;
@@ -8156,7 +8682,49 @@ function calculatePhysics() {
 
     const dispV = (val) => (val >= 100 || val % 1 === 0 ? Math.round(val) : val.toFixed(1));
 
-    if (regime === 'transition') {
+    if (regime === 'overheating') {
+      // WAAM Overheating (HI > 600 J/mm): reduce arc power or increase travel speed so HI < 600 J/mm
+      const recP = quantize(Math.min(p * 0.72, v * 480.0), pMin, pMax, pStep);
+      const recV = quantize(Math.max(v * 1.45, p / 480.0), vMin, vMax, vStep);
+      tweakPanel.className = 'regime-tweak-panel defect-border';
+      tweakPanel.innerHTML = `
+        <div class="regime-tweak-text">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-rose); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span><strong>${regimeInfo.remediationHeading}</strong></span>
+          ${recP < p ? `<span class="regime-tweak-item">Lower Arc Power: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${p}W → ${recP}W</span></span>` : ''}
+          ${recV > v ? `<span class="regime-tweak-item">or Increase Travel Speed: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${dispV(v)} → ${dispV(recV)} mm/s</span></span>` : ''}
+        </div>
+        <div class="regime-tweak-buttons">
+          <button type="button" class="tweak-btn primary" onclick="tweakToConduction()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            ${regimeInfo.tweakCtaLabel}
+          </button>
+          ${recP < p ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})">Reduce Arc Power (${recP}W)</button>` : ''}
+          ${recV > v ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Increase Travel Speed (${dispV(recV)} mm/s)</button>` : ''}
+        </div>
+      `;
+    } else if (isWaam && regime === 'lof') {
+      // WAAM Lack of Fusion / Cold Lap (HI < 120 J/mm): warning severity
+      const recP = quantize(Math.max(p * 1.35, v * 180.0), pMin, pMax, pStep);
+      const recV = quantize(Math.min(v * 0.70, p / 180.0), vMin, vMax, vStep);
+      tweakPanel.className = 'regime-tweak-panel warning-border';
+      tweakPanel.innerHTML = `
+        <div class="regime-tweak-text">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-amber); flex-shrink: 0;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          <span><strong>${regimeInfo.remediationHeading}</strong></span>
+          ${recP > p ? `<span class="regime-tweak-item">Increase Arc Power: <span class="regime-tweak-highlight">${p}W → ${recP}W</span></span>` : ''}
+          ${recV < v ? `<span class="regime-tweak-item">or Lower Travel Speed: <span class="regime-tweak-highlight">${dispV(v)} → ${dispV(recV)} mm/s</span></span>` : ''}
+        </div>
+        <div class="regime-tweak-buttons">
+          <button type="button" class="tweak-btn primary" onclick="tweakToConduction()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            ${regimeInfo.tweakCtaLabel}
+          </button>
+          ${recP > p ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})">Increase Power (${recP}W)</button>` : ''}
+          ${recV < v ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Lower Speed (${dispV(recV)} mm/s)</button>` : ''}
+        </div>
+      `;
+    } else if (regime === 'transition') {
       const recP = quantize(p * 0.85, pMin, pMax, pStep);
       const recV = quantize(v * 1.20, vMin, vMax, vStep);
       const recSpot = quantize(spot * 1.15, spotMin, spotMax, spotStep);
@@ -8164,7 +8732,7 @@ function calculatePhysics() {
       tweakPanel.innerHTML = `
         <div class="regime-tweak-text">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-amber); flex-shrink: 0;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-          <span><strong>Recommended parameter tweaks to return to Normal Conduction Mode:</strong></span>
+          <span><strong>${regimeInfo.remediationHeading}</strong></span>
           ${recP < p ? `<span class="regime-tweak-item">Lower Power: <span class="regime-tweak-highlight">${p}W → ${recP}W</span></span>` : ''}
           ${recV > v ? `<span class="regime-tweak-item">or Higher Speed: <span class="regime-tweak-highlight">${dispV(v)} → ${dispV(recV)} mm/s</span></span>` : ''}
           ${recSpot > spot ? `<span class="regime-tweak-item">or Widen Spot: <span class="regime-tweak-highlight">${spot} → ${recSpot} µm</span></span>` : ''}
@@ -8172,7 +8740,7 @@ function calculatePhysics() {
         <div class="regime-tweak-buttons">
           <button type="button" class="tweak-btn primary" onclick="tweakToConduction()" title="Apply nominal calibrated conduction parameters">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Auto-Tweak to Conduction
+            ${regimeInfo.tweakCtaLabel}
           </button>
           ${recP < p ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})" title="Reduce power to ${recP} W">Reduce Power (${recP}W)</button>` : ''}
           ${recV > v ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})" title="Increase speed to ${recV} mm/s">Increase Speed (${dispV(recV)} mm/s)</button>` : ''}
@@ -8186,34 +8754,34 @@ function calculatePhysics() {
       tweakPanel.innerHTML = `
         <div class="regime-tweak-text">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-rose); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span><strong>Keyhole active! Tweaks to prevent gas pore entrapment:</strong></span>
+          <span><strong>${regimeInfo.remediationHeading}</strong></span>
           ${recP < p ? `<span class="regime-tweak-item">Lower Power: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${p}W → ${recP}W</span></span>` : ''}
           ${recV > v ? `<span class="regime-tweak-item">or Increase Speed: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${dispV(v)} → ${dispV(recV)} mm/s</span></span>` : ''}
         </div>
         <div class="regime-tweak-buttons">
           <button type="button" class="tweak-btn primary" onclick="tweakToConduction()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Auto-Tweak to Conduction
+            ${regimeInfo.tweakCtaLabel}
           </button>
           ${recP < p ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})">Power -25% (${recP}W)</button>` : ''}
           ${recV > v ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Speed +30% (${dispV(recV)} mm/s)</button>` : ''}
         </div>
       `;
-    } else if (regime === 'lof') {
+    } else if (regime === 'lof' || regime === 'transition_lof') {
       const recP = quantize(p * 1.25, pMin, pMax, pStep);
       const recV = quantize(v * 0.75, vMin, vMax, vStep);
-      tweakPanel.className = 'regime-tweak-panel defect-border';
+      tweakPanel.className = 'regime-tweak-panel ' + (regimeInfo.severity === 'danger' ? 'defect-border' : 'warning-border');
       tweakPanel.innerHTML = `
         <div class="regime-tweak-text">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-rose); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span><strong>Lack of Fusion active! Melt depth &lt; layer thickness:</strong></span>
+          <span><strong>${regimeInfo.remediationHeading}</strong></span>
           ${recP > p ? `<span class="regime-tweak-item">Increase Power: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${p}W → ${recP}W</span></span>` : ''}
           ${recV < v ? `<span class="regime-tweak-item">or Lower Speed: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${dispV(v)} → ${dispV(recV)} mm/s</span></span>` : ''}
         </div>
         <div class="regime-tweak-buttons">
           <button type="button" class="tweak-btn primary" onclick="tweakToConduction()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Auto-Tweak to Conduction
+            ${regimeInfo.tweakCtaLabel}
           </button>
           ${recP > p ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_p', ${recP})">Power +25% (${recP}W)</button>` : ''}
           ${recV < v ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Speed -25% (${dispV(recV)} mm/s)</button>` : ''}
@@ -8226,28 +8794,28 @@ function calculatePhysics() {
       tweakPanel.innerHTML = `
         <div class="regime-tweak-text">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-rose); flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span><strong>Balling instability! Length/Width ratio &gt; π:</strong></span>
+          <span><strong>${regimeInfo.remediationHeading}</strong></span>
           ${recV < v ? `<span class="regime-tweak-item">Lower Speed: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${dispV(v)} → ${dispV(recV)} mm/s</span></span>` : ''}
           ${recSpot > spot ? `<span class="regime-tweak-item">or Widen Spot: <span class="regime-tweak-highlight" style="color: var(--accent-rose); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);">${spot} → ${recSpot} µm</span></span>` : ''}
         </div>
         <div class="regime-tweak-buttons">
           <button type="button" class="tweak-btn primary" onclick="tweakToConduction()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Auto-Tweak to Conduction
+            ${regimeInfo.tweakCtaLabel}
           </button>
           ${recV < v ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_v', ${recV})">Speed -25% (${dispV(recV)} mm/s)</button>` : ''}
           ${recSpot > spot ? `<button type="button" class="tweak-btn" onclick="tweakSlider('sl_spot', ${recSpot})">Spot +25% (${recSpot} µm)</button>` : ''}
         </div>
       `;
     } else {
-      // Normal Conduction Mode
+      // Optimal Conduction / Arc Deposition Mode
       tweakPanel.className = 'regime-tweak-panel conduction-border';
       const condPower = (currentProcess === 'waam') ? 2400 : (currentProcess === 'ded-laser' ? 1600 : 240);
       const testPower = (currentProcess === 'waam') ? 3200 : (currentProcess === 'ded-laser' ? 2200 : 280);
       tweakPanel.innerHTML = `
         <div class="regime-tweak-text" style="color: var(--accent-emerald);">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink: 0;"><polyline points="20 6 9 17 4 12"/></svg>
-          <span><strong>Optimal Operating Window:</strong> Stable conduction melting active (ΔH/hs = ${normalizedEnthalpy.toFixed(1)} &lt; 5.5 · VED = ${ved.toFixed(1)} J/mm³). Melt pool depth/width is balanced with full interlayer fusion.</span>
+          <span><strong>${regimeInfo.remediationHeading}</strong></span>
         </div>
         <div class="regime-tweak-buttons">
           <button type="button" class="tweak-btn primary" onclick="tweakToConduction()" title="Reset to standard nominal baseline">
@@ -8350,9 +8918,15 @@ function calculatePhysics() {
   }
 
   const vedBadge = document.getElementById('kpi_ved_badge');
-  vedBadge.innerText = regime === 'conduction' ? 'Optimal' : (regime === 'lof' ? 'Low (LOF)' : (isWaam ? 'High (Overheat)' : 'High (Keyhole)'));
-  vedBadge.style.background = regime === 'conduction' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)';
-  vedBadge.style.color = regime === 'conduction' ? 'var(--accent-emerald)' : 'var(--accent-rose)';
+  if (vedBadge) {
+    vedBadge.innerText = regimeInfo.kpiBadgeLabel;
+    vedBadge.style.background = regimeInfo.severity === 'optimal'
+      ? 'rgba(16,185,129,0.2)'
+      : (regimeInfo.severity === 'danger' ? 'rgba(239,68,68,0.2)' : 'rgba(251,191,36,0.2)');
+    vedBadge.style.color = regimeInfo.severity === 'optimal'
+      ? 'var(--accent-emerald)'
+      : (regimeInfo.severity === 'danger' ? 'var(--accent-rose)' : 'var(--accent-amber)');
+  }
 
   // Update Microstructure & Other Predicted Outcomes
   document.getElementById('po_width').innerText = meltPoolWidth + ' µm';
@@ -8552,6 +9126,9 @@ function calculatePhysics() {
         ? 'As-deposited WAAM naturally precipitates Widmanstätten α+β basketweave (slower cooling <410 K/s), delivering ~12–14% ductility.'
         : (isDed ? 'As-deposited L-DED exhibits mixed α+β / α\' transition along thermal gradients; stress-relief recommended for structural stability.' : 'As-built LPBF component retains rapid-quenched acicular α\' martensite with high hardness and limited ductility.');
     }
+  }
+  if (typeof syncSolverDisplayFromSliders === 'function') {
+    syncSolverDisplayFromSliders();
   }
   updateMeltPoolAndThermal();
   if (typeof renderBonthaProfileTable === 'function') {
@@ -8910,6 +9487,20 @@ function selectProcess(proc, el) {
   if (el) el.classList.add('active');
 
   configureProcessControls(proc);
+
+  if (proc === 'waam' || proc === 'ded-laser') {
+    mpModel = 'rosenthal';
+    const btnCoen = document.getElementById('btnMpCoen');
+    const btnRosenthal = document.getElementById('btnMpRosenthal');
+    if (btnCoen) btnCoen.classList.remove('active');
+    if (btnRosenthal) btnRosenthal.classList.add('active');
+    const tEl = document.getElementById('mpTitle');
+    const bEl = document.getElementById('mpBadge');
+    const dEl = document.getElementById('mpDesc');
+    if (tEl) tEl.innerText = 'Rosenthal Thermal Field & Melt Pool Geometry';
+    if (bEl) { bEl.innerText = 'Classic 1946'; bEl.style.color = '#38bdf8'; }
+    if (dEl) dEl.innerText = 'Analytical 3D thermal field generated by moving point source in semi-infinite medium (Rosenthal 1946).';
+  }
 
   if (typeof bonthaSource !== 'undefined') {
     bonthaSource = (proc === 'waam') ? 'arc' : (proc === 'ded-laser' ? 'ded-laser' : 'laser');
@@ -10255,15 +10846,6 @@ function setMpView(v) {
 }
 
 function applyMpPreset(p) {
-  const p200 = document.getElementById('btnMpPreset200');
-  const p300 = document.getElementById('btnMpPreset300');
-  const pDed = document.getElementById('btnMpPresetDed');
-  const pWaam = document.getElementById('btnMpPresetWaam');
-  if (p200) p200.classList.toggle('active', p === '200w');
-  if (p300) p300.classList.toggle('active', p === '300w');
-  if (pDed) pDed.classList.toggle('active', p === 'ded');
-  if (pWaam) pWaam.classList.toggle('active', p === 'waam');
-
   bonthaOverridePower = null;
   bonthaOverrideSpeed = null;
   bonthaPreset = 'custom';
@@ -10290,9 +10872,15 @@ function applyMpPreset(p) {
     setMpModel('rosenthal');
   } else if (p === 'ded') {
     selectProcess('ded-laser', findPill('ded-laser'));
+    const slP = document.getElementById('sl_p'); if (slP) slP.value = 1600;
+    const slV = document.getElementById('sl_v'); if (slV) slV.value = 15;
+    calculatePhysics();
     return;
   } else if (p === 'waam') {
     selectProcess('waam', findPill('waam'));
+    const slP = document.getElementById('sl_p'); if (slP) slP.value = 2400;
+    const slV = document.getElementById('sl_v'); if (slV) slV.value = 8;
+    calculatePhysics();
     return;
   }
   calculatePhysics();
@@ -10803,6 +11391,19 @@ function updateMeltPoolAndThermal() {
     elMarangoni.innerText = isOpticalAborted ? 'Surface Convection: Dormant (0 mm/s)' : `Marangoni Outward Velocity: ${vMarangoniMmS.toLocaleString()} mm/s (dγ/dT < 0)`;
   }
 
+  // Synchronize Rosenthal Preset Bar buttons against active (processId, P, v) within ±1% tolerance
+  const effProcForMp = isWaamPool ? 'waam' : (isDedPool ? 'lded' : currentProcess);
+  syncMpPresetButtons(effProcForMp, effP, effV);
+
+  // Unified Process Regime & Rosenthal Aspect Ratio Callout Synchronization
+  const activeMpRegime = classifyProcessRegime(
+    effProcForMp,
+    { P: effP, v: effV, h: h, t: t, T0: preheat, db: effSpot },
+    { aspectRatio: parseFloat(aspect) }
+  );
+  const aspectCallout = formatRosenthalAspectCallout(aspect, activeMpRegime, mpModel);
+  const xAxisTitle = getHeatSourceLongitudinalLabel(effProcForMp);
+
   // Update 6 Metric Cards
   const cLen = document.getElementById('mpCardLength'); if (cLen) cLen.innerText = (poolLength >= 10000 ? (poolLength/1000).toFixed(1) + ' mm' : poolLength + ' µm');
   const cLenMm = document.getElementById('mpCardLengthMm'); if (cLenMm) cLenMm.innerText = (poolLength / 1000.0).toFixed(2) + ' mm';
@@ -10813,18 +11414,14 @@ function updateMeltPoolAndThermal() {
   
   const aspectEl = document.getElementById('mpCardAspect');
   const aspectSub = document.getElementById('mpCardAspectSub');
-  if (aspectEl) aspectEl.innerText = aspect;
+  if (aspectEl) {
+    aspectEl.innerText = aspectCallout.aspectText;
+    aspectEl.style.color = aspectCallout.color;
+  }
   if (aspectSub) {
-    if (parseFloat(aspect) > 0.8) {
-      if (aspectEl) aspectEl.style.color = 'var(--accent-rose)';
-      aspectSub.innerText = 'Keyhole Mode';
-    } else if (parseFloat(aspect) >= 0.55) {
-      if (aspectEl) aspectEl.style.color = 'var(--accent-amber)';
-      aspectSub.innerText = 'Transition Mode (Incipient Vapor Depression)';
-    } else {
-      if (aspectEl) aspectEl.style.color = 'var(--accent-emerald)';
-      aspectSub.innerText = 'Conduction Mode';
-    }
+    aspectSub.innerText = aspectCallout.subLabel;
+    aspectSub.style.color = aspectCallout.color;
+    aspectSub.title = aspectCallout.tooltip;
   }
   const cPk = document.getElementById('mpCardPeak'); if (cPk) cPk.innerText = peakTemp + '°C';
   const cGr = document.getElementById('mpCardGrowth'); if (cGr) cGr.innerText = growthRate + ' cm/s';
@@ -10944,10 +11541,10 @@ function updateMeltPoolAndThermal() {
         }
         svgHtml += `<line x1="80" y1="210" x2="860" y2="210" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="6 3" opacity="0.8"/>`;
         svgHtml += `<line x1="${xBeam}" y1="45" x2="${xBeam}" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;
-        svgHtml += `<text x="470" y="413" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">Longitudinal Distance from Laser Center x (µm / mm)</text>`;
         svgHtml += `<text x="24" y="210" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" transform="rotate(-90 24 210)" font-family="monospace">Transverse Width y</text>`;
         svgHtml += `</g>`;
       }
+      svgHtml += `<text id="mpXAxisLabel" x="470" y="413" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">${xAxisTitle}</text>`;
 
       // Hard-clipped Thermal Envelope strictly inside [80, 45, 780, 330] frame
       svgHtml += `<g class="thermal-shapes" clip-path="url(#mpFrameClip)">`;
@@ -11106,8 +11703,17 @@ function updateMeltPoolAndThermal() {
         // Mushy zone pointer connects to the rear tail
         const mushyTargetX = Math.max(95, rearX - 0.05 * span);
         const mushyTargetY = Math.min(270, 210 + halfW * 0.35);
+        const surfBadgeW = Math.max(210, Math.round(aspectCallout.fullText.length * 6.5 + 24));
+        const surfBadgeX = Math.max(295, 852 - surfBadgeW);
         svgHtml += `
           <line x1="175" y1="330" x2="${mushyTargetX.toFixed(1)}" y2="${mushyTargetY.toFixed(1)}" stroke="#ffffff" stroke-width="1" stroke-dasharray="3 3"/>
+          <!-- 4. Melt Pool Aspect Ratio (d/W) Synchronized Callout Badge -->
+          <g id="mpAspectRatioBadge" class="mp-aspect-callout" data-tooltip="${aspectCallout.tooltip}">
+            <title>${aspectCallout.tooltip}</title>
+            <rect x="${surfBadgeX}" y="326" width="${surfBadgeW}" height="38" rx="6" fill="${aspectCallout.bgColor}" stroke="${aspectCallout.borderColor}" stroke-width="1.3"/>
+            <text x="${surfBadgeX + 10}" y="340" fill="#94a3b8" font-size="10.5" font-weight="600">Melt Pool Aspect Ratio (d/W)</text>
+            <text x="${surfBadgeX + 10}" y="356" fill="${aspectCallout.color}" font-size="10.5" font-weight="bold" font-family="monospace">${aspectCallout.fullText}</text>
+          </g>
         `;
       }
     } else {
@@ -11149,9 +11755,9 @@ function updateMeltPoolAndThermal() {
           }
         }
         svgHtml += `<line x1="${xBeam}" y1="${zSurface}" x2="${xBeam}" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;
-        svgHtml += `<text x="470" y="413" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">Longitudinal Distance from Laser Center x (µm / mm)</text>`;
         svgHtml += `</g>`;
       }
+      svgHtml += `<text id="mpXAxisLabel" x="470" y="413" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">${xAxisTitle}</text>`;
 
       svgHtml += `
         <rect x="80" y="${zSurface}" width="780" height="${powderH}" fill="#f59e0b" fill-opacity="0.12"/>
@@ -11246,10 +11852,14 @@ function updateMeltPoolAndThermal() {
 
       if (mpCallouts) {
         // Aspect ratio badge (Placed in top-left air space above substrate - zero collision!)
+        const xzBadgeW = Math.max(210, Math.round(aspectCallout.fullText.length * 6.8 + 24));
         svgHtml += `
-          <rect x="95" y="60" width="200" height="44" rx="8" fill="#070c14" stroke="#1e293b" stroke-width="1.2"/>
-          <text x="105" y="78" fill="#94a3b8" font-size="11" font-weight="600">Melt Pool Aspect Ratio (d/W)</text>
-          <text x="105" y="94" fill="${parseFloat(aspect) > 0.8 ? '#f43f5e' : '#10b981'}" font-size="12" font-weight="bold" font-family="monospace">${aspect} — ${parseFloat(aspect) > 0.8 ? 'Keyhole Mode' : 'Conduction Mode'}</text>
+          <g id="mpAspectRatioBadge" class="mp-aspect-callout" data-tooltip="${aspectCallout.tooltip}">
+            <title>${aspectCallout.tooltip}</title>
+            <rect x="95" y="56" width="${xzBadgeW}" height="46" rx="8" fill="${aspectCallout.bgColor}" stroke="${aspectCallout.borderColor}" stroke-width="1.4"/>
+            <text x="107" y="74" fill="#94a3b8" font-size="11" font-weight="600">Melt Pool Aspect Ratio (d/W)</text>
+            <text x="107" y="92" fill="${aspectCallout.color}" font-size="11.5" font-weight="bold" font-family="monospace">${aspectCallout.fullText}</text>
+          </g>
         `;
       }
     }
@@ -11784,15 +12394,40 @@ function renderBonthaProfileTable() {
 const SUPABASE_CLOUD_URL = 'https://iismzfileyuvqgdpivgx.supabase.co';
 const SUPABASE_CLOUD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpc216ZmlsZXl1dnFnZHBpdmd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3ODAwMjYsImV4cCI6MjEwOTM1NjAyNn0.v__OCG79B-NyMKmyb_W7Lp_Lw0xcoWUggEuONMECmGo';
 
-function updateLitPaperCountBadges(count) {
+function updateLitPaperCountBadges(_fetchedCount) {
+  const totalPubs = LITERATURE_META.totalPublications;
+  const totalVars = LITERATURE_META.totalVariants;
+  const totalMetrics = LITERATURE_META.trackedMetricsCount;
+  const looCount = LITERATURE_META.looBenchmarkCount;
+
   const countBadge = document.getElementById('matrixPapersCountBadge');
-  if (countBadge) countBadge.innerText = `${count} Peer-Reviewed Publications • 289 Curated Variants • 42 Metrics`;
+  if (countBadge) {
+    countBadge.innerText = `${totalPubs} Peer-Reviewed Publications • ${totalVars} Curated Variants • ${totalMetrics} Metrics`;
+  }
+  const modelSub = document.getElementById('modelTableSubtitle');
+  if (modelSub) {
+    modelSub.innerText = `Calibrated against ${looCount} Leave-One-Out (LOO) Benchmark Papers across ${totalPubs} Indexed Studies & ${totalVars} Variants`;
+  }
+  const oodHead = document.getElementById('oodBannerHeading');
+  if (oodHead) {
+    oodHead.innerText = `Extrapolation Warning — Outside Validated Literature Envelope (N=${totalPubs} Studies)`;
+  }
   const titleHeader = document.getElementById('litTabTitle');
-  if (titleHeader) titleHeader.innerText = `Indexed Literature Evidence Database (${count} Research Papers)`;
+  if (titleHeader) {
+    titleHeader.innerText = `Indexed Literature Evidence Database (${totalPubs} Research Papers)`;
+  }
   const navBtn = document.getElementById('navBtnLit');
-  if (navBtn) navBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg> Literature Evidence (${count} Papers)`;
+  if (navBtn) {
+    navBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg> Literature Evidence (${totalPubs} Papers)`;
+  }
+  const browseBtn = document.getElementById('browseAllPapersBtn');
+  if (browseBtn) {
+    browseBtn.innerText = `Browse All ${totalPubs} Papers →`;
+  }
   const allBtn = document.getElementById('btnFilterAll');
-  if (allBtn) allBtn.innerText = `All (${count})`;
+  if (allBtn) {
+    allBtn.innerText = `All (${totalPubs})`;
+  }
 }
 
 function getProcessBaselineProps(amProcess) {
@@ -11814,7 +12449,7 @@ function getProcessBaselineProps(amProcess) {
 
 function deduplicateAndNormalizePapers(rawPapers) {
   const seenNums = new Set();
-  const seenTitles = new Set();
+  const seenExactKeys = new Set();
   const curatedByAuthorYear = new Map();
   PAPERS_DATABASE.forEach(item => {
     const key = (item.author || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -11824,11 +12459,12 @@ function deduplicateAndNormalizePapers(rawPapers) {
   const out = [];
   for (const p of rawPapers) {
     const num = p.paper_number || p.paperNumber || p.id;
-    const normTitle = String(p.title || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 60);
+    const fullNormTitle = String(p.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const exactKey = `${num || ''}::${fullNormTitle}`;
     if (num && seenNums.has(String(num))) continue;
-    if (normTitle && seenTitles.has(normTitle)) continue;
+    if (exactKey && seenExactKeys.has(exactKey)) continue;
     if (num) seenNums.add(String(num));
-    if (normTitle) seenTitles.add(normTitle);
+    if (exactKey) seenExactKeys.add(exactKey);
 
     const procStr = p.am_process || p.amProcess || p.process || 'LPBF';
     const authorStr = `${p.authors || 'Unknown'} (${p.year || 2022})`;
@@ -11901,20 +12537,20 @@ async function initSupabaseCloudSync() {
     if (rawPapers && rawPapers.length > 0) {
       livePapersCatalog = deduplicateAndNormalizePapers(rawPapers);
       if (badge) {
-        badge.innerText = `⚡ ${sourceLabel} (${livePapersCatalog.length} Papers)`;
+        badge.innerText = `⚡ ${sourceLabel} (${LITERATURE_META.totalPublications} Papers)`;
         badge.style.color = '#34d399';
         badge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
         badge.style.background = 'rgba(16, 185, 129, 0.15)';
       }
       filterPapersTable();
-      updateLitPaperCountBadges(livePapersCatalog.length);
+      updateLitPaperCountBadges(LITERATURE_META.totalPublications);
     } else {
-      if (badge) badge.innerText = `⚡ Local Catalog (${PAPERS_DATABASE.length} Papers)`;
-      updateLitPaperCountBadges(PAPERS_DATABASE.length);
+      if (badge) badge.innerText = `⚡ Local Catalog (${LITERATURE_META.totalPublications} Papers)`;
+      updateLitPaperCountBadges(LITERATURE_META.totalPublications);
     }
   } catch (e) {
-    if (badge) badge.innerText = `⚡ Local Catalog (${PAPERS_DATABASE.length} Papers)`;
-    updateLitPaperCountBadges(PAPERS_DATABASE.length);
+    if (badge) badge.innerText = `⚡ Local Catalog (${LITERATURE_META.totalPublications} Papers)`;
+    updateLitPaperCountBadges(LITERATURE_META.totalPublications);
   }
 }
 
@@ -12463,23 +13099,33 @@ function renderMicrostructureSvg(phaseKey) {
 function updateSensitivityCurves(p, v, h, t) {
   const dialLof = document.getElementById('dialLof');
   const dialLofSt = document.getElementById('dialLofStatus');
+  const dialKeyTitle = document.getElementById('dialKeyholeTitle');
   const dialKey = document.getElementById('dialKeyhole');
   const dialKeySt = document.getElementById('dialKeyholeStatus');
+  const dialKeySub = document.getElementById('dialKeyholeSub');
   const dialBall = document.getElementById('dialBalling');
   const dialBallSt = document.getElementById('dialBallingStatus');
 
+  const isWaamProc = (typeof currentProcess !== 'undefined' && currentProcess === 'waam');
+  const physState = window.latestPhysicsState || {};
   const estW = Math.max(80, Math.sqrt(p / Math.max(100, v)) * 260);
   const estD = estW * 0.51;
-  const lofIndex = Number(((h * t) / Math.max(1, estW * estD)).toFixed(2));
-  const arKey = Number((estD / Math.max(1, estW)).toFixed(2));
-  const ballRatio = Number((Math.max(120, estW * 2.3) / Math.max(1, estW)).toFixed(2));
+  const lofIndex = Number.isFinite(physState.lofIndex)
+    ? Number(physState.lofIndex.toFixed(2))
+    : Number(((h * t) / Math.max(1, estW * estD)).toFixed(2));
+  const arKey = Number.isFinite(physState.keyholeRatio) && isWaamProc
+    ? Number(physState.keyholeRatio.toFixed(2))
+    : Number((estD / Math.max(1, estW)).toFixed(2));
+  const ballRatio = Number.isFinite(physState.ballingRatio)
+    ? Number((physState.ballingRatio * Math.PI).toFixed(2))
+    : Number((Math.max(120, estW * 2.3) / Math.max(1, estW)).toFixed(2));
 
-  if (dialLof) dialLof.innerText = lofIndex;
+  if (dialLof) dialLof.innerText = lofIndex.toFixed(2);
   if (dialLofSt) {
     if (lofIndex > 1.0) {
-      dialLofSt.innerText = 'HIGH RISK (Lack of Fusion)';
-      dialLofSt.style.color = '#ef4444';
-      if (dialLof) dialLof.style.color = '#ef4444';
+      dialLofSt.innerText = isWaamProc ? 'WARNING (Cold Lap / LOF)' : 'HIGH RISK (Lack of Fusion)';
+      dialLofSt.style.color = isWaamProc ? '#fbbf24' : '#ef4444';
+      if (dialLof) dialLof.style.color = isWaamProc ? '#fbbf24' : '#ef4444';
     } else if (lofIndex > 0.8) {
       dialLofSt.innerText = 'Marginal Overlap';
       dialLofSt.style.color = '#fbbf24';
@@ -12491,9 +13137,27 @@ function updateSensitivityCurves(p, v, h, t) {
     }
   }
 
-  if (dialKey) dialKey.innerText = arKey;
+  if (dialKeyTitle) {
+    dialKeyTitle.innerText = isWaamProc ? 'Overheat / Sag Ratio (HI / 600)' : 'Keyhole Aspect Ratio (d / W)';
+  }
+  if (dialKeySub) {
+    dialKeySub.innerText = isWaamProc
+      ? 'Threshold: > 1.00 (HI > 600 J/mm) induces remelt sag'
+      : 'Threshold: > 0.80 indicates keyhole collapse';
+  }
+  if (dialKey) dialKey.innerText = arKey.toFixed(2);
   if (dialKeySt) {
-    if (arKey > 0.80) {
+    if (isWaamProc) {
+      if (arKey > 1.0) {
+        dialKeySt.innerText = 'OVERHEATING ACTIVE (HI > 600 J/mm)';
+        dialKeySt.style.color = '#ef4444';
+        if (dialKey) dialKey.style.color = '#ef4444';
+      } else {
+        dialKeySt.innerText = 'Optimal Arc Deposition (120–600 J/mm)';
+        dialKeySt.style.color = '#34d399';
+        if (dialKey) dialKey.style.color = '#34d399';
+      }
+    } else if (arKey > 0.80) {
       dialKeySt.innerText = 'KEYHOLE ACTIVE (Vapor Cavity)';
       dialKeySt.style.color = '#ef4444';
       if (dialKey) dialKey.style.color = '#ef4444';
@@ -12901,7 +13565,9 @@ function openAuditCertificateModal() {
     } else if (phys.lofIndex > 1.0) {
       elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}%); un-melted lack-of-fusion voids cause premature tear`;
     } else if (phys.keyholeRatio > 1.0) {
-      elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}%); keyhole gas porosity triggers early void coalescence`;
+      elongSub = phys.isWaam
+        ? `Sub-standard ductility (${measuredElong.toFixed(1)}%); excessive linear heat input coarsens prior-β grains`
+        : `Sub-standard ductility (${measuredElong.toFixed(1)}%); keyhole gas porosity triggers early void coalescence`;
     } else {
       elongSub = `Sub-standard ductility (${measuredElong.toFixed(1)}% < ${std.elThresh}% requirement)`;
     }
@@ -12918,7 +13584,9 @@ function openAuditCertificateModal() {
     if (phys.lofIndex > 1.0) {
       denSub = `Severe lack-of-fusion porosity (${(100 - measuredDen).toFixed(2)}% voids); VED insufficient for interlayer bonding`;
     } else if (phys.keyholeRatio > 1.0) {
-      denSub = `Keyhole vaporization gas entrapment (${(100 - measuredDen).toFixed(2)}% voids); excess power density`;
+      denSub = phys.isWaam
+        ? `Overheating remelt sag and gas porosity (${(100 - measuredDen).toFixed(2)}% voids); excessive arc linear heat input`
+        : `Keyhole vaporization gas entrapment (${(100 - measuredDen).toFixed(2)}% voids); excess power density`;
     } else {
       denSub = `Sub-standard relative density (${measuredDen.toFixed(2)}% < ${std.denThresh}%)`;
     }

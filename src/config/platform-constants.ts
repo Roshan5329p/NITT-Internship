@@ -16,16 +16,18 @@ export const APP_METADATA = {
 } as const;
 
 // 2. Literature Dataset Metrics (Single Source of Truth)
-// Eliminates conflicting counts (e.g. 154 vs 178) across UI banners and table headers.
+// Eliminates conflicting counts (e.g. 154 vs 173 vs 178) across UI banners and table headers.
 export const LITERATURE_DATASET_META = {
   totalPublications: 178,     // Total indexed peer-reviewed studies
   looBenchmarkCount: 54,      // Calibrated Leave-One-Out (LOO) benchmark papers
   totalVariants: 289,         // Curated experimental alloy variants
   trackedMetricsCount: 42,    // Physical, thermal, and microstructural metrics
-  summaryBannerText: "178 Indexed Publications • 289 Curated Variants • 42 Metrics",
-  tableSubtitleText: "Calibrated against 54 LOO Benchmark Papers across 178 Indexed Studies & 289 Variants",
+  summaryBannerText: "178 Peer-Reviewed Publications • 289 Curated Variants • 42 Metrics",
+  tableSubtitleText: "Calibrated against 54 Leave-One-Out (LOO) Benchmark Papers across 178 Indexed Studies & 289 Variants",
   dateRange: "2016–2026"
 } as const;
+
+export const LITERATURE_META = LITERATURE_DATASET_META;
 
 // 3. Thermophysical Baseline Constants (Ti-6Al-4V Grade 5 & Grade 23 ELI)
 export const THERMOPHYSICAL_BASELINE = {
