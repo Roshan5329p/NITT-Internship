@@ -6413,6 +6413,7 @@ function openEngineeringReportModal() {
   setT('repYs', stateData.ysMpa + ' MPa');
   setT('repUts', elUts ? elUts.innerText : (stateData.utsMpa + ' MPa'));
   setT('repEl', stateData.elongPct.toFixed(1) + ' %');
+  if (typeof _populateCadReportBlock === 'function') _populateCadReportBlock();
 
   modal.style.display = 'block';
   document.body.classList.add('report-modal-open');
@@ -6533,6 +6534,10 @@ window.addEventListener('click', function(e) {
     <button class="tab-btn" onclick="switchTab('literature', this)" id="navBtnLit">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
       Literature Evidence (178 Papers)
+    </button>
+    <button class="tab-btn" onclick="switchTab('cad-analyzer', this)" id="navBtnCadAnalyzer">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+      Part Analyzer <span class="tab-tag tag-cyan">CAD 3D</span>
     </button>
   </div>
 </nav>
@@ -6888,6 +6893,24 @@ window.addEventListener('click', function(e) {
 
     <!-- TAB 1: PREDICTIONS VIEW (DEFAULT) -->
     <div id="view_predictions" class="tab-view active">
+    <!-- ACTIVE CAD PART COUPLING BANNER -->
+    <div id="cadCouplingBanner" style="display: none; margin: 0 0 14px 0; padding: 11px 14px; border-radius: 10px; background: rgba(56, 189, 248, 0.10); border: 1px solid rgba(56, 189, 248, 0.4); align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+      <div>
+        <div style="font-size: 12.5px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span>📐 CAD-Coupled Predictions Active:</span>
+          <span id="cadCouplingPartName" style="color: #f8fafc;">—</span>
+        </div>
+        <div id="cadCouplingDetails" style="font-size: 11px; color: #bae6fd; margin-top: 3px; font-family: 'JetBrains Mono', monospace;"></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #e2e8f0; cursor: pointer;">
+          <input type="checkbox" id="chkCadPredictionCoupling" checked onchange="cadCouplingEnabled = Boolean(this.checked); calculatePhysics();">
+          Couple Predictions to CAD File
+        </label>
+        <button type="button" class="step-btn" onclick="switchTab('cad-analyzer', document.getElementById('navBtnCadAnalyzer'))">Inspect 3D Part →</button>
+      </div>
+    </div>
+
     <!-- UNIVERSAL MATERIAL STATE SELECTOR BANNER -->
     <div class="mat-state-banner">
       <div>
@@ -9969,6 +9992,235 @@ window.addEventListener('click', function(e) {
       </div>
     </div>
 
+    <!-- TAB 9: CAD PART ANALYZER (PHASE 1: UPLOAD, PARSING & 3D VIEWER) -->
+    <div id="view_cad-analyzer" class="tab-view">
+      <div class="model-card" style="margin-bottom: 16px;">
+        <div class="model-card-header" style="flex-wrap: wrap; gap: 10px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span class="model-card-title">Ti-6Al-4V CAD Part Analyzer</span>
+              <span class="brand-badge" style="color: #38bdf8; border-color: rgba(56,189,248,0.4);">100% Browser-Local (Zero Upload)</span>
+              <span class="brand-badge" id="cadStatusBadge" style="color: #94a3b8; border-color: rgba(148,163,184,0.35);">Waiting for CAD file</span>
+            </div>
+            <div class="model-card-sub">Supports .stl (≤150 MB), .step/.stp/.iges (≤60 MB in-browser WASM), and .ipt/.prt STEP export guidance. Files remain in local RAM only.</div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <button type="button" class="step-btn" onclick="loadDemoCadBracket()" style="color: #34d399; border-color: rgba(16,185,129,0.4);">Load Demo Ti-6Al-4V Bracket (.stl)</button>
+            <button type="button" class="step-btn" id="btnCadApplyDash" onclick="applyCadToDashboard()" style="color: #38bdf8; border-color: rgba(56,189,248,0.4);">Apply Process to Dashboard</button>
+            <button type="button" class="step-btn" id="btnCadExportJson" onclick="exportCadPartReportJson()" style="color: #c084fc; border-color: rgba(192,132,252,0.4);">Export Part JSON</button>
+            <button type="button" class="step-btn" id="btnCadExportPdf" onclick="openCadPartReportModal()" style="color: #fbbf24; border-color: rgba(251,191,36,0.4);">Export Part PDF Report</button>
+            <button type="button" class="step-btn" onclick="clearLoadedCadPart()" style="color: #f87171; border-color: rgba(244,63,94,0.35);">Clear</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 16px; align-items: start;">
+          <!-- Left Control Column -->
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div id="cadDropzone" onclick="document.getElementById('cadFileInput')?.click()" ondragover="event.preventDefault(); this.style.borderColor='#38bdf8';" ondragleave="this.style.borderColor='rgba(56,189,248,0.38)';" ondrop="handleCadFileDrop(event)" style="border: 1.5px dashed rgba(56,189,248,0.38); border-radius: 10px; padding: 16px; text-align: center; background: rgba(4,8,16,0.65); cursor: pointer;">
+              <div style="font-size: 13px; font-weight: 700; color: #f1f5f9;">Drop CAD file here or click to browse</div>
+              <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace;">.stl (max 150 MB) · .step / .stp / .iges (max 60 MB) · .ipt / .prt (guide)</div>
+              <input type="file" id="cadFileInput" accept=".stl,.step,.stp,.iges,.igs,.ipt,.prt" style="display: none;" onchange="handleCadFileInput(this)">
+            </div>
+
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); cursor: pointer;">
+              <input type="checkbox" id="chkCadForceLoad" onchange="cadForceLoadAnyway = Boolean(this.checked);">
+              Force Load Anyway (High-RAM Workstation override above 150/60 MB caps)
+            </label>
+
+            <!-- Guardrail / Warning / Unit Banner -->
+            <div id="cadGuardrailBox" style="display: none; border-radius: 8px; padding: 10px 12px; font-size: 11px; line-height: 1.45;"></div>
+
+            <!-- Unit Selector Row -->
+            <div id="cadUnitRow" style="display: none; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 8px; background: rgba(15,23,42,0.75); border: 1px solid rgba(255,255,255,0.08);">
+              <span style="font-size: 11px; color: var(--text-secondary);">Source CAD Units:</span>
+              <select id="cadSourceUnitSelect" onchange="changeCadSourceUnit(this.value)" style="background: #0b1220; color: #e2e8f0; border: 1px solid rgba(148,163,184,0.35); border-radius: 6px; padding: 4px 8px; font-size: 11px;">
+                <option value="mm" selected>Millimeters (mm, ×1)</option>
+                <option value="inch">Inches (in, ×25.4)</option>
+                <option value="m">Meters (m, ×1000)</option>
+              </select>
+            </div>
+
+            <!-- Option B Native Format Export-to-STEP Guide Card -->
+            <div id="cadNativeGuideCard" style="display: none; border-radius: 10px; padding: 12px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.4);">
+              <div style="font-size: 12px; font-weight: 800; color: #fbbf24; margin-bottom: 4px;" id="cadNativeGuideTitle">Native CAD Export Guide</div>
+              <div style="font-size: 11px; color: #fde68a; margin-bottom: 8px;" id="cadNativeGuideNote"></div>
+              <div id="cadNativeGuideSteps" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;"></div>
+              <div onclick="document.getElementById('cadFileInput')?.click()" ondragover="event.preventDefault();" ondrop="handleCadFileDrop(event)" style="border: 1px dashed rgba(251,191,36,0.55); border-radius: 6px; padding: 8px; text-align: center; font-size: 11px; color: #fef08a; cursor: pointer; background: rgba(0,0,0,0.25);">
+                Drop your exported <strong>.step / .stp</strong> file here to continue
+              </div>
+            </div>
+
+            <!-- Machine Library Preset Card (Editable Placeholder Rates) -->
+            <div style="border-radius: 10px; padding: 12px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="font-size: 12px; color: #f1f5f9;">AM Machine Preset</strong>
+                <span class="brand-badge" style="font-size: 9px; color: #fbbf24; border-color: rgba(251,191,36,0.35);">Editable Placeholders</span>
+              </div>
+              <select id="cadMachineSelect" onchange="selectCadMachine(this.value)" style="width: 100%; background: #0b1220; color: #e2e8f0; border: 1px solid rgba(56,189,248,0.35); border-radius: 6px; padding: 6px 8px; font-size: 11.5px; margin-bottom: 8px;"></select>
+              <div id="cadMachineMeta" style="font-size: 10.5px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; line-height: 1.5; margin-bottom: 8px;"></div>
+
+              <details style="font-size: 11px; color: var(--text-secondary);">
+                <summary style="cursor: pointer; color: #38bdf8; font-weight: 600;">Edit Machine Specs &amp; Cost Rates (localStorage)</summary>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;">
+                  <label style="font-size: 10px;">Env X (mm)<input type="number" id="cadMacEnvX" min="10" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
+                  <label style="font-size: 10px;">Env Y (mm)<input type="number" id="cadMacEnvY" min="10" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
+                  <label style="font-size: 10px;">Env Z (mm)<input type="number" id="cadMacEnvZ" min="10" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
+                  <label style="font-size: 10px;">Hourly Rate ($/h)<input type="number" id="cadMacRate" min="1" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
+                  <label style="font-size: 10px;">Material ($/kg)<input type="number" id="cadMacMatCost" min="10" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
+                  <label style="font-size: 10px;">Gas ($/h)<input type="number" id="cadMacGasCost" min="0" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: 8px;">
+                  <button type="button" class="step-btn" onclick="saveCadMachineEdits()" style="color: #34d399; border-color: rgba(16,185,129,0.4);">Save Preset</button>
+                  <button type="button" class="step-btn" onclick="exportCadMachinesJson()">Export JSON</button>
+                </div>
+              </details>
+            </div>
+          </div>
+
+          <!-- Right Interactive 3D CAD WebGL Viewer -->
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="position: relative; background: radial-gradient(circle at 50% 35%, #0f172a, #040812); border: 1px solid rgba(56,189,248,0.22); border-radius: 12px; overflow: hidden;">
+              <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(7,12,20,0.8);">
+                <button type="button" class="mp-pill-btn active" id="btnCadWireframe" onclick="toggleCadViewerOption('wireframe')">Wireframe</button>
+                <button type="button" class="mp-pill-btn active" id="btnCadEnvelope" onclick="toggleCadViewerOption('envelope')">Machine Envelope</button>
+                <button type="button" class="mp-pill-btn active" id="btnCadArrow" onclick="toggleCadViewerOption('arrow')">Build Dir (+Z)</button>
+                <select id="cadOverlayModeSelect" onchange="setCadOverlayMode(this.value)" style="background: #0b1220; color: #38bdf8; border: 1px solid rgba(56,189,248,0.35); border-radius: 6px; padding: 3px 6px; font-size: 10.5px;">
+                  <option value="overhang" selected>Overlay: Overhangs (&gt;θ)</option>
+                  <option value="thickness">Overlay: Wall Thickness (mm)</option>
+                  <option value="stress">Overlay: Residual Stress Hotspots</option>
+                  <option value="thermal">Overlay: Overheating Zones</option>
+                </select>
+                <button type="button" class="mp-pill-btn" onclick="resetCadCamera()">Reset Camera</button>
+                <div style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--text-secondary);">
+                  <span>Overhang θ:</span>
+                  <input type="number" id="cadOverhangThreshInput" min="20" max="75" step="1" value="45" onchange="runCadGeometryAnalysis()" style="width: 44px; background: #070c14; color: #fff; border: 1px solid rgba(255,255,255,0.18); border-radius: 4px; padding: 2px 4px; font-size: 10.5px;">
+                  <span>Z-Cut:</span>
+                  <input type="range" id="cadSectionSlider" min="5" max="100" value="100" oninput="setCadSectionPct(this.value)" style="width: 78px; accent-color: #38bdf8;">
+                  <span id="cadSectionVal" style="font-family: monospace; width: 34px;">100%</span>
+                </div>
+              </div>
+              <div id="cadHeatmapLegend" style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 5px 12px; background: rgba(4,8,16,0.92); border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 10px; font-family: 'JetBrains Mono', monospace; color: #cbd5e1;">
+                <span style="color: #94a3b8;">Legend:</span>
+                <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#55afea;vertical-align:middle;margin-right:4px;"></span>Self-Supporting (&le;45°)</span>
+                <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#dc5041;vertical-align:middle;margin-right:4px;"></span>Overhang / Needs Support (&gt;45°)</span>
+              </div>
+              <canvas id="cadViewerCanvas" width="760" height="420" style="width: 100%; height: 420px; display: block; cursor: grab;"></canvas>
+              <div id="cadViewerEmptyHint" style="position: absolute; inset: 72px 0 0 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; color: #64748b; text-align: center; padding: 20px;">
+                <div style="font-size: 14px; font-weight: 700; color: #94a3b8;">No CAD Mesh Loaded Yet</div>
+                <div style="font-size: 11px; margin-top: 4px;">Drop a .stl / .step / .iges file on the left, or click <strong>Load Demo Ti-6Al-4V Bracket</strong>.</div>
+              </div>
+            </div>
+
+            <!-- Mesh Readout Strip -->
+            <div class="metric-score-row" style="margin-top: 0;">
+              <div class="metric-score-card"><div class="metric-score-val" id="cadStatFormat" style="color: #38bdf8;">—</div><div class="metric-score-lbl">Parsed Format</div></div>
+              <div class="metric-score-card"><div class="metric-score-val" id="cadStatTris" style="color: #34d399;">—</div><div class="metric-score-lbl">Triangles</div></div>
+              <div class="metric-score-card"><div class="metric-score-val" id="cadStatBbox" style="color: #fbbf24;">—</div><div class="metric-score-lbl">Bounding Box (mm)</div></div>
+              <div class="metric-score-card"><div class="metric-score-val" id="cadStatFit" style="color: #c084fc;">—</div><div class="metric-score-lbl">Envelope Fit</div></div>
+            </div>
+
+            <!-- Phase 2: Geometry Analysis Cards & Slice Profile -->
+            <div class="metric-score-row" style="margin-top: 0;">
+              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoVol" style="color: #38bdf8;">—</div><div class="metric-score-lbl">Volume / Ti-64 Mass</div></div>
+              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoArea" style="color: #34d399;">—</div><div class="metric-score-lbl">Surface Area</div></div>
+              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoOverhang" style="color: #fb7185;">—</div><div class="metric-score-lbl">Overhang (&gt;θ)</div></div>
+              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoWall" style="color: #fbbf24;">—</div><div class="metric-score-lbl">Min / Med Wall (mm)</div></div>
+            </div>
+            <div class="metric-score-row" style="margin-top: 0;">
+              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoWatertight" style="color: #34d399;">—</div><div class="metric-score-lbl">Mesh Topology</div></div>
+              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoCorners" style="color: #fbbf24;">—</div><div class="metric-score-lbl">Sharp Concave Edges</div></div>
+              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoCavities" style="color: #c084fc;">—</div><div class="metric-score-lbl">Enclosed Cavities</div></div>
+              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoSlicesMeta" style="color: #38bdf8;">—</div><div class="metric-score-lbl">A(z) Jump Count</div></div>
+            </div>
+
+            <div style="border-radius: 10px; padding: 10px 12px; background: rgba(7,12,20,0.75); border: 1px solid rgba(255,255,255,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong style="font-size: 11.5px; color: #f1f5f9;">Layer Cross-Section Area A(z) &amp; Thermal Heat-Sink Profile</strong>
+                <span id="cadGeoTimingBadge" style="font-size: 10px; font-family: monospace; color: var(--text-muted);">Load a part to slice</span>
+              </div>
+              <canvas id="cadLayerAreaCanvas" width="740" height="135" style="width: 100%; height: 135px; display: block;"></canvas>
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #38bdf8; font-weight: 600;">
+                  <span>Z Layer Scrubber:</span>
+                  <input type="range" id="cadLayerScrubber" min="0" max="15" value="0" oninput="scrubCadLayer(this.value)" style="width: 130px; accent-color: #38bdf8;">
+                </label>
+                <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: #94a3b8; cursor: pointer;">
+                  <input type="checkbox" id="chkCadScrubSync3d" onchange="if(this.checked) scrubCadLayer(document.getElementById('cadLayerScrubber')?.value || 0);">
+                  Sync 3D Z-Cut
+                </label>
+                <span id="cadLayerScrubberReadout" style="font-size: 10.5px; font-family: 'JetBrains Mono', monospace; color: #cbd5e1; margin-left: auto;">Load a part to inspect layer-by-layer properties</span>
+              </div>
+            </div>
+
+            <!-- Phase 3: Printability, Supports, Process Ranking & 26-Orientation Optimizer -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px;">
+              <div style="border-radius: 10px; padding: 12px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
+                  <strong style="font-size: 12px; color: #f1f5f9;">Printability &amp; Support Estimate</strong>
+                  <span class="brand-badge" id="cadPrintabilityBadge" style="font-size: 9.5px; color: #94a3b8; border-color: rgba(148,163,184,0.35);">Pending CAD</span>
+                </div>
+                <div id="cadSupportSummary" style="font-size: 11px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 8px;">Load a CAD mesh to evaluate envelope fit, thin walls, support volume, and trapped powder risks.</div>
+                <ul id="cadPrintabilityNotes" style="margin: 0 0 10px 16px; padding: 0; font-size: 10.5px; color: #fde68a; line-height: 1.45;"></ul>
+                <table class="custom-table" style="font-size: 10.5px;">
+                  <thead><tr><th>Process</th><th>Score</th><th>Verdict</th><th>Action</th></tr></thead>
+                  <tbody id="cadProcessRankingBody"><tr><td colspan="4" style="color:var(--text-muted); text-align:center;">—</td></tr></tbody>
+                </table>
+              </div>
+
+              <div style="border-radius: 10px; padding: 12px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
+                  <strong style="font-size: 12px; color: #f1f5f9;">26-Orientation Build Optimizer</strong>
+                  <span class="brand-badge" id="cadOrientationBadge" style="font-size: 9.5px; color: #38bdf8; border-color: rgba(56,189,248,0.35);">Top 3 Choices</span>
+                </div>
+                <div id="cadCurrentOriSummary" style="font-size: 10.5px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 8px;">Current orientation score will appear after CAD parse.</div>
+                <table class="custom-table" style="font-size: 10.5px;">
+                  <thead><tr><th>Orientation</th><th>Z Height / Support</th><th>Score</th><th>Rotate</th></tr></thead>
+                  <tbody id="cadOrientationBody"><tr><td colspan="4" style="color:var(--text-muted); text-align:center;">—</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Phase 4: Part-Level PINN Properties, Distortion & Residual Stress + Time & Cost -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px;">
+              <div style="border-radius: 10px; padding: 12px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
+                  <strong style="font-size: 12px; color: #f1f5f9;">Part Properties &amp; Distortion Screening</strong>
+                  <span class="brand-badge" id="cadSimAstmBadge" style="font-size: 9.5px; color: #94a3b8; border-color: rgba(148,163,184,0.35);">ASTM Check Pending</span>
+                </div>
+                <div class="metric-score-row" style="margin-top: 0; margin-bottom: 8px;">
+                  <div class="metric-score-card"><div class="metric-score-val" id="cadSimYsUts" style="color: #34d399; font-size: 13px;">—</div><div class="metric-score-lbl">Weakest YS / UTS</div></div>
+                  <div class="metric-score-card"><div class="metric-score-val" id="cadSimElong" style="color: #38bdf8; font-size: 13px;">—</div><div class="metric-score-lbl">Min Elongation</div></div>
+                  <div class="metric-score-card"><div class="metric-score-val" id="cadStressMpa" style="color: #fb7185; font-size: 13px;">—</div><div class="metric-score-lbl">Residual Stress</div></div>
+                  <div class="metric-score-card"><div class="metric-score-val" id="cadWarpDeflect" style="color: #fbbf24; font-size: 13px;">—</div><div class="metric-score-lbl">Warp Risk / Defl.</div></div>
+                </div>
+                <div id="cadSimSummary" style="font-size: 10.5px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 6px;">Screening estimate from geometry &amp; thermal gradients (not full thermo-mechanical FEA).</div>
+                <ul id="cadStressNotes" style="margin: 0 0 0 16px; padding: 0; font-size: 10.5px; color: #bae6fd; line-height: 1.45;"></ul>
+              </div>
+
+              <div style="border-radius: 10px; padding: 12px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
+                  <strong style="font-size: 12px; color: #f1f5f9;">Build Time, Material &amp; Cost Estimate</strong>
+                  <label style="font-size: 10.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px;">
+                    Batch Qty:
+                    <input type="number" id="cadBatchSizeInput" min="1" max="24" value="1" onchange="runCadPhase4Simulation()" style="width: 44px; background: #070c14; color: #fff; border: 1px solid rgba(56,189,248,0.4); border-radius: 4px; padding: 2px 5px; font-size: 10.5px;">
+                  </label>
+                </div>
+                <div class="metric-score-row" style="margin-top: 0; margin-bottom: 8px;">
+                  <div class="metric-score-card"><div class="metric-score-val" id="cadCostHours" style="color: #38bdf8; font-size: 13px;">—</div><div class="metric-score-lbl">Total Build Time</div></div>
+                  <div class="metric-score-card"><div class="metric-score-val" id="cadCostMass" style="color: #fbbf24; font-size: 13px;">—</div><div class="metric-score-lbl">Ti-64 Feedstock</div></div>
+                  <div class="metric-score-card"><div class="metric-score-val" id="cadCostPerPart" style="color: #34d399; font-size: 13px;">—</div><div class="metric-score-lbl">Est. Cost / Part</div></div>
+                  <div class="metric-score-card"><div class="metric-score-val" id="cadCostPlateCap" style="color: #c084fc; font-size: 13px;">—</div><div class="metric-score-lbl">Max Plate Nest</div></div>
+                </div>
+                <div id="cadCostMeta" style="font-size: 10.5px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; line-height: 1.55;">
+                  Placeholder machine &amp; powder rates (customize in Machine Preset panel).
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -10492,11 +10744,16 @@ function calculatePhysics() {
   const heatInputJmm = p / Math.max(0.5, v);
   setTxt('kpi_ved', ved.toFixed(1) + ' J/mm³');
 
-  // 2. Melt pool physics (Analytical Rosenthal 3D + Process Thermal Efficiency)
+  // 2. Melt pool physics (Analytical Rosenthal 3D + CAD-Part Thermal Coupling + Process Thermal Efficiency)
+  const cadMods = (typeof cadActiveMesh !== 'undefined' && cadActiveMesh && typeof cadGeometryReport !== 'undefined' && cadGeometryReport && typeof cadCouplingEnabled !== 'undefined' && cadCouplingEnabled && typeof computeCadPredictionModifiersUi === 'function')
+    ? computeCadPredictionModifiersUi(cadGeometryReport, cadCurrentFileName, currentProcess)
+    : null;
+  const effPreheat = cadMods ? Math.min(500, preheat + cadMods.interlayerPreheatShiftC) : preheat;
+
   const vMs = Math.max(0.001, v / 1000.0);
   const eta = isWaam ? 0.78 : (isDed ? (String(currentAlloy || '').startsWith('ti64') ? 0.38 : alloy.laserAbsorptivity * 0.90) : alloy.laserAbsorptivity);
   const effectivePower = p * eta;
-  const deltaT = Math.max(50, alloy.liquidusC - preheat);
+  const deltaT = Math.max(50, alloy.liquidusC - effPreheat);
   const thermalDiffusivity = alloy.thermalConductivity / (alloy.density * alloy.specificHeat);
 
   // Beam / arc irradiance (W/cm^2)
@@ -10528,12 +10785,13 @@ function calculatePhysics() {
     meltPoolLength = Math.round(meltPoolWidth * (1.2 + 0.0012 * v));
   }
 
-  // Solidus cooling rate (K/s) with multi-pass heat accumulation for DED / WAAM
+  // Solidus cooling rate (K/s) with multi-pass heat accumulation for DED / WAAM & active CAD part geometry
   const accumFactor = isWaam ? 0.45 : (isDed ? 0.15 : 0.0);
   const rawCoolingRate = (2 * Math.PI * alloy.thermalConductivity * vMs * Math.pow(deltaT, 2)) / Math.max(5, effectivePower);
-  const coolingRate = isWaam || isDed
+  const baseCoolingRate = isWaam || isDed
     ? Math.max(1.0, rawCoolingRate * (1.0 - accumFactor))
     : Math.max(10, rawCoolingRate);
+  const coolingRate = cadMods ? Math.max(5.0, baseCoolingRate * cadMods.coolingRateMultiplier) : baseCoolingRate;
   const solidVelocityR = Math.max(0.0005, vMs * 0.72);
   const thermalGradientG = coolingRate / solidVelocityR;
   const grRatio = thermalGradientG / solidVelocityR;
@@ -10570,8 +10828,8 @@ function calculatePhysics() {
   // Balling index: F
   const ballingRatio = meltPoolLength / (meltPoolWidth * Math.PI);
 
-  // Relative density (%)
-  let densityPct = 99.85 - (lofIndex > 1 ? (lofIndex - 1) * 8.5 : 0) - (keyholeRatio > 1 ? (keyholeRatio - 1) * 4.2 : 0) - (ballingRatio > 1 ? (ballingRatio - 1) * 6.0 : 0);
+  // Relative density (%) adjusted by active CAD thin-wall & overhang porosity risk
+  let densityPct = 99.85 - (lofIndex > 1 ? (lofIndex - 1) * 8.5 : 0) - (keyholeRatio > 1 ? (keyholeRatio - 1) * 4.2 : 0) - (ballingRatio > 1 ? (ballingRatio - 1) * 6.0 : 0) - (cadMods ? cadMods.densityPenaltyPct : 0);
   if (post === 'HIP') densityPct = Math.min(99.98, densityPct + 0.5);
   densityPct = Math.max(88.0, Math.min(99.98, densityPct));
   const porosityPct = (100 - densityPct).toFixed(2);
@@ -10865,7 +11123,7 @@ function calculatePhysics() {
   const rawPinnEval = (typeof evaluateTi64Pinn === 'function')
     ? evaluateTi64Pinn({
         processId: currentProcess,
-        P: p, v: v, h: h, t: t, T0: preheat, db: spot,
+        P: p, v: v, h: h, t: t, T0: effPreheat, db: spot,
         postProcessing: post,
         oxygenWtPct: met.oxygen.effectiveOxygenWtPct,
         densityPct: densityPct,
@@ -10925,7 +11183,7 @@ function calculatePhysics() {
   const poreKnockdown = Math.exp(-0.45 * Math.max(0, 100 - densityPct));
   const lofDuctilityPenalty = lofIndex > 1.0 ? Math.max(0.15, 1.0 - (lofIndex - 1.0) * 1.4) : 1.0;
   const keyholeDuctilityPenalty = keyholeRatio > 1.0 ? Math.max(0.4, 1.0 - (keyholeRatio - 1.0) * 0.5) : 1.0;
-  const elongationPct = Math.max(1.0, Math.min(22.0, baseElongation * poreKnockdown * lofDuctilityPenalty * keyholeDuctilityPenalty * met.oxygen.ductilityMultiplier * met.anisotropy.elongationFactor));
+  const elongationPct = Math.max(1.0, Math.min(22.0, baseElongation * poreKnockdown * lofDuctilityPenalty * keyholeDuctilityPenalty * met.oxygen.ductilityMultiplier * met.anisotropy.elongationFactor * (cadMods ? cadMods.elongationMultiplier : 1.0)));
 
   const o2Content = met.oxygen.effectiveOxygenWtPct;
   const o2Limit = met.oxygen.alloyId === 'ti64_eli' ? 0.130 : 0.200;
@@ -11034,6 +11292,28 @@ function calculatePhysics() {
   } else {
     // As-Built: high thermal tensile macrostress near yield strength
     residualStressMPa = Math.round(yieldStrength * (isWaam ? 0.72 : (isDed ? 0.82 : 1.06)) * thermalScaling);
+  }
+  if (cadMods) {
+    residualStressMPa = Math.round(residualStressMPa * cadMods.stressConcentrationFactor);
+  }
+
+  // Update CAD-Coupled Predictions Banner on Tab 1
+  const cadBanner = document.getElementById('cadCouplingBanner');
+  if (cadBanner) {
+    if (typeof cadActiveMesh !== 'undefined' && cadActiveMesh && typeof cadGeometryReport !== 'undefined' && cadGeometryReport) {
+      cadBanner.style.display = 'flex';
+      setTxt('cadCouplingPartName', `${cadCurrentFileName || 'Uploaded CAD'} (${cadGeometryReport.volumeCm3} cm³, Z=${cadActiveMesh.boundingBox.size[2].toFixed(1)} mm)`);
+      if (cadMods) {
+        const supTxt = (typeof cadPrintabilityReport !== 'undefined' && cadPrintabilityReport)
+          ? `Supports: ${cadPrintabilityReport.supportEstimate.supportVolumeCm3} cm³ (${cadPrintabilityReport.overallVerdict})`
+          : '';
+        setTxt('cadCouplingDetails', `Part Thermal Shift: +${cadMods.interlayerPreheatShiftC}°C (T0,eff=${Math.round(effPreheat)}°C) · Stress Factor: ×${cadMods.stressConcentrationFactor} · Density Penalty: -${cadMods.densityPenaltyPct}% · ${supTxt}`);
+      } else {
+        setTxt('cadCouplingDetails', 'CAD coupling paused by user toggle — showing generic bulk coupon baseline.');
+      }
+    } else {
+      cadBanner.style.display = 'none';
+    }
   }
 
   // Compute Physical High-Cycle Fatigue Endurance Limit (10^7 cycles) based on UTS, density/porosity knockdown (Murakami model), defect notch penalty, and residual stress
@@ -11212,6 +11492,9 @@ function calculatePhysics() {
   }
   if (typeof syncSolverDisplayFromSliders === 'function') {
     syncSolverDisplayFromSliders();
+  }
+  if (typeof runCadPhase4Simulation === 'function' && typeof cadActiveMesh !== 'undefined' && cadActiveMesh && typeof cadGeometryReport !== 'undefined' && cadGeometryReport) {
+    runCadPhase4Simulation();
   }
   updateMeltPoolAndThermal();
   if (typeof renderBonthaProfileTable === 'function') {
@@ -11721,7 +12004,7 @@ function switchTab(tabId, btn) {
     if (tabId === 'literature') {
       targetBtn = document.getElementById('navBtnLit');
     } else {
-      const tabOrder = ['predictions', 'process-map', 'defect-map', 'economics', 'digital-twin', 'qualification', 'melt-pool', 'literature'];
+      const tabOrder = ['predictions', 'process-map', 'defect-map', 'economics', 'digital-twin', 'qualification', 'melt-pool', 'literature', 'cad-analyzer'];
       const idx = tabOrder.indexOf(tabId);
       if (idx !== -1) {
         targetBtn = document.querySelectorAll('.tab-btn')[idx];
@@ -11734,6 +12017,9 @@ function switchTab(tabId, btn) {
 
   if (tabId === 'digital-twin') {
     startTwinAnimation();
+  }
+  if (tabId === 'cad-analyzer' && typeof initCadAnalyzerTab === 'function') {
+    initCadAnalyzerTab();
   }
   if (tabId === 'melt-pool') {
     updateMeltPoolAndThermal();
@@ -16028,6 +16314,1464 @@ window.addEventListener('click', function(e) {
   }
 });
 
+// ====================================================================
+// PART ANALYZER PHASE 1: STATELESS CAD UPLOAD, PARSING & 3D VIEWER
+// ====================================================================
+var cadForceLoadAnyway = false;
+var cadRawMesh = null;
+var cadActiveMesh = null;
+var cadGeometryReport = null;
+var cadCurrentFileName = '';
+var cadCurrentUnit = 'mm';
+var cadMachinesList = [];
+var cadActiveMachineId = 'eos-m290';
+
+var cadViewerState = {
+  yaw: -0.78,
+  pitch: 0.48,
+  zoom: 1.0,
+  wireframe: true,
+  envelope: true,
+  arrow: true,
+  overlayMode: 'overhang',
+  sectionPct: 100,
+  dragging: false,
+  lastX: 0,
+  lastY: 0,
+  initialized: false
+};
+
+const CAD_GUARDRAIL_RULES = {
+  softWarningMb: 50,
+  stlMaxMb: 150,
+  brepMaxMb: 60,
+  softTriWarn: 1000000,
+  decimateTriCap: 2000000,
+  nativeSliceBytes: 65536
+};
+
+const CAD_DEFAULT_MACHINES = [
+  { id: 'eos-m290', name: 'EOS M 290', vendor: 'EOS', process: 'lpbf', envelopeMm: [250, 250, 325], powerRangeW: [100, 400], layerRangeUm: [20, 60], hourlyRateUsd: 95, materialCostPerKgUsd: 280, gasCostPerHourUsd: 12, isCustom: false },
+  { id: 'slm-280', name: 'Nikon SLM 280 (Twin 400/700W)', vendor: 'Nikon SLM', process: 'lpbf', envelopeMm: [280, 280, 365], powerRangeW: [100, 700], layerRangeUm: [20, 90], hourlyRateUsd: 125, materialCostPerKgUsd: 280, gasCostPerHourUsd: 14, isCustom: false },
+  { id: 'renishaw-500m', name: 'Renishaw RenAM 500M', vendor: 'Renishaw', process: 'lpbf', envelopeMm: [250, 250, 350], powerRangeW: [100, 500], layerRangeUm: [20, 60], hourlyRateUsd: 105, materialCostPerKgUsd: 285, gasCostPerHourUsd: 11, isCustom: false },
+  { id: 'dmp-flex-350', name: '3D Systems DMP Flex 350', vendor: '3D Systems', process: 'lpbf', envelopeMm: [275, 275, 420], powerRangeW: [100, 500], layerRangeUm: [20, 60], hourlyRateUsd: 115, materialCostPerKgUsd: 290, gasCostPerHourUsd: 10, isCustom: false },
+  { id: 'truprint-1000', name: 'TRUMPF TruPrint 1000 (Ø100×100)', vendor: 'TRUMPF', process: 'lpbf', envelopeMm: [100, 100, 100], powerRangeW: [50, 200], layerRangeUm: [10, 50], hourlyRateUsd: 70, materialCostPerKgUsd: 310, gasCostPerHourUsd: 7, isCustom: false },
+  { id: 'generic-powder-lded', name: 'Generic Powder-Fed L-DED Cell', vendor: 'Generic Lab', process: 'ded-laser', envelopeMm: [600, 600, 500], powerRangeW: [400, 4000], layerRangeUm: [250, 1000], hourlyRateUsd: 140, materialCostPerKgUsd: 260, gasCostPerHourUsd: 22, isCustom: false },
+  { id: 'generic-wire-lded', name: 'Generic Wire-Laser DED Cell', vendor: 'Generic Lab', process: 'ded-laser', envelopeMm: [900, 900, 700], powerRangeW: [800, 6000], layerRangeUm: [500, 1500], hourlyRateUsd: 160, materialCostPerKgUsd: 145, gasCostPerHourUsd: 25, isCustom: false },
+  { id: 'generic-robotic-waam', name: 'Generic Robotic CMT / GMAW WAAM', vendor: 'Generic Lab', process: 'waam', envelopeMm: [1500, 1200, 1000], powerRangeW: [1000, 4500], layerRangeUm: [800, 2200], hourlyRateUsd: 85, materialCostPerKgUsd: 115, gasCostPerHourUsd: 18, isCustom: false },
+  { id: 'nit-trichy-custom', name: 'NIT Trichy Custom Ti-6Al-4V System (Editable)', vendor: 'NIT Trichy Lab', process: 'lpbf', envelopeMm: [250, 250, 300], powerRangeW: [100, 400], layerRangeUm: [20, 60], hourlyRateUsd: 65, materialCostPerKgUsd: 275, gasCostPerHourUsd: 10, isCustom: true }
+];
+
+function _loadCadMachines() {
+  const map = new Map();
+  CAD_DEFAULT_MACHINES.forEach(m => map.set(m.id, JSON.parse(JSON.stringify(m))));
+  try {
+    const raw = localStorage.getItem('nit_am_custom_machines_v1');
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) arr.forEach(m => { if (m && m.id && Array.isArray(m.envelopeMm)) map.set(m.id, Object.assign({}, m, { isCustom: true })); });
+    }
+  } catch (e) {}
+  cadMachinesList = Array.from(map.values());
+  const sel = document.getElementById('cadMachineSelect');
+  if (sel) {
+    sel.innerHTML = cadMachinesList.map(m => `<option value="${m.id}" ${m.id === cadActiveMachineId ? 'selected' : ''}>[${m.process.toUpperCase()}] ${m.name}</option>`).join('');
+  }
+  selectCadMachine(cadActiveMachineId);
+}
+
+function getActiveCadMachine() {
+  return cadMachinesList.find(m => m.id === cadActiveMachineId) || cadMachinesList[0] || CAD_DEFAULT_MACHINES[0];
+}
+
+function selectCadMachine(id) {
+  cadActiveMachineId = id;
+  const m = getActiveCadMachine();
+  const setV = (elId, v) => { const el = document.getElementById(elId); if (el) el.value = v; };
+  setV('cadMacEnvX', m.envelopeMm[0]); setV('cadMacEnvY', m.envelopeMm[1]); setV('cadMacEnvZ', m.envelopeMm[2]);
+  setV('cadMacRate', m.hourlyRateUsd); setV('cadMacMatCost', m.materialCostPerKgUsd); setV('cadMacGasCost', m.gasCostPerHourUsd);
+  const meta = document.getElementById('cadMachineMeta');
+  if (meta) {
+    meta.innerText = `Envelope: ${m.envelopeMm[0]}×${m.envelopeMm[1]}×${m.envelopeMm[2]} mm | Power: ${m.powerRangeW[0]}–${m.powerRangeW[1]} W\nLayer: ${m.layerRangeUm[0]}–${m.layerRangeUm[1]} µm | Rate: $${m.hourlyRateUsd}/h | Ti64: $${m.materialCostPerKgUsd}/kg (Placeholder)`;
+  }
+  _updateCadMeshSummaryUi();
+  if (cadActiveMesh && typeof runCadGeometryAnalysis === 'function') runCadGeometryAnalysis();
+  else renderCadViewer();
+}
+window.selectCadMachine = selectCadMachine;
+
+function saveCadMachineEdits() {
+  const m = Object.assign({}, getActiveCadMachine(), {
+    envelopeMm: [
+      Math.max(10, parseFloat(document.getElementById('cadMacEnvX')?.value) || 250),
+      Math.max(10, parseFloat(document.getElementById('cadMacEnvY')?.value) || 250),
+      Math.max(10, parseFloat(document.getElementById('cadMacEnvZ')?.value) || 300)
+    ],
+    hourlyRateUsd: Math.max(1, parseFloat(document.getElementById('cadMacRate')?.value) || 85),
+    materialCostPerKgUsd: Math.max(10, parseFloat(document.getElementById('cadMacMatCost')?.value) || 260),
+    gasCostPerHourUsd: Math.max(0, parseFloat(document.getElementById('cadMacGasCost')?.value) || 10),
+    isCustom: true
+  });
+  const idx = cadMachinesList.findIndex(x => x.id === m.id);
+  if (idx >= 0) cadMachinesList[idx] = m;
+  try { localStorage.setItem('nit_am_custom_machines_v1', JSON.stringify(cadMachinesList.filter(x => x.isCustom))); } catch (e) {}
+  selectCadMachine(m.id);
+}
+window.saveCadMachineEdits = saveCadMachineEdits;
+
+function exportCadMachinesJson() {
+  const blob = new Blob([JSON.stringify(cadMachinesList, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'nit_am_machine_presets.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+window.exportCadMachinesJson = exportCadMachinesJson;
+
+function _cadBbox(pos) {
+  if (!pos || pos.length < 3) return { min: [0,0,0], max: [0,0,0], size: [0,0,0] };
+  let x0=Infinity, y0=Infinity, z0=Infinity, x1=-Infinity, y1=-Infinity, z1=-Infinity;
+  for (let i = 0; i < pos.length; i += 3) {
+    const x=pos[i], y=pos[i+1], z=pos[i+2];
+    if (x<x0) x0=x; if (y<y0) y0=y; if (z<z0) z0=z;
+    if (x>x1) x1=x; if (y>y1) y1=y; if (z>z1) z1=z;
+  }
+  return { min:[x0,y0,z0], max:[x1,y1,z1], size:[x1-x0, y1-y0, z1-z0] };
+}
+
+function _cadTriNormal(ax,ay,az, bx,by,bz, cx,cy,cz) {
+  const ux=bx-ax, uy=by-ay, uz=bz-az, vx=cx-ax, vy=cy-ay, vz=cz-az;
+  const nx=uy*vz-uz*vy, ny=uz*vx-ux*vz, nz=ux*vy-uy*vx;
+  const len = Math.hypot(nx, ny, nz);
+  return (Number.isFinite(len) && len > 1e-12) ? [nx/len, ny/len, nz/len] : null;
+}
+
+function _parseStlBufferUi(buffer) {
+  if (!buffer || buffer.byteLength < 15) throw new Error('Invalid STL file (<15 bytes).');
+  const dv = new DataView(buffer);
+  const rawTri = buffer.byteLength >= 84 ? dv.getUint32(80, true) : 0;
+  let isBin = buffer.byteLength >= 84 && (84 + rawTri * 50 === buffer.byteLength);
+  if (!isBin) {
+    const probe = new Uint8Array(buffer, 0, Math.min(512, buffer.byteLength));
+    let s = ''; for (let i = 0; i < probe.length; i++) s += String.fromCharCode(probe[i]);
+    isBin = !(/^\s*solid\b/i.test(s) && /\bfacet\s+normal\b/i.test(s));
+  }
+  if (isBin) {
+    const count = Math.min(rawTri, Math.floor((buffer.byteLength - 84) / 50));
+    if (count <= 0) throw new Error('Binary STL has 0 triangles.');
+    const pos = new Float32Array(count * 9), norm = new Float32Array(count * 9);
+    let valid = 0;
+    for (let t = 0; t < count; t++) {
+      const o = 84 + t * 50;
+      const ax=dv.getFloat32(o+12,true), ay=dv.getFloat32(o+16,true), az=dv.getFloat32(o+20,true);
+      const bx=dv.getFloat32(o+24,true), by=dv.getFloat32(o+28,true), bz=dv.getFloat32(o+32,true);
+      const cx=dv.getFloat32(o+36,true), cy=dv.getFloat32(o+40,true), cz=dv.getFloat32(o+44,true);
+      if (![ax,ay,az,bx,by,bz,cx,cy,cz].every(Number.isFinite)) continue;
+      const fn = _cadTriNormal(ax,ay,az, bx,by,bz, cx,cy,cz);
+      if (!fn) continue;
+      const b = valid * 9;
+      pos[b]=ax; pos[b+1]=ay; pos[b+2]=az; pos[b+3]=bx; pos[b+4]=by; pos[b+5]=bz; pos[b+6]=cx; pos[b+7]=cy; pos[b+8]=cz;
+      norm[b]=fn[0]; norm[b+1]=fn[1]; norm[b+2]=fn[2]; norm[b+3]=fn[0]; norm[b+4]=fn[1]; norm[b+5]=fn[2]; norm[b+6]=fn[0]; norm[b+7]=fn[1]; norm[b+8]=fn[2];
+      valid++;
+    }
+    if (valid === 0) throw new Error('No valid non-degenerate triangles in STL.');
+    const pOut = pos.subarray(0, valid * 9), nOut = norm.subarray(0, valid * 9);
+    return { format: 'STL Binary', triangleCount: valid, originalTriangleCount: valid, wasDecimated: false, positions: pOut, normals: nOut, boundingBox: _cadBbox(pOut) };
+  }
+  const text = new TextDecoder('utf-8', { fatal: false }).decode(buffer);
+  const rx = /vertex\s+([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)\s+([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)\s+([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)/g;
+  const coords = []; let m;
+  while ((m = rx.exec(text)) !== null) coords.push(Number(m[1]), Number(m[2]), Number(m[3]));
+  const triTot = Math.floor(coords.length / 9);
+  if (triTot <= 0) throw new Error('ASCII STL contains 0 valid facet vertices.');
+  const pos = new Float32Array(triTot * 9), norm = new Float32Array(triTot * 9);
+  let valid = 0;
+  for (let t = 0; t < triTot; t++) {
+    const i = t * 9;
+    const fn = _cadTriNormal(coords[i],coords[i+1],coords[i+2], coords[i+3],coords[i+4],coords[i+5], coords[i+6],coords[i+7],coords[i+8]);
+    if (!fn) continue;
+    const b = valid * 9;
+    for (let k = 0; k < 9; k++) pos[b+k] = coords[i+k];
+    for (let v = 0; v < 3; v++) { norm[b+v*3]=fn[0]; norm[b+v*3+1]=fn[1]; norm[b+v*3+2]=fn[2]; }
+    valid++;
+  }
+  if (valid === 0) throw new Error('ASCII STL has 0 valid triangles.');
+  const pOut = pos.subarray(0, valid * 9), nOut = norm.subarray(0, valid * 9);
+  return { format: 'STL ASCII', triangleCount: valid, originalTriangleCount: valid, wasDecimated: false, positions: pOut, normals: nOut, boundingBox: _cadBbox(pOut) };
+}
+
+function _decimateMeshUi(mesh, target) {
+  if (mesh.triangleCount <= target) return mesh;
+  const stride = mesh.triangleCount / target;
+  const pos = new Float32Array(target * 9), norm = new Float32Array(target * 9);
+  for (let i = 0; i < target; i++) {
+    const s = Math.min(mesh.triangleCount - 1, Math.floor(i * stride)) * 9, d = i * 9;
+    for (let k = 0; k < 9; k++) { pos[d+k] = mesh.positions[s+k]; norm[d+k] = mesh.normals[s+k]; }
+  }
+  return Object.assign({}, mesh, { triangleCount: target, positions: pos, normals: norm, boundingBox: _cadBbox(pos), wasDecimated: true });
+}
+
+function _showCadGuardrail(type, html) {
+  const box = document.getElementById('cadGuardrailBox');
+  if (!box) return;
+  box.style.display = 'block';
+  if (type === 'error') {
+    box.style.background = 'rgba(244,63,94,0.12)'; box.style.border = '1px solid rgba(244,63,94,0.45)'; box.style.color = '#fda4af';
+  } else if (type === 'warn') {
+    box.style.background = 'rgba(245,158,11,0.12)'; box.style.border = '1px solid rgba(245,158,11,0.45)'; box.style.color = '#fde68a';
+  } else {
+    box.style.background = 'rgba(16,185,129,0.10)'; box.style.border = '1px solid rgba(16,185,129,0.35)'; box.style.color = '#6ee7b7';
+  }
+  box.innerHTML = html;
+}
+
+function _renderNativeCadGuideUi(fileName, bytes) {
+  const ext = (fileName.split('.').pop() || '').toLowerCase();
+  let ascii = '';
+  const n = Math.min(bytes.length, CAD_GUARDRAIL_RULES.nativeSliceBytes);
+  for (let i = 0; i < n; i++) { const c = bytes[i]; ascii += (c >= 32 && c <= 126) ? String.fromCharCode(c) : ' '; }
+  let note = '', steps = [];
+  if (ext === 'ipt') {
+    note = 'Autodesk Inventor native (.ipt) detected. Export to STEP in Inventor to analyze geometry locally.';
+    steps = [['Autodesk Inventor', 'File → Export → CAD Format → STEP (*.stp, *.step) | AP242, Millimeters (mm), Solid Body']];
+  } else if (/#UGC:2|PRO\/ENGINEER|PTC|CREO/i.test(ascii)) {
+    note = 'PTC Creo / Pro-ENGINEER (.prt) signature detected.';
+    steps = [['PTC Creo Parametric', 'File → Save As → Type: STEP (*.stp) | AP242 / AP214 IS, Solid, Units: mm']];
+  } else if (/\bUGII\b|UNIGRAPHICS|SIEMENS\s+NX|PARASOLID/i.test(ascii)) {
+    note = 'Siemens NX (.prt) signature detected.';
+    steps = [['Siemens NX', 'File → Export → STEP (AP242) | Solid Bodies, Units: Millimeters (.stp)']];
+  } else {
+    note = 'Both Siemens NX and PTC Creo use the .prt extension. Follow your CAD tool below to export STEP:';
+    steps = [
+      ['Siemens NX', 'File → Export → STEP (AP242), Units: mm, Solid Bodies'],
+      ['PTC Creo', 'File → Save As → Type: STEP (*.stp), AP242 / AP214 IS, Units: mm']
+    ];
+  }
+  document.getElementById('cadNativeGuideCard').style.display = 'block';
+  document.getElementById('cadNativeGuideTitle').innerText = `Export ${fileName} to STEP (.stp / .step)`;
+  document.getElementById('cadNativeGuideNote').innerText = note;
+  document.getElementById('cadNativeGuideSteps').innerHTML = steps.map(([app, inst]) =>
+    `<div style="background:rgba(0,0,0,0.3); padding:6px 8px; border-radius:6px; font-size:10.5px;"><strong style="color:#fbbf24;">${app}:</strong> <span style="color:#f8fafc;">${inst}</span></div>`
+  ).join('');
+  const st = document.getElementById('cadStatusBadge');
+  if (st) { st.innerText = 'STEP Export Needed (.ipt/.prt)'; st.style.color = '#fbbf24'; }
+}
+
+async function _parseBrepInWorker(buffer, ext, fileName) {
+  return new Promise((resolve, reject) => {
+    const workerCode = `
+      self.onmessage = async function(ev) {
+        try {
+          importScripts('https://cdn.jsdelivr.net/npm/occt-import-js@0.0.22/dist/occt-import-js.js');
+          const occt = await self.occtimportjs({ locateFile: f => 'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.22/dist/' + f });
+          const bytes = new Uint8Array(ev.data.buffer);
+          const res = ev.data.ext.startsWith('ig') ? occt.ReadIgesFile(bytes, null) : occt.ReadStepFile(bytes, null);
+          if (!res || !res.success || !res.meshes || res.meshes.length === 0) throw new Error('STEP/IGES contains no tessellated solid meshes.');
+          let totCoords = 0;
+          const parts = [];
+          for (const m of res.meshes) {
+            const pos = m.attributes && m.attributes.position && m.attributes.position.array;
+            const idx = m.index && m.index.array;
+            if (!pos || !idx) continue;
+            parts.push({ pos, idx });
+            totCoords += idx.length * 3;
+          }
+          if (totCoords === 0) throw new Error('Empty STEP/IGES mesh.');
+          const outPos = new Float32Array(totCoords);
+          let off = 0;
+          for (const p of parts) {
+            for (let i = 0; i < p.idx.length; i++) {
+              const vi = p.idx[i] * 3;
+              outPos[off++] = p.pos[vi]; outPos[off++] = p.pos[vi+1]; outPos[off++] = p.pos[vi+2];
+            }
+          }
+          self.postMessage({ ok: true, posBuffer: outPos.buffer }, [outPos.buffer]);
+        } catch (err) {
+          self.postMessage({ ok: false, error: err && err.message ? err.message : 'STEP/IGES WASM parse failed' });
+        }
+      };
+    `;
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    const w = new Worker(URL.createObjectURL(blob));
+    const timer = setTimeout(() => { w.terminate(); reject(new Error('STEP/IGES WASM timed out (check network or export binary .stl).')); }, 45000);
+    w.onmessage = (e) => {
+      clearTimeout(timer); w.terminate();
+      if (!e.data.ok) return reject(new Error(e.data.error));
+      const pos = new Float32Array(e.data.posBuffer);
+      const triCount = Math.floor(pos.length / 9);
+      const norm = new Float32Array(triCount * 9);
+      for (let t = 0; t < triCount; t++) {
+        const b = t * 9;
+        const fn = _cadTriNormal(pos[b],pos[b+1],pos[b+2], pos[b+3],pos[b+4],pos[b+5], pos[b+6],pos[b+7],pos[b+8]) || [0,0,1];
+        for (let v=0; v<3; v++) { norm[b+v*3]=fn[0]; norm[b+v*3+1]=fn[1]; norm[b+v*3+2]=fn[2]; }
+      }
+      resolve({ format: ext.startsWith('ig') ? 'IGES (WASM)' : 'STEP (WASM)', triangleCount: triCount, originalTriangleCount: triCount, wasDecimated: false, positions: pos, normals: norm, boundingBox: _cadBbox(pos) });
+    };
+    w.onerror = (err) => { clearTimeout(timer); w.terminate(); reject(new Error('Worker load error for STEP/IGES parser.')); };
+    w.postMessage({ buffer, ext, fileName }, [buffer]);
+  });
+}
+
+function _applyCadMesh(mesh, fileName, extraWarnings) {
+  let active = mesh;
+  const warnings = [...(extraWarnings || [])];
+  if (mesh.triangleCount > CAD_GUARDRAIL_RULES.decimateTriCap) {
+    warnings.push(`Mesh has ${mesh.triangleCount.toLocaleString()} triangles (>2M). Simplified to 1,200,000 triangles for responsive WebGL & analysis.`);
+    active = _decimateMeshUi(mesh, 1200000);
+  } else if (mesh.triangleCount > CAD_GUARDRAIL_RULES.softTriWarn) {
+    warnings.push(`High-density mesh (${mesh.triangleCount.toLocaleString()} triangles > 1M). Adaptive sampling enabled.`);
+  }
+  cadRawMesh = active;
+  cadCurrentFileName = fileName;
+  const maxSpan = Math.max(...active.boundingBox.size);
+  cadCurrentUnit = (maxSpan > 0 && maxSpan < 0.8) ? 'm' : ((maxSpan > 0 && maxSpan < 10.0) ? 'inch' : 'mm');
+  const unitSel = document.getElementById('cadSourceUnitSelect');
+  if (unitSel) unitSel.value = cadCurrentUnit;
+  if (cadCurrentUnit !== 'mm') {
+    warnings.push(`Max span is ${maxSpan.toFixed(2)} units — auto-selected '${cadCurrentUnit}'. Verify source units below.`);
+  }
+  document.getElementById('cadUnitRow').style.display = 'flex';
+  if (warnings.length > 0) _showCadGuardrail('warn', warnings.join('<br>'));
+  else _showCadGuardrail('ok', `Loaded <strong>${fileName}</strong> cleanly in local browser RAM.`);
+
+  changeCadSourceUnit(cadCurrentUnit);
+  resetCadCamera();
+}
+
+function changeCadSourceUnit(unit) {
+  cadCurrentUnit = unit;
+  if (!cadRawMesh) return;
+  const factor = unit === 'inch' ? 25.4 : (unit === 'm' ? 1000.0 : 1.0);
+  if (factor === 1.0) cadActiveMesh = cadRawMesh;
+  else {
+    const pos = new Float32Array(cadRawMesh.positions.length);
+    for (let i = 0; i < pos.length; i++) pos[i] = cadRawMesh.positions[i] * factor;
+    cadActiveMesh = Object.assign({}, cadRawMesh, { positions: pos, boundingBox: _cadBbox(pos) });
+  }
+  _updateCadMeshSummaryUi();
+  if (typeof runCadGeometryAnalysis === 'function') runCadGeometryAnalysis();
+  renderCadViewer();
+}
+window.changeCadSourceUnit = changeCadSourceUnit;
+
+function _updateCadMeshSummaryUi() {
+  const hint = document.getElementById('cadViewerEmptyHint');
+  if (!cadActiveMesh) {
+    if (hint) hint.style.display = 'flex';
+    ['cadStatFormat','cadStatTris','cadStatBbox','cadStatFit'].forEach(id => { const el = document.getElementById(id); if (el) el.innerText = '—'; });
+    return;
+  }
+  if (hint) hint.style.display = 'none';
+  const b = cadActiveMesh.boundingBox.size;
+  const m = getActiveCadMachine();
+  const fits = b[0] <= m.envelopeMm[0] && b[1] <= m.envelopeMm[1] && b[2] <= m.envelopeMm[2];
+  document.getElementById('cadStatFormat').innerText = cadActiveMesh.format;
+  document.getElementById('cadStatTris').innerText = cadActiveMesh.triangleCount.toLocaleString() + (cadActiveMesh.wasDecimated ? ' (Simp.)' : '');
+  document.getElementById('cadStatBbox').innerText = `${b[0].toFixed(1)} × ${b[1].toFixed(1)} × ${b[2].toFixed(1)}`;
+  const fitEl = document.getElementById('cadStatFit');
+  fitEl.innerText = fits ? '✓ Fits Envelope' : '✗ Exceeds Build Vol';
+  fitEl.style.color = fits ? '#34d399' : '#fb7185';
+  const st = document.getElementById('cadStatusBadge');
+  if (st) { st.innerText = `${cadCurrentFileName} (${cadActiveMesh.triangleCount.toLocaleString()} tris)`; st.style.color = '#34d399'; }
+}
+
+async function processCadFile(file) {
+  if (!file) return;
+  document.getElementById('cadNativeGuideCard').style.display = 'none';
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const mb = file.size / (1024 * 1024);
+  const warnings = [];
+
+  if (!['stl','step','stp','iges','igs','ipt','prt'].includes(ext)) {
+    return _showCadGuardrail('error', `Unsupported format '.${ext}'. Supported: .stl, .step, .stp, .iges, .ipt, .prt.`);
+  }
+  if (file.size === 0) return _showCadGuardrail('error', 'Selected file is empty (0 bytes).');
+
+  if (ext === 'ipt' || ext === 'prt') {
+    const slice = await file.slice(0, CAD_GUARDRAIL_RULES.nativeSliceBytes).arrayBuffer();
+    return _renderNativeCadGuideUi(file.name, new Uint8Array(slice));
+  }
+
+  const maxMb = ext === 'stl' ? CAD_GUARDRAIL_RULES.stlMaxMb : CAD_GUARDRAIL_RULES.brepMaxMb;
+  if (mb > CAD_GUARDRAIL_RULES.softWarningMb && mb <= maxMb) {
+    warnings.push(`Large CAD file (${mb.toFixed(1)} MB > 50 MB). Slicing and thickness checks will use adaptive sampling.`);
+  }
+  if (mb > maxMb) {
+    if (!cadForceLoadAnyway) {
+      return _showCadGuardrail('error', `${ext.toUpperCase()} file (${mb.toFixed(1)} MB) exceeds ${maxMb} MB safety limit. Enable "Force Load Anyway" to override.`);
+    }
+    warnings.push(`Workstation override active: loading ${mb.toFixed(1)} MB file above ${maxMb} MB cap.`);
+  }
+
+  try {
+    const buf = await file.arrayBuffer();
+    if (ext === 'stl') {
+      const mesh = _parseStlBufferUi(buf);
+      _applyCadMesh(mesh, file.name, warnings);
+    } else {
+      _showCadGuardrail('warn', `Tessellating ${file.name} locally via OpenCascade WebAssembly...`);
+      const mesh = await _parseBrepInWorker(buf, ext, file.name);
+      _applyCadMesh(mesh, file.name, warnings);
+    }
+  } catch (err) {
+    _showCadGuardrail('error', `CAD parse failed cleanly: ${err && err.message ? err.message : String(err)}`);
+  }
+}
+
+function handleCadFileInput(inp) { if (inp && inp.files && inp.files[0]) processCadFile(inp.files[0]); }
+function handleCadFileDrop(e) { e.preventDefault(); const dz=document.getElementById('cadDropzone'); if (dz) dz.style.borderColor='rgba(56,189,248,0.38)'; if (e.dataTransfer?.files?.[0]) processCadFile(e.dataTransfer.files[0]); }
+window.handleCadFileInput = handleCadFileInput;
+window.handleCadFileDrop = handleCadFileDrop;
+
+function loadDemoCadBracket() {
+  document.getElementById('cadNativeGuideCard').style.display = 'none';
+  const tris = [];
+  const pushTri = (a,b,c) => tris.push(...a,...b,...c);
+  const q = (p0,p1,p2,p3) => { pushTri(p0,p1,p2); pushTri(p0,p2,p3); };
+  const rects = [[0,0,12,8],[12,0,60,8],[0,8,12,27],[0,27,12,35],[12,27,36,35]];
+  rects.forEach(([x0,z0,x1,z1]) => {
+    q([x0,0,z0],[x1,0,z0],[x1,0,z1],[x0,0,z1]);
+    q([x1,40,z0],[x0,40,z0],[x0,40,z1],[x1,40,z1]);
+  });
+  const loop = [[0,0],[12,0],[60,0],[60,8],[12,8],[12,27],[36,27],[36,35],[12,35],[0,35],[0,27],[0,8]];
+  for (let i = 0; i < loop.length; i++) {
+    const [ax,az] = loop[i], [bx,bz] = loop[(i+1)%loop.length];
+    q([ax,0,az],[ax,40,az],[bx,40,bz],[bx,0,bz]);
+  }
+  const count = tris.length / 9, buf = new ArrayBuffer(84 + count * 50), dv = new DataView(buf);
+  dv.setUint32(80, count, true);
+  for (let t = 0; t < count; t++) {
+    const o = 84 + t * 50, b = t * 9;
+    for (let k = 0; k < 9; k++) dv.setFloat32(o + 12 + k * 4, tris[b + k], true);
+  }
+  _applyCadMesh(_parseStlBufferUi(buf), 'demo_ti64_aerospace_bracket.stl', []);
+}
+window.loadDemoCadBracket = loadDemoCadBracket;
+
+function clearLoadedCadPart() {
+  cadRawMesh = null; cadActiveMesh = null; cadGeometryReport = null; cadPrintabilityReport = null; cadOrientationResult = null; cadSimReport = null; cadEconomicsReport = null; cadCurrentFileName = '';
+  window.cadActiveScrubIdx = 0;
+  document.getElementById('cadUnitRow').style.display = 'none';
+  document.getElementById('cadGuardrailBox').style.display = 'none';
+  document.getElementById('cadNativeGuideCard').style.display = 'none';
+  const st = document.getElementById('cadStatusBadge');
+  if (st) { st.innerText = 'Waiting for CAD file'; st.style.color = '#94a3b8'; }
+  _updateCadMeshSummaryUi();
+  _renderCadGeometryUi();
+  _renderCadPrintabilityAndOriUi();
+  _renderCadPhase4Ui();
+  if (typeof _updateCadHeatmapLegend === 'function') _updateCadHeatmapLegend();
+  renderCadViewer();
+  if (typeof calculatePhysics === 'function') calculatePhysics();
+}
+window.clearLoadedCadPart = clearLoadedCadPart;
+
+// ---------------- PHASE 2: GEOMETRY ANALYZER ENGINE (BVH + SLICING) ----------------
+function _edgeKeyUi(ax,ay,az, bx,by,bz) {
+  const q = n => Math.round(n * 10000);
+  const a = `${q(ax)},${q(ay)},${q(az)}`, b = `${q(bx)},${q(by)},${q(bz)}`;
+  return [`${a}|${b}`, `${b}|${a}`];
+}
+
+function _buildBvhUi(pos, nTri) {
+  const idx = new Uint32Array(nTri), cx = new Float32Array(nTri), cy = new Float32Array(nTri), cz = new Float32Array(nTri);
+  for (let t = 0; t < nTri; t++) { idx[t] = t; const i = t * 9; cx[t] = (pos[i]+pos[i+3]+pos[i+6])/3; cy[t] = (pos[i+1]+pos[i+4]+pos[i+7])/3; cz[t] = (pos[i+2]+pos[i+5]+pos[i+8])/3; }
+  const build = (s, cnt) => {
+    let x0=Infinity,y0=Infinity,z0=Infinity, x1=-Infinity,y1=-Infinity,z1=-Infinity;
+    for (let k=s; k<s+cnt; k++) {
+      const i = idx[k] * 9;
+      for (let v=0; v<9; v+=3) {
+        const x=pos[i+v], y=pos[i+v+1], z=pos[i+v+2];
+        if (x<x0)x0=x; if(y<y0)y0=y; if(z<z0)z0=z; if(x>x1)x1=x; if(y>y1)y1=y; if(z>z1)z1=z;
+      }
+    }
+    if (cnt <= 8) return { x0,y0,z0,x1,y1,z1, l:null, r:null, s, cnt };
+    const dx=x1-x0, dy=y1-y0, dz=z1-z0;
+    const ax = dx>=dy && dx>=dz ? 0 : (dy>=dz ? 1 : 2);
+    const ca = ax===0 ? cx : (ax===1 ? cy : cz);
+    const mid = ax===0 ? (x0+x1)*0.5 : (ax===1 ? (y0+y1)*0.5 : (z0+z1)*0.5);
+    let le = s;
+    for (let k=s; k<s+cnt; k++) { if (ca[idx[k]] < mid) { const tmp=idx[k]; idx[k]=idx[le]; idx[le]=tmp; le++; } }
+    let lc = le - s; if (lc === 0 || lc === cnt) lc = cnt >> 1;
+    return { x0,y0,z0,x1,y1,z1, l: build(s, lc), r: build(s+lc, cnt-lc), s:0, cnt:0 };
+  };
+  return { root: build(0, nTri), idx };
+}
+
+function _traceBvhUi(ox,oy,oz, dx,dy,dz, pos, root, idx, skipTri) {
+  const ix = Math.abs(dx)>1e-12 ? 1/dx : 1e12, iy = Math.abs(dy)>1e-12 ? 1/dy : 1e12, iz = Math.abs(dz)>1e-12 ? 1/dz : 1e12;
+  let best = Infinity, hits = 0, firstDot = 0;
+  const st = [root];
+  while (st.length > 0) {
+    const n = st.pop();
+    const tx1=(n.x0-ox)*ix, tx2=(n.x1-ox)*ix, ty1=(n.y0-oy)*iy, ty2=(n.y1-oy)*iy, tz1=(n.z0-oz)*iz, tz2=(n.z1-oz)*iz;
+    const tmin = Math.max(Math.min(tx1,tx2), Math.min(ty1,ty2), Math.min(tz1,tz2));
+    const tmax = Math.min(Math.max(tx1,tx2), Math.max(ty1,ty2), Math.max(tz1,tz2));
+    if (tmax < Math.max(0, tmin)) continue;
+    if (n.cnt > 0) {
+      for (let k=n.s; k<n.s+n.cnt; k++) {
+        const tri = idx[k]; if (tri === skipTri) continue;
+        const i = tri * 9, ax=pos[i], ay=pos[i+1], az=pos[i+2];
+        const e1x=pos[i+3]-ax, e1y=pos[i+4]-ay, e1z=pos[i+5]-az, e2x=pos[i+6]-ax, e2y=pos[i+7]-ay, e2z=pos[i+8]-az;
+        const px=dy*e2z-dz*e2y, py=dz*e2x-dx*e2z, pz=dx*e2y-dy*e2x, det=e1x*px+e1y*py+e1z*pz;
+        if (Math.abs(det) < 1e-10) continue;
+        const inv = 1/det, tx=ox-ax, ty=oy-ay, tz=oz-az, u=(tx*px+ty*py+tz*pz)*inv;
+        if (u<0 || u>1) continue;
+        const qx=ty*e1z-tz*e1y, qy=tz*e1x-tx*e1z, qz=tx*e1y-ty*e1x, v=(dx*qx+dy*qy+dz*qz)*inv;
+        if (v<0 || u+v>1) continue;
+        const t = (e2x*qx+e2y*qy+e2z*qz)*inv;
+        if (t > 1e-3 && Number.isFinite(t)) {
+          hits++;
+          if (t < best) {
+            best = t;
+            const nx=e1y*e2z-e1z*e2y, ny=e1z*e2x-e1x*e2z, nz=e1x*e2y-e1y*e2x, nl=Math.hypot(nx,ny,nz)||1;
+            firstDot = (nx*dx+ny*dy+nz*dz)/nl;
+          }
+        }
+      }
+    } else { if (n.l) st.push(n.l); if (n.r) st.push(n.r); }
+  }
+  return { dist: best, hits, firstDot };
+}
+
+function analyzeCadGeometryUi(mesh, overhangDeg, minWallLimitMm) {
+  const t0 = Date.now(), pos = mesh.positions, norm = mesh.normals, bb = mesh.boundingBox, nTri = mesh.triangleCount;
+  const ox=(bb.min[0]+bb.max[0])*0.5, oy=(bb.min[1]+bb.max[1])*0.5, oz=(bb.min[2]+bb.max[2])*0.5;
+  let signedVol6 = 0, areaSum = 0, sharpConcaveCorners = 0;
+  const checkTopo = nTri <= 200000;
+  const edges = checkTopo ? new Map() : null, edgeNorms = checkTopo ? new Map() : null;
+  const nzCutoff = -Math.sin((overhangDeg * Math.PI) / 180), zBase = bb.min[2];
+  const perOverhang = new Uint8Array(nTri);
+  let overhangAreaMm2 = 0;
+  const triZMin = new Float32Array(nTri), triZMax = new Float32Array(nTri);
+
+  for (let t = 0; t < nTri; t++) {
+    const i = t * 9;
+    const ax=pos[i]-ox, ay=pos[i+1]-oy, az=pos[i+2]-oz, bx=pos[i+3]-ox, by=pos[i+4]-oy, bz=pos[i+5]-oz, cx=pos[i+6]-ox, cy=pos[i+7]-oy, cz=pos[i+8]-oz;
+    signedVol6 += ax*(by*cz-bz*cy) + ay*(bz*cx-bx*cz) + az*(bx*cy-by*cx);
+    const ux=bx-ax, uy=by-ay, uz=bz-az, vx=cx-ax, vy=cy-ay, vz=cz-az;
+    const crx=uy*vz-uz*vy, cry=uz*vx-ux*vz, crz=ux*vy-uy*vx;
+    const a = 0.5 * Math.hypot(crx, cry, crz);
+    if (Number.isFinite(a)) areaSum += a;
+    const azW=pos[i+2], bzW=pos[i+5], czW=pos[i+8];
+    triZMin[t] = Math.min(azW,bzW,czW); triZMax[t] = Math.max(azW,bzW,czW);
+    if (norm[i+2] < nzCutoff && ((azW+bzW+czW)/3 > zBase + 0.15) && Number.isFinite(a)) { overhangAreaMm2 += a; perOverhang[t] = 1; }
+    if (edges && edgeNorms) {
+      const fn = [norm[i], norm[i+1], norm[i+2]];
+      const vs = [[pos[i],pos[i+1],pos[i+2]],[pos[i+3],pos[i+4],pos[i+5]],[pos[i+6],pos[i+7],pos[i+8]]];
+      for (let e=0; e<3; e++) {
+        const p=vs[e], q=vs[(e+1)%3];
+        const [fwd, rev] = _edgeKeyUi(p[0],p[1],p[2], q[0],q[1],q[2]);
+        edges.set(fwd, (edges.get(fwd)||0) + 1);
+        const opp = edgeNorms.get(rev);
+        if (opp) {
+          if (fn[0]*opp[0]+fn[1]*opp[1]+fn[2]*opp[2] < 0.35) {
+            const ex=q[0]-p[0], ey=q[1]-p[1], ez=q[2]-p[2];
+            if ((opp[1]*fn[2]-opp[2]*fn[1])*ex + (opp[2]*fn[0]-opp[0]*fn[2])*ey + (opp[0]*fn[1]-opp[1]*fn[0])*ez > 1e-6) sharpConcaveCorners++;
+          }
+        } else edgeNorms.set(fwd, fn);
+      }
+    }
+  }
+  let boundaryEdgeCount = 0, nonManifoldEdgeCount = 0;
+  if (edges) {
+    edges.forEach((cnt, k) => { if (cnt > 1) nonManifoldEdgeCount += cnt - 1; const sp = k.indexOf('|'); if (!edges.has(k.slice(sp+1)+'|'+k.slice(0,sp))) boundaryEdgeCount++; });
+  }
+  const isWatertight = checkTopo ? (boundaryEdgeCount === 0 && nonManifoldEdgeCount === 0 && signedVol6 > 0) : (signedVol6 > 0);
+
+  const { root, idx } = _buildBvhUi(pos, nTri);
+  const perThick = new Float32Array(nTri), maxSpan = Math.max(1, Math.max(...bb.size)), stride = nTri > 1000 ? Math.ceil(nTri/1000) : 1;
+  const thickSamples = []; let cavityVotes = 0;
+  for (let t = 0; t < nTri; t += stride) {
+    const i = t * 9, tx=(pos[i]+pos[i+3]+pos[i+6])/3, ty=(pos[i+1]+pos[i+4]+pos[i+7])/3, tz=(pos[i+2]+pos[i+5]+pos[i+8])/3;
+    const nx=norm[i], ny=norm[i+1], nz=norm[i+2], eps=Math.min(0.02, maxSpan*1e-4);
+    const hit = _traceBvhUi(tx-nx*eps, ty-ny*eps, tz-nz*eps, -nx,-ny,-nz, pos, root, idx, t);
+    const th = Math.max(0.05, Math.min(maxSpan, Number.isFinite(hit.dist) && hit.dist <= maxSpan*1.1 ? hit.dist : maxSpan));
+    thickSamples.push(th);
+    for (let s=0; s<stride && t+s<nTri; s++) perThick[t+s] = th;
+    if (hit.hits >= 3 && hit.firstDot < -0.5) cavityVotes++;
+  }
+  thickSamples.sort((a,b) => a-b);
+  const minWallThicknessMm = thickSamples.length ? Number(thickSamples[0].toFixed(2)) : 0;
+  const medianWallThicknessMm = thickSamples.length ? Number(thickSamples[Math.floor(thickSamples.length*0.5)].toFixed(2)) : 0;
+  const enclosedCavityCount = isWatertight && cavityVotes >= Math.max(6, Math.round(thickSamples.length*0.08)) ? Math.max(1, Math.round(cavityVotes / Math.max(12, Math.round(thickSamples.length*0.12)))) : 0;
+
+  const height = bb.size[2], numSlices = Math.max(8, Math.min(90, Math.round(height / 0.4)));
+  const layerSlices = []; let prevA = 0, abruptAreaJumpCount = 0;
+  for (let s = 0; s < numSlices; s++) {
+    const z = zBase + ((s + 0.5) / numSlices) * height;
+    let twiceA = 0;
+    for (let t = 0; t < nTri; t++) {
+      if (triZMax[t] < z || triZMin[t] > z) continue;
+      const i = t * 9, pts = [[pos[i],pos[i+1],pos[i+2]],[pos[i+3],pos[i+4],pos[i+5]],[pos[i+6],pos[i+7],pos[i+8]]], cp = [];
+      for (let e=0; e<3; e++) {
+        const a=pts[e], b=pts[(e+1)%3], da=a[2]-z, db=b[2]-z;
+        if ((da<=0 && db>0)||(db<=0 && da>0)) { const f=(z-a[2])/(b[2]-a[2]); cp.push([a[0]+f*(b[0]-a[0]), a[1]+f*(b[1]-a[1])]); }
+      }
+      if (cp.length === 2) {
+        let p0=cp[0], p1=cp[1]; const sx=p1[0]-p0[0], sy=p1[1]-p0[1];
+        if (sy*norm[i] - sx*norm[i+1] < 0) { const tmp=p0; p0=p1; p1=tmp; }
+        twiceA += p0[0]*p1[1] - p1[0]*p0[1];
+      }
+    }
+    const area = Math.max(0, Math.abs(twiceA) * 0.5);
+    const ratio = s === 0 ? 1.0 : Number(Math.max(0.05, Math.min(20, prevA / Math.max(1e-2, area))).toFixed(2));
+    if (s > 0 && (ratio >= 2.0 || ratio <= 0.5)) abruptAreaJumpCount++;
+    layerSlices.push({ zMm: Number(z.toFixed(2)), areaMm2: Number(area.toFixed(1)), heatSinkRatio: ratio });
+    prevA = area;
+  }
+
+  const volumeCm3 = Number((Math.abs(signedVol6)/6000).toFixed(3));
+  const surfaceAreaCm2 = Number((areaSum/100).toFixed(2));
+  return {
+    volumeCm3, massTi64Grams: Number((volumeCm3 * 4.43).toFixed(2)), surfaceAreaCm2,
+    isWatertight, boundaryEdgeCount, nonManifoldEdgeCount,
+    overhangAreaCm2: Number((overhangAreaMm2/100).toFixed(2)),
+    overhangFractionPct: areaSum > 0 ? Number(Math.min(100, (overhangAreaMm2/areaSum)*100).toFixed(1)) : 0,
+    minWallThicknessMm, medianWallThicknessMm,
+    thinWallWarn: minWallThicknessMm < minWallLimitMm,
+    sharpConcaveCornerCount: sharpConcaveCorners,
+    enclosedCavityCount, layerSlices, abruptAreaJumpCount,
+    elapsedMs: Date.now() - t0, perOverhang, perThick
+  };
+}
+
+var cadPrintabilityReport = null;
+var cadOrientationResult = null;
+var cadCouplingEnabled = true;
+
+function computeCadPredictionModifiersUi(geo, fileName, procId) {
+  if (!geo || !cadActiveMesh) return null;
+  const bb = cadActiveMesh.boundingBox;
+  const heightMm = bb.size[2], minFoot = Math.max(1, Math.min(bb.size[0], bb.size[1]));
+  const slendernessZ = heightMm / minFoot;
+  const areas = (geo.layerSlices || []).map(s => s.areaMm2);
+  const meanA = areas.length ? areas.reduce((a,b) => a+b, 0) / areas.length : 1000;
+  const areaSmall = Math.max(0, Math.min(1, 1.0 - meanA / 4000));
+  const jumpHeat = Math.min(1.0, (geo.abruptAreaJumpCount || 0) * 0.12);
+  const ohInsul = Math.min(1.0, (geo.overhangFractionPct || 0) / 25.0);
+  const pScale = procId === 'waam' ? 1.6 : (procId === 'ded-laser' ? 1.3 : 1.0);
+  const interlayerPreheatShiftC = Number(Math.min(180, (18 * areaSmall + 25 * jumpHeat + 22 * ohInsul) * pScale).toFixed(1));
+  const thinQuench = geo.minWallThicknessMm < 1.5 ? 1.18 : 1.0;
+  const coolingRateMultiplier = Number((thinQuench * Math.max(0.65, 1.0 - interlayerPreheatShiftC / 450.0)).toFixed(3));
+  const stressConcentrationFactor = Number((1.0 + Math.min(0.28, (geo.sharpConcaveCornerCount||0)*0.035) + Math.min(0.22, Math.max(0, slendernessZ-1.2)*0.08) + Math.min(0.18, (geo.abruptAreaJumpCount||0)*0.04)).toFixed(3));
+  const thinHits = geo.perThick ? Array.from(geo.perThick).filter(x => x > 0 && x < (procId==='waam'?3.5:(procId==='ded-laser'?1.2:0.4))).length : 0;
+  const thinPct = geo.perThick && geo.perThick.length ? (thinHits / geo.perThick.length) * 100 : 0;
+  const densityPenaltyPct = Number(Math.min(1.5, thinPct * 0.015 + (geo.overhangFractionPct || 0) * 0.01).toFixed(2));
+  const elongationMultiplier = Number(Math.max(0.75, 1.0 - (geo.sharpConcaveCornerCount||0)*0.015 - (geo.overhangFractionPct||0)*0.004).toFixed(3));
+  return { partLabel: fileName, interlayerPreheatShiftC, coolingRateMultiplier, stressConcentrationFactor, densityPenaltyPct, elongationMultiplier };
+}
+
+function evaluateCadPrintabilityUi(mesh, geo, mac) {
+  const proc = mac.process, sz = mesh.boundingBox.size;
+  const fits = sz[0] <= mac.envelopeMm[0] && sz[1] <= mac.envelopeMm[1] && sz[2] <= mac.envelopeMm[2];
+  const minW = proc === 'waam' ? 3.5 : (proc === 'ded-laser' ? 1.2 : 0.4);
+  const pos = mesh.positions, norm = mesh.normals, nTri = mesh.triangleCount, zBase = mesh.boundingBox.min[2];
+  const stride = nTri > 12000 ? Math.ceil(nTri / 12000) : 1;
+  let supSolid = 0, ohSampleA = 0, maxDrop = 0, hardPockets = 0;
+  for (let t = 0; t < nTri; t += stride) {
+    if (!geo.perOverhang || !geo.perOverhang[t]) continue;
+    const i = t * 9, ax=pos[i],ay=pos[i+1],az=pos[i+2], bx=pos[i+3],by=pos[i+4],bz=pos[i+5], cx=pos[i+6],cy=pos[i+7],cz=pos[i+8];
+    const crx=(by-ay)*(cz-az)-(bz-az)*(cy-ay), cry=(bz-az)*(cx-ax)-(bx-ax)*(cz-az), crz=(bx-ax)*(cy-ay)-(by-ay)*(cx-ax);
+    const area = 0.5 * Math.hypot(crx, cry, crz) * stride;
+    if (!Number.isFinite(area) || area <= 0) continue;
+    const cX=(ax+bx+cx)/3, cY=(ay+by+cy)/3, cZ=(az+bz+cz)/3;
+    let landZ = zBase;
+    if (nTri <= 10000) {
+      for (let k=0; k<nTri; k++) {
+        if (k===t) continue; const j=k*9; if (norm[j+2]<=0.15) continue;
+        const kz=(pos[j+2]+pos[j+5]+pos[j+8])/3; if (kz>=cZ-0.1 || kz<=landZ) continue;
+        if (cX>=Math.min(pos[j],pos[j+3],pos[j+6]) && cX<=Math.max(pos[j],pos[j+3],pos[j+6]) && cY>=Math.min(pos[j+1],pos[j+4],pos[j+7]) && cY<=Math.max(pos[j+1],pos[j+4],pos[j+7])) landZ = kz;
+      }
+    }
+    const drop = Math.max(0.5, cZ - landZ); if (drop > maxDrop) maxDrop = drop; if (landZ > zBase + 1.0) hardPockets++;
+    ohSampleA += area; supSolid += area * Math.max(0.15, Math.abs(norm[i+2])) * drop;
+  }
+  const ohMm2 = geo.overhangAreaCm2 * 100;
+  const fill = proc === 'lpbf' ? 0.22 : (proc === 'ded-laser' ? 0.35 : 0.45);
+  const sc = ohSampleA > 0 ? ohMm2 / ohSampleA : 1.0;
+  const supportVolumeCm3 = Number(((supSolid * sc * fill) / 1000).toFixed(2));
+  const supportMassGrams = Number((supportVolumeCm3 * 4.43).toFixed(2));
+  const removalDifficulty = ohMm2 <= 1 ? 'None' : ((hardPockets>0 && geo.overhangFractionPct>12) ? 'Hard' : ((geo.overhangFractionPct>6 || maxDrop>18) ? 'Moderate' : 'Easy'));
+
+  const notes = [];
+  if (!fits) notes.push(`Exceeds ${mac.name} build volume (${mac.envelopeMm.join('×')} mm) in current orientation.`);
+  let wallStatus = 'Pass';
+  if (geo.minWallThicknessMm < minW) {
+    wallStatus = proc === 'lpbf' ? 'Fail' : 'Marginal';
+    notes.push(`Min wall (${geo.minWallThicknessMm} mm) < ${proc.toUpperCase()} limit (${minW} mm)${proc==='lpbf' ? ' — thicken walls.' : ' — needs CNC finish machining.'}`);
+  }
+  if (geo.enclosedCavityCount > 0 && proc === 'lpbf') notes.push(`${geo.enclosedCavityCount} trapped-powder cavity(s) detected — add ≥ Ø2.5 mm drain holes.`);
+  if (!geo.isWatertight) notes.push(`Mesh has ${geo.boundaryEdgeCount} open edges — watertight check failed.`);
+  if (geo.overhangFractionPct > 4) notes.push(`${geo.overhangAreaCm2} cm² overhang requires ~${supportVolumeCm3} cm³ (${supportMassGrams} g) Ti-6Al-4V supports (${removalDifficulty} removal).`);
+
+  const maxD = Math.max(...sz);
+  const lpbfS = Math.max(10, Math.min(100, Math.round((maxD<=350?92:45) - (geo.minWallThicknessMm<0.4?25:0) - (geo.enclosedCavityCount>0?12:0) - Math.min(18, geo.overhangFractionPct*0.6) + (geo.volumeCm3<=400?6:-12))));
+  const ldedS = Math.max(10, Math.min(100, Math.round((geo.volumeCm3>=25?84:62) - (geo.minWallThicknessMm<1.2?18:0) - (geo.overhangFractionPct>15?20:geo.overhangFractionPct*0.8) + (maxD>250?10:0))));
+  const waamS = Math.max(10, Math.min(100, Math.round((geo.volumeCm3>=150||maxD>=250?88:48) - (geo.minWallThicknessMm<3.5?28:0) - (geo.overhangFractionPct>10?22:geo.overhangFractionPct*0.9))));
+  const processRanking = [
+    { processId: 'lpbf', label: 'LPBF', score: lpbfS, verdict: lpbfS>=75?'Recommended':(lpbfS>=55?'Viable':'Not Suitable') },
+    { processId: 'ded-laser', label: 'L-DED', score: ldedS, verdict: ldedS>=75?'Recommended':(ldedS>=55?'Viable (Post-Machine)':'Marginal') },
+    { processId: 'waam', label: 'WAAM', score: waamS, verdict: waamS>=75?'Recommended':(waamS>=52?'Viable (Post-Machine)':'Not Suitable') }
+  ].sort((a,b) => b.score - a.score);
+
+  let overallVerdict = 'Printable';
+  if (!fits || wallStatus === 'Fail') overallVerdict = 'Not Printable on Selected Machine';
+  else if (ohMm2 > 1 || wallStatus === 'Marginal' || (geo.enclosedCavityCount > 0 && proc === 'lpbf') || !geo.isWatertight) overallVerdict = 'Printable with Supports / Adjustments';
+
+  return { overallVerdict, fits, wallStatus, supportEstimate: { supportContactAreaCm2: geo.overhangAreaCm2, supportVolumeCm3, supportMassGrams, removalDifficulty }, notes, processRanking };
+}
+
+function _rotMatUi(rxD, ryD, rzD) {
+  const rx=rxD*Math.PI/180, ry=ryD*Math.PI/180, rz=rzD*Math.PI/180;
+  const cx=Math.cos(rx),sx=Math.sin(rx), cy=Math.cos(ry),sy=Math.sin(ry), cz=Math.cos(rz),sz=Math.sin(rz);
+  return [cz*cy, cz*sy*sx-sz*cx, cz*sy*cx+sz*sx, sz*cy, sz*sy*sx+cz*cx, sz*sy*cx-cz*sx, -sy, cy*sx, cy*cx];
+}
+
+function optimizeBuildOrientationsUi(mesh, mac, overhangDeg) {
+  const specs = [
+    ['Current (+Z Up)',0,0,0], ['Flip 180° (-Z)',180,0,0], ['Tilt +90° X (+Y Up)',90,0,0], ['Tilt -90° X (-Y Up)',-90,0,0],
+    ['Tilt +90° Y (+X Up)',0,90,0], ['Tilt -90° Y (-X Up)',0,-90,0], ['45° X-Tilt',45,0,0], ['-45° X-Tilt',-45,0,0],
+    ['45° Y-Tilt',0,45,0], ['-45° Y-Tilt',0,-45,0], ['135° Relief X',135,0,0], ['-135° Relief X',-135,0,0],
+    ['135° Relief Y',0,135,0], ['-135° Relief Y',0,-135,0], ['Side +45°',90,45,0], ['Side -45°',90,-45,0],
+    ['Spine +45°',45,90,0], ['Spine -45°',-45,90,0], ['Diag +35/+45',35.26,45,0], ['Diag +35/-45',35.26,-45,0],
+    ['Diag -35/+45',-35.26,45,0], ['Diag -35/-45',-35.26,-45,0], ['InvDiag +145/+45',144.74,45,0], ['InvDiag +145/-45',144.74,-45,0],
+    ['InvDiag -145/+45',-144.74,45,0], ['InvDiag -145/-45',-144.74,-45,0]
+  ];
+  const pos = mesh.positions, norm = mesh.normals, nTri = mesh.triangleCount;
+  const stride = nTri > 10000 ? Math.ceil(nTri / 10000) : 1;
+  const nzCut = -Math.sin((overhangDeg * Math.PI) / 180);
+  const fill = mac.process === 'lpbf' ? 0.22 : 0.35;
+
+  const scores = specs.map(([label, rx, ry, rz]) => {
+    const m = _rotMatUi(rx, ry, rz);
+    let x0=Infinity,y0=Infinity,z0=Infinity,x1=-Infinity,y1=-Infinity,z1=-Infinity;
+    for (let t=0; t<nTri; t+=stride) {
+      const i=t*9;
+      for (let v=0; v<9; v+=3) {
+        const x=pos[i+v], y=pos[i+v+1], z=pos[i+v+2];
+        const rxp=m[0]*x+m[1]*y+m[2]*z, ryp=m[3]*x+m[4]*y+m[5]*z, rzp=m[6]*x+m[7]*y+m[8]*z;
+        if(rxp<x0)x0=rxp; if(ryp<y0)y0=ryp; if(rzp<z0)z0=rzp; if(rxp>x1)x1=rxp; if(ryp>y1)y1=ryp; if(rzp>z1)z1=rzp;
+      }
+    }
+    const sx=Math.max(0.1,x1-x0), sy=Math.max(0.1,y1-y0), sz=Math.max(0.1,z1-z0);
+    const fits = sx<=mac.envelopeMm[0] && sy<=mac.envelopeMm[1] && sz<=mac.envelopeMm[2];
+    let totA=0, ohA=0, sup3=0;
+    for (let t=0; t<nTri; t+=stride) {
+      const i=t*9, ax=pos[i],ay=pos[i+1],az=pos[i+2], bx=pos[i+3],by=pos[i+4],bz=pos[i+5], cx=pos[i+6],cy=pos[i+7],cz=pos[i+8];
+      const crx=(by-ay)*(cz-az)-(bz-az)*(cy-ay), cry=(bz-az)*(cx-ax)-(bx-ax)*(cz-az), crz=(bx-ax)*(cy-ay)-(by-ay)*(cx-ax);
+      const a = 0.5*Math.hypot(crx,cry,crz)*stride; if(!Number.isFinite(a)||a<=0)continue;
+      totA += a;
+      const rnz = m[6]*norm[i] + m[7]*norm[i+1] + m[8]*norm[i+2];
+      const czp = m[6]*(ax+bx+cx)/3 + m[7]*(ay+by+cy)/3 + m[8]*(az+bz+cz)/3 - z0;
+      if (rnz < nzCut && czp > 0.25) { ohA += a; sup3 += a * Math.max(0.15, Math.abs(rnz)) * czp; }
+    }
+    const ohPct = totA > 0 ? Math.min(100, (ohA/totA)*100) : 0;
+    const supVol = Number(((sup3*fill)/1000).toFixed(2));
+    const hNorm = sz / Math.max(10, Math.max(sx, sy, sz));
+    const score = Number(Math.max(1, Math.min(100, (fits?50:10) + (1-Math.min(1,ohPct/35))*30 + (1-Math.min(1,hNorm))*20)).toFixed(1));
+    return { label, mat: m, zMm: Number(sz.toFixed(1)), fits, ohCm2: Number((ohA/100).toFixed(2)), supVol, score };
+  });
+
+  const current = scores[0];
+  const topCandidates = [...scores].sort((a,b) => b.score - a.score || a.supVol - b.supVol).slice(0, 3);
+  return { evaluatedCount: scores.length, current, topCandidates };
+}
+
+function applyCadOrientation(idx) {
+  if (!cadRawMesh || !cadOrientationResult || !cadOrientationResult.topCandidates[idx]) return;
+  const m = cadOrientationResult.topCandidates[idx].mat;
+  const pos = cadRawMesh.positions, norm = cadRawMesh.normals, n = pos.length;
+  const nPos = new Float32Array(n), nNorm = new Float32Array(n);
+  let minX=Infinity, minY=Infinity, minZ=Infinity;
+  for (let i=0; i<n; i+=3) {
+    const x=pos[i], y=pos[i+1], z=pos[i+2];
+    const rx=m[0]*x+m[1]*y+m[2]*z, ry=m[3]*x+m[4]*y+m[5]*z, rz=m[6]*x+m[7]*y+m[8]*z;
+    nPos[i]=rx; nPos[i+1]=ry; nPos[i+2]=rz;
+    if(rx<minX)minX=rx; if(ry<minY)minY=ry; if(rz<minZ)minZ=rz;
+    const nx=norm[i], ny=norm[i+1], nz=norm[i+2];
+    nNorm[i]=m[0]*nx+m[1]*ny+m[2]*nz; nNorm[i+1]=m[3]*nx+m[4]*ny+m[5]*nz; nNorm[i+2]=m[6]*nx+m[7]*ny+m[8]*nz;
+  }
+  for (let i=0; i<n; i+=3) { nPos[i]-=minX; nPos[i+1]-=minY; nPos[i+2]-=minZ; }
+  cadRawMesh = Object.assign({}, cadRawMesh, { positions: nPos, normals: nNorm, boundingBox: _cadBbox(nPos) });
+  changeCadSourceUnit(cadCurrentUnit);
+  resetCadCamera();
+}
+window.applyCadOrientation = applyCadOrientation;
+
+function useCadProcess(procId) {
+  const pillMap = { 'lpbf': 0, 'ded-laser': 1, 'waam': 2 };
+  const pills = document.querySelectorAll('.process-pill');
+  if (typeof selectProcess === 'function') selectProcess(procId, pills[pillMap[procId] ?? 0]);
+  const matchMac = cadMachinesList.find(m => m.process === procId);
+  if (matchMac) {
+    const sel = document.getElementById('cadMachineSelect');
+    if (sel) sel.value = matchMac.id;
+    selectCadMachine(matchMac.id);
+  }
+}
+window.useCadProcess = useCadProcess;
+
+function _renderCadPrintabilityAndOriUi() {
+  const p = cadPrintabilityReport, o = cadOrientationResult;
+  const pBadge = document.getElementById('cadPrintabilityBadge');
+  if (!p || !o) {
+    if (pBadge) { pBadge.innerText = 'Pending CAD'; pBadge.style.color = '#94a3b8'; }
+    return;
+  }
+  if (pBadge) {
+    pBadge.innerText = p.overallVerdict;
+    pBadge.style.color = p.overallVerdict === 'Printable' ? '#34d399' : (p.overallVerdict.includes('Not') ? '#fb7185' : '#fbbf24');
+  }
+  document.getElementById('cadSupportSummary').innerHTML =
+    `Support Vol: <strong style="color:#38bdf8;">${p.supportEstimate.supportVolumeCm3} cm³</strong> (${p.supportEstimate.supportMassGrams} g) · Removal: <strong>${p.supportEstimate.removalDifficulty}</strong> · Envelope: <strong>${p.fits ? '✓ Fits' : '✗ Oversized'}</strong>`;
+  document.getElementById('cadPrintabilityNotes').innerHTML = p.notes.length
+    ? p.notes.map(n => `<li>${n}</li>`).join('')
+    : '<li style="color:#34d399;">Clean self-supporting geometry on selected machine.</li>';
+  document.getElementById('cadProcessRankingBody').innerHTML = p.processRanking.map(r => `
+    <tr>
+      <td><strong>${r.label}</strong></td>
+      <td style="font-family:monospace; color:#38bdf8; font-weight:700;">${r.score}</td>
+      <td style="font-size:10px; color:${r.verdict==='Recommended'?'#34d399':(r.verdict==='Not Suitable'?'#fb7185':'#fbbf24')};">${r.verdict}</td>
+      <td><button type="button" class="step-btn" onclick="useCadProcess('${r.processId}')" style="padding:2px 6px; font-size:9.5px;">Use</button></td>
+    </tr>
+  `).join('');
+
+  document.getElementById('cadCurrentOriSummary').innerText =
+    `Current (+Z Up): Z=${o.current.zMm} mm · Overhang=${o.current.ohCm2} cm² · Support=${o.current.supVol} cm³ · Score=${o.current.score}/100 (${o.evaluatedCount} tested)`;
+  document.getElementById('cadOrientationBody').innerHTML = o.topCandidates.map((c, idx) => `
+    <tr>
+      <td><strong>#${idx+1} ${c.label}</strong></td>
+      <td style="font-family:monospace;">Z=${c.zMm}mm · ${c.supVol}cm³</td>
+      <td style="font-family:monospace; color:#34d399; font-weight:700;">${c.score}</td>
+      <td><button type="button" class="step-btn" onclick="applyCadOrientation(${idx})" style="padding:2px 7px; font-size:9.5px; color:#38bdf8; border-color:rgba(56,189,248,0.4);">Rotate Here</button></td>
+    </tr>
+  `).join('');
+}
+
+var cadSimReport = null;
+var cadEconomicsReport = null;
+
+function simulatePartBuildUi(mesh, geo, printability, mac) {
+  const alloyId = document.getElementById('alloySelect')?.value || 'ti64_gr5';
+  const post = document.getElementById('postProcessingSelect')?.value || 'HIP';
+  const p = parseFloat(document.getElementById('sl_p')?.value) || (mac.process==='waam'?2200:(mac.process==='ded-laser'?1500:280));
+  const v = parseFloat(document.getElementById('sl_v')?.value) || (mac.process==='waam'?8:(mac.process==='ded-laser'?15:960));
+  const h = parseFloat(document.getElementById('sl_h')?.value) || (mac.process==='waam'?3400:(mac.process==='ded-laser'?1100:110));
+  const tUm = parseFloat(document.getElementById('sl_t')?.value) || (mac.process==='waam'?1400:(mac.process==='ded-laser'?450:40));
+  const baseT0 = parseFloat(document.getElementById('sl_preheat')?.value) || (mac.process==='lpbf'?200:120);
+  const db = parseFloat(document.getElementById('sl_spot')?.value) || (mac.process==='waam'?3000:(mac.process==='ded-laser'?1500:80));
+  const o2 = parseFloat(document.getElementById('sl_oxygen')?.value) || (alloyId==='ti64_eli'?0.11:0.16);
+  const oriDeg = parseInt(document.getElementById('buildOrientationSelect')?.value || '0', 10);
+  const scanRot = parseInt(document.getElementById('scanRotationSelect')?.value || '67', 10);
+
+  const proc = mac.process, lasers = Math.max(1, mac.laserCount || 1), hMm = h * 1e-3, recoatS = proc === 'lpbf' ? 8.5 : 0.5;
+  const ved = (p * 1e6) / Math.max(1, v * h * tUm);
+  const slices = (geo.layerSlices && geo.layerSlices.length) ? geo.layerSlices : [{ zMm: Number((mesh.boundingBox.size[2]*0.5).toFixed(2)), areaMm2: 1000, heatSinkRatio: 1.0 }];
+
+  const layers = [];
+  let rolling = 0, minYs = Infinity, minUts = Infinity, minEl = Infinity, hvSum = 0, maxT0 = baseT0, weakestZ = slices[0].zMm, maxOod = 0;
+
+  for (let idx = 0; idx < slices.length; idx++) {
+    const sl = slices[idx], effA = Math.max(10, sl.areaMm2);
+    const scanS = (effA / Math.max(1e-3, v * hMm * lasers));
+    const interS = scanS + recoatS;
+    const fastBoost = Math.max(0, 1 - interS / (proc==='lpbf'?18:28));
+    const neckBoost = sl.heatSinkRatio > 1.35 ? Math.min(1, (sl.heatSinkRatio - 1) * 0.35) : 0;
+    const zIns = Math.min(1, sl.zMm / 80);
+    const tgt = (18*fastBoost + 45*neckBoost + 22*zIns) * (proc==='waam'?1.55:(proc==='ded-laser'?1.25:1.0));
+    rolling = 0.65 * rolling + 0.35 * tgt;
+    const effT0 = Number(Math.min(500, baseT0 + rolling).toFixed(1));
+    if (effT0 > maxT0) maxT0 = effT0;
+
+    const pinn = (typeof evaluateTi64Pinn === 'function')
+      ? evaluateTi64Pinn({ processId: proc, P: p, v, h, t: tUm, T0: effT0, db, postProcessing: post, oxygenWtPct: o2, densityPct: Math.max(92, 99.7 - geo.overhangFractionPct*0.015), buildOrientationDeg: oriDeg })
+      : null;
+    const cool = pinn ? pinn.meltPool.coolingRateKs : 4.5e5;
+    const met = evaluateTi64Metallurgy({ alloyId, processId: proc, coolingRateKs: cool, postProcessing: post, oxygenWtPct: o2, buildOrientationDeg: oriDeg, scanRotationDeg: scanRot, densityPct: 99.6 });
+
+    const ys = pinn ? Math.round(0.5*pinn.metallurgy.yieldStrengthMpa + 0.5*met.hallPetchYieldStrengthMpa) : met.hallPetchYieldStrengthMpa;
+    const uts = pinn ? Math.round(0.5*pinn.metallurgy.utsMpa + 0.5*met.predictedUtsMpa) : met.predictedUtsMpa;
+    const hv = pinn ? Math.round(0.5*pinn.metallurgy.predictedHv + 0.5*met.predictedHv) : met.predictedHv;
+    const elRaw = pinn ? pinn.metallurgy.elongationPct : (post==='None'?7.2:14.2);
+    const el = Number(Math.max(1.5, Math.min(22, elRaw * met.anisotropy.elongationFactor * (sl.heatSinkRatio>=2?0.94:1.0))).toFixed(1));
+
+    const ood = evaluateOodRisk({ P: p, v, h, t: tUm, T0: effT0, ved }, proc);
+    if (ood.mahalanobisDistance > maxOod) maxOod = ood.mahalanobisDistance;
+    if (ys < minYs) { minYs = ys; weakestZ = sl.zMm; }
+    if (uts < minUts) minUts = uts;
+    if (el < minEl) { minEl = el; weakestZ = sl.zMm; }
+    hvSum += hv;
+    layers.push({ zMm: sl.zMm, effectivePreheatC: effT0, ys, uts, el, hv, heatSinkRatio: sl.heatSinkRatio });
+  }
+
+  const minLayerYs = Math.round(minYs), minLayerUts = Math.round(minUts), minLayerEl = Number(minEl.toFixed(1));
+  const astmStd = (proc==='waam'||proc==='ded-laser') ? 'ASTM F3187' : (alloyId==='ti64_eli' ? 'ASTM F3001' : 'ASTM F2924');
+  const ysReq = alloyId==='ti64_eli' ? 795 : 825, utsReq = alloyId==='ti64_eli' ? 860 : 895, o2Max = alloyId==='ti64_eli' ? 0.13 : 0.20;
+  const astmPass = minLayerYs >= ysReq && minLayerUts >= utsReq && minLayerEl >= 10.0 && o2 <= o2Max && printability.wallStatus !== 'Fail';
+  const astmReason = astmPass
+    ? `All ${layers.length} slices meet ${astmStd} (Min YS ${minLayerYs} MPa, Elong ${minLayerEl}%, Max T0,eff ${maxT0}°C).`
+    : (minLayerEl < 10.0 ? `Critical zone Z=${weakestZ} mm fails ≥10% ductility (${minLayerEl}%); apply Anneal/HIP.` :
+       (o2 > o2Max ? `Interstitial O₂ (${o2.toFixed(3)} wt%) exceeds ${astmStd} (${o2Max} wt%).` :
+       `Part fails ${astmStd} (Min YS ${minLayerYs}/${ysReq} MPa or wall limit).`));
+
+  // Screening Distortion & Residual Stress (Non-FEA)
+  const sz = mesh.boundingBox.size, longSpan = Math.max(sz[0], sz[1]), slend = sz[2] / Math.max(1, Math.min(sz[0], sz[1]));
+  const _pLow = String(post || 'HIP').toLowerCase();
+  const postN = (_pLow === 'none' || _pLow.includes('as-built') || _pLow.includes('as_built')) ? 'None'
+    : (_pLow.includes('stress') ? 'Stress-relieved'
+    : (_pLow.includes('anneal') ? 'Annealed'
+    : (_pLow.includes('bi-modal') || _pLow.includes('bimodal') ? 'Bi-modal'
+    : (_pLow.includes('solution') || _pLow === 'sta' ? 'Solution-Aged' : 'HIP'))));
+  const abStress = Math.round(minLayerYs * (proc==='waam'?0.72:(proc==='ded-laser'?0.82:1.02)) * (1 + Math.min(0.28, geo.sharpConcaveCornerCount*0.03) + Math.min(0.18, geo.abruptAreaJumpCount*0.035)));
+  const relF = postN==='HIP' ? 0.045 : (postN==='Annealed' ? 0.085 : (postN==='Stress-relieved' ? 0.14 : (postN==='Solution-Aged' ? 0.12 : 1.0)));
+  const surfStress = Math.max(12, Math.round(abStress * relF * (scanRot===67?0.93:1.04)));
+  const warpScore = Math.max(5, Math.min(98, Math.round((postN==='HIP'?12:(postN==='Annealed'?20:(postN==='Stress-relieved'?28:58))) + Math.min(18, geo.overhangFractionPct*1.1) + Math.min(14, geo.abruptAreaJumpCount*3.5) + Math.min(10, Math.max(0, slend-1)*5))));
+  const deflUm = Math.round((longSpan*0.8 + sz[2]*0.5) * (surfStress/450) * (1 + geo.overhangFractionPct/40));
+  const cutRisk = (postN==='None' && surfStress>400) ? 'High' : ((warpScore>=48 || surfStress>120) ? 'Moderate' : 'Low');
+
+  const stressNotes = [];
+  if (geo.sharpConcaveCornerCount > 0) stressNotes.push(`${geo.sharpConcaveCornerCount} sharp concave corners concentrate peel tension.`);
+  if (geo.abruptAreaJumpCount > 0) stressNotes.push(`${geo.abruptAreaJumpCount} abrupt A(z) transitions drive warping risk (Score ${warpScore}/100).`);
+  if (postN === 'None') stressNotes.push('Apply 650°C/2h stress relief before wire-EDM cut-off from plate.');
+  if (stressNotes.length === 0) stressNotes.push('Low distortion risk with current thermal state & 67° scan rotation.');
+
+  // Paint per-triangle hotspots for 3D viewer
+  const nTri = mesh.triangleCount, pos = mesh.positions, norm = mesh.normals, zMin = mesh.boundingBox.min[2], hSafe = Math.max(0.1, sz[2]);
+  const perThermal = new Float32Array(nTri), perStress = new Float32Array(nTri);
+  for (let t = 0; t < nTri; t++) {
+    const i = t * 9, zc = (pos[i+2] + pos[i+5] + pos[i+8]) / 3;
+    const zf = Math.max(0, Math.min(1, (zc - zMin) / hSafe));
+    const si = Math.min(layers.length - 1, Math.max(0, Math.floor(zf * (layers.length - 1))));
+    const lay = layers[si];
+    const tNorm = Math.max(0, Math.min(1, (lay.effectivePreheatC - baseT0) / 140));
+    const ohB = (geo.perOverhang && geo.perOverhang[t]) ? 0.35 : 0;
+    const thB = (geo.perThick && geo.perThick[t] > 0 && geo.perThick[t] < 1.5) ? 0.2 : 0;
+    perThermal[t] = Math.max(0, Math.min(1, 0.55 * tNorm + ohB + thB));
+    const jProx = (lay.heatSinkRatio >= 1.8 || lay.heatSinkRatio <= 0.55) ? 0.42 : 0;
+    const nearPl = zf < 0.12 ? 0.38 : 0;
+    perStress[t] = Math.max(0.05, Math.min(1, (nearPl + jProx + ohB + (1 - Math.abs(norm[i+2]))*0.2) * Math.max(0.15, Math.min(1, surfStress / 650))));
+  }
+
+  // Time & Cost Estimate
+  const batchReq = Math.max(1, Math.min(24, parseInt(document.getElementById('cadBatchSizeInput')?.value || '1', 10) || 1));
+  const nx = Math.max(1, Math.floor(mac.envelopeMm[0] / Math.max(2, sz[0] + 5)));
+  const ny = Math.max(1, Math.floor(mac.envelopeMm[1] / Math.max(2, sz[1] + 5)));
+  const plateCap = nx * ny, batch = Math.min(batchReq, plateCap);
+  const tMm = Math.max(0.015, tUm * 1e-3), layerCount = Math.max(1, Math.round(sz[2] / tMm));
+  const solidMm3 = geo.volumeCm3 * 1000 + printability.supportEstimate.supportVolumeCm3 * 1000;
+  const scanH = Number(((solidMm3 * batch) / Math.max(0.5, v * hMm * tMm * lasers) / 3600).toFixed(2));
+  const recoatH = Number(((layerCount * (proc==='lpbf'?8.5:0.6)) / 3600).toFixed(2));
+  const setupH = proc === 'lpbf' ? 1.5 : 0.8;
+  const totalH = Number((scanH + recoatH + setupH).toFixed(2));
+  const pMass = Number((geo.massTi64Grams * batch).toFixed(1)), sMass = Number((printability.supportEstimate.supportMassGrams * batch).toFixed(1));
+  const wastePct = proc==='lpbf' ? 8 : (proc==='ded-laser' ? 28 : 12);
+  const kgUsed = Number((((pMass + sMass) * (1 + wastePct / 100)) / 1000).toFixed(3));
+  const mCost = Number(((scanH + recoatH + 0.5*setupH) * mac.hourlyRateUsd).toFixed(2));
+  const matCost = Number((kgUsed * mac.materialCostPerKgUsd).toFixed(2));
+  const gasCost = Number(((scanH + recoatH) * mac.gasCostPerHourUsd).toFixed(2));
+  const postFee = (postN==='HIP'?220:(postN==='Annealed'?110:(postN==='Stress-relieved'?85:(postN==='Solution-Aged'||postN==='Bi-modal'?250:0)))) +
+                  (printability.supportEstimate.removalDifficulty==='None'?15:(printability.supportEstimate.removalDifficulty==='Easy'?40:(printability.supportEstimate.removalDifficulty==='Moderate'?75:130))) * batch;
+  const totCost = Number((mCost + matCost + gasCost + postFee).toFixed(2));
+  const costEach = Number((totCost / batch).toFixed(2));
+
+  return {
+    sim: { minLayerYs, minLayerUts, minLayerEl, meanHv: Math.round(hvSum/layers.length), maxT0, weakestZ, maxOod, astmStd, astmPass, astmReason, surfStress, warpScore, deflUm, cutRisk, stressNotes, layers, perThermal, perStress },
+    econ: { totalH, scanH, recoatH, setupH, layerCount, kgUsed, wastePct, costEach, totCost, mCost, matCost, gasCost, postFee, batch, plateCap }
+  };
+}
+
+function _renderCadPhase4Ui() {
+  const s = cadSimReport, e = cadEconomicsReport;
+  const setT = (id, t, col) => { const el = document.getElementById(id); if (el) { el.innerText = t; if (col) el.style.color = col; } };
+  if (!s || !e) {
+    ['cadSimYsUts','cadSimElong','cadStressMpa','cadWarpDeflect','cadCostHours','cadCostMass','cadCostPerPart','cadCostPlateCap'].forEach(id => setT(id, '—'));
+    setT('cadSimAstmBadge', 'ASTM Check Pending', '#94a3b8');
+    setT('cadLayerScrubberReadout', 'Load a part to inspect layer-by-layer properties', '#94a3b8');
+    return;
+  }
+  const ab = document.getElementById('cadSimAstmBadge');
+  if (ab) {
+    ab.innerText = s.astmPass ? `${s.astmStd} PART PASS` : `${s.astmStd} PART FAIL`;
+    ab.style.color = s.astmPass ? '#34d399' : '#fb7185';
+  }
+  setT('cadSimYsUts', `${s.minLayerYs} / ${s.minLayerUts}`, '#34d399');
+  setT('cadSimElong', `${s.minLayerEl}%`, s.minLayerEl >= 10 ? '#38bdf8' : '#fb7185');
+  setT('cadStressMpa', `${s.surfStress} MPa`, s.surfStress > 250 ? '#fb7185' : '#34d399');
+  setT('cadWarpDeflect', `${s.warpScore}/100 · ${s.deflUm}µm`, s.warpScore >= 50 ? '#fbbf24' : '#34d399');
+  setT('cadSimSummary', `${s.astmReason} Cut-off Risk: ${s.cutRisk}. (Screening estimate, non-FEA)`);
+  const snEl = document.getElementById('cadStressNotes');
+  if (snEl) snEl.innerHTML = s.stressNotes.map(n => `<li>${n}</li>`).join('');
+
+  setT('cadCostHours', `${e.totalH} h`, '#38bdf8');
+  setT('cadCostMass', `${e.kgUsed} kg`, '#fbbf24');
+  setT('cadCostPerPart', `$${e.costEach}`, '#34d399');
+  setT('cadCostPlateCap', `${e.batch} / ${e.plateCap} max`, '#c084fc');
+  setT('cadCostMeta', `Scan: ${e.scanH}h · Recoat: ${e.recoatH}h (${e.layerCount} layers) · Machine: $${e.mCost} · Ti64: $${e.matCost} · Gas: $${e.gasCost} · Post: $${e.postFee} [Placeholder rates]`);
+
+  const scEl = document.getElementById('cadLayerScrubber');
+  if (scEl && s.layers && s.layers.length) {
+    scEl.max = String(s.layers.length - 1);
+    const clampedIdx = Math.max(0, Math.min(s.layers.length - 1, Number(cadActiveScrubIdx) || 0));
+    scEl.value = String(clampedIdx);
+    scrubCadLayer(clampedIdx, true);
+  }
+}
+
+function runCadPhase4Simulation() {
+  if (!cadActiveMesh || !cadGeometryReport || !cadPrintabilityReport) {
+    cadSimReport = null; cadEconomicsReport = null;
+    _renderCadPhase4Ui();
+    return;
+  }
+  const mac = getActiveCadMachine();
+  const out = simulatePartBuildUi(cadActiveMesh, cadGeometryReport, cadPrintabilityReport, mac);
+  cadSimReport = out.sim; cadEconomicsReport = out.econ;
+  _renderCadPhase4Ui();
+  renderCadViewer();
+}
+window.runCadPhase4Simulation = runCadPhase4Simulation;
+
+function runCadGeometryAnalysis() {
+  if (!cadActiveMesh) {
+    cadGeometryReport = null; cadPrintabilityReport = null; cadOrientationResult = null; cadSimReport = null; cadEconomicsReport = null;
+    _renderCadGeometryUi(); _renderCadPrintabilityAndOriUi(); _renderCadPhase4Ui();
+    if (typeof calculatePhysics === 'function') calculatePhysics();
+    return;
+  }
+  const deg = Math.max(15, Math.min(75, parseFloat(document.getElementById('cadOverhangThreshInput')?.value) || 45));
+  const mac = getActiveCadMachine();
+  const minLimit = mac.process === 'waam' ? 3.5 : (mac.process === 'ded-laser' ? 1.2 : 0.4);
+  cadGeometryReport = analyzeCadGeometryUi(cadActiveMesh, deg, minLimit);
+  cadPrintabilityReport = evaluateCadPrintabilityUi(cadActiveMesh, cadGeometryReport, mac);
+  cadOrientationResult = optimizeBuildOrientationsUi(cadActiveMesh, mac, deg);
+  const p4 = simulatePartBuildUi(cadActiveMesh, cadGeometryReport, cadPrintabilityReport, mac);
+  cadSimReport = p4.sim; cadEconomicsReport = p4.econ;
+  _renderCadGeometryUi();
+  _renderCadPrintabilityAndOriUi();
+  _renderCadPhase4Ui();
+  if (typeof _updateCadHeatmapLegend === 'function') _updateCadHeatmapLegend();
+  renderCadViewer();
+  if (typeof calculatePhysics === 'function') calculatePhysics();
+}
+window.runCadGeometryAnalysis = runCadGeometryAnalysis;
+
+function setCadOverlayMode(mode) {
+  cadViewerState.overlayMode = mode;
+  if (typeof _updateCadHeatmapLegend === 'function') _updateCadHeatmapLegend();
+  renderCadViewer();
+}
+window.setCadOverlayMode = setCadOverlayMode;
+
+function _renderCadGeometryUi() {
+  const g = cadGeometryReport;
+  const setG = (id, txt, col) => { const el = document.getElementById(id); if (el) { el.innerText = txt; if (col) el.style.color = col; } };
+  if (!g) {
+    ['cadGeoVol','cadGeoArea','cadGeoOverhang','cadGeoWall','cadGeoWatertight','cadGeoCorners','cadGeoCavities','cadGeoSlicesMeta'].forEach(id => setG(id, '—'));
+    setG('cadGeoTimingBadge', 'Load a part to slice');
+    const c = document.getElementById('cadLayerAreaCanvas'); if (c) c.getContext('2d')?.clearRect(0,0,c.width,c.height);
+    return;
+  }
+  setG('cadGeoVol', `${g.volumeCm3} cm³ / ${g.massTi64Grams} g`, '#38bdf8');
+  setG('cadGeoArea', `${g.surfaceAreaCm2} cm²`, '#34d399');
+  setG('cadGeoOverhang', `${g.overhangAreaCm2} cm² (${g.overhangFractionPct}%)`, g.overhangFractionPct > 10 ? '#fb7185' : '#34d399');
+  setG('cadGeoWall', `${g.minWallThicknessMm} / ${g.medianWallThicknessMm} mm`, g.thinWallWarn ? '#fb7185' : '#fbbf24');
+  setG('cadGeoWatertight', g.isWatertight ? '✓ Watertight (0 open)' : `⚠ Open (${g.boundaryEdgeCount} edges)`, g.isWatertight ? '#34d399' : '#fbbf24');
+  setG('cadGeoCorners', `${g.sharpConcaveCornerCount}`, g.sharpConcaveCornerCount > 0 ? '#fbbf24' : '#34d399');
+  setG('cadGeoCavities', g.enclosedCavityCount > 0 ? `⚠ ${g.enclosedCavityCount} Trapped` : '0 (Clear)', g.enclosedCavityCount > 0 ? '#fb7185' : '#34d399');
+  setG('cadGeoSlicesMeta', `${g.abruptAreaJumpCount} jumps / ${g.layerSlices.length} slices`, g.abruptAreaJumpCount > 0 ? '#fbbf24' : '#38bdf8');
+  setG('cadGeoTimingBadge', `Analyzed in ${g.elapsedMs} ms (BVH + Slicing)`);
+
+  const canvas = document.getElementById('cadLayerAreaCanvas');
+  if (!canvas || !g.layerSlices.length) return;
+  const ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const pad = { l: 44, r: 14, t: 12, b: 22 }, pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+  const maxA = Math.max(10, Math.max(...g.layerSlices.map(s => s.areaMm2)));
+  ctx.strokeStyle = 'rgba(148,163,184,0.18)'; ctx.lineWidth = 1;
+  ctx.strokeRect(pad.l, pad.t, pw, ph);
+  ctx.fillStyle = '#94a3b8'; ctx.font = '10px JetBrains Mono, monospace';
+  ctx.fillText(Math.round(maxA) + ' mm²', 4, pad.t + 10);
+  ctx.fillText('0', 28, pad.t + ph);
+  ctx.fillText(`Z = 0 → ${g.layerSlices[g.layerSlices.length-1].zMm} mm`, pad.l, H - 5);
+
+  ctx.beginPath();
+  g.layerSlices.forEach((s, idx) => {
+    const x = pad.l + (idx / Math.max(1, g.layerSlices.length - 1)) * pw;
+    const y = pad.t + ph - (s.areaMm2 / maxA) * ph;
+    if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2; ctx.stroke();
+  g.layerSlices.forEach((s, idx) => {
+    if (idx > 0 && (s.heatSinkRatio >= 2.0 || s.heatSinkRatio <= 0.5)) {
+      const x = pad.l + (idx / Math.max(1, g.layerSlices.length - 1)) * pw;
+      const y = pad.t + ph - (s.areaMm2 / maxA) * ph;
+      ctx.fillStyle = '#fb7185'; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+    }
+  });
+  // Phase 5 active Z-layer scrubber marker
+  const sIdx = Math.max(0, Math.min(g.layerSlices.length - 1, Number(window.cadActiveScrubIdx) || 0));
+  const sx = pad.l + (sIdx / Math.max(1, g.layerSlices.length - 1)) * pw;
+  const sy = pad.t + ph - (g.layerSlices[sIdx].areaMm2 / maxA) * ph;
+  ctx.save();
+  ctx.strokeStyle = '#34d399';
+  ctx.lineWidth = 1.6;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath();
+  ctx.moveTo(sx, pad.t);
+  ctx.lineTo(sx, pad.t + ph);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#34d399';
+  ctx.beginPath();
+  ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function toggleCadViewerOption(opt) {
+  cadViewerState[opt] = !cadViewerState[opt];
+  const map = { wireframe: 'btnCadWireframe', envelope: 'btnCadEnvelope', arrow: 'btnCadArrow' };
+  const btn = document.getElementById(map[opt]);
+  if (btn) btn.classList.toggle('active', cadViewerState[opt]);
+  renderCadViewer();
+}
+function setCadSectionPct(v) {
+  cadViewerState.sectionPct = parseInt(v, 10) || 100;
+  const el = document.getElementById('cadSectionVal'); if (el) el.innerText = cadViewerState.sectionPct + '%';
+  renderCadViewer();
+}
+function resetCadCamera() { cadViewerState.yaw = -0.78; cadViewerState.pitch = 0.48; cadViewerState.zoom = 1.0; renderCadViewer(); }
+window.toggleCadViewerOption = toggleCadViewerOption;
+window.setCadSectionPct = setCadSectionPct;
+window.resetCadCamera = resetCadCamera;
+
+function renderCadViewer() {
+  const canvas = document.getElementById('cadViewerCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Determine viewport scale cleanly around either active mesh or machine envelope
+  const mac = getActiveCadMachine();
+  const bb = cadActiveMesh ? cadActiveMesh.boundingBox : { min:[0,0,0], max:[mac.envelopeMm[0]*0.3, mac.envelopeMm[1]*0.3, mac.envelopeMm[2]*0.3], size:[60,40,35] };
+  const cx = (bb.min[0] + bb.max[0]) * 0.5, cy = (bb.min[1] + bb.max[1]) * 0.5, czBase = bb.min[2];
+  const refSpan = Math.max(25, Math.max(bb.size[0], bb.size[1], bb.size[2]));
+  const pxScale = (Math.min(W, H) * 0.52 / refSpan) * cadViewerState.zoom;
+
+  const cyaw = Math.cos(cadViewerState.yaw), syaw = Math.sin(cadViewerState.yaw);
+  const cpit = Math.cos(cadViewerState.pitch), spit = Math.sin(cadViewerState.pitch);
+  const zMid = bb.size[2] * 0.5;
+  const proj = (x, y, z) => {
+    const dx = x - cx, dy = y - cy, dz = (z - czBase) - zMid;
+    const x1 = dx * cyaw - dy * syaw, y1 = dx * syaw + dy * cyaw;
+    const z2 = dz * cpit - y1 * spit, y2 = dz * spit + y1 * cpit;
+    const persp = 1.0 / (1.0 + y2 / (refSpan * 4.5));
+    return [W * 0.5 + x1 * pxScale * persp, H * 0.52 - z2 * pxScale * persp, y2];
+  };
+
+  // 1. Build plate grid on z = czBase
+  const gHalf = Math.max(refSpan * 0.85, Math.min(mac.envelopeMm[0], mac.envelopeMm[1]) * 0.5);
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.14)'; ctx.lineWidth = 1;
+  for (let i = -4; i <= 4; i++) {
+    const d = (i / 4) * gHalf;
+    const a = proj(cx - gHalf, cy + d, czBase), b = proj(cx + gHalf, cy + d, czBase);
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    const c = proj(cx + d, cy - gHalf, czBase), dPt = proj(cx + d, cy + gHalf, czBase);
+    ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(dPt[0], dPt[1]); ctx.stroke();
+  }
+
+  // 2. Machine build envelope wireframe box (if toggled)
+  if (cadViewerState.envelope) {
+    const ex = mac.envelopeMm[0] * 0.5, ey = mac.envelopeMm[1] * 0.5, ez = mac.envelopeMm[2];
+    const pts = [
+      proj(cx-ex,cy-ey,czBase), proj(cx+ex,cy-ey,czBase), proj(cx+ex,cy+ey,czBase), proj(cx-ex,cy+ey,czBase),
+      proj(cx-ex,cy-ey,czBase+ez), proj(cx+ex,cy-ey,czBase+ez), proj(cx+ex,cy+ey,czBase+ez), proj(cx-ex,cy+ey,czBase+ez)
+    ];
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)'; ctx.setLineDash([4, 4]);
+    [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]].forEach(([i,j]) => {
+      ctx.beginPath(); ctx.moveTo(pts[i][0], pts[i][1]); ctx.lineTo(pts[j][0], pts[j][1]); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+  }
+
+  // 3. Render CAD triangles (painter's depth sort up to 60k preview tris + Z section slice)
+  if (cadActiveMesh) {
+    const pos = cadActiveMesh.positions, norm = cadActiveMesh.normals;
+    const nTri = cadActiveMesh.triangleCount;
+    const zClip = czBase + bb.size[2] * (cadViewerState.sectionPct / 100);
+    const step = nTri > 40000 ? Math.ceil(nTri / 40000) : 1;
+    const drawList = [];
+    for (let t = 0; t < nTri; t += step) {
+      const b = t * 9;
+      const ax=pos[b], ay=pos[b+1], az=pos[b+2];
+      const bx=pos[b+3], by=pos[b+4], bz=pos[b+5];
+      const cxV=pos[b+6], cyV=pos[b+7], czV=pos[b+8];
+      if ((az + bz + czV) / 3 > zClip) continue;
+      const p0 = proj(ax,ay,az), p1 = proj(bx,by,bz), p2 = proj(cxV,cyV,czV);
+      // Screen-space CCW backface cull so hidden internal faces never bleed over front faces
+      const area2 = (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p1[1] - p0[1]) * (p2[0] - p0[0]);
+      if (area2 >= 0) continue;
+      const nx = norm[b], ny = norm[b+1], nz = norm[b+2];
+      const light = Math.max(0.28, 0.35 + Math.abs(nx * 0.45 + ny * 0.35 + nz * 0.82) * 0.65);
+      const isOverhang = cadGeometryReport && cadGeometryReport.perOverhang
+        ? Boolean(cadGeometryReport.perOverhang[t])
+        : (nz < -0.707 && az > czBase + 0.2);
+      const thickMm = (cadGeometryReport && cadGeometryReport.perThick) ? cadGeometryReport.perThick[t] : 99;
+      const stressVal = (cadSimReport && cadSimReport.perStress) ? cadSimReport.perStress[t] : 0.2;
+      const thermVal = (cadSimReport && cadSimReport.perThermal) ? cadSimReport.perThermal[t] : 0.2;
+      drawList.push({ p0, p1, p2, depth: (p0[2] + p1[2] + p2[2]) / 3, light, isOverhang, thickMm, stressVal, thermVal });
+    }
+    drawList.sort((a, b) => b.depth - a.depth);
+    for (let i = 0; i < drawList.length; i++) {
+      const f = drawList[i];
+      ctx.beginPath(); ctx.moveTo(f.p0[0], f.p0[1]); ctx.lineTo(f.p1[0], f.p1[1]); ctx.lineTo(f.p2[0], f.p2[1]); ctx.closePath();
+      if (cadViewerState.overlayMode === 'thickness') {
+        const rgb = f.thickMm < 1.2 ? [239, 68, 68] : (f.thickMm < 3.5 ? [245, 158, 11] : (f.thickMm < 10.0 ? [52, 211, 153] : [56, 189, 248]));
+        ctx.fillStyle = `rgb(${Math.round(rgb[0]*f.light)}, ${Math.round(rgb[1]*f.light)}, ${Math.round(rgb[2]*f.light)})`;
+      } else if (cadViewerState.overlayMode === 'stress') {
+        const v = f.stressVal;
+        const r = Math.round((v < 0.5 ? 56 + (v * 2) * 195 : 251 - ((v - 0.5) * 2) * 12) * f.light);
+        const g = Math.round((v < 0.5 ? 189 + (v * 2) * 2 : 191 - ((v - 0.5) * 2) * 123) * f.light);
+        const bl = Math.round((v < 0.5 ? 248 - (v * 2) * 212 : 36 + ((v - 0.5) * 2) * 32) * f.light);
+        ctx.fillStyle = `rgb(${r}, ${g}, ${bl})`;
+      } else if (cadViewerState.overlayMode === 'thermal') {
+        const v = f.thermVal;
+        const r = Math.round((60 + v * 195) * f.light);
+        const g = Math.round((190 - v * 115) * f.light);
+        const bl = Math.round((245 - v * 210) * f.light);
+        ctx.fillStyle = `rgb(${r}, ${g}, ${bl})`;
+      } else if (f.isOverhang) {
+        ctx.fillStyle = `rgb(${Math.round(220*f.light)}, ${Math.round(80*f.light)}, ${Math.round(65*f.light)})`;
+      } else {
+        ctx.fillStyle = `rgb(${Math.round(85*f.light)}, ${Math.round(175*f.light)}, ${Math.round(235*f.light)})`;
+      }
+      ctx.fill();
+      if (cadViewerState.wireframe && drawList.length <= 12000) {
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.35)'; ctx.lineWidth = 0.7; ctx.stroke();
+      }
+    }
+  }
+
+  // 4. Build Direction (+Z) Arrow
+  if (cadViewerState.arrow) {
+    const ax0 = cx - refSpan * 0.72, ay0 = cy - refSpan * 0.55;
+    const pBase = proj(ax0, ay0, czBase), pTip = proj(ax0, ay0, czBase + refSpan * 0.55);
+    ctx.strokeStyle = '#34d399'; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(pBase[0], pBase[1]); ctx.lineTo(pTip[0], pTip[1]); ctx.stroke();
+    ctx.fillStyle = '#34d399'; ctx.font = 'bold 11px JetBrains Mono, monospace';
+    ctx.fillText('+Z Build', pTip[0] + 6, pTip[1]);
+  }
+}
+
+function initCadAnalyzerTab() {
+  if (!cadMachinesList || cadMachinesList.length === 0) _loadCadMachines();
+  const canvas = document.getElementById('cadViewerCanvas');
+  if (canvas && !cadViewerState.initialized) {
+    cadViewerState.initialized = true;
+    canvas.addEventListener('mousedown', (e) => { cadViewerState.dragging = true; cadViewerState.lastX = e.clientX; cadViewerState.lastY = e.clientY; canvas.style.cursor = 'grabbing'; });
+    window.addEventListener('mouseup', () => { cadViewerState.dragging = false; canvas.style.cursor = 'grab'; });
+    window.addEventListener('mousemove', (e) => {
+      if (!cadViewerState.dragging) return;
+      cadViewerState.yaw += (e.clientX - cadViewerState.lastX) * 0.01;
+      cadViewerState.pitch = Math.max(-1.4, Math.min(1.4, cadViewerState.pitch + (e.clientY - cadViewerState.lastY) * 0.01));
+      cadViewerState.lastX = e.clientX; cadViewerState.lastY = e.clientY;
+      renderCadViewer();
+    });
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      cadViewerState.zoom = Math.max(0.25, Math.min(4.0, cadViewerState.zoom * (e.deltaY > 0 ? 0.9 : 1.1)));
+      renderCadViewer();
+    }, { passive: false });
+  }
+  _updateCadHeatmapLegend();
+  renderCadViewer();
+}
+window.initCadAnalyzerTab = initCadAnalyzerTab;
+
+window.cadActiveScrubIdx = 0;
+
+function _updateCadHeatmapLegend() {
+  const el = document.getElementById('cadHeatmapLegend');
+  if (!el) return;
+  const mode = cadViewerState.overlayMode || 'overhang';
+  const deg = parseFloat(document.getElementById('cadOverhangThreshInput')?.value) || 45;
+  const sw = (col, txt) => `<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${col};vertical-align:middle;margin-right:4px;"></span>${txt}</span>`;
+  if (mode === 'thickness') {
+    el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#ef4444', 'Critical Thin (&lt;1.2 mm)') + sw('#f59e0b', 'Thin (1.2–3.5 mm)') + sw('#34d399', 'Optimal (3.5–10 mm)') + sw('#38bdf8', 'Bulk (&gt;10 mm)');
+  } else if (mode === 'stress') {
+    el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#38bdf8', 'Low Peel Stress') + sw('#fbbf24', 'Moderate Transition') + sw('#ef4444', 'High Peel / Warping Hotspot (Overhangs / Jumps)');
+  } else if (mode === 'thermal') {
+    el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#3cbef5', 'Fast Cool (High Sink)') + sw('#c89640', 'Moderate Heat Accum.') + sw('#ff4b23', 'Overheating / Low Heat-Sink Ratio');
+  } else {
+    el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#55afea', `Self-Supporting (&le;${deg}°)`) + sw('#dc5041', `Overhang / Needs Support (&gt;${deg}°)`);
+  }
+}
+window._updateCadHeatmapLegend = _updateCadHeatmapLegend;
+
+function scrubCadLayer(idx, skipViewerSync) {
+  const s = cadSimReport, g = cadGeometryReport;
+  const out = document.getElementById('cadLayerScrubberReadout');
+  if (!s || !g || !s.layers || !s.layers.length) {
+    if (out) out.innerText = 'Load a part to inspect layer-by-layer properties';
+    return;
+  }
+  const n = s.layers.length;
+  const i = Math.max(0, Math.min(n - 1, parseInt(idx, 10) || 0));
+  window.cadActiveScrubIdx = i;
+  const ly = s.layers[i];
+  const slice = g.layerSlices && g.layerSlices[i] ? g.layerSlices[i] : { areaMm2: 0, zMm: ly.zMm, heatSinkRatio: ly.heatSinkRatio };
+  if (out) {
+    out.innerText = `Slice ${i + 1}/${n}: Z=${ly.zMm} mm · Area=${slice.areaMm2} mm² · T0,eff=${ly.effectivePreheatC}°C · YS/UTS=${ly.ys}/${ly.uts} MPa · Elong=${ly.el}%`;
+    out.style.color = ly.el < 10.0 ? '#fb7185' : '#34d399';
+  }
+  _renderCadGeometryUi();
+  if (!skipViewerSync && document.getElementById('chkCadScrubSync3d')?.checked) {
+    const pct = Math.max(5, Math.min(100, Math.round(((i + 1) / n) * 100)));
+    const zSlider = document.getElementById('cadSectionSlider');
+    if (zSlider) zSlider.value = String(pct);
+    setCadSectionPct(pct);
+  }
+}
+window.scrubCadLayer = scrubCadLayer;
+
+function applyCadToDashboard() {
+  if (!cadActiveMesh) {
+    const badge = document.getElementById('cadStatusBadge');
+    if (badge) { badge.innerText = 'Load a CAD part first'; badge.style.color = '#fbbf24'; }
+    return;
+  }
+  const mac = getActiveCadMachine();
+  useCadProcess(mac.process);
+  if (typeof calculatePhysics === 'function') calculatePhysics();
+  const predBtn = document.querySelector(".tab-btn[onclick*=\"'predictions'\"]");
+  if (typeof switchTab === 'function') switchTab('predictions', predBtn || undefined);
+}
+window.applyCadToDashboard = applyCadToDashboard;
+
+function exportCadPartReportJson() {
+  if (!cadActiveMesh || !cadGeometryReport || !cadPrintabilityReport || !cadOrientationResult || !cadSimReport || !cadEconomicsReport) {
+    const badge = document.getElementById('cadStatusBadge');
+    if (badge) { badge.innerText = 'Load & analyze a CAD part before JSON export'; badge.style.color = '#fbbf24'; }
+    return;
+  }
+  const mac = getActiveCadMachine();
+  const g = cadGeometryReport;
+  const s = cadSimReport;
+  const report = {
+    reportVersion: 'ti64-cad-report-v1.0',
+    generatedAtIso: new Date().toISOString(),
+    disclaimer: 'Engineering screening estimates (analytical Rosenthal + PINN + LOPO surrogate). Machine rates are editable placeholders. Not certified FEA or ASTM E8M qualification.',
+    part: {
+      fileName: cadCurrentFileName || 'part.stl',
+      format: cadActiveMesh.format,
+      triangleCount: cadActiveMesh.triangleCount,
+      wasDecimated: Boolean(cadActiveMesh.wasDecimated),
+      boundingBoxMm: cadActiveMesh.boundingBox.size,
+      volumeCm3: g.volumeCm3,
+      massTi64Grams: g.massTi64Grams,
+      surfaceAreaCm2: g.surfaceAreaCm2,
+      isWatertight: g.isWatertight,
+      minWallThicknessMm: g.minWallThicknessMm,
+      overhangAreaCm2: g.overhangAreaCm2,
+      overhangFractionPct: g.overhangFractionPct,
+      sharpConcaveCornerCount: g.sharpConcaveCornerCount,
+      enclosedCavityCount: g.enclosedCavityCount
+    },
+    machineAndProcess: {
+      machineId: mac.id,
+      machineName: mac.name || mac.label || mac.id,
+      processId: mac.process,
+      envelopeMm: mac.envelopeMm || mac.buildVolumeMm
+    },
+    printability: {
+      overallVerdict: cadPrintabilityReport.overallVerdict,
+      fitsSelectedMachine: cadPrintabilityReport.fits,
+      wallCheckStatus: cadPrintabilityReport.wallStatus,
+      supportContactAreaCm2: cadPrintabilityReport.supportEstimate.supportContactAreaCm2,
+      supportVolumeCm3: cadPrintabilityReport.supportEstimate.supportVolumeCm3,
+      supportMassGrams: cadPrintabilityReport.supportEstimate.supportMassGrams,
+      removalDifficulty: cadPrintabilityReport.supportEstimate.removalDifficulty,
+      notes: cadPrintabilityReport.notes
+    },
+    orientationTop3: (cadOrientationResult.topCandidates || []).map(c => ({
+      label: c.label,
+      buildHeightMm: c.zMm,
+      overhangAreaCm2: c.ohCm2,
+      estimatedSupportVolumeCm3: c.supVol,
+      compositeScore: c.score
+    })),
+    simulationSummary: {
+      astmStandard: s.astmStd,
+      astmPass: s.astmPass,
+      astmReason: s.astmReason,
+      minLayerYsMpa: s.minLayerYs,
+      minLayerUtsMpa: s.minLayerUts,
+      minLayerElongPct: s.minLayerEl,
+      surfaceResidualStressMpa: s.surfStress,
+      warpRiskScore: s.warpScore,
+      estimatedDeflectionUm: s.deflUm,
+      cutOffRisk: s.cutRisk,
+      layerSampleCount: s.layers.length,
+      layers: s.layers
+    },
+    economics: cadEconomicsReport
+  };
+
+  const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  const baseName = (cadCurrentFileName || 'ti64_cad_part').replace(/\.[^.]+$/, '');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${baseName}_ti64_report.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+}
+window.exportCadPartReportJson = exportCadPartReportJson;
+
+function _populateCadReportBlock() {
+  const block = document.getElementById('repCadPartBlock');
+  if (!block) return;
+  if (!cadActiveMesh || !cadGeometryReport || !cadSimReport || !cadEconomicsReport) {
+    block.style.display = 'none';
+    return;
+  }
+  block.style.display = 'block';
+  const g = cadGeometryReport, p = cadPrintabilityReport, s = cadSimReport, e = cadEconomicsReport, o = cadOrientationResult;
+  const setT = (id, t, col) => { const el = document.getElementById(id); if (el) { el.innerText = t; if (col) el.style.color = col; } };
+  const sz = cadActiveMesh.boundingBox.size;
+  setT('repCadFileName', cadCurrentFileName || 'loaded_part.stl');
+  setT('repCadBbox', `${sz[0].toFixed(1)} × ${sz[1].toFixed(1)} × ${sz[2].toFixed(1)} mm`);
+  setT('repCadTris', cadActiveMesh.triangleCount.toLocaleString());
+  setT('repCadVolMass', `${g.volumeCm3} cm³ / ${g.massTi64Grams} g`);
+  setT('repCadOverhang', `${g.overhangAreaCm2} cm² (${g.overhangFractionPct}%)`);
+  setT('repCadPrintVerdict', p ? p.overallVerdict : '—', p && p.overallVerdict === 'Printable' ? '#34d399' : '#fbbf24');
+  setT('repCadSupport', p ? `${p.supportEstimate.supportVolumeCm3} cm³ (${p.supportEstimate.removalDifficulty})` : '—');
+  setT('repCadLayerProps', `${s.minLayerYs} / ${s.minLayerUts} MPa · ${s.minLayerEl}%`);
+  setT('repCadStressWarp', `${s.surfStress} MPa · Warp ${s.warpScore}/100 (~${s.deflUm} µm)`);
+  setT('repCadAstm', s.astmPass ? `${s.astmStd} PART PASS` : `${s.astmStd} PART FAIL`, s.astmPass ? '#34d399' : '#fb7185');
+  setT('repCadTimeCost', `${e.totalH} h · $${e.costEach}/part (batch ${e.batch}, ${e.kgUsed} kg)`);
+  setT('repCadOriLabel', o && o.topCandidates && o.topCandidates[0] ? `Best Ori: ${o.topCandidates[0].label} (${o.topCandidates[0].score}/100)` : 'Current Orientation (+Z)');
+
+  const canvas = document.getElementById('cadViewerCanvas');
+  const img = document.getElementById('cadRepSnapshotImg');
+  if (canvas && img) {
+    try { img.src = canvas.toDataURL('image/png'); } catch (_) {}
+  }
+}
+window._populateCadReportBlock = _populateCadReportBlock;
+
+function openCadPartReportModal() {
+  if (!cadActiveMesh || !cadSimReport) {
+    const badge = document.getElementById('cadStatusBadge');
+    if (badge) { badge.innerText = 'Load a CAD part first to export PDF report'; badge.style.color = '#fbbf24'; }
+    return;
+  }
+  renderCadViewer();
+  openEngineeringReportModal();
+}
+window.openCadPartReportModal = openCadPartReportModal;
+
 </script>
 
 
@@ -16114,6 +17858,26 @@ window.addEventListener('click', function(e) {
           • <strong>Classification:</strong> Official Component Class 1 (Full Thermal Processing + HIP Mandatory for Fatigue Criticality).<br>
           • <strong>Compliance Status:</strong> <span style="color:#34d399; font-weight:bold;">PRELIMINARY COMPLIANCE PASS</span> (All tensile minimums and HIP requirements satisfied).<br>
           • <em>Caveat:</em> Official ASTM Section 15 certification requires physical destructive tensile verification per ASTM E8M and chemical inert gas fusion assay per ASTM E1409.
+        </div>
+      </div>
+
+      <!-- Section 5: CAD Part Geometry, Printability & Cost Assessment (Phase 5) -->
+      <div id="repCadPartBlock" style="display: none; background: rgba(56,189,248,0.04); border: 1px solid rgba(56,189,248,0.28); border-radius: 6px; padding: 12px; margin-bottom: 20px;">
+        <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 10px;">5. CAD Part Geometry, Printability &amp; Cost Assessment (<span id="repCadFileName">—</span>)</div>
+        <div style="display: grid; grid-template-columns: 220px 1fr; gap: 12px; align-items: start;">
+          <div style="background: #040812; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 6px; text-align: center;">
+            <img id="cadRepSnapshotImg" alt="CAD 3D Render Snapshot" style="width: 100%; height: auto; border-radius: 4px; display: block;">
+            <div style="font-size: 9.5px; color: #94a3b8; margin-top: 4px; font-family: monospace;" id="repCadOriLabel">Orientation: —</div>
+          </div>
+          <div style="font-size: 11px; color: #cbd5e1; line-height: 1.55; font-family: monospace;">
+            <div>Bounding Box: <strong id="repCadBbox">—</strong> · Triangles: <strong id="repCadTris">—</strong></div>
+            <div>Volume / Mass: <strong id="repCadVolMass">—</strong> · Overhang (&gt;θ): <strong id="repCadOverhang">—</strong></div>
+            <div>Printability: <strong id="repCadPrintVerdict" style="color:#34d399;">—</strong> · Support Vol: <strong id="repCadSupport">—</strong></div>
+            <div>Layer Min YS / UTS / Elong: <strong id="repCadLayerProps">—</strong></div>
+            <div>Surface Stress / Warp Score: <strong id="repCadStressWarp">—</strong></div>
+            <div>Part ASTM Screening: <strong id="repCadAstm">—</strong></div>
+            <div>Build Time / Unit Cost: <strong id="repCadTimeCost" style="color:#fbbf24;">—</strong></div>
+          </div>
         </div>
       </div>
 
