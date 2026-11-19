@@ -278,6 +278,13 @@ export function computeLabCalibrationStats(
   };
 }
 
+import {
+  evaluateTi64Pinn,
+  applyPhysicsGuardedPinnTransfer,
+  type Ti64PinnInput,
+  type Ti64PinnPrediction
+} from '../lib/ti64-pinn';
+
 export function applyBayesianBiasCorrection(
   rawValue: number,
   metricStats: MetricCalibrationStats | undefined,
@@ -287,4 +294,25 @@ export function applyBayesianBiasCorrection(
     return rawValue;
   }
   return rawValue + metricStats.bayesianBiasShift;
+}
+
+/**
+ * Combines trained Ti-6Al-4V PINN inference with Bayesian coupon residuals while enforcing
+ * Hall-Petch and UTS > YS thermodynamic bounds (prevents small-sample coupon noise inversion).
+ */
+export function computePinnGuidedLabTransfer(
+  input: Ti64PinnInput,
+  summary: LabCalibrationSummary | null,
+  enabled: boolean
+): Ti64PinnPrediction {
+  const basePinn = evaluateTi64Pinn(input);
+  if (!enabled || !summary || summary.sampleCount <= 0) {
+    return basePinn;
+  }
+  return applyPhysicsGuardedPinnTransfer(basePinn, {
+    hvShift: summary.hv.meanBias,
+    ysShift: summary.ys.meanBias,
+    elongShift: summary.elong.meanBias,
+    sampleCount: summary.sampleCount
+  });
 }

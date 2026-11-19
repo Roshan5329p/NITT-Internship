@@ -5,6 +5,7 @@
  */
 
 import { evaluateOodRisk } from './ood-detector';
+import { evaluateTi64Pinn, computePinnProcessGradients } from './ti64-pinn';
 import {
   computeOxygenAndReuseEffects,
   evaluateTi64Metallurgy,
@@ -57,6 +58,9 @@ export interface EvaluatedRecipeCandidate {
   regimeName: string;
   astmCompliant: boolean;
   paretoScore: number;
+  pinnYieldStrengthMpa?: number;
+  pinnHallPetchResidualMpa?: number;
+  gradientRefined?: boolean;
 }
 
 export interface InverseSolverResult {
@@ -410,12 +414,104 @@ export function solveInverseTi64Recipes(rawConstraints: InverseTargetConstraints
   const byLpbf = scored.filter(x => x.processId === 'lpbf').sort((a, b) => b.paretoScore - a.paretoScore);
 
   const labeled: Array<EvaluatedRecipeCandidate> = [];
+  const polishWithPinn = (c: EvaluatedRecipeCandidate): EvaluatedRecipeCandidate => {
+    const basePinn = evaluateTi64Pinn({
+      processId: c.processId,
+      P: c.P, v: c.v, h: c.h, t: c.t, T0: c.T0, db: c.db,
+      postProcessing: c.postProcessing,
+      oxygenWtPct,
+      densityPct: c.densityPct,
+      buildOrientationDeg
+    });
+    // 6-step projected gradient ascent on (P, v) using PINN derivatives to raise margin on YS/Elongation
+    let curP = c.P;
+    let curV = c.v;
+    const pBounds = c.processId === 'waam' ? [1200, 3200] : (c.processId === 'ded-laser' ? [600, 2600] : [140, 420]);
+    const vBounds = c.processId === 'waam' ? [4, 15] : (c.processId === 'ded-laser' ? [8, 25] : [450, 1600]);
+    const stepP = c.processId === 'lpbf' ? 2.5 : 15.0;
+    const stepV = c.processId === 'lpbf' ? 8.0 : 0.25;
+
+    for (let s = 0; s < 6; s++) {
+      const grad = computePinnProcessGradients({
+        processId: c.processId,
+        P: curP, v: curV, h: c.h, t: c.t, T0: c.T0, db: c.db,
+        postProcessing: c.postProcessing,
+        oxygenWtPct,
+        densityPct: c.densityPct,
+        buildOrientationDeg
+      });
+      const candP = Math.round(clampFinite(curP + Math.sign(grad.dYs_dP) * stepP, pBounds[0], pBounds[1], curP));
+      const candV = Number(clampFinite(curV + Math.sign(grad.dElong_dv) * stepV, vBounds[0], vBounds[1], curV).toFixed(1));
+      if (candP === curP && candV === curV) break;
+      const evCand = evaluateForwardTi64Candidate({
+        processId: c.processId,
+        alloyId,
+        P: candP, v: candV, h: c.h, t: c.t, db: c.db, T0: c.T0,
+        postProcessing: c.postProcessing,
+        oxygenWtPct,
+        buildOrientationDeg,
+        scanRotationDeg
+      });
+      const astmMinYs = astmStd === 'F3001' ? 795 : 825;
+      if (
+        evCand.yieldStrengthMpa >= Math.max(minYsMpa, astmMinYs) &&
+        evCand.elongationPct >= minElongPct &&
+        evCand.residualStressMpa <= maxResidualStressMpa &&
+        evCand.buildRateCm3H >= minBuildRateCm3H &&
+        evCand.densityPct >= 99.4 &&
+        evCand.mahalanobisDistance <= 3.5 &&
+        evCand.yieldStrengthMpa >= c.yieldStrengthMpa
+      ) {
+        curP = candP;
+        curV = candV;
+      } else {
+        break;
+      }
+    }
+
+    if (curP !== c.P || curV !== c.v) {
+      const refinedEv = evaluateForwardTi64Candidate({
+        processId: c.processId,
+        alloyId,
+        P: curP, v: curV, h: c.h, t: c.t, db: c.db, T0: c.T0,
+        postProcessing: c.postProcessing,
+        oxygenWtPct,
+        buildOrientationDeg,
+        scanRotationDeg
+      });
+      const refPinn = evaluateTi64Pinn({
+        processId: c.processId,
+        P: curP, v: curV, h: c.h, t: c.t, T0: c.T0, db: c.db,
+        postProcessing: c.postProcessing,
+        oxygenWtPct,
+        densityPct: refinedEv.densityPct,
+        buildOrientationDeg
+      });
+      return {
+        ...refinedEv,
+        rank: c.rank,
+        tag: c.tag,
+        paretoScore: c.paretoScore,
+        pinnYieldStrengthMpa: refPinn.metallurgy.yieldStrengthMpa,
+        pinnHallPetchResidualMpa: refPinn.physicsAudit.hallPetchResidualMpa,
+        gradientRefined: true
+      };
+    }
+
+    return {
+      ...c,
+      pinnYieldStrengthMpa: basePinn.metallurgy.yieldStrengthMpa,
+      pinnHallPetchResidualMpa: basePinn.physicsAudit.hallPetchResidualMpa,
+      gradientRefined: false
+    };
+  };
+
   const assign = (item: typeof scored[0] | undefined, tag: string) => {
     if (!item) return;
     const k = keyOf(item);
     if (usedKeys.has(k) || labeled.length >= maxReturn) return;
     usedKeys.add(k);
-    labeled.push({ ...item, rank: labeled.length + 1, tag });
+    labeled.push(polishWithPinn({ ...item, rank: labeled.length + 1, tag }));
   };
 
   assign(byScore[0], 'Balanced Pareto Optimal');

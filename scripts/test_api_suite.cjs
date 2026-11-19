@@ -103,7 +103,18 @@ async function runTests() {
     assert.strictEqual(res.statusCode, 200);
     assert(res.body.comparison.rosenthal_1946);
     assert(res.body.comparison.coen_hybrid_2022);
+    assert(res.body.comparison.pinn_surrogate);
     assert(Number.isFinite(res.body.comparison.depth_discrepancy_um));
+  });
+
+  await test('api/meltpool.js calculates PINN PDE thermal surrogate with verified monotonicity', async () => {
+    const { req, res } = createMockReqRes('GET', { model: 'pinn', power: '280', speed: '960', spot: '80' });
+    await meltpoolHandler(req, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert(res.body.model_name.includes('Physics-Informed Neural Network'));
+    assert(res.body.melt_pool.width_um > 40);
+    assert(res.body.melt_pool.depth_um > 20);
+    assert.strictEqual(res.body.physics_audit.monotonicity_verified, true);
   });
 
   // 3. Stats API - Explicit Database Status
@@ -219,6 +230,16 @@ async function runTests() {
     assert(res.body.predictions.tabor_scaling.tabor_factor >= 2.95 && res.body.predictions.tabor_scaling.tabor_factor <= 3.15);
     assert(res.body.predictions.approximate_rockwell_c_hrc > 0);
     assert.strictEqual(res.body.predictions.hrc_disclaimer, '*approximate for Ti alloys via ASTM E140 steel reference');
+  });
+
+  await test('api/predict.js computes PINN model with Hall-Petch and autograd physics audit', async () => {
+    const { req, res } = createMockReqRes('GET', { power: '280', speed: '960', hatch: '110', layer: '40', condition: 'hip', model: 'pinn' });
+    await predictHandler(req, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert(res.body.model.includes('PINN'));
+    assert(Number.isFinite(res.body.model_comparison.pinn_hv));
+    assert(res.body.pinn_physics_audit.hall_petch_residual_mpa < 20);
+    assert.strictEqual(res.body.pinn_physics_audit.monotonicity_verified, true);
   });
 
   // 9. Numerical Safety - Zero NaN / Infinity Tolerance (Section 6)

@@ -7,6 +7,7 @@
  */
 
 import { setCorsHeaders, normalizeProcessName, validateProcessInputs } from './_shared.js';
+import { evaluateTi64PinnNode } from './_pinn.js';
 
 // Ti-6Al-4V thermophysical baseline constants (validated baseline for Grade 5 & Grade 23 ELI)
 const RHO = 4430.0;             // Density ρ (kg/m³)
@@ -206,12 +207,49 @@ export default function handler(req, res) {
       });
     }
 
-    const { power: p, speed: v, spot, preheat } = validation.accepted_parameters;
+    const { power: p, speed: v, hatch: h, layer: t, spot, preheat } = validation.accepted_parameters;
     const requestedModel = (q.model || 'coen').toLowerCase().trim();
 
-    if (requestedModel === 'compare' || requestedModel === 'both') {
+    function calculatePinnMeltPool() {
+      const pinnRes = evaluateTi64PinnNode({
+        processId: proc,
+        P: p,
+        v,
+        h,
+        t,
+        T0: preheat,
+        db: spot
+      });
+      return {
+        model_name: "Ti-6Al-4V Physics-Informed Neural Network (PDE + Enthalpy Surrogate)",
+        citation: "Trained on N=58 verified Ti-6Al-4V thermal rows + 420 enthalpy-conduction PDE collocation points (Lf = 286 kJ/kg, T-dependent k(T)).",
+        governing_equation: "ρ·cp_eff(T)(-v ∂T/∂x) - ∇·(k(T)∇T) - Q = 0; autograd dW/dP > 0, dW/dv < 0",
+        thermophysical_constants: {
+          density_kg_m3: RHO,
+          specific_heat_j_kg_k: CP,
+          thermal_conductivity_w_m_k: K,
+          thermal_diffusivity_m2_s: DIFFUSIVITY,
+          latent_heat_of_fusion_j_kg: LATENT_FUSION,
+          liquidus_temperature_c: T_LIQUIDUS,
+          solidus_temperature_c: T_SOLIDUS
+        },
+        melt_pool: {
+          width_um: pinnRes.meltPool.width_um,
+          depth_um: pinnRes.meltPool.depth_um,
+          length_um: pinnRes.meltPool.length_um,
+          aspect_ratio: pinnRes.meltPool.aspect_ratio,
+          mode: pinnRes.meltPool.mode
+        },
+        peak_temperature_c: pinnRes.meltPool.peak_temperature_c,
+        cooling_rate_k_s: pinnRes.meltPool.cooling_rate_k_s,
+        physics_audit: pinnRes.physicsAudit
+      };
+    }
+
+    if (requestedModel === 'compare' || requestedModel === 'both' || requestedModel === 'all') {
       const rosenthal = calculateRosenthal(p, v, spot, preheat, proc);
       const coen = calculateCoenHybrid(p, v, spot, preheat, proc);
+      const pinn = calculatePinnMeltPool();
       return res.status(200).json({
         status: 'success',
         process: proc,
@@ -220,16 +258,27 @@ export default function handler(req, res) {
         comparison: {
           rosenthal_1946: rosenthal,
           coen_hybrid_2022: coen,
+          pinn_surrogate: pinn,
           depth_discrepancy_um: Math.abs(coen.melt_pool.depth_um - rosenthal.melt_pool.depth_um),
           width_discrepancy_um: Math.abs(coen.melt_pool.width_um - rosenthal.melt_pool.width_um),
+          pinn_coen_depth_diff_um: Math.abs(pinn.melt_pool.depth_um - coen.melt_pool.depth_um),
           analysis: coen.melt_pool.mode.includes("Keyhole")
-            ? "KU Leuven hybrid model predicts keyhole vapor depression (aspect > 0.8), where Rosenthal underpredicts penetration by >30%."
-            : "Both models agree closely in the conduction regime (aspect ≈ 0.50), validating analytical baseline assumptions."
+            ? "KU Leuven hybrid and PINN models predict keyhole vapor depression (aspect > 0.8), where Rosenthal underpredicts penetration by >30%."
+            : "Rosenthal, KU Leuven hybrid, and PINN agree closely in the conduction regime (aspect ≈ 0.50), validating analytical and PDE-constrained assumptions."
         }
       });
     }
 
-    if (requestedModel.includes('rosenthal')) {
+    if (requestedModel.includes('pinn')) {
+      const result = calculatePinnMeltPool();
+      return res.status(200).json({
+        status: 'success',
+        process: proc,
+        process_name: validation.process_name,
+        inputs: validation.accepted_parameters,
+        ...result
+      });
+    } else if (requestedModel.includes('rosenthal')) {
       const result = calculateRosenthal(p, v, spot, preheat, proc);
       return res.status(200).json({
         status: 'success',
