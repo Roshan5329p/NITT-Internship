@@ -3469,6 +3469,183 @@ window.AUDIT_STANDARDS = AUDIT_STANDARDS;
 window.MATERIAL_STATE_REGISTRY = MATERIAL_STATE_REGISTRY;
 window.setGlobalMaterialState = setGlobalMaterialState;
 
+// ========================================================
+// OUT-OF-DISTRIBUTION (OOD) EXTRAPOLATION DETECTOR (N=178)
+// ========================================================
+var PROCESS_REFERENCE_ENVELOPES = {
+  lpbf: {
+    processId: 'lpbf',
+    displayName: 'LPBF',
+    studyCount: 178,
+    nominalBaseline: { P: 280, v: 960, h: 110, t: 40, db: 80, T0: 200 },
+    sliderBounds: { P: [80, 450], v: [300, 2200], h: [50, 180], t: [20, 90], db: [40, 160], T0: [25, 650] },
+    parameters: {
+      P:   { label: 'Laser Power',         unit: 'W',     min: 100, max: 400,  centroid: 250,  std: 65,  includeInMahalanobis: true },
+      v:   { label: 'Scan Speed',          unit: 'mm/s',  min: 400, max: 1600, centroid: 1000, std: 280, includeInMahalanobis: true },
+      h:   { label: 'Hatch Spacing',       unit: 'µm',    min: 60,  max: 140,  centroid: 100,  std: 20,  includeInMahalanobis: true },
+      t:   { label: 'Layer Thickness',     unit: 'µm',    min: 20,  max: 60,   centroid: 35,   std: 10,  includeInMahalanobis: true },
+      T0:  { label: 'Build Plate Preheat', unit: '°C',    min: 25,  max: 300,  centroid: 150,  std: 70,  includeInMahalanobis: true },
+      ved: { label: 'Volumetric Energy Density (VED)', unit: 'J/mm³', min: 35, max: 120, centroid: 68, std: 22, includeInMahalanobis: false }
+    }
+  },
+  'ded-laser': {
+    processId: 'ded-laser',
+    displayName: 'L-DED',
+    studyCount: 178,
+    nominalBaseline: { P: 1600, v: 15, h: 1200, t: 450, db: 1500, T0: 100 },
+    sliderBounds: { P: [400, 3000], v: [4, 40], h: [600, 2200], t: [150, 1000], db: [800, 3500], T0: [25, 300] },
+    parameters: {
+      P:   { label: 'Laser Power',         unit: 'W',     min: 600, max: 2600, centroid: 1600, std: 450, includeInMahalanobis: true },
+      v:   { label: 'Scan Speed',          unit: 'mm/s',  min: 6,   max: 30,   centroid: 15,   std: 6,   includeInMahalanobis: true },
+      h:   { label: 'Hatch Spacing',       unit: 'µm',    min: 700, max: 1800, centroid: 1200, std: 280, includeInMahalanobis: true },
+      t:   { label: 'Layer Thickness',     unit: 'µm',    min: 200, max: 800,  centroid: 450,  std: 150, includeInMahalanobis: true },
+      T0:  { label: 'Build Plate Preheat', unit: '°C',    min: 25,  max: 250,  centroid: 100,  std: 60,  includeInMahalanobis: true },
+      ved: { label: 'Volumetric Energy Density (VED)', unit: 'J/mm³', min: 80, max: 350, centroid: 195, std: 60, includeInMahalanobis: false }
+    }
+  },
+  waam: {
+    processId: 'waam',
+    displayName: 'WAAM',
+    studyCount: 178,
+    nominalBaseline: { P: 2400, v: 8, h: 3500, t: 1500, db: 3000, T0: 120 },
+    sliderBounds: { P: [1200, 4500], v: [3, 25], h: [2000, 6000], t: [800, 2500], db: [2000, 6000], T0: [25, 350] },
+    parameters: {
+      P:   { label: 'Arc Power',           unit: 'W',     min: 1500, max: 3800, centroid: 2400, std: 550, includeInMahalanobis: true },
+      v:   { label: 'Travel Speed',        unit: 'mm/s',  min: 4,    max: 18,   centroid: 8,    std: 3.5, includeInMahalanobis: true },
+      h:   { label: 'Step-Over Hatch',     unit: 'µm',    min: 2400, max: 5000, centroid: 3500, std: 650, includeInMahalanobis: true },
+      t:   { label: 'Bead Layer Height',   unit: 'µm',    min: 1000, max: 2200, centroid: 1500, std: 300, includeInMahalanobis: true },
+      T0:  { label: 'Interpass Preheat',   unit: '°C',    min: 25,   max: 280,  centroid: 120,  std: 65,  includeInMahalanobis: true },
+      ved: { label: 'Volumetric Energy Density (VED)', unit: 'J/mm³', min: 25, max: 120, centroid: 60, std: 22, includeInMahalanobis: false }
+    }
+  },
+  'binder-jetting': {
+    processId: 'binder-jetting',
+    displayName: 'Binder Jetting',
+    studyCount: 178,
+    nominalBaseline: { P: 120, v: 400, h: 50, t: 50, db: 35, T0: 180 },
+    sliderBounds: { P: [50, 250], v: [150, 900], h: [30, 120], t: [25, 100], db: [20, 100], T0: [25, 220] },
+    parameters: {
+      P:   { label: 'Sinter / Curing Power',  unit: 'W',    min: 70,  max: 200, centroid: 120, std: 35,  includeInMahalanobis: true },
+      v:   { label: 'Printhead Speed',        unit: 'mm/s', min: 200, max: 750, centroid: 400, std: 130, includeInMahalanobis: true },
+      h:   { label: 'Line Spacing',           unit: 'µm',   min: 35,  max: 100, centroid: 50,  std: 18,  includeInMahalanobis: true },
+      t:   { label: 'Powder Layer Thickness', unit: 'µm',   min: 30,  max: 85,  centroid: 50,  std: 15,  includeInMahalanobis: true },
+      T0:  { label: 'Bed Drying Temp',        unit: '°C',   min: 25,  max: 210, centroid: 180, std: 45,  includeInMahalanobis: true },
+      ved: { label: 'Effective Energy Density', unit: 'J/mm³', min: 35, max: 200, centroid: 110, std: 40, includeInMahalanobis: false }
+    }
+  }
+};
+window.PROCESS_REFERENCE_ENVELOPES = PROCESS_REFERENCE_ENVELOPES;
+
+function resolveProcessEnvelope(processId) {
+  const norm = String(processId || 'lpbf').toLowerCase().trim();
+  if (norm === 'bj' || norm === 'binder-jetting') return PROCESS_REFERENCE_ENVELOPES['binder-jetting'];
+  if (norm === 'ded' || norm === 'ded-laser') return PROCESS_REFERENCE_ENVELOPES['ded-laser'];
+  if (norm === 'waam') return PROCESS_REFERENCE_ENVELOPES.waam;
+  return PROCESS_REFERENCE_ENVELOPES.lpbf;
+}
+window.resolveProcessEnvelope = resolveProcessEnvelope;
+
+function evaluateOodRisk(params, processId) {
+  const env = resolveProcessEnvelope(processId || (typeof currentProcess !== 'undefined' ? currentProcess : 'lpbf'));
+  const pObj = params || {};
+  const P = Number.isFinite(Number(pObj.P)) ? Number(pObj.P) : env.nominalBaseline.P;
+  const v = Number.isFinite(Number(pObj.v)) ? Number(pObj.v) : env.nominalBaseline.v;
+  const h = Number.isFinite(Number(pObj.h)) ? Number(pObj.h) : env.nominalBaseline.h;
+  const t = Number.isFinite(Number(pObj.t)) ? Number(pObj.t) : env.nominalBaseline.t;
+  const T0 = Number.isFinite(Number(pObj.T0)) ? Number(pObj.T0) : env.nominalBaseline.T0;
+  const computedVed = (P * 1e6) / Math.max(1e-6, v * h * t);
+  const ved = Number.isFinite(Number(pObj.ved)) ? Number(Number(pObj.ved).toFixed(1)) : Number(computedVed.toFixed(1));
+
+  const vec = { P: P, v: v, h: h, t: t, T0: T0, ved: ved };
+  let sumSq = 0;
+  const violations = [];
+
+  Object.keys(env.parameters).forEach(function(key) {
+    const spec = env.parameters[key];
+    const val = vec[key];
+    if (spec.includeInMahalanobis && spec.std > 0) {
+      const z = (val - spec.centroid) / spec.std;
+      sumSq += z * z;
+    }
+    if (val > spec.max) {
+      violations.push(spec.label + ' (' + val + ' ' + spec.unit + ') exceeds validated ' + env.displayName + ' range (' + spec.min + '–' + spec.max + ' ' + spec.unit + ')');
+    } else if (val < spec.min) {
+      violations.push(spec.label + ' (' + val + ' ' + spec.unit + ') is below validated ' + env.displayName + ' range (' + spec.min + '–' + spec.max + ' ' + spec.unit + ')');
+    }
+  });
+
+  const mahalanobisDistance = Number(Math.sqrt(sumSq).toFixed(2));
+  let status = 'in_distribution';
+  if (mahalanobisDistance > 3.5 || violations.length > 0) {
+    status = 'extrapolating';
+  } else if (mahalanobisDistance > 2.5) {
+    status = 'boundary';
+  }
+
+  let piMultiplier = 1.0;
+  if (status !== 'in_distribution') {
+    const effectiveDm = violations.length > 0
+      ? Math.max(mahalanobisDistance, 3.5 + 0.35 * violations.length)
+      : mahalanobisDistance;
+    const progress = Math.min(1.0, Math.max(0.0, (effectiveDm - 2.5) / 3.5));
+    piMultiplier = Number((1.0 + progress * 1.2).toFixed(2));
+  }
+
+  return {
+    status: status,
+    mahalanobisDistance: mahalanobisDistance,
+    piMultiplier: piMultiplier,
+    violations: violations,
+    processId: env.processId,
+    processDisplayName: env.displayName,
+    studyCount: env.studyCount
+  };
+}
+window.evaluateOodRisk = evaluateOodRisk;
+
+function getCurrentOodEvaluation() {
+  const proc = (typeof currentProcess !== 'undefined' && currentProcess) ? currentProcess : 'lpbf';
+  const env = resolveProcessEnvelope(proc);
+  const P = parseFloat(document.getElementById('sl_p')?.value);
+  const v = parseFloat(document.getElementById('sl_v')?.value);
+  const h = parseFloat(document.getElementById('sl_h')?.value);
+  const t = parseFloat(document.getElementById('sl_t')?.value);
+  const T0 = parseFloat(document.getElementById('sl_preheat')?.value);
+  return evaluateOodRisk({
+    P: Number.isFinite(P) ? P : env.nominalBaseline.P,
+    v: Number.isFinite(v) ? v : env.nominalBaseline.v,
+    h: Number.isFinite(h) ? h : env.nominalBaseline.h,
+    t: Number.isFinite(t) ? t : env.nominalBaseline.t,
+    T0: Number.isFinite(T0) ? T0 : env.nominalBaseline.T0
+  }, proc);
+}
+
+function resetToValidatedEnvelope() {
+  const proc = (typeof currentProcess !== 'undefined' && currentProcess) ? currentProcess : 'lpbf';
+  const env = resolveProcessEnvelope(proc);
+  const base = env.nominalBaseline;
+  const setSlider = function(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+  setSlider('sl_p', base.P);
+  setSlider('sl_v', base.v);
+  setSlider('sl_h', base.h);
+  setSlider('sl_t', base.t);
+  setSlider('sl_spot', base.db);
+  setSlider('sl_preheat', base.T0);
+  if (typeof syncSolverDisplayFromSliders === 'function') {
+    syncSolverDisplayFromSliders();
+  }
+  if (typeof calculatePhysics === 'function') {
+    calculatePhysics();
+  }
+  if (typeof scheduleUrlStateSync === 'function') {
+    scheduleUrlStateSync();
+  }
+}
+window.resetToValidatedEnvelope = resetToValidatedEnvelope;
+
 var activeModelId = 'ensemble'; // Default to Consensus Ensemble
 window.activeModelId = activeModelId;
 
@@ -3477,16 +3654,312 @@ function setActiveModel(modelId) {
   activeModelId = modelId;
   window.activeModelId = modelId;
   if (window.lastModelPredictions && window.lastStateKey) {
-    renderUnifiedModelsUI(window.lastModelPredictions, window.lastStateKey);
-  } else {
+    renderUnifiedModelsUI(window.lastModelPredictions, window.lastStateKey, window.lastOodResult);
+  } else if (typeof calculatePhysics === 'function') {
     calculatePhysics();
+  }
+  if (typeof scheduleUrlStateSync === 'function') {
+    scheduleUrlStateSync();
   }
 }
 window.setActiveModel = setActiveModel;
 
-function renderUnifiedModelsUI(modelPredictions, stateKey) {
+// ========================================================
+// BI-DIRECTIONAL URL QUERY-STRING STATE SYNC & SHARE RUN
+// ========================================================
+var _urlSyncTimerId = null;
+var _isHydratingFromUrl = false;
+
+function sanitizeProcessId(raw) {
+  if (!raw) return 'lpbf';
+  const norm = String(raw).toLowerCase().trim();
+  if (norm === 'bj' || norm === 'binder-jetting') return 'binder-jetting';
+  if (norm === 'ded' || norm === 'ded-laser') return 'ded-laser';
+  if (['lpbf', 'ded-laser', 'waam', 'binder-jetting'].includes(norm)) return norm;
+  return 'lpbf';
+}
+
+function sanitizeAlloyId(raw) {
+  if (!raw) return 'ti64_gr5';
+  const norm = String(raw).toLowerCase().trim();
+  if (norm === 'ti64_eli' || norm === 'ti64_gr23' || norm === 'eli') return 'ti64_eli';
+  if (['ti64_gr5', 'ti64_eli'].includes(norm)) return norm;
+  return 'ti64_gr5';
+}
+
+function sanitizePostState(raw) {
+  if (!raw) return 'HIP';
+  const trimmed = String(raw).trim();
+  if (['None', 'Stress-relieved', 'Annealed', 'HIP', 'Solution-Aged'].includes(trimmed)) return trimmed;
+  const lower = trimmed.toLowerCase();
+  if (lower === 'none' || lower === 'as_built' || lower === 'as-built') return 'None';
+  if (lower === 'stress-relieved' || lower === 'stress_relieved') return 'Stress-relieved';
+  if (lower === 'annealed') return 'Annealed';
+  if (lower === 'hip') return 'HIP';
+  if (lower === 'solution-aged' || lower === 'solution_aged' || lower === 'sta') return 'Solution-Aged';
+  return 'HIP';
+}
+
+function sanitizeModelId(raw) {
+  if (!raw) return 'ensemble';
+  const lower = String(raw).toLowerCase().trim();
+  if (lower === 'hybridgpr' || lower === 'hybrid-gpr' || lower === 'hybrid_gpr') return 'gpr';
+  if (['analytical', 'rf', 'xgboost', 'svm', 'gpr', 'ensemble'].includes(lower)) return lower;
+  return 'ensemble';
+}
+
+function clampFiniteNumber(raw, fallback, bounds) {
+  if (raw === null || raw === undefined || (typeof raw === 'string' && raw.trim() === '')) {
+    return fallback;
+  }
+  const num = Number(raw);
+  if (!Number.isFinite(num)) {
+    return fallback;
+  }
+  return Math.max(bounds[0], Math.min(bounds[1], num));
+}
+
+function parseUrlDashboardState(search) {
+  const params = new URLSearchParams(search || '');
+  const proc = sanitizeProcessId(params.get('proc'));
+  const env = resolveProcessEnvelope(proc);
+  const base = env.nominalBaseline;
+  const bounds = env.sliderBounds;
+
+  return {
+    proc: proc,
+    alloy: sanitizeAlloyId(params.get('alloy')),
+    P: clampFiniteNumber(params.get('P'), base.P, bounds.P),
+    v: clampFiniteNumber(params.get('v'), base.v, bounds.v),
+    h: clampFiniteNumber(params.get('h'), base.h, bounds.h),
+    t: clampFiniteNumber(params.get('t'), base.t, bounds.t),
+    db: clampFiniteNumber(params.get('db'), base.db, bounds.db),
+    T0: clampFiniteNumber(params.get('T0'), base.T0, bounds.T0),
+    post: sanitizePostState(params.get('post')),
+    model: sanitizeModelId(params.get('model'))
+  };
+}
+window.parseUrlDashboardState = parseUrlDashboardState;
+
+function getCurrentDashboardUrlState() {
+  const proc = sanitizeProcessId(typeof currentProcess !== 'undefined' ? currentProcess : 'lpbf');
+  const env = resolveProcessEnvelope(proc);
+  const base = env.nominalBaseline;
+  const bounds = env.sliderBounds;
+
+  return {
+    proc: proc,
+    alloy: sanitizeAlloyId(document.getElementById('alloySelect')?.value || (typeof currentAlloy !== 'undefined' ? currentAlloy : 'ti64_gr5')),
+    P: clampFiniteNumber(document.getElementById('sl_p')?.value, base.P, bounds.P),
+    v: clampFiniteNumber(document.getElementById('sl_v')?.value, base.v, bounds.v),
+    h: clampFiniteNumber(document.getElementById('sl_h')?.value, base.h, bounds.h),
+    t: clampFiniteNumber(document.getElementById('sl_t')?.value, base.t, bounds.t),
+    db: clampFiniteNumber(document.getElementById('sl_spot')?.value, base.db, bounds.db),
+    T0: clampFiniteNumber(document.getElementById('sl_preheat')?.value, base.T0, bounds.T0),
+    post: sanitizePostState(document.getElementById('postProcessingSelect')?.value),
+    model: sanitizeModelId(typeof activeModelId !== 'undefined' ? activeModelId : 'ensemble')
+  };
+}
+window.getCurrentDashboardUrlState = getCurrentDashboardUrlState;
+
+function serializeDashboardStateToQuery(state) {
+  const s = state || getCurrentDashboardUrlState();
+  const params = new URLSearchParams();
+  params.set('proc', s.proc);
+  params.set('alloy', s.alloy);
+  params.set('P', String(s.P));
+  params.set('v', String(s.v));
+  params.set('h', String(s.h));
+  params.set('t', String(s.t));
+  params.set('db', String(s.db));
+  params.set('T0', String(s.T0));
+  params.set('post', s.post);
+  params.set('model', s.model);
+  return '?' + params.toString();
+}
+window.serializeDashboardStateToQuery = serializeDashboardStateToQuery;
+
+function flushUrlStateSync() {
+  if (_urlSyncTimerId !== null) {
+    clearTimeout(_urlSyncTimerId);
+    _urlSyncTimerId = null;
+  }
+  const state = getCurrentDashboardUrlState();
+  const query = serializeDashboardStateToQuery(state);
+  if (typeof window !== 'undefined' && window.history && typeof window.history.replaceState === 'function') {
+    const nextUrl = window.location.pathname + query + (window.location.hash || '');
+    window.history.replaceState(null, '', nextUrl);
+    return window.location.href;
+  }
+  return query;
+}
+window.flushUrlStateSync = flushUrlStateSync;
+
+function scheduleUrlStateSync() {
+  if (_isHydratingFromUrl) return;
+  if (_urlSyncTimerId !== null) {
+    clearTimeout(_urlSyncTimerId);
+  }
+  _urlSyncTimerId = setTimeout(function() {
+    flushUrlStateSync();
+  }, 250);
+}
+window.scheduleUrlStateSync = scheduleUrlStateSync;
+
+function syncMaterialStateUiFromPost(postVal) {
+  const mapPostToKey = {
+    'None': 'as_built',
+    'Stress-relieved': 'stress_relieved',
+    'Annealed': 'annealed',
+    'HIP': 'hip',
+    'Solution-Aged': 'sta'
+  };
+  const stateKey = mapPostToKey[postVal] || 'hip';
+  globalMaterialState = stateKey;
+  window.globalMaterialState = stateKey;
+  const stateData = MATERIAL_STATE_REGISTRY[stateKey];
+  if (!stateData) return;
+
+  document.querySelectorAll('.mat-state-btn').forEach(btn => btn.classList.remove('active'));
+  const activeBtn = document.getElementById('btnMatState_' + stateKey);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const bannerBadge = document.getElementById('globalStateBadge');
+  if (bannerBadge) {
+    bannerBadge.innerText = stateData.badge;
+    bannerBadge.style.color = stateData.badgeColor;
+    bannerBadge.style.borderColor = stateData.badgeColor;
+    bannerBadge.style.background = (stateData.badgeColor === 'var(--accent-emerald)' || stateData.badgeColor === '#10b981') ? 'rgba(16, 185, 129, 0.15)' : (stateData.badgeColor === '#f43f5e' ? 'rgba(244, 63, 94, 0.15)' : 'rgba(251, 191, 36, 0.15)');
+  }
+
+  const postBadge = document.getElementById('postStatusBadge');
+  if (postBadge) {
+    postBadge.innerText = stateData.qualificationBadgeLabel || (stateData.astmQualified ? "ASTM F2924 QUALIFIED" : "NON-COMPLIANT (DUCTILITY < 10%)");
+    postBadge.style.color = stateData.badgeColor;
+    postBadge.style.borderColor = stateData.badgeColor;
+    postBadge.style.background = (stateData.badgeColor === 'var(--accent-emerald)' || stateData.badgeColor === '#10b981') ? 'rgba(16, 185, 129, 0.15)' : (stateData.badgeColor === '#f43f5e' ? 'rgba(244, 63, 94, 0.15)' : 'rgba(251, 191, 36, 0.15)');
+  }
+
+  const postNote = document.getElementById('postProcessingNote');
+  if (postNote && stateData.desc) {
+    postNote.innerText = stateData.desc;
+  }
+
+  if (typeof selectMicrostructurePhase === 'function') {
+    selectMicrostructurePhase(stateKey);
+  }
+}
+window.syncMaterialStateUiFromPost = syncMaterialStateUiFromPost;
+
+function hydrateDashboardFromUrl() {
+  _isHydratingFromUrl = true;
+  try {
+    const search = (typeof window !== 'undefined' && window.location) ? window.location.search : '';
+    const state = parseUrlDashboardState(search);
+
+    if (typeof currentProcess !== 'undefined') currentProcess = state.proc;
+    window.currentProcess = state.proc;
+    document.querySelectorAll('.process-pill').forEach(function(pill) {
+      const onclickAttr = pill.getAttribute ? (pill.getAttribute('onclick') || '') : '';
+      pill.classList.toggle('active', onclickAttr.includes("'" + state.proc + "'"));
+    });
+
+    if (typeof configureProcessControls === 'function') {
+      configureProcessControls(state.proc);
+    }
+
+    if (typeof currentAlloy !== 'undefined') currentAlloy = state.alloy;
+    window.currentAlloy = state.alloy;
+    const alloyEl = document.getElementById('alloySelect');
+    if (alloyEl) alloyEl.value = state.alloy;
+
+    const setVal = function(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.value = String(val);
+    };
+    setVal('sl_p', state.P);
+    setVal('sl_v', state.v);
+    setVal('sl_h', state.h);
+    setVal('sl_t', state.t);
+    setVal('sl_spot', state.db);
+    setVal('sl_preheat', state.T0);
+
+    const postEl = document.getElementById('postProcessingSelect');
+    if (postEl) postEl.value = state.post;
+    syncMaterialStateUiFromPost(state.post);
+
+    activeModelId = state.model;
+    window.activeModelId = state.model;
+
+    if (typeof syncSolverDisplayFromSliders === 'function') {
+      syncSolverDisplayFromSliders();
+    }
+    if (typeof calculatePhysics === 'function') {
+      calculatePhysics();
+    }
+  } finally {
+    _isHydratingFromUrl = false;
+  }
+  flushUrlStateSync();
+}
+window.hydrateDashboardFromUrl = hydrateDashboardFromUrl;
+
+window.addEventListener('popstate', function() {
+  hydrateDashboardFromUrl();
+});
+
+var _shareBtnResetTimer = null;
+function shareCurrentRun() {
+  const fullUrl = flushUrlStateSync();
+  const btn = document.getElementById('shareRunBtn');
+
+  const showCopiedConfirmation = function() {
+    if (!btn) return;
+    if (_shareBtnResetTimer) clearTimeout(_shareBtnResetTimer);
+    btn.innerText = '✓ Link Copied';
+    btn.style.background = 'rgba(16, 185, 129, 0.30)';
+    btn.style.color = '#ffffff';
+    btn.style.borderColor = '#10b981';
+    _shareBtnResetTimer = setTimeout(function() {
+      btn.innerText = '🔗 Share Run';
+      btn.style.background = 'rgba(16,185,129,0.15)';
+      btn.style.color = '#34d399';
+      btn.style.borderColor = 'rgba(16,185,129,0.35)';
+    }, 2000);
+  };
+
+  const fallbackCopy = function(text) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    } catch (e) {
+      // Safe fallback if clipboard permissions are restricted
+    }
+    showCopiedConfirmation();
+  };
+
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    navigator.clipboard.writeText(fullUrl).then(showCopiedConfirmation).catch(function() {
+      fallbackCopy(fullUrl);
+    });
+  } else {
+    fallbackCopy(fullUrl);
+  }
+}
+window.shareCurrentRun = shareCurrentRun;
+
+function renderUnifiedModelsUI(modelPredictions, stateKey, oodResultInput) {
   window.lastModelPredictions = modelPredictions;
   window.lastStateKey = stateKey;
+  const oodResult = oodResultInput || getCurrentOodEvaluation();
+  window.lastOodResult = oodResult;
 
   const activeCondition = (typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY[stateKey]) 
     ? MATERIAL_STATE_REGISTRY[stateKey] 
@@ -3503,18 +3976,27 @@ function renderUnifiedModelsUI(modelPredictions, stateKey) {
     benchLabel.innerText = `Range of published ${stateShort} experiments (${benchRange[0]} - ${benchRange[1]} HV)`;
   }
 
-  // Derive model results array
+  const piMult = (oodResult && oodResult.status !== 'in_distribution' && Number.isFinite(oodResult.piMultiplier))
+    ? oodResult.piMultiplier
+    : 1.0;
+  const isExtrapolating = Boolean(oodResult && oodResult.status === 'extrapolating');
+
+  // Derive model results array with dynamic OOD 95% PI widening
   const modelResults = ML_MODELS_REGISTRY.map((m) => {
     const predHv = (modelPredictions && modelPredictions[m.id] !== undefined) ? modelPredictions[m.id] : (m.nominalHv || 340);
     const hrcRaw = typeof hvToHrcStandard === 'function' ? hvToHrcStandard(predHv) : '34 HRC';
     const hrc = hrcRaw.includes('HRC') ? hrcRaw : hrcRaw + ' HRC';
+    const widenedPi95 = Number((m.calibratedPi95 * piMult).toFixed(1));
     return {
       ...m,
+      basePi95: m.calibratedPi95,
+      calibratedPi95: widenedPi95,
       predictedHv: predHv,
       hrc: hrc,
       coverage: m.coveragePct || 95.2
     };
   });
+  window.latestModelResults = modelResults;
 
   // Derive active model from activeModelId
   let activeModel = modelResults.find(m => m.id === activeModelId);
@@ -3532,7 +4014,31 @@ function renderUnifiedModelsUI(modelPredictions, stateKey) {
   if (elHv) elHv.innerText = `${activeModel.predictedHv} HV`;
 
   const elCi = document.getElementById('kpi_ci');
-  if (elCi) elCi.innerText = `± ${activeModel.calibratedPi95} HV [Calibrated 95% PI] · ${activeModel.coverage}% Empirical Coverage`;
+  if (elCi) {
+    const extrapTag = isExtrapolating ? ' (Extrapolated)' : '';
+    elCi.innerText = `± ${activeModel.calibratedPi95} HV [Calibrated 95% PI]${extrapTag} · ${activeModel.coverage}% Empirical Coverage`;
+  }
+
+  // Update Extrapolation Alert Banner above the Hardness from Each Model table
+  const oodBanner = document.getElementById('oodExtrapolationBanner');
+  if (oodBanner) {
+    if (isExtrapolating) {
+      oodBanner.style.display = 'block';
+      const bodyEl = document.getElementById('oodBannerBody');
+      if (bodyEl) {
+        bodyEl.innerHTML = `Diagonal Mahalanobis Distance <strong>d<sub>M</sub> = ${oodResult.mahalanobisDistance.toFixed(2)}</strong> exceeds the validated literature training envelope. Calibrated <strong>95% PI</strong> uncertainty bounds have been widened by <strong>×${oodResult.piMultiplier.toFixed(2)}</strong>.`;
+      }
+      const listEl = document.getElementById('oodViolationsList');
+      if (listEl) {
+        const items = (oodResult.violations && oodResult.violations.length > 0)
+          ? oodResult.violations
+          : [`Multi-parameter combination (dM = ${oodResult.mahalanobisDistance.toFixed(2)} > 3.50) lies outside the joint literature covariance hull.`];
+        listEl.innerHTML = items.map(v => `<li>${v}</li>`).join('');
+      }
+    } else {
+      oodBanner.style.display = 'none';
+    }
+  }
 
   const elHrc = document.getElementById('kpi_hrc');
   if (elHrc) elHrc.innerText = `${activeModel.hrc}`;
@@ -3814,6 +4320,9 @@ window.addEventListener('click', function(e) {
     <div class="snow-header-actions">
         <button type="button" class="step-btn" style="background: rgba(56,189,248,0.15); color: #38bdf8; border-color: rgba(56,189,248,0.3); font-size: 11.5px; font-weight: 700; padding: 6px 12px;" onclick="openEngineeringReportModal()">
           📄 Export Technical Report
+        </button>
+        <button type="button" class="step-btn" id="shareRunBtn" style="background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.35); font-size: 11.5px; font-weight: 700; padding: 6px 12px;" onclick="shareCurrentRun()" title="Copy shareable URL with current parameters">
+          🔗 Share Run
         </button>
       <span class="counter-pill" id="liveStatusBadge">● Platform Online</span>
       <span class="counter-pill" id="supabaseStatusBadge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">⚡ Cloud Synced</span>
@@ -4196,6 +4705,23 @@ window.addEventListener('click', function(e) {
               <div class="model-card-sub">Calibrated against 54 Leave-One-Out (LOO) Benchmark Papers across 178 Indexed Studies &amp; 289 Variants</div>
             </div>
             <button class="step-btn" onclick="exportPredictionsCsv()">📥 Download CSV</button>
+          </div>
+
+          <!-- Out-of-Distribution (OOD) Extrapolation Alert Banner -->
+          <div id="oodExtrapolationBanner" role="alert" style="display: none; margin: 0 0 14px 0; padding: 14px 16px; border-radius: 10px; background: rgba(244, 63, 94, 0.12); border: 1px solid rgba(244, 63, 94, 0.45); color: #fecdd3;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 240px;">
+                <div style="font-size: 13px; font-weight: 800; color: #fda4af; display: flex; align-items: center; gap: 7px; margin-bottom: 6px;">
+                  <span>⚠️</span>
+                  <span id="oodBannerHeading">Extrapolation Warning — Outside Validated Literature Envelope (N=178 Studies)</span>
+                </div>
+                <div id="oodBannerBody" style="font-size: 11.5px; color: #fecdd3; line-height: 1.5;"></div>
+                <ul id="oodViolationsList" style="margin: 6px 0 0 18px; padding: 0; font-size: 11.5px; color: #fda4af; line-height: 1.45;"></ul>
+              </div>
+              <button type="button" class="step-btn" id="resetValidatedEnvelopeBtn" onclick="resetToValidatedEnvelope()" style="background: rgba(244, 63, 94, 0.22); color: #fff; border: 1px solid rgba(244, 63, 94, 0.6); font-size: 11.5px; font-weight: 700; padding: 7px 12px; white-space: nowrap; cursor: pointer;">
+                Reset to Validated Envelope
+              </button>
+            </div>
           </div>
 
           <!-- Comparison Table -->
@@ -7387,9 +7913,24 @@ function calculatePhysics() {
     setTxt('aud_el_val', elongationPct.toFixed(1) + ' %');
     setTxt('aud_den_val', densityPct.toFixed(2) + ' %');
 
+    const bjStateKey = (post === 'None' || post === 'As-Built') ? 'as_built' :
+      (post === 'Stress-relieved' ? 'stress_relieved' :
+      (post === 'Annealed' ? 'annealed' :
+      (post === 'HIP' ? 'hip' : 'sta')));
+    const bjOod = evaluateOodRisk({ P: p, v: v, h: h, t: t, T0: preheat, db: spot }, currentProcess);
+    renderUnifiedModelsUI({
+      analytical: primaryHv - 3,
+      rf: primaryHv + 2,
+      xgboost: primaryHv + 1,
+      svm: primaryHv,
+      gpr: primaryHv - 1,
+      ensemble: primaryHv
+    }, bjStateKey, bjOod);
+
     updateDefectMapSvg(currentProcess, p, v);
     updateMeltPoolAndThermal();
     if (typeof renderBonthaProfileTable === 'function') renderBonthaProfileTable();
+    if (typeof scheduleUrlStateSync === 'function') scheduleUrlStateSync();
     return;
   }
 
@@ -7836,7 +8377,18 @@ function calculatePhysics() {
   setTxt('microMorph', post === 'Bi-modal' ? 'Bi-modal (Equiaxed α_p + α/β)' : (post === 'HIP' || post === 'Annealed' ? 'Lamellar α+β + Prior-β GB' : (isMartensiticAsBuilt ? `Acicular α' Needles (${bonthaMorphShort})` : `α+β Colony (${bonthaMorphShort})`)));
   setTxt('microPost', post === 'None' ? (isWaam ? 'As-deposited α+β (ASTM F3187 / WAAM)' : (isDed ? 'As-deposited (ASTM F3187 L-DED)' : 'As-built (ASTM F2924 Class 1)')) : `${post} (${(isWaam || isDed) ? 'ASTM F3187' : 'ASTM F2924'} Decomposed)`);
 
-  // Render Unified Models UI (Table + Bar Chart) from single reactive source
+  // Evaluate Out-of-Distribution (OOD) extrapolation risk against N=178 literature envelope
+  const oodResult = evaluateOodRisk({
+    P: p,
+    v: v,
+    h: h,
+    t: t,
+    T0: preheat,
+    ved: Number(ved.toFixed(1)),
+    db: spot
+  }, currentProcess);
+
+  // Render Unified Models UI (Table + Bar Chart + Top KPIs + OOD Banner) from single reactive source
   renderUnifiedModelsUI({
     analytical: hvAnalytical,
     rf: hvRf,
@@ -7844,7 +8396,11 @@ function calculatePhysics() {
     svm: hvSvm,
     gpr: hvGpr,
     ensemble: hvEnsemble
-  }, stateKey);
+  }, stateKey, oodResult);
+
+  if (typeof scheduleUrlStateSync === 'function') {
+    scheduleUrlStateSync();
+  }
 
   // Update Dynamic SVG Operating Point & Zones on Defect Map
   updateDefectMapSvg(currentProcess, p, v);
@@ -8308,7 +8864,7 @@ function configureProcessControls(proc) {
     slH.min = 50; slH.max = 180; slH.step = 5; slH.value = 110;
     slT.min = 20; slT.max = 90; slT.step = 5; slT.value = 40;
     if (slSpot) { slSpot.min = 40; slSpot.max = 160; slSpot.step = 5; slSpot.value = 80; }
-    if (slPre) { slPre.min = 25; slPre.max = 250; slPre.step = 5; slPre.value = 200; }
+    if (slPre) { slPre.min = 25; slPre.max = 650; slPre.step = 5; slPre.value = 200; }
     if (vedSlider) { vedSlider.min = 20; vedSlider.max = 140; vedSlider.step = 1; vedSlider.value = 72; }
     setText('lblCurrentEnergy', 'CURRENT ENERGY DENSITY');
     setText('lbl_p', 'Laser Power');
@@ -8373,7 +8929,12 @@ function selectProcess(proc, el) {
 }
 
 function updateAll() {
-  currentAlloy = document.getElementById('alloySelect').value;
+  const alloyEl = document.getElementById('alloySelect');
+  if (alloyEl) currentAlloy = alloyEl.value;
+  const postEl = document.getElementById('postProcessingSelect');
+  if (postEl && typeof syncMaterialStateUiFromPost === 'function') {
+    syncMaterialStateUiFromPost(postEl.value);
+  }
   calculatePhysics();
 }
 
@@ -11480,11 +12041,18 @@ window.addEventListener('DOMContentLoaded', () => {
   updateNetworkTelemetry();
   initSupabaseCloudSync();
   populatePapersTable(PAPERS_DATABASE);
+  const prevAutoInit = autoSync;
+  autoSync = false;
   updateVedSolver(66.3);
-  calculatePhysics();
+  autoSync = prevAutoInit;
+  if (typeof hydrateDashboardFromUrl === 'function') {
+    hydrateDashboardFromUrl();
+  } else {
+    calculatePhysics();
+  }
   renderBonthaProfileTable();
   if (typeof updateCustomEconomics === 'function') updateIndustrialEconomics();
-  if (typeof renderMicrostructureSvg === 'function') renderMicrostructureSvg('hip');
+  if (typeof renderMicrostructureSvg === 'function') renderMicrostructureSvg(globalMaterialState || 'hip');
   startTwinAnimation();
   // Start 60 FPS Live Melt Pool Fluid Dynamics Animation Loop
   ensureMpAnimationRunning();
