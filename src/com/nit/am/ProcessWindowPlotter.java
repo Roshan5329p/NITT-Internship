@@ -304,16 +304,6 @@ public class ProcessWindowPlotter {
             g.setStroke(new BasicStroke(1.5f));
             g.drawOval((int) px - 6, (int) py - 6, 12, 12);
 
-            // Key Paper Annotation Tags
-            if (r.paperNumber == 1 || r.paperNumber == 2 || r.paperNumber == 3 ||
-                r.paperNumber == 6 || r.paperNumber == 8 || r.paperNumber == 10 ||
-                r.paperNumber == 37 || r.paperNumber == 43 || r.paperNumber == 52) {
-
-                String tag = "#" + r.paperNumber + " " + getAuthorShort(r.title);
-                g.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                g.setColor(new Color(15, 23, 42));
-                g.drawString(tag, (int) px + 9, (int) py - 6);
-            }
         }
 
         // Draw Legend Box
@@ -448,10 +438,6 @@ public class ProcessWindowPlotter {
             g.setStroke(new BasicStroke(2.0f));
             g.drawOval((int) px - 7, (int) py - 7, 14, 14);
 
-            String tag = "#" + r.paperNumber + " " + getAuthorShort(r.title);
-            g.setFont(new Font("Segoe UI", Font.BOLD, 12));
-            g.setColor(new Color(15, 23, 42));
-            g.drawString(tag, (int) px + 10, (int) py - 6);
         }
 
         drawLegendBox(g, padLeft + 25, padTop + 25, 340, 130, new String[]{
@@ -570,16 +556,6 @@ public class ProcessWindowPlotter {
             g.setStroke(new BasicStroke(2.0f));
             g.drawOval((int) px - 7, (int) py - 7, 14, 14);
 
-            // Annotation for prominent papers
-            if (r.paperNumber == 1 || r.paperNumber == 6 || r.paperNumber == 24 ||
-                r.paperNumber == 26 || r.paperNumber == 33 || r.paperNumber == 43 ||
-                r.paperNumber == 46 || r.paperNumber == 52) {
-
-                String tag = "#" + r.paperNumber + " (" + r.yieldStrengthMpa + " MPa, " + r.elongationPct + "%)";
-                g.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                g.setColor(new Color(15, 23, 42));
-                g.drawString(tag, (int) px + 10, (int) py - 4);
-            }
         }
 
         drawLegendBox(g, padLeft + 25, padTop + plotH - 180, 360, 150, new String[]{
@@ -1037,8 +1013,10 @@ public class ProcessWindowPlotter {
             plotter.plotAshbyQualificationMap(Paths.get(plotsDir, "ti64_astm_qualification_ashby_map.png").toString());
             plotter.plotEnergyDensityTradeoff(Paths.get(plotsDir, "ti64_energy_density_density_tradeoff.png").toString());
 
-            // Generate Interactive HTML Dashboard
-            plotter.generateHtmlDashboard(Paths.get(workspace, "process_windows_dashboard.html").toString());
+            // Never overwrite the live upgraded process_windows_dashboard.html unless explicitly requested
+            if (Arrays.asList(args).contains("--generate-html")) {
+                plotter.generateHtmlDashboard(Paths.get(workspace, "process_windows_dashboard.html").toString());
+            }
 
             System.out.println("All 4 plots and interactive dashboard successfully generated in pure Java!");
 
