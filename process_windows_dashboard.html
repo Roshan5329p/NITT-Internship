@@ -3383,6 +3383,14 @@ function updateAstmAuditor() {
   const passStress = measuredStress <= std.stressThresh;
   const passFatigue = measuredFatigue >= std.fatigueThresh;
 
+  const isEliAlloy = (phys.alloyId === 'ti64_eli' || (typeof currentAlloy !== 'undefined' && currentAlloy === 'ti64_eli'));
+  const measuredO2 = phys.o2Content !== undefined ? Number(phys.o2Content) : (isEliAlloy ? 0.110 : 0.160);
+  const o2ThreshLimit = (currentAuditStandard === 'F3001' || currentAuditStandard === 'ISO5832' || isEliAlloy) ? 0.130 : 0.200;
+  const passO2 = measuredO2 <= o2ThreshLimit;
+  const o2Sub = passO2
+    ? `Interstitial O₂ (${measuredO2.toFixed(3)} wt%) within ${o2ThreshLimit.toFixed(3)} wt% cap (${isEliAlloy ? 'ASTM F3001 ELI' : 'ASTM F2924 Gr5'})`
+    : `${isEliAlloy || currentAuditStandard === 'F3001' ? 'ASTM F3001 ELI' : 'ASTM F2924 Gr5'} FAILURE: ${measuredO2.toFixed(3)} wt% O₂ exceeds ${o2ThreshLimit.toFixed(3)} wt% limit`;
+
   const setRow = (prefix, val, thresh, pass, sub) => {
     const elVal = document.getElementById(prefix + '_val');
     if (elVal) elVal.innerText = val;
@@ -3405,9 +3413,10 @@ function updateAstmAuditor() {
   setRow('aud_den', measuredDen.toFixed(2) + ' %', '≥ ' + std.denThresh.toFixed(1) + ' %', passDen, denSub);
   setRow('aud_stress', measuredStress + ' MPa', '≤ ' + std.stressThresh + ' MPa', passStress, stressSub);
   setRow('aud_fatigue', measuredFatigue + ' MPa', '≥ ' + std.fatigueThresh + ' MPa', passFatigue, fatigueSub);
+  setRow('aud_o2', measuredO2.toFixed(3) + ' wt%', '≤ ' + o2ThreshLimit.toFixed(3) + ' wt%', passO2, o2Sub);
 
   // Overall Assessment
-  const overallPass = passYs && passUts && passElong && passDen && passStress && passFatigue;
+  const overallPass = passYs && passUts && passElong && passDen && passStress && passFatigue && passO2;
   const overallBadge = document.getElementById('astmOverallPillBadge');
   if (overallBadge) {
     overallBadge.innerText = overallPass ? 'COMPLIANT' : 'NON-COMPLIANT';
@@ -3420,6 +3429,9 @@ function updateAstmAuditor() {
   const planContainer = document.getElementById('aud_action_plan_container');
   if (planContainer) {
     let items = [];
+    if (!passO2) {
+      items.push(`Refresh virgin Ti-6Al-4V powder blend or reduce argon chamber O₂ (<100 ppm) to restore interstitial oxygen ≤ ${o2ThreshLimit.toFixed(3)} wt% (${isEliAlloy ? 'ASTM F3001 ELI' : 'ASTM F2924'}).`);
+    }
     if (!passStress) {
       items.push(`Perform Sub-Transus Stress-Relief (700°C–800°C for 2h in industrial vacuum) to lower residual stresses below ${std.stressThresh} MPa.`);
     }
@@ -3450,7 +3462,7 @@ function updateAstmAuditor() {
   // Update Dynamic Cryptographic Hash in Stamp
   const certHashEl = document.getElementById('aud_cert_hash');
   if (certHashEl) {
-    const rawSeed = `NIT|${phys.p || 280}|${phys.v || 960}|${phys.h || 110}|${phys.t || 40}|${stateKey}|${measuredYs}|${measuredUts}|${measuredDen}`;
+    const rawSeed = `NIT|${phys.p || 280}|${phys.v || 960}|${phys.h || 110}|${phys.t || 40}|${stateKey}|${measuredYs}|${measuredUts}|${measuredDen}|${measuredO2.toFixed(3)}|${phys.buildOrientationDeg || 0}`;
     let h1 = 0x811c9dc5, h2 = 0x9e3779b9, h3 = 0x6a09e667, h4 = 0xbb67ae85;
     for (let i = 0; i < rawSeed.length; i++) {
       const ch = rawSeed.charCodeAt(i);
@@ -4156,11 +4168,20 @@ function computeSpecimenStressField(processIdInput, alloyId, params, postProcess
     processContextPart = processLabel + ' • ' + Math.round(P) + ' W / ' + Math.round(v) + ' mm/s • T₀ ' + Math.round(T0) + '°C';
   }
 
-  const gaugeSurfaceStressMpa = Math.max(12, Math.round(asBuiltGaugeSurface * postFactor));
-  const peakSurfaceStressMpa = Math.max(15, Math.round(asBuiltGaugeSurface * filletConcentrationFactor * postFactor));
+  const opts = (regime && regime.metallurgyOptions) ? regime.metallurgyOptions : {};
+  const oriDeg = Number.isFinite(Number(opts.buildOrientationDeg)) ? Number(opts.buildOrientationDeg) : null;
+  const rotDeg = Number.isFinite(Number(opts.scanRotationDeg)) ? Number(opts.scanRotationDeg) : null;
+  const o2Wt = Number.isFinite(Number(opts.oxygenWtPct)) ? Number(opts.oxygenWtPct) : null;
+  const stressAnisoFactor = Number.isFinite(Number(opts.residualStressFactor)) ? Number(opts.residualStressFactor) : 1.0;
+
+  const gaugeSurfaceStressMpa = Math.max(12, Math.round(asBuiltGaugeSurface * postFactor * stressAnisoFactor));
+  const peakSurfaceStressMpa = Math.max(15, Math.round(asBuiltGaugeSurface * filletConcentrationFactor * postFactor * stressAnisoFactor));
   const coreCompressiveStressMpa = -Math.max(10, Math.round(peakSurfaceStressMpa * asBuiltCoreRatio));
 
   const postShort = (normPost === 'None' || normPost === 'As-Built') ? 'As-Built' : normPost;
+  const metSuffix = (oriDeg !== null && rotDeg !== null && o2Wt !== null)
+    ? (' • ' + oriDeg + '°/' + rotDeg + '° • ' + o2Wt.toFixed(3) + '% O₂')
+    : '';
   return {
     processId: processId,
     processLabel: processLabel,
@@ -4180,7 +4201,10 @@ function computeSpecimenStressField(processIdInput, alloyId, params, postProcess
     sinterDensityPct: normPost === 'HIP' ? 99.98 : 99.85,
     sinterTempC: 0,
     sinterHoldHours: 0,
-    contextHudSummary: processContextPart + ' • ' + postShort + ' | Peak +' + peakSurfaceStressMpa + ' MPa • ' + regimeShort,
+    buildOrientationDeg: oriDeg,
+    scanRotationDeg: rotDeg,
+    oxygenWtPct: o2Wt,
+    contextHudSummary: processContextPart + ' • ' + postShort + metSuffix + ' | Peak +' + peakSurfaceStressMpa + ' MPa • ' + regimeShort,
     regimeShortLabel: regimeShort,
     regimeSeverity: regimeSev
   };
@@ -4220,8 +4244,11 @@ function evaluateLocalResidualStressMpa(rFrac, zNorm, field) {
 window.evaluateLocalResidualStressMpa = evaluateLocalResidualStressMpa;
 
 // ========================================================
-// OUT-OF-DISTRIBUTION (OOD) EXTRAPOLATION DETECTOR (N=178)
 // ========================================================
+// OUT-OF-DISTRIBUTION (OOD) EXTRAPOLATION DETECTOR (N=178)
+// Full 6x6 Regularized Covariance Mahalanobis (Sigma_reg = Sigma + lambda*I)
+// ========================================================
+var OOD_FEATURE_ORDER = ['P', 'v', 'h', 't', 'T0', 'ved'];
 var PROCESS_REFERENCE_ENVELOPES = {
   lpbf: {
     processId: 'lpbf',
@@ -4230,13 +4257,20 @@ var PROCESS_REFERENCE_ENVELOPES = {
     nominalBaseline: { P: 280, v: 960, h: 110, t: 40, db: 80, T0: 200 },
     sliderBounds: { P: [80, 450], v: [300, 2200], h: [50, 180], t: [20, 90], db: [40, 160], T0: [25, 650] },
     parameters: {
-      P:   { label: 'Laser Power',         unit: 'W',     min: 100, max: 400,  centroid: 250,  std: 65,  includeInMahalanobis: true },
-      v:   { label: 'Scan Speed',          unit: 'mm/s',  min: 400, max: 1600, centroid: 1000, std: 280, includeInMahalanobis: true },
-      h:   { label: 'Hatch Spacing',       unit: 'µm',    min: 60,  max: 140,  centroid: 100,  std: 20,  includeInMahalanobis: true },
-      t:   { label: 'Layer Thickness',     unit: 'µm',    min: 20,  max: 60,   centroid: 35,   std: 10,  includeInMahalanobis: true },
-      T0:  { label: 'Build Plate Preheat', unit: '°C',    min: 25,  max: 300,  centroid: 150,  std: 70,  includeInMahalanobis: true },
-      ved: { label: 'Volumetric Energy Density (VED)', unit: 'J/mm³', min: 35, max: 120, centroid: 68, std: 22, includeInMahalanobis: false }
-    }
+      P:   { label: 'Laser Power',                   unit: 'W',     min: 100, max: 400,  centroid: 250,  std: 65,  includeInMahalanobis: true },
+      v:   { label: 'Scan Speed',                    unit: 'mm/s',  min: 400, max: 1600, centroid: 1000, std: 280, includeInMahalanobis: true },
+      h:   { label: 'Hatch Spacing',                 unit: 'µm',    min: 60,  max: 140,  centroid: 100,  std: 20,  includeInMahalanobis: true },
+      t:   { label: 'Layer Thickness',               unit: 'µm',    min: 20,  max: 60,   centroid: 35,   std: 10,  includeInMahalanobis: true },
+      T0:  { label: 'Build Plate Preheat',           unit: '°C',    min: 25,  max: 300,  centroid: 150,  std: 70,  includeInMahalanobis: true },
+      ved: { label: 'Volumetric Energy Density (VED)', unit: 'J/mm³', min: 35, max: 120,  centroid: 68,   std: 22,  includeInMahalanobis: true }
+    },
+    factorLoadings: [
+      [0.94, 0.90, 0.00, 0.12, 0.00, 0.08],
+      [0.25, -0.25, -0.22, -0.22, 0.00, 0.72],
+      [0.10, 0.00, 0.40, 0.42, 0.00, 0.00]
+    ],
+    idiosyncraticDiag: [0.18, 0.22, 0.72, 0.68, 1.00, 0.45],
+    ridgeLambda: 1e-4
   },
   'ded-laser': {
     processId: 'ded-laser',
@@ -4245,13 +4279,20 @@ var PROCESS_REFERENCE_ENVELOPES = {
     nominalBaseline: { P: 1600, v: 15, h: 1200, t: 450, db: 1500, T0: 100 },
     sliderBounds: { P: [400, 3000], v: [4, 40], h: [600, 2200], t: [150, 1000], db: [800, 3500], T0: [25, 300] },
     parameters: {
-      P:   { label: 'Laser Power',         unit: 'W',     min: 600, max: 2600, centroid: 1600, std: 450, includeInMahalanobis: true },
-      v:   { label: 'Scan Speed',          unit: 'mm/s',  min: 6,   max: 30,   centroid: 15,   std: 6,   includeInMahalanobis: true },
-      h:   { label: 'Hatch Spacing',       unit: 'µm',    min: 700, max: 1800, centroid: 1200, std: 280, includeInMahalanobis: true },
-      t:   { label: 'Layer Thickness',     unit: 'µm',    min: 200, max: 800,  centroid: 450,  std: 150, includeInMahalanobis: true },
-      T0:  { label: 'Build Plate Preheat', unit: '°C',    min: 25,  max: 250,  centroid: 100,  std: 60,  includeInMahalanobis: true },
-      ved: { label: 'Volumetric Energy Density (VED)', unit: 'J/mm³', min: 80, max: 350, centroid: 195, std: 60, includeInMahalanobis: false }
-    }
+      P:   { label: 'Laser Power',                   unit: 'W',     min: 600, max: 2600, centroid: 1600, std: 450, includeInMahalanobis: true },
+      v:   { label: 'Scan Speed',                    unit: 'mm/s',  min: 6,   max: 30,   centroid: 15,   std: 6,   includeInMahalanobis: true },
+      h:   { label: 'Hatch Spacing',                 unit: 'µm',    min: 700, max: 1800, centroid: 1200, std: 280, includeInMahalanobis: true },
+      t:   { label: 'Layer Thickness',               unit: 'µm',    min: 200, max: 800,  centroid: 450,  std: 150, includeInMahalanobis: true },
+      T0:  { label: 'Build Plate Preheat',           unit: '°C',    min: 25,  max: 250,  centroid: 100,  std: 60,  includeInMahalanobis: true },
+      ved: { label: 'Volumetric Energy Density (VED)', unit: 'J/mm³', min: 80, max: 350,  centroid: 195,  std: 60,  includeInMahalanobis: true }
+    },
+    factorLoadings: [
+      [0.90, 0.84, 0.15, 0.22, 0.00, 0.05],
+      [0.22, -0.28, -0.20, -0.20, 0.00, 0.70],
+      [0.10, 0.00, 0.48, 0.50, 0.00, 0.00]
+    ],
+    idiosyncraticDiag: [0.24, 0.28, 0.65, 0.60, 1.00, 0.48],
+    ridgeLambda: 1e-4
   },
   waam: {
     processId: 'waam',
@@ -4260,13 +4301,20 @@ var PROCESS_REFERENCE_ENVELOPES = {
     nominalBaseline: { P: 2400, v: 8, h: 3500, t: 1500, db: 3000, T0: 120 },
     sliderBounds: { P: [1200, 4500], v: [3, 25], h: [2000, 6000], t: [800, 2500], db: [2000, 6000], T0: [25, 350] },
     parameters: {
-      P:   { label: 'Arc Power',           unit: 'W',     min: 1500, max: 3800, centroid: 2400, std: 550, includeInMahalanobis: true },
-      v:   { label: 'Travel Speed',        unit: 'mm/s',  min: 4,    max: 18,   centroid: 8,    std: 3.5, includeInMahalanobis: true },
-      h:   { label: 'Step-Over Hatch',     unit: 'µm',    min: 2400, max: 5000, centroid: 3500, std: 650, includeInMahalanobis: true },
-      t:   { label: 'Bead Layer Height',   unit: 'µm',    min: 1000, max: 2200, centroid: 1500, std: 300, includeInMahalanobis: true },
-      T0:  { label: 'Interpass Preheat',   unit: '°C',    min: 25,   max: 280,  centroid: 120,  std: 65,  includeInMahalanobis: true },
-      ved: { label: 'Volumetric Energy Density (VED)', unit: 'J/mm³', min: 25, max: 120, centroid: 60, std: 22, includeInMahalanobis: false }
-    }
+      P:   { label: 'Arc Power',                     unit: 'W',     min: 1500, max: 3800, centroid: 2400, std: 550, includeInMahalanobis: true },
+      v:   { label: 'Travel Speed',                  unit: 'mm/s',  min: 4,    max: 18,   centroid: 8,    std: 3.5, includeInMahalanobis: true },
+      h:   { label: 'Step-Over Hatch',               unit: 'µm',    min: 2400, max: 5000, centroid: 3500, std: 650, includeInMahalanobis: true },
+      t:   { label: 'Bead Layer Height',             unit: 'µm',    min: 1000, max: 2200, centroid: 1500, std: 300, includeInMahalanobis: true },
+      T0:  { label: 'Interpass Preheat',             unit: '°C',    min: 25,   max: 280,  centroid: 120,  std: 65,  includeInMahalanobis: true },
+      ved: { label: 'Volumetric Energy Density (VED)', unit: 'J/mm³', min: 25,  max: 120,  centroid: 60,   std: 22,  includeInMahalanobis: true }
+    },
+    factorLoadings: [
+      [0.92, 0.88, 0.20, 0.15, 0.00, 0.05],
+      [0.20, -0.26, -0.18, -0.18, 0.00, 0.68],
+      [0.12, 0.00, 0.50, 0.52, 0.00, 0.00]
+    ],
+    idiosyncraticDiag: [0.22, 0.25, 0.62, 0.62, 1.00, 0.50],
+    ridgeLambda: 1e-4
   },
   'binder-jetting': {
     processId: 'binder-jetting',
@@ -4275,48 +4323,155 @@ var PROCESS_REFERENCE_ENVELOPES = {
     nominalBaseline: { P: 120, v: 400, h: 50, t: 50, db: 35, T0: 180 },
     sliderBounds: { P: [50, 250], v: [150, 900], h: [30, 120], t: [25, 100], db: [20, 100], T0: [25, 220] },
     parameters: {
-      P:   { label: 'Sinter / Curing Power',  unit: 'W',    min: 70,  max: 200, centroid: 120, std: 35,  includeInMahalanobis: true },
-      v:   { label: 'Printhead Speed',        unit: 'mm/s', min: 200, max: 750, centroid: 400, std: 130, includeInMahalanobis: true },
-      h:   { label: 'Line Spacing',           unit: 'µm',   min: 35,  max: 100, centroid: 50,  std: 18,  includeInMahalanobis: true },
-      t:   { label: 'Powder Layer Thickness', unit: 'µm',   min: 30,  max: 85,  centroid: 50,  std: 15,  includeInMahalanobis: true },
-      T0:  { label: 'Bed Drying Temp',        unit: '°C',   min: 25,  max: 210, centroid: 180, std: 45,  includeInMahalanobis: true },
-      ved: { label: 'Effective Energy Density', unit: 'J/mm³', min: 35, max: 200, centroid: 110, std: 40, includeInMahalanobis: false }
-    }
+      P:   { label: 'Sinter / Curing Power',    unit: 'W',     min: 70,  max: 200, centroid: 120, std: 35,  includeInMahalanobis: true },
+      v:   { label: 'Printhead Speed',          unit: 'mm/s',  min: 200, max: 750, centroid: 400, std: 130, includeInMahalanobis: true },
+      h:   { label: 'Line Spacing',             unit: 'µm',    min: 35,  max: 100, centroid: 50,  std: 18,  includeInMahalanobis: true },
+      t:   { label: 'Powder Layer Thickness',   unit: 'µm',    min: 30,  max: 85,  centroid: 50,  std: 15,  includeInMahalanobis: true },
+      T0:  { label: 'Bed Drying Temp',          unit: '°C',    min: 25,  max: 210, centroid: 180, std: 45,  includeInMahalanobis: true },
+      ved: { label: 'Effective Energy Density', unit: 'J/mm³', min: 35,  max: 200, centroid: 110, std: 40,  includeInMahalanobis: true }
+    },
+    factorLoadings: [
+      [0.86, 0.82, 0.00, 0.15, 0.10, 0.10],
+      [0.22, -0.22, -0.20, -0.20, 0.15, 0.66],
+      [0.10, 0.00, 0.45, 0.45, 0.00, 0.00]
+    ],
+    idiosyncraticDiag: [0.30, 0.32, 0.70, 0.68, 0.95, 0.52],
+    ridgeLambda: 1e-4
   }
 };
 window.PROCESS_REFERENCE_ENVELOPES = PROCESS_REFERENCE_ENVELOPES;
 
 function resolveProcessEnvelope(processId) {
   const norm = String(processId || 'lpbf').toLowerCase().trim();
-  if (norm === 'bj' || norm === 'binder-jetting') return PROCESS_REFERENCE_ENVELOPES['binder-jetting'];
-  if (norm === 'ded' || norm === 'ded-laser') return PROCESS_REFERENCE_ENVELOPES['ded-laser'];
+  if (norm === 'bj' || norm === 'binder-jetting' || norm === 'binder_jetting') return PROCESS_REFERENCE_ENVELOPES['binder-jetting'];
+  if (norm === 'ded' || norm === 'ded-laser' || norm === 'lded' || norm === 'l-ded') return PROCESS_REFERENCE_ENVELOPES['ded-laser'];
   if (norm === 'waam') return PROCESS_REFERENCE_ENVELOPES.waam;
   return PROCESS_REFERENCE_ENVELOPES.lpbf;
 }
 window.resolveProcessEnvelope = resolveProcessEnvelope;
 
+function _buildSpdCorr(factorLoadings, diagEps) {
+  const n = OOD_FEATURE_ORDER.length;
+  const G = Array.from({ length: n }, function() { return new Array(n).fill(0); });
+  for (let f = 0; f < factorLoadings.length; f++) {
+    const fl = factorLoadings[f];
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) G[i][j] += (fl[i] || 0) * (fl[j] || 0);
+    }
+  }
+  for (let i = 0; i < n; i++) G[i][i] += Math.max(1e-3, diagEps[i] || 0.01);
+  return G.map(function(row, i) {
+    return row.map(function(val, j) {
+      return i === j ? 1.0 : Math.max(-0.98, Math.min(0.98, val / Math.sqrt(Math.max(1e-12, G[i][i] * G[j][j]))));
+    });
+  });
+}
+
+function _invertSpdCholesky(M) {
+  const n = M.length;
+  const scale = new Array(n);
+  for (let i = 0; i < n; i++) {
+    if (!Number.isFinite(M[i][i]) || M[i][i] <= 1e-12) return null;
+    scale[i] = 1.0 / Math.sqrt(M[i][i]);
+  }
+  const E = Array.from({ length: n }, function(_, i) {
+    return Array.from({ length: n }, function(__, j) {
+      return scale[i] * 0.5 * (M[i][j] + M[j][i]) * scale[j];
+    });
+  });
+  const L = Array.from({ length: n }, function() { return new Array(n).fill(0); });
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j <= i; j++) {
+      let s = 0;
+      for (let k = 0; k < j; k++) s += L[i][k] * L[j][k];
+      if (i === j) {
+        const d = E[i][i] - s;
+        if (!Number.isFinite(d) || d <= 1e-12) return null;
+        L[i][j] = Math.sqrt(d);
+      } else {
+        const v = (E[i][j] - s) / L[j][j];
+        if (!Number.isFinite(v)) return null;
+        L[i][j] = v;
+      }
+    }
+  }
+  const Linv = Array.from({ length: n }, function() { return new Array(n).fill(0); });
+  for (let c = 0; c < n; c++) {
+    for (let r = c; r < n; r++) {
+      let s = r === c ? 1.0 : 0.0;
+      for (let k = c; k < r; k++) s -= L[r][k] * Linv[k][c];
+      Linv[r][c] = s / L[r][r];
+    }
+  }
+  const inv = Array.from({ length: n }, function() { return new Array(n).fill(0); });
+  for (let i = 0; i < n; i++) {
+    for (let j = i; j < n; j++) {
+      let s = 0;
+      for (let k = Math.max(i, j); k < n; k++) s += Linv[k][i] * Linv[k][j];
+      const entry = scale[i] * s * scale[j];
+      if (!Number.isFinite(entry)) return null;
+      inv[i][j] = entry;
+      inv[j][i] = entry;
+    }
+  }
+  return inv;
+}
+
+var _OOD_PREC_CACHE = {};
+function _getOodPrecisionModel(env) {
+  if (_OOD_PREC_CACHE[env.processId]) return _OOD_PREC_CACHE[env.processId];
+  const n = OOD_FEATURE_ORDER.length;
+  const stds = OOD_FEATURE_ORDER.map(function(k) {
+    const s = env.parameters[k].std;
+    return Number.isFinite(s) && s > 1e-6 ? s : 1.0;
+  });
+  const corr = _buildSpdCorr(env.factorLoadings, env.idiosyncraticDiag);
+  const cov = corr.map(function(row, i) { return row.map(function(val, j) { return val * stds[i] * stds[j]; }); });
+  let lam = env.ridgeLambda || 1e-4;
+  let prec = null;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const reg = cov.map(function(row, i) { return row.map(function(val, j) { return i === j ? val + lam : val; }); });
+    prec = _invertSpdCholesky(reg);
+    if (prec) break;
+    lam = Math.max(lam * 10, 1e-3);
+  }
+  if (!prec) {
+    prec = Array.from({ length: n }, function(_, i) {
+      return Array.from({ length: n }, function(__, j) { return i === j ? 1.0 / (stds[i] * stds[i] + lam) : 0.0; });
+    });
+  }
+  const model = { cov: cov, prec: prec };
+  _OOD_PREC_CACHE[env.processId] = model;
+  return model;
+}
+
 function evaluateOodRisk(params, processId) {
   const env = resolveProcessEnvelope(processId || (typeof currentProcess !== 'undefined' ? currentProcess : 'lpbf'));
+  const precModel = _getOodPrecisionModel(env);
   const pObj = params || {};
   const P = Number.isFinite(Number(pObj.P)) ? Number(pObj.P) : env.nominalBaseline.P;
-  const v = Number.isFinite(Number(pObj.v)) ? Number(pObj.v) : env.nominalBaseline.v;
-  const h = Number.isFinite(Number(pObj.h)) ? Number(pObj.h) : env.nominalBaseline.h;
-  const t = Number.isFinite(Number(pObj.t)) ? Number(pObj.t) : env.nominalBaseline.t;
+  const v = (Number.isFinite(Number(pObj.v)) && Number(pObj.v) > 0) ? Number(pObj.v) : env.nominalBaseline.v;
+  const h = (Number.isFinite(Number(pObj.h)) && Number(pObj.h) > 0) ? Number(pObj.h) : env.nominalBaseline.h;
+  const t = (Number.isFinite(Number(pObj.t)) && Number(pObj.t) > 0) ? Number(pObj.t) : env.nominalBaseline.t;
   const T0 = Number.isFinite(Number(pObj.T0)) ? Number(pObj.T0) : env.nominalBaseline.T0;
   const computedVed = (P * 1e6) / Math.max(1e-6, v * h * t);
-  const ved = Number.isFinite(Number(pObj.ved)) ? Number(Number(pObj.ved).toFixed(1)) : Number(computedVed.toFixed(1));
+  const vedRaw = Number.isFinite(Number(pObj.ved)) ? Number(pObj.ved) : computedVed;
+  const ved = Number.isFinite(vedRaw) ? Number(vedRaw.toFixed(1)) : env.parameters.ved.centroid;
 
   const vec = { P: P, v: v, h: h, t: t, T0: T0, ved: ved };
-  let sumSq = 0;
+  const diff = OOD_FEATURE_ORDER.map(function(k) { return vec[k] - env.parameters[k].centroid; });
+  let quad = 0;
+  for (let i = 0; i < OOD_FEATURE_ORDER.length; i++) {
+    let dot = 0;
+    for (let j = 0; j < OOD_FEATURE_ORDER.length; j++) dot += precModel.prec[i][j] * diff[j];
+    quad += diff[i] * dot;
+  }
+  const mahalanobisDistance = Number((Number.isFinite(quad) ? Math.sqrt(Math.max(0, quad)) : 0).toFixed(2));
   const violations = [];
 
-  Object.keys(env.parameters).forEach(function(key) {
+  OOD_FEATURE_ORDER.forEach(function(key) {
     const spec = env.parameters[key];
     const val = vec[key];
-    if (spec.includeInMahalanobis && spec.std > 0) {
-      const z = (val - spec.centroid) / spec.std;
-      sumSq += z * z;
-    }
     if (val > spec.max) {
       violations.push(spec.label + ' (' + val + ' ' + spec.unit + ') exceeds validated ' + env.displayName + ' range (' + spec.min + '–' + spec.max + ' ' + spec.unit + ')');
     } else if (val < spec.min) {
@@ -4324,7 +4479,6 @@ function evaluateOodRisk(params, processId) {
     }
   });
 
-  const mahalanobisDistance = Number(Math.sqrt(sumSq).toFixed(2));
   let status = 'in_distribution';
   if (mahalanobisDistance > 3.5 || violations.length > 0) {
     status = 'extrapolating';
@@ -4348,10 +4502,1034 @@ function evaluateOodRisk(params, processId) {
     violations: violations,
     processId: env.processId,
     processDisplayName: env.displayName,
-    studyCount: env.studyCount
+    studyCount: env.studyCount,
+    covarianceMode: 'full_6x6_regularized'
   };
 }
 window.evaluateOodRisk = evaluateOodRisk;
+
+// ========================================================
+// DEEP Ti-6Al-4V PHYSICAL METALLURGY ENGINE (PHASE 2)
+// Oxygen / Powder Reuse · Orientation Anisotropy · Hall-Petch Kinetics
+// ========================================================
+function _normTi64Alloy(raw) {
+  const s = String(raw || 'ti64_gr5').toLowerCase().trim();
+  return (s.includes('eli') || s.includes('23') || s === 'f3001') ? 'ti64_eli' : 'ti64_gr5';
+}
+function _normTi64Post(raw) {
+  const s = String(raw || 'HIP').toLowerCase().trim();
+  if (s === 'none' || s.includes('as-built') || s.includes('as_built')) return 'None';
+  if (s.includes('stress')) return 'Stress-relieved';
+  if (s.includes('anneal')) return 'Annealed';
+  if (s.includes('bi-modal') || s.includes('bimodal')) return 'Bi-modal';
+  if (s.includes('solution') || s === 'sta') return 'Solution-Aged';
+  return 'HIP';
+}
+function computeOxygenAndReuseEffects(params) {
+  const p = params || {};
+  const alloyId = _normTi64Alloy(p.alloyId);
+  const proc = String(p.processId || 'lpbf').toLowerCase().trim();
+  const virginO2 = alloyId === 'ti64_eli' ? 0.11 : 0.16;
+  const reuseCycles = Number.isFinite(Number(p.powderReuseCycles))
+    ? Math.max(0, Math.min(30, Math.round(Number(p.powderReuseCycles)))) : 0;
+  const autoCoupleReuse = p.autoCoupleReuse !== false;
+  const pickupRate = proc === 'waam' ? 0.0008 : (proc.includes('binder') || proc === 'bj' ? 0.0018 : (proc.includes('ded') ? 0.0025 : 0.0032));
+  let rawO2 = Number.isFinite(Number(p.oxygenWtPct)) ? Number(p.oxygenWtPct) : virginO2;
+  if (autoCoupleReuse && p.oxygenWtPct === undefined) rawO2 = virginO2 + reuseCycles * pickupRate;
+  const effectiveOxygenWtPct = Number(Math.max(0.08, Math.min(0.22, rawO2)).toFixed(3));
+  const o2Norm = (effectiveOxygenWtPct - 0.08) / (0.22 - 0.08);
+  const betaTransusC = Number((975.0 + o2Norm * (1010.0 - 975.0)).toFixed(1));
+  const solidSolutionDeltaYsMpa = Number((((effectiveOxygenWtPct - 0.11) / 0.05) * 70.0).toFixed(1));
+  const sigma0Mpa = Number((710.0 + solidSolutionDeltaYsMpa).toFixed(1));
+  const excess = Math.max(0, effectiveOxygenWtPct - 0.12);
+  const below = Math.max(0, 0.12 - effectiveOxygenWtPct);
+  const ductilityMultiplier = Number(Math.max(0.45, Math.min(1.12, 1.0 - 3.6 * excess + 1.5 * below)).toFixed(4));
+  const kicMultiplier = Number(Math.max(0.55, Math.min(1.10, 1.0 - 2.8 * excess + 1.2 * below)).toFixed(4));
+  const astmF3001OxygenPass = effectiveOxygenWtPct <= 0.13;
+  const astmF2924OxygenPass = effectiveOxygenWtPct <= 0.20;
+  const activeAlloyOxygenPass = alloyId === 'ti64_eli' ? astmF3001OxygenPass : astmF2924OxygenPass;
+  let chemistryAlert = null;
+  if (alloyId === 'ti64_eli' && !astmF3001OxygenPass) {
+    chemistryAlert = `ASTM F3001 FAILURE: Interstitial O₂ (${effectiveOxygenWtPct.toFixed(3)} wt%) exceeds 0.130 wt% Grade 23 ELI threshold.`;
+  } else if (alloyId === 'ti64_gr5' && !astmF2924OxygenPass) {
+    chemistryAlert = `ASTM F2924 FAILURE: Interstitial O₂ (${effectiveOxygenWtPct.toFixed(3)} wt%) exceeds 0.200 wt% Grade 5 threshold.`;
+  }
+  return {
+    alloyId, virginOxygenWtPct: virginO2, effectiveOxygenWtPct, powderReuseCycles: reuseCycles,
+    autoCoupleReuse, pickupPerCycleWtPct: pickupRate, betaTransusC, solidSolutionDeltaYsMpa,
+    sigma0Mpa, ductilityMultiplier, kicMultiplier,
+    astmF3001LimitWtPct: 0.13, astmF2924LimitWtPct: 0.20,
+    astmF3001OxygenPass, astmF2924OxygenPass, activeAlloyOxygenPass, chemistryAlert
+  };
+}
+function computeAlphaLathKinetics(coolingRateKs, postProcessing, oxygenWtPct) {
+  const safeCool = Number.isFinite(Number(coolingRateKs)) && Number(coolingRateKs) > 0 ? Number(coolingRateKs) : 4.8e5;
+  const post = _normTi64Post(postProcessing);
+  const o2 = Number.isFinite(Number(oxygenWtPct)) ? Number(oxygenWtPct) : 0.16;
+  const asBuiltLathUm = Math.max(0.32, Math.min(2.60, 6.8 * Math.pow(Math.max(10, safeCool), -0.19)));
+  let tC = 25, tH = 0, precip = 0;
+  if (post === 'Stress-relieved') { tC = 650; tH = 2.0; }
+  else if (post === 'Annealed') { tC = 730; tH = 2.0; }
+  else if (post === 'HIP') { tC = 920; tH = 2.0; }
+  else if (post === 'Solution-Aged' || post === 'Bi-modal') { tC = 705; tH = 2.0; precip = post === 'Solution-Aged' ? 68.0 : 32.0; }
+  const o2Retard = Math.max(0.85, 1.0 - 0.9 * Math.max(0, o2 - 0.14));
+  let lam3 = Math.pow(asBuiltLathUm, 3);
+  if (tH > 0 && tC > 200) lam3 += 1.019e7 * o2Retard * Math.exp(-15500.0 / (tC + 273.15)) * tH;
+  const alphaLathWidthUm = Number(Math.max(0.32, Math.cbrt(Math.max(1e-6, lam3))).toFixed(3));
+  const invSqrtLathUm = Number((1.0 / Math.sqrt(Math.max(0.1, alphaLathWidthUm))).toFixed(4));
+  return { asBuiltLathUm: Number(asBuiltLathUm.toFixed(3)), alphaLathWidthUm, invSqrtLathUm, heatTreatmentTempC: tC, heatTreatmentHours: tH, precipitationBoostMpa: precip };
+}
+function computeOrientationAnisotropy(buildOrientationDeg, scanRotationDeg, postProcessing, lofIndex) {
+  const ori = Number(buildOrientationDeg) === 45 ? 45 : (Number(buildOrientationDeg) === 90 ? 90 : 0);
+  const rot = Number(scanRotationDeg) === 90 ? 90 : 67;
+  const post = _normTi64Post(postProcessing);
+  const lof = Number.isFinite(Number(lofIndex)) ? Number(lofIndex) : 0.7;
+  const hipAtten = post === 'HIP' ? 0.28 : (post === 'Annealed' ? 0.55 : (post === 'Stress-relieved' ? 0.85 : 1.0));
+  const rotFactor = rot === 67 ? 0.78 : 1.0;
+  const residualStressFactor = rot === 67 ? 0.93 : 1.04;
+  let baseYs = 0, baseEl = 0, label = '0° (Horizontal XY)';
+  if (ori === 45) { label = '45° (Diagonal)'; baseYs = -0.025; baseEl = 0.04; }
+  else if (ori === 90) { label = '90° (Vertical Z)'; baseYs = -0.045; baseEl = lof > 0.95 ? -0.14 : 0.06; }
+  const eff = hipAtten * rotFactor;
+  return {
+    buildOrientationDeg: ori, scanRotationDeg: rot, orientationLabel: label,
+    ysFactor: Number((1.0 + baseYs * eff).toFixed(4)),
+    utsFactor: Number((1.0 + baseYs * 0.85 * eff).toFixed(4)),
+    elongationFactor: Number(Math.max(0.55, 1.0 + baseEl * (ori === 90 && lof > 0.95 ? 1.0 : eff)).toFixed(4)),
+    residualStressFactor: residualStressFactor,
+    hipAttenuation: hipAtten,
+    rotationTextureFactor: rotFactor
+  };
+}
+function evaluateTi64Metallurgy(input) {
+  const inp = input || {};
+  const post = _normTi64Post(inp.postProcessing);
+  const oxygen = computeOxygenAndReuseEffects(inp);
+  const lath = computeAlphaLathKinetics(inp.coolingRateKs, post, oxygen.effectiveOxygenWtPct);
+  const anisotropy = computeOrientationAnisotropy(inp.buildOrientationDeg, inp.scanRotationDeg, post, inp.lofIndex);
+  const hallPetchIncrementMpa = Number((220.0 * lath.invSqrtLathUm).toFixed(1));
+  const rawIsoYs = oxygen.sigma0Mpa + hallPetchIncrementMpa + lath.precipitationBoostMpa;
+  const hallPetchYieldStrengthMpa = Math.round(rawIsoYs * anisotropy.ysFactor);
+  const utsToYsRatio = post === 'None' ? 1.07 : (post === 'Stress-relieved' ? 1.08 : (post === 'Solution-Aged' || post === 'Bi-modal' ? 1.07 : 1.09));
+  const taborFactor = post === 'None' ? 3.02 : (post === 'Stress-relieved' ? 3.00 : (post === 'Annealed' ? 2.98 : (post === 'HIP' ? 2.95 : 3.05)));
+  const predictedUtsMpa = Math.round(hallPetchYieldStrengthMpa * utsToYsRatio * (anisotropy.utsFactor / Math.max(0.5, anisotropy.ysFactor)));
+  const predictedHv = Math.round(predictedUtsMpa / taborFactor);
+  const baseKic = post === 'HIP' ? 76.0 : (post === 'Annealed' ? 68.0 : (post === 'Stress-relieved' ? 54.0 : (post === 'Bi-modal' ? 72.0 : (post === 'Solution-Aged' ? 58.0 : 42.0))));
+  const lathBoost = Math.min(1.18, 0.90 + 0.08 * Math.sqrt(lath.alphaLathWidthUm));
+  const denPen = Number.isFinite(Number(inp.densityPct)) ? Math.max(0.55, 1.0 - 0.14 * Math.max(0, 99.8 - Number(inp.densityPct))) : 1.0;
+  const predictedKicMpaM05 = Number((baseKic * lathBoost * oxygen.kicMultiplier * denPen).toFixed(1));
+  return { oxygen, lath, anisotropy, hallPetchIncrementMpa, hallPetchYieldStrengthMpa, predictedUtsMpa, predictedHv, taborFactor, utsToYsRatio, predictedKicMpaM05 };
+}
+window.computeOxygenAndReuseEffects = computeOxygenAndReuseEffects;
+window.computeAlphaLathKinetics = computeAlphaLathKinetics;
+window.computeOrientationAnisotropy = computeOrientationAnisotropy;
+window.evaluateTi64Metallurgy = evaluateTi64Metallurgy;
+
+function onAlloyGradeChange() {
+  const alloyEl = document.getElementById('alloySelect');
+  const o2Sl = document.getElementById('sl_oxygen');
+  const reuseSl = document.getElementById('sl_reuse');
+  const autoChk = document.getElementById('chk_auto_reuse');
+  const alloyId = alloyEl ? alloyEl.value : 'ti64_gr5';
+  const reuse = reuseSl ? parseInt(reuseSl.value, 10) : 0;
+  const proc = (typeof currentProcess !== 'undefined') ? currentProcess : 'lpbf';
+  if (o2Sl) {
+    if (!autoChk || autoChk.checked || reuse === 0) {
+      const eff = computeOxygenAndReuseEffects({ alloyId, processId: proc, powderReuseCycles: reuse, autoCoupleReuse: true });
+      o2Sl.value = eff.effectiveOxygenWtPct.toFixed(3);
+    }
+  }
+  updateAll();
+}
+function onReuseSliderChange() {
+  const reuseSl = document.getElementById('sl_reuse');
+  const reuseVal = document.getElementById('val_reuse');
+  const o2Sl = document.getElementById('sl_oxygen');
+  const autoChk = document.getElementById('chk_auto_reuse');
+  const alloyEl = document.getElementById('alloySelect');
+  const cycles = reuseSl ? parseInt(reuseSl.value, 10) : 0;
+  if (reuseVal) reuseVal.innerText = cycles + (cycles === 1 ? ' cycle' : ' cycles');
+  if (autoChk && autoChk.checked && o2Sl) {
+    const proc = (typeof currentProcess !== 'undefined') ? currentProcess : 'lpbf';
+    const eff = computeOxygenAndReuseEffects({
+      alloyId: alloyEl ? alloyEl.value : 'ti64_gr5',
+      processId: proc,
+      powderReuseCycles: cycles,
+      autoCoupleReuse: true
+    });
+    o2Sl.value = eff.effectiveOxygenWtPct.toFixed(3);
+  }
+  updateAll();
+}
+function onOxygenSliderChange() {
+  const o2Sl = document.getElementById('sl_oxygen');
+  const autoChk = document.getElementById('chk_auto_reuse');
+  // Allow manual oxygen exploration without being overwritten by reuse auto-coupling
+  if (autoChk && autoChk.checked) autoChk.checked = false;
+  const valEl = document.getElementById('val_oxygen');
+  if (o2Sl && valEl) valEl.innerText = parseFloat(o2Sl.value).toFixed(3) + ' wt%';
+  updateAll();
+}
+window.onAlloyGradeChange = onAlloyGradeChange;
+window.onReuseSliderChange = onReuseSliderChange;
+window.onOxygenSliderChange = onOxygenSliderChange;
+
+// ========================================================
+// PHASE 3: LIVE Ti-6Al-4V CCT, STRESS-STRAIN & MURAKAMI S-N SOLVERS
+// ========================================================
+var stressStrainMode = 'engineering';
+var showCurvesOverlay = true;
+
+function _clampFiniteP3(val, min, max, fallback) {
+  return Number.isFinite(Number(val)) ? Math.max(min, Math.min(max, Number(val))) : fallback;
+}
+
+function computeTi64PhaseFractions(coolingRateKs, postProcessing) {
+  const rate = _clampFiniteP3(coolingRateKs, 1e-3, 1e8, 4.8e5);
+  const exceedsCritical410Ks = rate >= 410.0;
+  const crossesDiffusionalNose = rate < 410.0;
+  const logRate = Math.log10(Math.max(1e-3, rate));
+  const quenchPot = 90.0 / (1.0 + Math.exp(-2.1 * (logRate - Math.log10(145.0))));
+  const post = String(postProcessing || 'None').toLowerCase().trim();
+  let alphaPrimePct = 0;
+  let retainedBetaPct = 6.0;
+  let regimeDescription = '';
+
+  if (post === 'hip' || post.includes('anneal')) {
+    alphaPrimePct = 0.0;
+    retainedBetaPct = post === 'hip' ? 10.5 : 9.5;
+    regimeDescription = post === 'hip' ? 'HIP α+β Equil.' : 'Annealed α+β';
+  } else if (post.includes('stress')) {
+    alphaPrimePct = Number((quenchPot * 0.34).toFixed(1));
+    retainedBetaPct = 7.8;
+    regimeDescription = alphaPrimePct > 15 ? 'Tempered α\' + α+β' : 'Stress-Relieved α+β';
+  } else if (post.includes('bi-modal') || post.includes('solution') || post === 'sta') {
+    alphaPrimePct = Number((quenchPot * 0.14).toFixed(1));
+    retainedBetaPct = 9.0;
+    regimeDescription = 'Bi-Modal α_p + α_s';
+  } else {
+    alphaPrimePct = Number(quenchPot.toFixed(1));
+    retainedBetaPct = rate >= 410 ? 5.5 : 8.5;
+    regimeDescription = rate >= 410 ? 'Martensitic α\' Quench' : (rate >= 20 ? 'Mixed α\' + α+β' : 'Widmanstätten α+β');
+  }
+  const lamellarRaw = Math.max(0, 100.0 - alphaPrimePct - retainedBetaPct);
+  const sum = alphaPrimePct + lamellarRaw + retainedBetaPct;
+  const lamellarAlphaPct = Number((lamellarRaw + (100.0 - sum)).toFixed(1));
+  return { alphaPrimePct, lamellarAlphaPct, retainedBetaPct, regimeDescription, crossesDiffusionalNose, exceedsCritical410Ks };
+}
+window.computeTi64PhaseFractions = computeTi64PhaseFractions;
+
+function computeCctDiagramData(input) {
+  const inp = input || {};
+  const betaTransusC = _clampFiniteP3(inp.betaTransusC, 965, 1020, 995.0);
+  const preheatTempC = _clampFiniteP3(inp.preheatTempC, 20, 750, 200.0);
+  const coolingRateKs = _clampFiniteP3(inp.coolingRateKs, 1e-3, 1e8, 4.8e5);
+
+  function buildCoolPath(rateKs) {
+    const safeRate = Math.max(1e-3, rateKs);
+    const span = Math.max(50, betaTransusC - preheatTempC);
+    const tau = span / safeRate;
+    const pts = [];
+    for (let i = 0; i <= 48; i++) {
+      const logTime = -3.0 + (i / 48) * 7.0;
+      const timeSec = Math.pow(10, logTime);
+      const tempC = preheatTempC + span * Math.exp(-Math.min(60, timeSec / Math.max(1e-9, tau)));
+      pts.push({ timeSec, logTime, tempC: Math.max(200, Math.min(1080, tempC)) });
+    }
+    return pts;
+  }
+
+  function buildNose(apexLogT, widthScale) {
+    const pts = [];
+    const tMin = 590.0, tMax = betaTransusC - 8.0, tNose = 825.0;
+    for (let i = 0; i <= 36; i++) {
+      const tempC = tMax - (i / 36) * (tMax - tMin);
+      const normDelta = (tempC - tNose) / (tMax - tNose);
+      const logTime = Math.max(-2.8, Math.min(3.95, apexLogT + widthScale * normDelta * normDelta));
+      pts.push({ timeSec: Math.pow(10, logTime), logTime, tempC });
+    }
+    return pts;
+  }
+
+  return {
+    betaTransusC,
+    msTempC: 780.0,
+    mfTempC: 575.0,
+    criticalRateKs: 410.0,
+    coolingRateKs,
+    trajectory: buildCoolPath(coolingRateKs),
+    critical410Trajectory: buildCoolPath(410.0),
+    alphaStartNose: buildNose(-0.26, 2.35),
+    alphaFinishNose: buildNose(1.05, 2.25),
+    phases: computeTi64PhaseFractions(coolingRateKs, inp.postProcessing)
+  };
+}
+window.computeCctDiagramData = computeCctDiagramData;
+
+function inferActiveDefectProfile(params) {
+  const p = params || {};
+  const post = String(p.postProcessing || 'HIP').toLowerCase().trim();
+  const isHip = post === 'hip';
+  const density = _clampFiniteP3(p.densityPct, 85, 99.99, 99.85);
+  const lof = _clampFiniteP3(p.lofIndex, 0.1, 5.0, 0.72);
+  const kh = _clampFiniteP3(p.keyholeRatio, 0.1, 5.0, 0.36);
+
+  let defectType = p.defectTypeOverride || (lof > 1.0 ? 'lof' : (kh > 1.0 ? 'keyhole_pore' : (!isHip && density < 99.90 ? 'gas_pore' : 'none')));
+  let baseDiam = 14.0;
+  if (defectType === 'lof') baseDiam = 78.0 + Math.min(180.0, Math.max(0, lof - 1.0) * 145.0 + (100 - density) * 18.0);
+  else if (defectType === 'keyhole_pore') baseDiam = 42.0 + Math.min(110.0, Math.max(0, kh - 1.0) * 85.0 + (100 - density) * 12.0);
+  else if (defectType === 'gas_pore') baseDiam = 22.0 + Math.min(35.0, Math.max(0, 99.9 - density) * 28.0);
+  else baseDiam = isHip ? 12.0 : 20.0;
+
+  const hipReduction = isHip ? (defectType === 'lof' ? 0.38 : 0.60) : 1.0;
+  const maxDefectSizeUm = Number(_clampFiniteP3(p.maxDefectSizeUmOverride !== undefined ? p.maxDefectSizeUmOverride : baseDiam * hipReduction, 8.0, 350.0, 16.0).toFixed(1));
+  const shapeFactor = defectType === 'lof' ? 1.48 : (defectType === 'keyhole_pore' ? 1.18 : (defectType === 'gas_pore' ? 1.00 : 0.92));
+  const sqrtAreaUm = Number((shapeFactor * (Math.sqrt(Math.PI) / 2.0) * maxDefectSizeUm).toFixed(1));
+  const label = defectType === 'lof' ? 'Lack-of-Fusion Flaw' : (defectType === 'keyhole_pore' ? 'Keyhole Pore' : (defectType === 'gas_pore' ? 'Argon Gas Pore' : (isHip ? 'HIP Matrix Floor' : 'Dense Matrix')));
+  return { defectType, maxDefectSizeUm, sqrtAreaUm, shapeFactor, label };
+}
+window.inferActiveDefectProfile = inferActiveDefectProfile;
+
+function generateStressStrainCurve(input) {
+  const inp = input || {};
+  const ys = _clampFiniteP3(inp.yieldStrengthMpa, 300, 1600, 890);
+  const uts = Math.max(ys + 20, _clampFiniteP3(inp.utsMpa, 350, 1750, 985));
+  const elongPct = _clampFiniteP3(inp.elongationPct, 1.2, 26.0, 14.5);
+  const E_GPa = _clampFiniteP3(inp.youngsModulusGpa || 113.8, 80, 130, 113.8);
+  const E_MPa = E_GPa * 1000.0;
+  const epsF = elongPct / 100.0;
+  const epsU = Math.max(ys / E_MPa + 0.004, epsF * (elongPct >= 10.0 ? 0.62 : 0.72));
+  const epsYieldTot = ys / E_MPa + 0.002;
+  const trueUts = uts * (1.0 + epsU);
+  const trueEpsPU = Math.max(0.004, Math.log(1.0 + epsU) - trueUts / E_MPa);
+  const rawN = Math.log(Math.max(1.01, trueUts / ys)) / Math.log(Math.max(1.5, trueEpsPU / 0.002));
+  const strainHardeningN = Number(_clampFiniteP3(rawN, 0.025, 0.22, 0.075).toFixed(4));
+  const K = trueUts / Math.pow(Math.max(1e-4, trueEpsPU), strainHardeningN);
+
+  const pts = [{ engStrainPct: 0, engStressMpa: 0, trueStrainPct: 0, trueStressMpa: 0 }];
+  const propS = ys * 0.88, propE = propS / E_MPa;
+  for (let i = 1; i <= 6; i++) {
+    const f = i / 6, e = propE * f, s = propS * f;
+    pts.push({ engStrainPct: e * 100, engStressMpa: s, trueStrainPct: Math.log(1 + e) * 100, trueStressMpa: s * (1 + e) });
+  }
+  const span = Math.max(0.004, epsF - propE);
+  for (let i = 1; i <= 44; i++) {
+    const engEps = propE + (i / 44) * span;
+    const trueEps = Math.log(1.0 + engEps);
+    let engS, trueS;
+    if (engEps <= epsYieldTot) {
+      const u = _clampFiniteP3((engEps - propE) / Math.max(1e-6, epsYieldTot - propE), 0, 1, 1);
+      engS = propS + (u * u * (3 - 2 * u)) * (ys - propS);
+      trueS = engS * (1.0 + engEps);
+    } else if (engEps <= epsU) {
+      const epsP = Math.max(0.002, trueEps - ys / E_MPa);
+      const hTrue = Math.min(trueUts, K * Math.pow(epsP, strainHardeningN));
+      const u = _clampFiniteP3((engEps - epsYieldTot) / Math.max(1e-6, epsU - epsYieldTot), 0, 1, 1);
+      engS = ys + Math.pow(u, 0.72) * (uts - ys);
+      trueS = Math.max(engS * (1 + engEps), hTrue);
+    } else {
+      const u = _clampFiniteP3((engEps - epsU) / Math.max(1e-6, epsF - epsU), 0, 1, 1);
+      const neckDrop = elongPct >= 10.0 ? 0.14 : 0.06;
+      engS = uts * (1.0 - neckDrop * Math.pow(u, 1.65));
+      trueS = trueUts * (1.0 + 0.09 * Math.pow(u, 0.85));
+    }
+    pts.push({
+      engStrainPct: Number((engEps * 100).toFixed(3)),
+      engStressMpa: Number(_clampFiniteP3(engS, 0, 2200, ys).toFixed(1)),
+      trueStrainPct: Number((trueEps * 100).toFixed(3)),
+      trueStressMpa: Number(_clampFiniteP3(trueS, 0, 2500, uts).toFixed(1))
+    });
+  }
+  return { points: pts, yieldStrengthMpa: Math.round(ys), utsMpa: Math.round(uts), elongationPct: Number(elongPct.toFixed(1)), strainHardeningN, youngsModulusGpa: E_GPa };
+}
+window.generateStressStrainCurve = generateStressStrainCurve;
+
+function computeMurakamiSnFatigueCurve(input) {
+  const inp = input || {};
+  const hv = _clampFiniteP3(inp.hv, 200, 600, 340);
+  const uts = _clampFiniteP3(inp.utsMpa, 400, 1750, 990);
+  const resStress = _clampFiniteP3(inp.surfaceResidualStressMpa, -400, 800, 35);
+  const profile = inferActiveDefectProfile({ postProcessing: 'None', densityPct: 99.8, lofIndex: 0.7, keyholeRatio: 0.4, defectTypeOverride: inp.defectType, maxDefectSizeUmOverride: inp.maxDefectSizeUm });
+  const cLoc = inp.isSurfaceDefect === false ? 1.56 : 1.43;
+  const murakamiRaw = (cLoc * (hv + 120.0)) / Math.pow(Math.max(8.0, profile.sqrtAreaUm), 1.0 / 6.0);
+  const goodmanFactor = _clampFiniteP3(1.0 - resStress / (2.15 * uts), 0.42, 1.08, 1.0);
+  const enduranceLimitMpa = Number(_clampFiniteP3(murakamiRaw * goodmanFactor, 120, uts * 0.72, 400).toFixed(1));
+  const stressAt1e4Mpa = Number(Math.max(enduranceLimitMpa + 40, uts * 0.86).toFixed(1));
+  const basquinSlopeB = Number(_clampFiniteP3(Math.log10(stressAt1e4Mpa / enduranceLimitMpa) / 3.0, 0.02, 0.28, 0.10).toFixed(4));
+  const pts = [];
+  for (let i = 0; i <= 32; i++) {
+    const logCycles = 4.0 + (i / 32) * 4.0;
+    const cycles = Math.pow(10, logCycles);
+    const stressAmp = logCycles <= 7.0
+      ? stressAt1e4Mpa * Math.pow(cycles / 1e4, -basquinSlopeB)
+      : enduranceLimitMpa * Math.pow(cycles / 1e7, -0.008);
+    pts.push({ cycles: Math.round(cycles), logCycles, stressAmplitudeMpa: Number(_clampFiniteP3(stressAmp, 80, 1800, enduranceLimitMpa).toFixed(1)) });
+  }
+  return { points: pts, murakamiLimitRawMpa: Number(murakamiRaw.toFixed(1)), enduranceLimitMpa, sqrtAreaUm: profile.sqrtAreaUm, stressAt1e4Mpa, basquinSlopeB, defectProfile: profile };
+}
+window.computeMurakamiSnFatigueCurve = computeMurakamiSnFatigueCurve;
+
+function setStressStrainMode(mode) {
+  stressStrainMode = (mode === 'true') ? 'true' : 'engineering';
+  const bEng = document.getElementById('btnSsEng');
+  const bTrue = document.getElementById('btnSsTrue');
+  if (bEng) bEng.classList.toggle('active', stressStrainMode === 'engineering');
+  if (bTrue) bTrue.classList.toggle('active', stressStrainMode === 'true');
+  renderTi64Phase3Curves(window.latestPhysicsState);
+}
+window.setStressStrainMode = setStressStrainMode;
+
+function toggleCurvesOverlay() {
+  showCurvesOverlay = !showCurvesOverlay;
+  const btn = document.getElementById('btnCurvesOverlay');
+  if (btn) btn.classList.toggle('active', showCurvesOverlay);
+  renderTi64Phase3Curves(window.latestPhysicsState);
+}
+window.toggleCurvesOverlay = toggleCurvesOverlay;
+
+function _setP3Txt(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.innerText = val;
+}
+
+function renderTi64Phase3Curves(physInput) {
+  const st = physInput || window.latestPhysicsState || {};
+  const post = st.post || 'HIP';
+  const coolingRate = Number.isFinite(Number(st.coolingRate)) ? Number(st.coolingRate) : 4.8e5;
+  const betaTransusC = Number.isFinite(Number(st.betaTransusC)) ? Number(st.betaTransusC) : 995.0;
+  const preheat = Number.isFinite(Number(st.preheat)) ? Number(st.preheat) : (parseFloat(document.getElementById('sl_preheat')?.value) || 200);
+  const ys = Number.isFinite(Number(st.yieldStrength)) ? Number(st.yieldStrength) : 906;
+  const uts = Number.isFinite(Number(st.tensileStrength)) ? Number(st.tensileStrength) : 988;
+  const elong = Number.isFinite(Number(st.elongationPct)) ? Number(st.elongationPct) : 14.5;
+  const hv = Number.isFinite(Number(st.hv)) ? Number(st.hv) : (window.latestModelResults?.find(m => m.id === (window.activeModelId || 'ensemble'))?.predictedHv || 335);
+  const densityPct = Number.isFinite(Number(st.densityPct)) ? Number(st.densityPct) : 99.98;
+  const lofIndex = Number.isFinite(Number(st.lofIndex)) ? Number(st.lofIndex) : 0.72;
+  const keyholeRatio = Number.isFinite(Number(st.keyholeRatio)) ? Number(st.keyholeRatio) : 0.36;
+  const surfStress = (st.stressField && Number.isFinite(st.stressField.peakSurfaceStressMpa)) ? st.stressField.peakSurfaceStressMpa : (Number.isFinite(Number(st.residualStress)) ? Number(st.residualStress) : 38);
+
+  // 1. Render CCT Diagram
+  const cct = computeCctDiagramData({ coolingRateKs: coolingRate, betaTransusC, preheatTempC: preheat, postProcessing: post });
+  const cctSvg = document.getElementById('cctSvg');
+  if (cctSvg) {
+    const padL = 46, padR = 14, padT = 18, padB = 34;
+    const pW = 420 - padL - padR, pH = 260 - padT - padB;
+    const toCctX = (lg) => padL + _clampFiniteP3((lg - (-3)) / 7.0, 0, 1, 0) * pW;
+    const toCctY = (tC) => padT + (1.0 - _clampFiniteP3((tC - 200) / 900.0, 0, 1, 0)) * pH;
+    const toPath = (pts) => pts.map((pt, i) => `${i === 0 ? 'M' : 'L'}${toCctX(pt.logTime).toFixed(1)},${toCctY(pt.tempC).toFixed(1)}`).join(' ');
+    const tbY = toCctY(cct.betaTransusC), msY = toCctY(cct.msTempC), mfY = toCctY(cct.mfTempC);
+    const noseFillPts = cct.alphaStartNose.map(pt => `${toCctX(pt.logTime).toFixed(1)},${toCctY(pt.tempC).toFixed(1)}`).concat(
+      cct.alphaFinishNose.slice().reverse().map(pt => `${toCctX(pt.logTime).toFixed(1)},${toCctY(pt.tempC).toFixed(1)}`)
+    ).join(' ');
+    let gridHtml = '';
+    [-3, -2, -1, 0, 1, 2, 3, 4].forEach(lg => {
+      const gx = toCctX(lg).toFixed(1);
+      gridHtml += `<line x1="${gx}" y1="${padT}" x2="${gx}" y2="${padT + pH}" stroke="#1e293b" stroke-width="1"/><text x="${gx}" y="${padT + pH + 14}" fill="#64748b" font-size="9" text-anchor="middle" font-family="monospace">10^${lg}</text>`;
+    });
+    [300, 500, 700, 900, 1050].forEach(tC => {
+      const gy = toCctY(tC).toFixed(1);
+      gridHtml += `<line x1="${padL}" y1="${gy}" x2="${padL + pW}" y2="${gy}" stroke="#1e293b" stroke-width="1"/><text x="${padL - 5}" y="${Number(gy) + 3}" fill="#64748b" font-size="9" text-anchor="end" font-family="monospace">${tC}°</text>`;
+    });
+    const trajCol = cct.phases.exceedsCritical410Ks ? '#f43f5e' : '#34d399';
+    cctSvg.innerHTML = `
+      ${gridHtml}
+      <polygon points="${noseFillPts}" fill="rgba(56,189,248,0.12)" stroke="none"/>
+      <path d="${toPath(cct.alphaStartNose)}" fill="none" stroke="#38bdf8" stroke-width="1.8"/>
+      <path d="${toPath(cct.alphaFinishNose)}" fill="none" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <line x1="${padL}" y1="${tbY.toFixed(1)}" x2="${padL + pW}" y2="${tbY.toFixed(1)}" stroke="#fbbf24" stroke-width="1.3" stroke-dasharray="5 3"/>
+      <text x="${padL + 6}" y="${(tbY - 4).toFixed(1)}" fill="#fbbf24" font-size="9" font-family="monospace">Tβ(O₂) ${cct.betaTransusC.toFixed(0)}°C</text>
+      <line x1="${padL}" y1="${msY.toFixed(1)}" x2="${padL + pW}" y2="${msY.toFixed(1)}" stroke="#f87171" stroke-width="1.1" stroke-dasharray="3 3"/>
+      <text x="${padL + pW - 4}" y="${(msY - 4).toFixed(1)}" fill="#f87171" font-size="8.5" text-anchor="end" font-family="monospace">Ms 780°C (α')</text>
+      <line x1="${padL}" y1="${mfY.toFixed(1)}" x2="${padL + pW}" y2="${mfY.toFixed(1)}" stroke="#a78bfa" stroke-width="1" stroke-dasharray="2 3"/>
+      <text x="${padL + pW - 4}" y="${(mfY - 4).toFixed(1)}" fill="#a78bfa" font-size="8.5" text-anchor="end" font-family="monospace">Mf 575°C</text>
+      <path d="${toPath(cct.critical410Trajectory)}" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <text x="${toCctX(-0.05).toFixed(1)}" y="${(padT + pH - 12).toFixed(1)}" fill="#94a3b8" font-size="8.5" font-family="monospace">410 K/s crit.</text>
+      <text x="${toCctX(1.3).toFixed(1)}" y="${toCctY(830).toFixed(1)}" fill="#38bdf8" font-size="9" font-weight="700" font-family="monospace">α + β</text>
+      <path d="${toPath(cct.trajectory)}" fill="none" stroke="${trajCol}" stroke-width="2.6"/>
+      <text x="${padL + pW / 2}" y="${256}" fill="#94a3b8" font-size="9.5" text-anchor="middle" font-family="sans-serif">Log Cooling Time (s)</text>
+    `;
+  }
+  _setP3Txt('cctRegimeBadge', cct.phases.regimeDescription);
+  _setP3Txt('cctAlphaPrimeBadge', `α': ${cct.phases.alphaPrimePct.toFixed(1)}%`);
+  _setP3Txt('cctLamellarBadge', `Lamellar α: ${cct.phases.lamellarAlphaPct.toFixed(1)}%`);
+  _setP3Txt('cctBetaBadge', `Retained β: ${cct.phases.retainedBetaPct.toFixed(1)}%`);
+
+  // 2. Render Stress-Strain Curve (with Counterfactual Overlay)
+  const isTrue = stressStrainMode === 'true';
+  const curSs = generateStressStrainCurve({ yieldStrengthMpa: ys, utsMpa: uts, elongationPct: elong });
+  const isAsBuilt = (post === 'None' || post === 'As-Built');
+  const compLabel = isAsBuilt ? 'HIP Reference' : 'As-Built Reference';
+  const compMet = typeof evaluateTi64Metallurgy === 'function'
+    ? evaluateTi64Metallurgy({
+        alloyId: st.alloyId || 'ti64_gr5',
+        processId: st.process || (typeof currentProcess !== 'undefined' ? currentProcess : 'lpbf'),
+        coolingRateKs: coolingRate,
+        postProcessing: isAsBuilt ? 'HIP' : 'None',
+        oxygenWtPct: st.o2Content,
+        buildOrientationDeg: st.buildOrientationDeg,
+        scanRotationDeg: st.scanRotationDeg,
+        lofIndex, densityPct
+      })
+    : null;
+  const compSs = generateStressStrainCurve({
+    yieldStrengthMpa: compMet ? compMet.hallPetchYieldStrengthMpa : (isAsBuilt ? 895 : 1120),
+    utsMpa: compMet ? compMet.predictedUtsMpa : (isAsBuilt ? 980 : 1220),
+    elongationPct: isAsBuilt ? 15.2 : 6.8
+  });
+
+  const ssSvg = document.getElementById('stressStrainSvg');
+  if (ssSvg) {
+    const padL = 46, padR = 14, padT = 18, padB = 34;
+    const pW = 420 - padL - padR, pH = 260 - padT - padB;
+    const maxEps = Math.max(18, Math.ceil(Math.max(curSs.elongationPct, showCurvesOverlay ? compSs.elongationPct : 0) / 2) * 2 + 2);
+    const maxSig = Math.max(1400, Math.ceil(Math.max(curSs.utsMpa * 1.15, showCurvesOverlay ? compSs.utsMpa * 1.15 : 0) / 200) * 200);
+    const toSx = (e) => padL + _clampFiniteP3(e / maxEps, 0, 1, 0) * pW;
+    const toSy = (s) => padT + (1.0 - _clampFiniteP3(s / maxSig, 0, 1, 0)) * pH;
+    const ssPath = (curve) => curve.points.map((pt, i) => {
+      const e = isTrue ? pt.trueStrainPct : pt.engStrainPct;
+      const s = isTrue ? pt.trueStressMpa : pt.engStressMpa;
+      return `${i === 0 ? 'M' : 'L'}${toSx(e).toFixed(1)},${toSy(s).toFixed(1)}`;
+    }).join(' ');
+    let gridHtml = '';
+    for (let e = 0; e <= maxEps; e += Math.max(4, Math.round(maxEps / 5))) {
+      const gx = toSx(e).toFixed(1);
+      gridHtml += `<line x1="${gx}" y1="${padT}" x2="${gx}" y2="${padT + pH}" stroke="#1e293b" stroke-width="1"/><text x="${gx}" y="${padT + pH + 14}" fill="#64748b" font-size="9" text-anchor="middle" font-family="monospace">${e}%</text>`;
+    }
+    [400, 800, 1200].filter(s => s <= maxSig).forEach(s => {
+      const gy = toSy(s).toFixed(1);
+      gridHtml += `<line x1="${padL}" y1="${gy}" x2="${padL + pW}" y2="${gy}" stroke="#1e293b" stroke-width="1"/><text x="${padL - 5}" y="${Number(gy) + 3}" fill="#64748b" font-size="9" text-anchor="end" font-family="monospace">${s}</text>`;
+    });
+    const lastPt = curSs.points[curSs.points.length - 1];
+    const endX = toSx(isTrue ? lastPt.trueStrainPct : lastPt.engStrainPct).toFixed(1);
+    const endY = toSy(isTrue ? lastPt.trueStressMpa : lastPt.engStressMpa).toFixed(1);
+    ssSvg.innerHTML = `
+      ${gridHtml}
+      ${showCurvesOverlay ? `<path d="${ssPath(compSs)}" fill="none" stroke="#fbbf24" stroke-width="1.6" stroke-dasharray="4 3" opacity="0.8"/>` : ''}
+      <path d="${ssPath(curSs)}" fill="none" stroke="#38bdf8" stroke-width="2.6"/>
+      <circle cx="${endX}" cy="${endY}" r="3.5" fill="#38bdf8"/>
+      <text x="${padL + pW / 2}" y="${256}" fill="#94a3b8" font-size="9.5" text-anchor="middle" font-family="sans-serif">${isTrue ? 'True Strain (%)' : 'Engineering Strain (%)'}</text>
+      <text x="12" y="${padT + pH / 2}" fill="#94a3b8" font-size="9.5" text-anchor="middle" transform="rotate(-90 12 ${padT + pH / 2})" font-family="sans-serif">Stress (MPa)</text>
+    `;
+  }
+  _setP3Txt('ssChartTitle', isTrue ? 'Tensile Stress-Strain (True σ–ε)' : 'Tensile Stress-Strain (Engineering σ–ε)');
+  _setP3Txt('ssSummaryBadge', `YS ${curSs.yieldStrengthMpa} | UTS ${curSs.utsMpa} | El ${curSs.elongationPct.toFixed(1)}%`);
+  _setP3Txt('ssLegendCompare', showCurvesOverlay ? `-- ${compLabel}` : 'Overlay OFF');
+  _setP3Txt('ssHardeningTag', `n = ${curSs.strainHardeningN.toFixed(3)} | E = 113.8 GPa`);
+
+  // 3. Render Murakami S-N Fatigue Curve
+  const defectProf = inferActiveDefectProfile({ postProcessing: post, densityPct, lofIndex, keyholeRatio });
+  const curSn = computeMurakamiSnFatigueCurve({
+    hv, utsMpa: uts, surfaceResidualStressMpa: surfStress,
+    defectType: defectProf.defectType, maxDefectSizeUm: defectProf.maxDefectSizeUm
+  });
+  // Counterfactual S-N reference: if currently HIP/low-defect, compare vs As-Built LOF (~120 um, +380 MPa); else compare vs HIP floor (~12 um, +35 MPa)
+  const isCleanHip = (post === 'HIP' && defectProf.maxDefectSizeUm < 25);
+  const compSn = computeMurakamiSnFatigueCurve(isCleanHip
+    ? { hv: 395, utsMpa: 1180, surfaceResidualStressMpa: 380, defectType: 'lof', maxDefectSizeUm: 120 }
+    : { hv: 335, utsMpa: 985, surfaceResidualStressMpa: 35, defectType: 'none', maxDefectSizeUm: 12 }
+  );
+
+  const snSvg = document.getElementById('snFatigueSvg');
+  if (snSvg) {
+    const padL = 46, padR = 14, padT = 18, padB = 34;
+    const pW = 420 - padL - padR, pH = 260 - padT - padB;
+    const maxS = 1200, minS = 100;
+    const toNx = (lc) => padL + _clampFiniteP3((lc - 4.0) / 4.0, 0, 1, 0) * pW;
+    const toNy = (s) => padT + (1.0 - _clampFiniteP3((s - minS) / (maxS - minS), 0, 1, 0)) * pH;
+    const snPath = (res) => res.points.map((pt, i) => `${i === 0 ? 'M' : 'L'}${toNx(pt.logCycles).toFixed(1)},${toNy(pt.stressAmplitudeMpa).toFixed(1)}`).join(' ');
+    let gridHtml = '';
+    [4, 5, 6, 7, 8].forEach(lc => {
+      const gx = toNx(lc).toFixed(1);
+      gridHtml += `<line x1="${gx}" y1="${padT}" x2="${gx}" y2="${padT + pH}" stroke="#1e293b" stroke-width="1"/><text x="${gx}" y="${padT + pH + 14}" fill="#64748b" font-size="9" text-anchor="middle" font-family="monospace">10^${lc}</text>`;
+    });
+    [200, 400, 600, 800, 1000].forEach(s => {
+      const gy = toNy(s).toFixed(1);
+      gridHtml += `<line x1="${padL}" y1="${gy}" x2="${padL + pW}" y2="${gy}" stroke="#1e293b" stroke-width="1"/><text x="${padL - 5}" y="${Number(gy) + 3}" fill="#64748b" font-size="9" text-anchor="end" font-family="monospace">${s}</text>`;
+    });
+    const kneeY = toNy(curSn.enduranceLimitMpa).toFixed(1);
+    snSvg.innerHTML = `
+      ${gridHtml}
+      ${showCurvesOverlay ? `<path d="${snPath(compSn)}" fill="none" stroke="${isCleanHip ? '#f43f5e' : '#34d399'}" stroke-width="1.6" stroke-dasharray="4 3" opacity="0.85"/>` : ''}
+      <line x1="${padL}" y1="${kneeY}" x2="${padL + pW}" y2="${kneeY}" stroke="rgba(52,211,153,0.4)" stroke-width="1" stroke-dasharray="2 3"/>
+      <path d="${snPath(curSn)}" fill="none" stroke="#34d399" stroke-width="2.6"/>
+      <circle cx="${toNx(7.0).toFixed(1)}" cy="${kneeY}" r="3.5" fill="#34d399"/>
+      <text x="${padL + pW / 2}" y="${256}" fill="#94a3b8" font-size="9.5" text-anchor="middle" font-family="sans-serif">Cycles to Failure N (Log Scale)</text>
+      <text x="12" y="${padT + pH / 2}" fill="#94a3b8" font-size="9.5" text-anchor="middle" transform="rotate(-90 12 ${padT + pH / 2})" font-family="sans-serif">Cyclic Stress σ_a (MPa)</text>
+    `;
+  }
+  _setP3Txt('snEnduranceVal', `Endurance: ${Math.round(curSn.enduranceLimitMpa)} MPa`);
+  _setP3Txt('snDefectBadge', `d_max=${defectProf.maxDefectSizeUm} µm · √area=${defectProf.sqrtAreaUm} µm (${defectProf.label})`);
+  _setP3Txt('snCompareBadge', showCurvesOverlay ? (isCleanHip ? `-- As-Built LOF (${Math.round(compSn.enduranceLimitMpa)} MPa)` : `-- HIP Floor (${Math.round(compSn.enduranceLimitMpa)} MPa)`) : 'Overlay OFF');
+}
+window.renderTi64Phase3Curves = renderTi64Phase3Curves;
+
+// ========================================================
+// PHASE 4: INVERSE PARETO SOLVER & NIT LAB CSV CALIBRATION
+// ========================================================
+var lastInverseCandidates = [];
+var uploadedLabCoupons = [];
+var labCalibrationSummary = null;
+var useLabBiasCorrection = false;
+
+var SAMPLE_LAB_CSV_TEMPLATE = [
+  'sample_id,process,P_W,v_mm_s,h_um,t_um,T0_C,post_proc,measured_HV,measured_YS_MPa,measured_UTS_MPa,measured_elong_pct',
+  'NITT-LPBF-01,lpbf,280,960,110,40,200,HIP,342,912,996,14.8',
+  'NITT-LPBF-02,lpbf,320,1150,110,45,200,HIP,336,895,982,15.1',
+  'NITT-LPBF-03,lpbf,240,850,100,30,180,Stress-relieved,374,985,1072,10.2',
+  'NITT-LDED-01,ded-laser,1600,15,1200,450,100,HIP,326,872,960,15.6'
+].join('\n');
+
+function evaluateForwardTi64Candidate(params) {
+  const procId = params.processId;
+  const alloyId = params.alloyId || 'ti64_gr5';
+  const P = params.P, v = params.v, h = params.h, t = params.t, db = params.db, T0 = params.T0;
+  const post = params.postProcessing || 'HIP';
+  const oxygenWtPct = params.oxygenWtPct;
+  const ori = params.buildOrientationDeg || 0;
+  const rot = params.scanRotationDeg || 67;
+
+  const isWaam = procId === 'waam';
+  const isDed = procId === 'ded-laser';
+  const processDisplayName = isWaam ? 'WAAM' : (isDed ? 'L-DED' : 'LPBF');
+  const density = 4430, specificHeat = 670, k = 21.9, thermalDiffusivity = k / (density * specificHeat);
+  const eta = isWaam ? 0.78 : (isDed ? 0.38 : 0.42);
+  const deltaT = Math.max(50, 1660 - T0);
+  const ved = (P * 1e6) / Math.max(1, v * h * t);
+  const heatInputJmm = P / Math.max(0.5, v);
+  const vMs = Math.max(0.001, v / 1000.0);
+  const effP = P * eta;
+  const spotCm = Math.max(1e-3, db * 1e-4);
+  const intensityWcm2 = effP / (Math.PI * Math.pow(spotCm * 0.5, 2));
+  const widthEst = Math.sqrt((8 * effP) / (Math.PI * Math.E * density * specificHeat * deltaT * vMs));
+  const mpW = Math.round(Math.max(db * 0.5, widthEst * 1e6 * 0.75 + db * 0.4));
+
+  let mpD;
+  if (isWaam) {
+    mpD = Math.round(Math.max(t * 0.35, mpW * Math.min(0.55, 0.28 + 0.00045 * heatInputJmm)));
+  } else if (isDed) {
+    const baseAr = Math.min(0.65, 0.26 + 0.0012 * heatInputJmm);
+    const arDed = intensityWcm2 > 1.5e5 ? Math.min(1.6, baseAr + 0.35 * ((intensityWcm2 - 1.5e5) / 1.5e5)) : baseAr;
+    mpD = Math.round(Math.max(t * 0.30, mpW * arDed));
+  } else {
+    mpD = Math.round(Math.max(t * 0.2, mpW * 0.52 * Math.pow(Math.max(0.05, ved / 70.0), 0.25)));
+  }
+
+  let mpL;
+  if (isWaam || isDed) {
+    const peclet = (vMs * mpW * 1e-6) / (2.0 * Math.max(1e-8, thermalDiffusivity));
+    mpL = Math.round(mpW * Math.min(2.8, 1.15 + 0.25 * peclet));
+  } else {
+    mpL = Math.round(mpW * (1.2 + 0.0012 * v));
+  }
+
+  const accum = isWaam ? 0.45 : (isDed ? 0.15 : 0.0);
+  const rawCool = (2 * Math.PI * k * vMs * Math.pow(deltaT, 2)) / Math.max(5, effP);
+  const coolingRateKs = (isWaam || isDed) ? Math.max(1.0, rawCool * (1.0 - accum)) : Math.max(10, rawCool);
+  const penRatio = mpD / Math.max(1, t);
+  const mHole = Math.PI * density * specificHeat * deltaT * Math.sqrt(thermalDiffusivity * vMs * Math.pow(db * 1e-6, 3));
+  const normEnth = isWaam ? 0 : (isDed ? (intensityWcm2 > 1.5e5 ? (effP / Math.max(1e-6, mHole)) * 0.45 : 0) : (effP / Math.max(1e-6, mHole)) * 0.5863);
+  const lofIndex = isWaam ? Math.max(0.25, 120.0 / Math.max(1.0, heatInputJmm)) : (isDed ? Math.max(1.25 / Math.max(0.1, penRatio), 75.0 / Math.max(1.0, heatInputJmm)) : 1.35 / Math.max(0.1, penRatio));
+  const keyholeRatio = isWaam ? heatInputJmm / 600.0 : (isDed ? (intensityWcm2 > 1.5e5 ? Math.max(heatInputJmm / 240.0, normEnth / 26.0) : heatInputJmm / 240.0) : (normEnth / 8.5) * 0.53);
+  const ballingRatio = mpL / Math.max(1e-6, mpW * Math.PI);
+
+  let densityPct = 99.85 - (lofIndex > 1 ? (lofIndex - 1) * 8.5 : 0) - (keyholeRatio > 1 ? (keyholeRatio - 1) * 4.2 : 0) - (ballingRatio > 1 ? (ballingRatio - 1) * 6.0 : 0);
+  if (post === 'HIP') densityPct = Math.min(99.98, densityPct + 0.5);
+  densityPct = Number(Math.max(88.0, Math.min(99.98, densityPct)).toFixed(2));
+
+  const met = evaluateTi64Metallurgy({
+    alloyId, processId: procId, coolingRateKs, postProcessing: post,
+    oxygenWtPct, buildOrientationDeg: ori, scanRotationDeg: rot, lofIndex, densityPct
+  });
+  const refVed = isWaam ? 57.0 : (isDed ? 198.0 : 72.0);
+  const hvA = met.predictedHv;
+  const hvRf = Math.round(hvA * (1.0 + 0.010 * Math.log10(Math.max(1.0, coolingRateKs) / 1e4)));
+  const hvXgb = Math.round(hvA * (1.0 + 0.008 * Math.log10(Math.max(1.0, coolingRateKs) / 1e4)));
+  const hvSvm = Math.round(hvA * (1.012 - 0.005 * Math.abs(ved - refVed) / Math.max(25, refVed * 0.5)));
+  const hvGpr = Math.round(hvA * (1.008 - 0.004 * Math.abs(ved - refVed) / Math.max(25, refVed * 0.5)));
+  const predictedHv = Math.round((hvA + hvRf + hvXgb + hvSvm + hvGpr) / 5);
+  const utsMpa = Math.round(predictedHv * met.taborFactor);
+  const yieldStrengthMpa = Math.round(utsMpa / met.utsToYsRatio);
+
+  const asBuiltEl = isWaam ? 12.8 : (isDed ? 11.2 : 7.5);
+  const srEl = isWaam ? 14.0 : (isDed ? 12.2 : 9.8);
+  const baseElong = post === 'HIP' ? 16.2 : (post === 'Annealed' ? 13.0 : (post === 'Stress-relieved' ? srEl : (post === 'Solution-Aged' ? 14.5 : asBuiltEl)));
+  const poreKnock = Math.exp(-0.45 * Math.max(0, 100 - densityPct));
+  const lofPen = lofIndex > 1.0 ? Math.max(0.15, 1.0 - (lofIndex - 1.0) * 1.4) : 1.0;
+  const khPen = keyholeRatio > 1.0 ? Math.max(0.4, 1.0 - (keyholeRatio - 1.0) * 0.5) : 1.0;
+  const elongationPct = Number(Math.max(1.0, Math.min(22.0, baseElong * poreKnock * lofPen * khPen * met.oxygen.ductilityMultiplier * met.anisotropy.elongationFactor)).toFixed(1));
+
+  const thermScale = Math.pow(Math.max(1e4, coolingRateKs) / 480000, 0.08);
+  let residualStressMpa = 1085;
+  if (post === 'HIP') residualStressMpa = Math.max(10, Math.round(12 + yieldStrengthMpa * 0.003));
+  else if (post === 'Annealed') residualStressMpa = Math.max(20, Math.round(20 + yieldStrengthMpa * 0.010));
+  else if (post === 'Stress-relieved') residualStressMpa = Math.max(35, Math.round((35 + yieldStrengthMpa * 0.012) * thermScale));
+  else if (post === 'Solution-Aged') residualStressMpa = Math.max(30, Math.round(35 + yieldStrengthMpa * 0.006));
+  else residualStressMpa = Math.round(yieldStrengthMpa * (isWaam ? 0.72 : (isDed ? 0.82 : 1.06)) * thermScale);
+
+  const buildRateCm3H = Number(((v * h * t * 3600) / 1e9).toFixed(1));
+  const ood = evaluateOodRisk({ P, v, h, t, T0, ved: Number(ved.toFixed(1)) }, procId);
+  return {
+    processId: procId, processDisplayName, P, v, h, t, db, T0, postProcessing: post,
+    ved: Number(ved.toFixed(1)), heatInputJmm: Number(heatInputJmm.toFixed(0)), buildRateCm3H,
+    predictedHv, yieldStrengthMpa, utsMpa, elongationPct, densityPct, residualStressMpa,
+    coolingRateKs: Math.round(coolingRateKs), alphaLathWidthUm: met.lath.alphaLathWidthUm,
+    mahalanobisDistance: ood.mahalanobisDistance
+  };
+}
+window.evaluateForwardTi64Candidate = evaluateForwardTi64Candidate;
+
+function solveInverseTi64Recipes(rawConstraints) {
+  const tStart = Date.now();
+  const c = rawConstraints || {};
+  const minYsMpa = _clampFiniteP3(c.minYsMpa, 400, 1400, 850);
+  const minElongPct = _clampFiniteP3(c.minElongPct, 2, 22, 12.0);
+  const maxResidualStressMpa = _clampFiniteP3(c.maxResidualStressMpa, 10, 1200, 60);
+  const minBuildRateCm3H = _clampFiniteP3(c.minBuildRateCm3H, 0.5, 1000, 20.0);
+  const alloyId = (c.alloyId === 'ti64_eli') ? 'ti64_eli' : 'ti64_gr5';
+  const astmStd = (c.astmStandard === 'F3001') ? 'F3001' : 'F2924';
+  const scope = c.processScope || 'all';
+  const oxygenWtPct = Number.isFinite(Number(c.oxygenWtPct)) ? Number(c.oxygenWtPct) : (alloyId === 'ti64_eli' ? 0.11 : 0.16);
+  const ori = Number.isFinite(Number(c.buildOrientationDeg)) ? Number(c.buildOrientationDeg) : 0;
+  const rot = Number.isFinite(Number(c.scanRotationDeg)) ? Number(c.scanRotationDeg) : 67;
+
+  const o2Check = computeOxygenAndReuseEffects({ alloyId, oxygenWtPct });
+  if ((astmStd === 'F3001' && !o2Check.astmF3001OxygenPass) || (alloyId === 'ti64_gr5' && !o2Check.astmF2924OxygenPass)) {
+    return { feasibleCount: 0, evaluatedCount: 0, elapsedMs: Date.now() - tStart, candidates: [], failureReason: o2Check.chemistryAlert };
+  }
+
+  const grid = [];
+  const posts = ['HIP', 'Annealed', 'Stress-relieved', 'Solution-Aged', 'None'];
+  if (scope === 'all' || scope === 'lpbf') {
+    [
+      { P: 260, v: 980, h: 110, t: 40, db: 80, T0: 200 },
+      { P: 280, v: 960, h: 110, t: 40, db: 80, T0: 200 },
+      { P: 310, v: 1150, h: 110, t: 45, db: 85, T0: 200 },
+      { P: 330, v: 1220, h: 115, t: 45, db: 85, T0: 225 },
+      { P: 350, v: 1280, h: 115, t: 50, db: 90, T0: 200 },
+      { P: 365, v: 1320, h: 120, t: 50, db: 90, T0: 250 },
+      { P: 380, v: 1380, h: 120, t: 50, db: 95, T0: 225 },
+      { P: 395, v: 1450, h: 125, t: 55, db: 95, T0: 200 }
+    ].forEach(s => posts.forEach(postProcessing => grid.push(Object.assign({ processId: 'lpbf', postProcessing }, s))));
+  }
+  if (scope === 'all' || scope === 'ded-laser') {
+    [
+      { P: 1200, v: 12, h: 1000, t: 350, db: 1200, T0: 100 },
+      { P: 1500, v: 15, h: 1100, t: 400, db: 1400, T0: 100 },
+      { P: 1600, v: 15, h: 1200, t: 450, db: 1500, T0: 120 },
+      { P: 1900, v: 18, h: 1250, t: 500, db: 1600, T0: 150 },
+      { P: 2200, v: 20, h: 1350, t: 550, db: 1800, T0: 100 }
+    ].forEach(s => posts.forEach(postProcessing => grid.push(Object.assign({ processId: 'ded-laser', postProcessing }, s))));
+  }
+  if (scope === 'all' || scope === 'waam') {
+    [
+      { P: 1800, v: 7, h: 3200, t: 1300, db: 2600, T0: 120 },
+      { P: 2200, v: 8, h: 3400, t: 1400, db: 2800, T0: 120 },
+      { P: 2400, v: 8, h: 3500, t: 1500, db: 3000, T0: 120 },
+      { P: 2800, v: 10, h: 3600, t: 1500, db: 3200, T0: 150 }
+    ].forEach(s => posts.forEach(postProcessing => grid.push(Object.assign({ processId: 'waam', postProcessing }, s))));
+  }
+
+  const astmMinYs = astmStd === 'F3001' ? 795 : 825;
+  const feasible = [];
+  for (let i = 0; i < grid.length; i++) {
+    const ev = evaluateForwardTi64Candidate(Object.assign({}, grid[i], { alloyId, oxygenWtPct, buildOrientationDeg: ori, scanRotationDeg: rot }));
+    if (ev.yieldStrengthMpa >= Math.max(minYsMpa, astmMinYs) && ev.elongationPct >= minElongPct &&
+        ev.residualStressMpa <= maxResidualStressMpa && ev.buildRateCm3H >= minBuildRateCm3H &&
+        ev.densityPct >= 99.4 && ev.mahalanobisDistance <= 3.5) {
+      feasible.push(ev);
+    }
+  }
+  if (feasible.length === 0) {
+    return { feasibleCount: 0, evaluatedCount: grid.length, elapsedMs: Date.now() - tStart, candidates: [], failureReason: `No recipe met all constraints (YS≥${minYsMpa}, El≥${minElongPct}%, Stress≤${maxResidualStressMpa}, Rate≥${minBuildRateCm3H} cm³/h).` };
+  }
+  const pareto = feasible.filter(a => !feasible.some(b =>
+    b !== a && b.yieldStrengthMpa >= a.yieldStrengthMpa && b.elongationPct >= a.elongationPct &&
+    b.buildRateCm3H >= a.buildRateCm3H && b.residualStressMpa <= a.residualStressMpa &&
+    b.mahalanobisDistance <= a.mahalanobisDistance &&
+    (b.yieldStrengthMpa > a.yieldStrengthMpa || b.elongationPct > a.elongationPct || b.buildRateCm3H > a.buildRateCm3H || b.residualStressMpa < a.residualStressMpa || b.mahalanobisDistance < a.mahalanobisDistance)
+  ));
+  const pool = pareto.length >= 3 ? pareto : feasible;
+  const ysMax = Math.max(...pool.map(x => x.yieldStrengthMpa)), rateMax = Math.max(...pool.map(x => x.buildRateCm3H)), elMax = Math.max(...pool.map(x => x.elongationPct));
+  const scored = pool.map(x => Object.assign({}, x, {
+    paretoScore: Number(((0.32 * x.yieldStrengthMpa / Math.max(1, ysMax) + 0.26 * x.buildRateCm3H / Math.max(1, rateMax) + 0.24 * x.elongationPct / Math.max(1, elMax) + 0.18 * (1 - Math.min(1, x.residualStressMpa / Math.max(20, maxResidualStressMpa)))) * 100).toFixed(1))
+  }));
+  const labeled = [], used = new Set();
+  const assign = (item, tag) => {
+    if (!item || labeled.length >= 5) return;
+    const k = `${item.processId}:${item.P}:${item.v}:${item.postProcessing}`;
+    if (used.has(k)) return;
+    used.add(k);
+    labeled.push(Object.assign({}, item, { rank: labeled.length + 1, tag }));
+  };
+  const byScore = [...scored].sort((a, b) => b.paretoScore - a.paretoScore);
+  const byLpbf = scored.filter(x => x.processId === 'lpbf').sort((a, b) => b.paretoScore - a.paretoScore);
+  const byRate = [...scored].sort((a, b) => b.buildRateCm3H - a.buildRateCm3H);
+  const byYs = [...scored].sort((a, b) => b.yieldStrengthMpa - a.yieldStrengthMpa);
+  const byStress = [...scored].sort((a, b) => a.residualStressMpa - b.residualStressMpa || a.mahalanobisDistance - b.mahalanobisDistance);
+  assign(byScore[0], 'Balanced Pareto Optimal');
+  assign(byLpbf[0], 'Precision LPBF Optimal');
+  assign(byRate[0], 'Max Throughput');
+  assign(byYs[0], 'Peak Strength');
+  assign(byStress[0], 'Min Residual Stress');
+  byScore.forEach(x => assign(x, 'Pareto Feasible'));
+  return { feasibleCount: feasible.length, evaluatedCount: grid.length, elapsedMs: Date.now() - tStart, candidates: labeled.slice(0, 5), failureReason: null };
+}
+window.solveInverseTi64Recipes = solveInverseTi64Recipes;
+
+function applyInversePresetAerospace() {
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = String(v); };
+  setVal('invMinYs', 850);
+  setVal('invMinElong', 12.0);
+  setVal('invMaxStress', 60);
+  setVal('invMinRate', 20.0);
+  setVal('invAstmStd', 'F2924');
+  setVal('invProcScope', 'all');
+  runInverseSolverUi();
+}
+window.applyInversePresetAerospace = applyInversePresetAerospace;
+
+function runInverseSolverUi() {
+  const minYsMpa = parseFloat(document.getElementById('invMinYs')?.value) || 850;
+  const minElongPct = parseFloat(document.getElementById('invMinElong')?.value) || 12.0;
+  const maxResidualStressMpa = parseFloat(document.getElementById('invMaxStress')?.value) || 60;
+  const minBuildRateCm3H = parseFloat(document.getElementById('invMinRate')?.value) || 20.0;
+  const astmStandard = document.getElementById('invAstmStd')?.value || 'F2924';
+  const processScope = document.getElementById('invProcScope')?.value || 'all';
+  const alloyId = document.getElementById('alloySelect')?.value || (astmStandard === 'F3001' ? 'ti64_eli' : 'ti64_gr5');
+  const o2 = parseFloat(document.getElementById('sl_oxygen')?.value);
+  const ori = parseInt(document.getElementById('buildOrientationSelect')?.value || '0', 10);
+  const rot = parseInt(document.getElementById('scanRotationSelect')?.value || '67', 10);
+
+  const res = solveInverseTi64Recipes({
+    minYsMpa, minElongPct, maxResidualStressMpa, minBuildRateCm3H,
+    alloyId, astmStandard, processScope,
+    oxygenWtPct: Number.isFinite(o2) ? o2 : undefined,
+    buildOrientationDeg: ori, scanRotationDeg: rot
+  });
+  lastInverseCandidates = res.candidates || [];
+  _setP3Txt('inverseSolverMeta', `Evaluated ${res.evaluatedCount} configs in ${res.elapsedMs} ms · ${res.feasibleCount} feasible`);
+  const tbody = document.getElementById('inverseResultsBody');
+  if (!tbody) return;
+  if (res.candidates.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color: #fb7185; text-align: center; padding: 12px;">${res.failureReason || 'No feasible recipes found.'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = res.candidates.map((c, idx) => `
+    <tr>
+      <td><span class="brand-badge" style="font-size: 9.5px; color: #34d399; border-color: rgba(16,185,129,0.4);">${c.tag}</span></td>
+      <td><strong>${c.processDisplayName}</strong><br><span style="color: var(--text-muted); font-size: 10px;">${c.postProcessing}</span></td>
+      <td style="font-family: monospace; font-size: 10.5px;">${c.P}W · ${c.v}mm/s<br>h=${c.h}µm · t=${c.t}µm</td>
+      <td style="font-family: monospace; font-size: 10.5px;">${c.yieldStrengthMpa} / ${c.utsMpa} MPa<br><span style="color:#38bdf8;">El ${c.elongationPct.toFixed(1)}%</span></td>
+      <td style="font-family: monospace; font-size: 10.5px;">${c.residualStressMpa} MPa<br><span style="color:#34d399;">${c.buildRateCm3H} cm³/h</span></td>
+      <td><button type="button" class="step-btn" onclick="applyInverseRecipe(${idx})" style="background: rgba(16,185,129,0.16); color: #34d399; border-color: rgba(16,185,129,0.4); font-weight: 700;">Apply Recipe to Dashboard</button></td>
+    </tr>
+  `).join('');
+}
+window.runInverseSolverUi = runInverseSolverUi;
+
+function applyInverseRecipe(idx) {
+  const c = lastInverseCandidates[idx];
+  if (!c) return;
+  const pillMap = { 'lpbf': 0, 'ded-laser': 1, 'waam': 2 };
+  const pills = document.querySelectorAll('.process-pill');
+  const pillEl = pills[pillMap[c.processId] ?? 0];
+  if (typeof selectProcess === 'function' && c.processId !== currentProcess) {
+    selectProcess(c.processId, pillEl);
+  }
+  const postSel = document.getElementById('postProcessingSelect');
+  if (postSel) postSel.value = c.postProcessing;
+  const prevAuto = typeof autoSync !== 'undefined' ? autoSync : false;
+  if (typeof autoSync !== 'undefined') autoSync = false;
+  if (typeof tweakSlider === 'function') {
+    tweakSlider('sl_p', c.P, true);
+    tweakSlider('sl_v', c.v, true);
+    tweakSlider('sl_h', c.h, true);
+    tweakSlider('sl_t', c.t, true);
+    tweakSlider('sl_spot', c.db, true);
+    tweakSlider('sl_preheat', c.T0, true);
+  }
+  if (typeof autoSync !== 'undefined') autoSync = prevAuto;
+  if (typeof calculatePhysics === 'function') calculatePhysics();
+  _setP3Txt('inverseSolverMeta', `Applied Rank #${c.rank} (${c.processDisplayName} · ${c.postProcessing}) — Live dashboard updated!`);
+}
+window.applyInverseRecipe = applyInverseRecipe;
+
+function parseLabCouponsCsv(csvText) {
+  if (!csvText || !String(csvText).trim()) {
+    return { coupons: [], errors: [{ rowNumber: 0, rawLine: '', reason: 'CSV content is empty.' }], validCount: 0, rejectedCount: 0 };
+  }
+  const lines = String(csvText).replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length < 2) {
+    return { coupons: [], errors: [{ rowNumber: 1, rawLine: lines[0] || '', reason: 'CSV must include header + at least one coupon row.' }], validCount: 0, rejectedCount: 0 };
+  }
+  const headers = lines[0].split(',').map(h => h.trim());
+  const req = ['sample_id', 'process', 'P_W', 'v_mm_s', 'h_um', 't_um', 'T0_C', 'post_proc'];
+  const missing = req.filter(r => !headers.includes(r));
+  if (missing.length > 0) {
+    return { coupons: [], errors: [{ rowNumber: 1, rawLine: lines[0], reason: `Missing required columns: ${missing.join(', ')}` }], validCount: 0, rejectedCount: 0 };
+  }
+  const idxMap = new Map();
+  headers.forEach((h, i) => idxMap.set(h, i));
+  const normProc = (raw) => {
+    const s = String(raw || '').toLowerCase().trim();
+    if (s === 'lpbf' || s === 'slm' || s === 'pbf') return 'lpbf';
+    if (s === 'lded' || s === 'l-ded' || s === 'ded-laser' || s === 'ded') return 'ded-laser';
+    if (s === 'waam') return 'waam';
+    if (s === 'bj' || s === 'binder-jetting' || s === 'binder_jetting') return 'binder-jetting';
+    return null;
+  };
+  const optPos = (raw) => {
+    if (raw === undefined || raw.trim() === '') return { ok: true, v: undefined };
+    const n = Number(raw.trim());
+    return (Number.isFinite(n) && n > 0) ? { ok: true, v: n } : { ok: false };
+  };
+  const coupons = [], errors = [];
+  for (let i = 1; i < lines.length; i++) {
+    const raw = lines[i];
+    const parts = raw.split(',').map(p => p.trim());
+    const get = (name) => { const idx = idxMap.get(name); return (idx !== undefined && idx < parts.length) ? parts[idx] : ''; };
+    const sample_id = get('sample_id');
+    const proc = normProc(get('process'));
+    const P_W = Number(get('P_W')), v_mm_s = Number(get('v_mm_s')), h_um = Number(get('h_um')), t_um = Number(get('t_um'));
+    const T0_C = get('T0_C') === '' ? 25 : Number(get('T0_C'));
+    const post_proc = get('post_proc') || 'HIP';
+    if (!sample_id) { errors.push({ rowNumber: i + 1, rawLine: raw, reason: 'Missing sample_id.' }); continue; }
+    if (!proc) { errors.push({ rowNumber: i + 1, rawLine: raw, reason: `Invalid AM process '${get('process')}'.` }); continue; }
+    if (!Number.isFinite(P_W) || P_W <= 0 || !Number.isFinite(v_mm_s) || v_mm_s <= 0 || !Number.isFinite(h_um) || h_um <= 0 || !Number.isFinite(t_um) || t_um <= 0 || !Number.isFinite(T0_C) || T0_C < 0) {
+      errors.push({ rowNumber: i + 1, rawLine: raw, reason: 'Non-finite or invalid process parameter.' }); continue;
+    }
+    const hvP = optPos(get('measured_HV')), ysP = optPos(get('measured_YS_MPa')), utsP = optPos(get('measured_UTS_MPa')), elP = optPos(get('measured_elong_pct'));
+    if (!hvP.ok || !ysP.ok || !utsP.ok || !elP.ok) { errors.push({ rowNumber: i + 1, rawLine: raw, reason: 'Invalid measured property value.' }); continue; }
+    if (hvP.v === undefined && ysP.v === undefined && utsP.v === undefined && elP.v === undefined) {
+      errors.push({ rowNumber: i + 1, rawLine: raw, reason: 'At least one measured property is required.' }); continue;
+    }
+    coupons.push({ sample_id, process: proc, P_W, v_mm_s, h_um, t_um, T0_C, post_proc, measured_HV: hvP.v, measured_YS_MPa: ysP.v, measured_UTS_MPa: utsP.v, measured_elong_pct: elP.v });
+  }
+  return { coupons, errors, validCount: coupons.length, rejectedCount: errors.length };
+}
+window.parseLabCouponsCsv = parseLabCouponsCsv;
+
+function _summarizeLabRes(residuals) {
+  const n = residuals.length;
+  if (n === 0) return { count: 0, mae: 0, rmse: 0, meanBias: 0, bayesianBiasShift: 0 };
+  let sa = 0, ss = 0, sg = 0;
+  residuals.forEach(r => { sa += Math.abs(r); ss += r * r; sg += r; });
+  const meanBias = Number((sg / n).toFixed(2));
+  return { count: n, mae: Number((sa / n).toFixed(2)), rmse: Number(Math.sqrt(ss / n).toFixed(2)), meanBias, bayesianBiasShift: Number(((n / (n + 4)) * meanBias).toFixed(2)) };
+}
+
+function handleLabCsvText(csvText) {
+  const parsed = parseLabCouponsCsv(csvText);
+  uploadedLabCoupons = parsed.coupons;
+  const alloyId = document.getElementById('alloySelect')?.value || 'ti64_gr5';
+  const resHv = [], resYs = [], resUts = [], resEl = [];
+  uploadedLabCoupons.forEach(c => {
+    if (c.process === 'binder-jetting') return;
+    const ev = evaluateForwardTi64Candidate({
+      processId: c.process, alloyId, P: c.P_W, v: c.v_mm_s, h: c.h_um, t: c.t_um,
+      db: c.process === 'waam' ? 3000 : (c.process === 'ded-laser' ? 1500 : 80), T0: c.T0_C,
+      postProcessing: c.post_proc, oxygenWtPct: alloyId === 'ti64_eli' ? 0.11 : 0.16,
+      buildOrientationDeg: 0, scanRotationDeg: 67
+    });
+    if (c.measured_HV !== undefined) resHv.push(c.measured_HV - ev.predictedHv);
+    if (c.measured_YS_MPa !== undefined) resYs.push(c.measured_YS_MPa - ev.yieldStrengthMpa);
+    if (c.measured_UTS_MPa !== undefined) resUts.push(c.measured_UTS_MPa - ev.utsMpa);
+    if (c.measured_elong_pct !== undefined) resEl.push(c.measured_elong_pct - ev.elongationPct);
+  });
+  labCalibrationSummary = {
+    sampleCount: uploadedLabCoupons.length,
+    hv: _summarizeLabRes(resHv), ys: _summarizeLabRes(resYs), uts: _summarizeLabRes(resUts), elong: _summarizeLabRes(resEl)
+  };
+  const stEl = document.getElementById('labCsvStatus');
+  if (stEl) {
+    if (parsed.validCount > 0 && parsed.rejectedCount === 0) {
+      stEl.style.color = '#34d399';
+      stEl.innerText = `Loaded ${parsed.validCount} NIT Trichy lab coupons (0 malformed rows). Overlay rendered on Defect Process Window.`;
+    } else if (parsed.validCount > 0) {
+      stEl.style.color = '#fbbf24';
+      stEl.innerText = `Loaded ${parsed.validCount} valid coupons (${parsed.rejectedCount} malformed skipped: Row ${parsed.errors[0].rowNumber} — ${parsed.errors[0].reason}).`;
+    } else {
+      stEl.style.color = '#fb7185';
+      stEl.innerText = `CSV validation failed: ${parsed.errors[0]?.reason || 'No valid rows found.'}`;
+    }
+  }
+  _setP3Txt('labMaeHv', labCalibrationSummary.hv.count > 0 ? `${labCalibrationSummary.hv.mae} / ${labCalibrationSummary.hv.rmse}` : '—');
+  _setP3Txt('labBiasHv', labCalibrationSummary.hv.count > 0 ? `${labCalibrationSummary.hv.bayesianBiasShift >= 0 ? '+' : ''}${labCalibrationSummary.hv.bayesianBiasShift} HV` : '—');
+  _setP3Txt('labMaeYs', labCalibrationSummary.ys.count > 0 ? `${labCalibrationSummary.ys.mae}` : '—');
+  _setP3Txt('labMaeEl', labCalibrationSummary.elong.count > 0 ? `${labCalibrationSummary.elong.mae}%` : '—');
+
+  if (typeof calculatePhysics === 'function') calculatePhysics();
+  return parsed;
+}
+window.handleLabCsvText = handleLabCsvText;
+
+function handleLabCsvFileInput(inputEl) {
+  const file = inputEl && inputEl.files && inputEl.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => handleLabCsvText(String(e.target?.result || ''));
+  reader.readAsText(file);
+}
+window.handleLabCsvFileInput = handleLabCsvFileInput;
+
+function handleLabCsvDrop(e) {
+  e.preventDefault();
+  const dz = document.getElementById('labCsvDropzone');
+  if (dz) dz.style.borderColor = 'rgba(56,189,248,0.35)';
+  const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => handleLabCsvText(String(ev.target?.result || ''));
+  reader.readAsText(file);
+}
+window.handleLabCsvDrop = handleLabCsvDrop;
+
+function loadDemoLabCoupons() {
+  handleLabCsvText(SAMPLE_LAB_CSV_TEMPLATE);
+  const chk = document.getElementById('chkLabBiasCorrection');
+  if (chk && !chk.checked) {
+    chk.checked = true;
+    toggleLabBiasCorrection(true);
+  }
+}
+window.loadDemoLabCoupons = loadDemoLabCoupons;
+
+function downloadLabCsvTemplate() {
+  const blob = new Blob([SAMPLE_LAB_CSV_TEMPLATE + '\n'], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'nit_trichy_ti64_lab_coupons_template.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+window.downloadLabCsvTemplate = downloadLabCsvTemplate;
+
+function clearLabCoupons() {
+  uploadedLabCoupons = [];
+  labCalibrationSummary = null;
+  useLabBiasCorrection = false;
+  const chk = document.getElementById('chkLabBiasCorrection');
+  if (chk) chk.checked = false;
+  const stEl = document.getElementById('labCsvStatus');
+  if (stEl) {
+    stEl.style.color = 'var(--text-muted)';
+    stEl.innerText = 'No experimental lab coupons loaded. Using baseline raw literature model predictions.';
+  }
+  _setP3Txt('labMaeHv', '—');
+  _setP3Txt('labBiasHv', '—');
+  _setP3Txt('labMaeYs', '—');
+  _setP3Txt('labMaeEl', '—');
+  if (typeof calculatePhysics === 'function') calculatePhysics();
+}
+window.clearLabCoupons = clearLabCoupons;
+
+function toggleLabBiasCorrection(enabled) {
+  useLabBiasCorrection = Boolean(enabled);
+  if (typeof calculatePhysics === 'function') calculatePhysics();
+}
+window.toggleLabBiasCorrection = toggleLabBiasCorrection;
 
 function getCurrentOodEvaluation() {
   const proc = (typeof currentProcess !== 'undefined' && currentProcess) ? currentProcess : 'lpbf';
@@ -4776,7 +5954,7 @@ function renderUnifiedModelsUI(modelPredictions, stateKey, oodResultInput) {
       oodBanner.style.display = 'block';
       const bodyEl = document.getElementById('oodBannerBody');
       if (bodyEl) {
-        bodyEl.innerHTML = `Diagonal Mahalanobis Distance <strong>d<sub>M</sub> = ${oodResult.mahalanobisDistance.toFixed(2)}</strong> exceeds the validated literature training envelope. Calibrated <strong>95% PI</strong> uncertainty bounds have been widened by <strong>×${oodResult.piMultiplier.toFixed(2)}</strong>.`;
+        bodyEl.innerHTML = `Full-Covariance Mahalanobis Distance <strong>d<sub>M</sub> = ${oodResult.mahalanobisDistance.toFixed(2)}</strong> exceeds the validated literature training envelope. Calibrated <strong>95% PI</strong> uncertainty bounds have been widened by <strong>×${oodResult.piMultiplier.toFixed(2)}</strong>.`;
       }
       const listEl = document.getElementById('oodViolationsList');
       if (listEl) {
@@ -5187,16 +6365,40 @@ window.addEventListener('click', function(e) {
       </div>
     </div>
 
-    <!-- 2. TITANIUM ALLOY SELECTOR -->
+    <!-- 2. TITANIUM ALLOY SELECTOR & INTERSTITIAL OXYGEN / POWDER REUSE -->
     <div class="side-card">
       <div class="side-header">
-        <span>Titanium Alloy</span>
-        <span style="color: var(--text-muted);">Chemistry Baseline</span>
+        <span>Ti-6Al-4V Grade &amp; O₂</span>
+        <span class="brand-badge" id="chemistryCompliancePill" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); border-color: rgba(16, 185, 129, 0.4); font-size: 9.5px;">ASTM F2924 PASS</span>
       </div>
-      <select class="dark-select" id="alloySelect" onchange="updateAll()">
-        <option value="ti64_gr5" selected>Ti-6Al-4V (Grade 5, α+β workhorse) (TI-6Al-4V)</option>
-        <option value="ti64_eli">Ti-6Al-4V ELI (Grade 23, medical & aerospace) (TI-6Al-4V-ELI)</option>
+      <select class="dark-select" id="alloySelect" onchange="onAlloyGradeChange()">
+        <option value="ti64_gr5" selected>Ti-6Al-4V (Grade 5, UNS R56400 · ≤0.20% O)</option>
+        <option value="ti64_eli">Ti-6Al-4V ELI (Grade 23, UNS R56401 · ≤0.13% O)</option>
       </select>
+
+      <div class="slider-item" style="margin-top: 12px;">
+        <div class="slider-header">
+          <span class="slider-label">Interstitial Oxygen (wt% O)</span>
+          <span class="slider-val" id="val_oxygen">0.160 wt%</span>
+        </div>
+        <input type="range" id="sl_oxygen" min="0.08" max="0.22" step="0.005" value="0.160" oninput="onOxygenSliderChange()">
+        <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 3px; font-family: 'JetBrains Mono', monospace;">
+          <span>β-Transus: <strong id="val_beta_transus" style="color: #38bdf8;">995.0 °C</strong></span>
+          <span id="val_o2_hardening" style="color: #fbbf24;">Δσ₀ +70 MPa</span>
+        </div>
+      </div>
+
+      <div class="slider-item" style="margin-top: 10px; margin-bottom: 6px;">
+        <div class="slider-header">
+          <span class="slider-label">Powder Reuse Cycles</span>
+          <span class="slider-val" id="val_reuse">0 cycles</span>
+        </div>
+        <input type="range" id="sl_reuse" min="0" max="30" step="1" value="0" oninput="onReuseSliderChange()">
+      </div>
+      <label style="display: flex; align-items: center; gap: 7px; font-size: 10.5px; color: var(--text-secondary); cursor: pointer;">
+        <input type="checkbox" id="chk_auto_reuse" checked onchange="onReuseSliderChange()">
+        Auto-couple powder O₂ pickup per reuse cycle
+      </label>
     </div>
 
     <!-- 3. PROCESS PARAMETERS & VED SOLVER -->
@@ -5352,6 +6554,29 @@ window.addEventListener('click', function(e) {
       </div>
     </div>
 
+    <!-- 4B. BUILD ORIENTATION & SCAN STRATEGY -->
+    <div class="side-card">
+      <div class="side-header">
+        <span>Orientation &amp; Scan Strategy</span>
+        <span style="color: var(--accent-cyan); font-family: monospace; font-size: 10px;" id="lbl_aniso_badge">⟨001⟩β Coupled</span>
+      </div>
+      <div style="margin-bottom: 8px;">
+        <div style="font-size: 10.5px; color: var(--text-secondary); margin-bottom: 4px;">Build Orientation (Test Axis)</div>
+        <select class="dark-select" id="buildOrientationSelect" onchange="updateAll()">
+          <option value="0" selected>0° (Horizontal XY · Transverse to ⟨001⟩β)</option>
+          <option value="45">45° (Diagonal · Max Prior-β Shear)</option>
+          <option value="90">90° (Vertical Z · Parallel to ⟨001⟩β)</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size: 10.5px; color: var(--text-secondary); margin-bottom: 4px;">Inter-Layer Scan Rotation</div>
+        <select class="dark-select" id="scanRotationSelect" onchange="updateAll()">
+          <option value="67" selected>67° Alternating (Low Anisotropy / Stress)</option>
+          <option value="90">90° Orthogonal (Stronger Fiber Texture)</option>
+        </select>
+      </div>
+    </div>
+
     <!-- 5. TARGET HARDNESS -->
     <div class="side-card">
       <div class="side-header">
@@ -5375,7 +6600,10 @@ window.addEventListener('click', function(e) {
       <div class="kpi-card kpi-card-1 cyan">
         <div class="kpi-label">
           <span id="kpi_model_title">Hardness (Ensemble)</span>
-          <span class="kpi-badge tag-cyan" id="kpi_model_badge">ACTIVE</span>
+          <span style="display: flex; gap: 4px; align-items: center;">
+            <span class="kpi-badge" id="kpiCalibrationBadge" style="background: rgba(148,163,184,0.14); color: #cbd5e1; font-size: 9px;" title="Literature vs. Lab-Calibrated Model Indicator">RAW LITERATURE MODEL</span>
+            <span class="kpi-badge tag-cyan" id="kpi_model_badge">ACTIVE</span>
+          </span>
         </div>
         <div class="kpi-value" id="kpi_hv">340 HV</div>
         <div class="kpi-sub" id="kpi_ci">± 10.2 HV [Calibrated 95% PI] · 95.2% Empirical Coverage</div>
@@ -5650,12 +6878,195 @@ window.addEventListener('click', function(e) {
             <div class="outcome-row"><span class="outcome-label">Hybrid GPR Hardness (Primary):</span><span class="outcome-val" id="po_gpr_hv">339 HV</span></div>
             <div class="outcome-row"><span class="outcome-label">Analytical Hardness (Hall-Petch):</span><span class="outcome-val" id="po_hp_hv">336 HV</span></div>
             <div class="outcome-row"><span class="outcome-label">Estimated Tensile Strength (UTS):</span><span class="outcome-val" id="po_uts_val">1034 MPa</span></div>
+            <div class="outcome-row"><span class="outcome-label">Interstitial O₂ &amp; β-Transus:</span><span class="outcome-val" id="po_oxygen">0.160 wt% | Tβ 995.0°C</span></div>
+            <div class="outcome-row"><span class="outcome-label">Fracture Toughness (K_IC):</span><span class="outcome-val" id="po_kic">76.0 MPa·m^0.5</span></div>
           </div>
 
         </div>
 
       </div>
-    
+
+      <!-- ========================================================
+           PHASE 3: LIVE Ti-6Al-4V CCT DIAGRAM, STRESS-STRAIN & S-N CURVES
+           ======================================================== -->
+      <div class="res-card" style="margin-top: 16px;" id="phase3CurvesCard">
+        <div class="res-card-header" style="flex-wrap: wrap; gap: 10px;">
+          <div>
+            <div class="res-card-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 16c2-5 5-8 12-10"/></svg>
+              Ti-6Al-4V Transformation Kinetics (CCT), Constitutive Stress-Strain &amp; Murakami S-N Fatigue
+            </div>
+            <div class="res-card-sub">Live cooling path on CCT (dynamic Tβ(O₂), Ms 780°C, 410 K/s), Ramberg-Osgood/Hollomon tensile curve &amp; Murakami √area fatigue limit</div>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+            <button type="button" class="mp-toggle-btn active" id="btnSsEng" onclick="setStressStrainMode('engineering')" style="font-size: 11px; padding: 4px 10px;">Engineering σ–ε</button>
+            <button type="button" class="mp-toggle-btn" id="btnSsTrue" onclick="setStressStrainMode('true')" style="font-size: 11px; padding: 4px 10px;">True σ–ε</button>
+            <button type="button" class="mp-toggle-btn active" id="btnCurvesOverlay" onclick="toggleCurvesOverlay()" style="font-size: 11px; padding: 4px 10px;">Overlay: Current vs. Ref</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px;">
+          <!-- 1. Ti-6Al-4V CCT Diagram -->
+          <div class="plot-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px;">
+              <span style="font-weight: 700; color: #fff;">Continuous Cooling Transformation (CCT)</span>
+              <span class="res-tag" id="cctRegimeBadge" style="font-size: 10px; background: rgba(16,185,129,0.16); color: #34d399; border-color: rgba(16,185,129,0.35);">HIP α+β Equil.</span>
+            </div>
+            <svg id="cctSvg" viewBox="0 0 420 260" style="width: 100%; height: auto; display: block; background: #040810; border-radius: 6px;"></svg>
+            <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; font-size: 10.5px; font-family: 'JetBrains Mono', monospace;">
+              <span style="padding: 2px 7px; border-radius: 4px; background: rgba(244,63,94,0.14); color: #fda4af;" id="cctAlphaPrimeBadge">α': 0.0%</span>
+              <span style="padding: 2px 7px; border-radius: 4px; background: rgba(56,189,248,0.14); color: #7dd3fc;" id="cctLamellarBadge">Lamellar α: 89.5%</span>
+              <span style="padding: 2px 7px; border-radius: 4px; background: rgba(16,185,129,0.14); color: #6ee7b7;" id="cctBetaBadge">Retained β: 10.5%</span>
+            </div>
+          </div>
+
+          <!-- 2. Synthetic Stress-Strain Curve -->
+          <div class="plot-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px;">
+              <span style="font-weight: 700; color: #fff;" id="ssChartTitle">Tensile Stress-Strain (Engineering σ–ε)</span>
+              <span style="color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-size: 10px;" id="ssSummaryBadge">YS 906 | UTS 988 | El 14.5%</span>
+            </div>
+            <svg id="stressStrainSvg" viewBox="0 0 420 260" style="width: 100%; height: auto; display: block; background: #040810; border-radius: 6px;"></svg>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 8px; font-family: 'JetBrains Mono', monospace;">
+              <span id="ssLegendPrimary" style="color: #38bdf8;">━ Current Condition</span>
+              <span id="ssLegendCompare" style="color: #fbbf24;">-- As-Built Reference</span>
+              <span id="ssHardeningTag">n = 0.075 | E = 113.8 GPa</span>
+            </div>
+          </div>
+
+          <!-- 3. Murakami sqrt(area) S-N Fatigue Curve -->
+          <div class="plot-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px;">
+              <span style="font-weight: 700; color: #fff;">Murakami √area S–N Fatigue (10⁴–10⁸)</span>
+              <span style="color: #34d399; font-family: 'JetBrains Mono', monospace; font-size: 10px;" id="snEnduranceVal">Endurance: 540 MPa</span>
+            </div>
+            <svg id="snFatigueSvg" viewBox="0 0 420 260" style="width: 100%; height: auto; display: block; background: #040810; border-radius: 6px;"></svg>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 8px; font-family: 'JetBrains Mono', monospace;">
+              <span id="snDefectBadge" style="color: #cbd5e1;">d_max = 12.0 µm (HIP Floor)</span>
+              <span id="snCompareBadge" style="color: #f43f5e;">-- As-Built LOF Ref</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================
+           PHASE 4: INVERSE Ti-6Al-4V RECIPE SOLVER & LAB CALIBRATION
+           ======================================================== -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; margin-top: 16px;" id="phase4SuiteGrid">
+        <!-- 4A. Goal-Seeking Inverse Ti-6Al-4V Process Designer -->
+        <div class="res-card" id="inverseSolverCard" style="margin-top: 0;">
+          <div class="res-card-header" style="flex-wrap: wrap; gap: 8px;">
+            <div>
+              <div class="res-card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Goal-Seeking Inverse Ti-6Al-4V Process Designer
+              </div>
+              <div class="res-card-sub">Specify target properties &amp; ASTM class to solve Pareto-optimal (P, v, h, t, T₀, Heat Treatment) recipes</div>
+            </div>
+            <button type="button" class="step-btn" onclick="applyInversePresetAerospace()" style="font-size: 10.5px; color: #38bdf8; border-color: rgba(56,189,248,0.35);">Aerospace Class 1 Preset</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; font-size: 11px;">
+            <div>
+              <label style="color: var(--text-muted); font-size: 10px;">Min Rp0.2 YS (MPa)</label>
+              <input type="number" id="invMinYs" value="850" min="500" max="1300" step="10" class="dark-select" style="padding: 6px 8px; margin-top: 2px;">
+            </div>
+            <div>
+              <label style="color: var(--text-muted); font-size: 10px;">Min Elongation (%)</label>
+              <input type="number" id="invMinElong" value="12.0" min="2" max="20" step="0.5" class="dark-select" style="padding: 6px 8px; margin-top: 2px;">
+            </div>
+            <div>
+              <label style="color: var(--text-muted); font-size: 10px;">Max Res. Stress (MPa)</label>
+              <input type="number" id="invMaxStress" value="60" min="15" max="800" step="5" class="dark-select" style="padding: 6px 8px; margin-top: 2px;">
+            </div>
+            <div>
+              <label style="color: var(--text-muted); font-size: 10px;">Min Build Rate (cm³/h)</label>
+              <input type="number" id="invMinRate" value="20.0" min="1" max="500" step="1" class="dark-select" style="padding: 6px 8px; margin-top: 2px;">
+            </div>
+            <div>
+              <label style="color: var(--text-muted); font-size: 10px;">ASTM Standard</label>
+              <select id="invAstmStd" class="dark-select" style="padding: 6px 8px; margin-top: 2px;">
+                <option value="F2924" selected>ASTM F2924 (Gr5)</option>
+                <option value="F3001">ASTM F3001 (ELI)</option>
+              </select>
+            </div>
+            <div>
+              <label style="color: var(--text-muted); font-size: 10px;">Process Scope</label>
+              <select id="invProcScope" class="dark-select" style="padding: 6px 8px; margin-top: 2px;">
+                <option value="all" selected>All (LPBF / L-DED / WAAM)</option>
+                <option value="lpbf">LPBF Only</option>
+                <option value="ded-laser">L-DED Only</option>
+                <option value="waam">WAAM Only</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <span id="inverseSolverMeta" style="font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">Ready for multi-objective Pareto sweep</span>
+            <button type="button" id="btnRunInverseSolver" onclick="runInverseSolverUi()" style="background: linear-gradient(135deg, #0ea5e9, #10b981); color: #04101d; border: none; border-radius: 8px; padding: 7px 14px; font-weight: 800; font-size: 11.5px; cursor: pointer;">Solve Pareto Recipes</button>
+          </div>
+
+          <div id="inverseResultsContainer" style="overflow-x: auto;">
+            <table class="custom-table" style="font-size: 11px;">
+              <thead>
+                <tr>
+                  <th>Pareto Role</th>
+                  <th>Route &amp; Heat Treatment</th>
+                  <th>Recipe (P, v, h, t)</th>
+                  <th>YS / UTS / El</th>
+                  <th>Stress / Rate</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="inverseResultsBody">
+                <tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 14px;">Click "Solve Pareto Recipes" to compute optimal Ti-6Al-4V build parameters.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 4B. NIT Trichy Lab Coupon CSV Dropzone & Residual Calibration -->
+        <div class="res-card" id="labCalibrationCard" style="margin-top: 0;">
+          <div class="res-card-header" style="flex-wrap: wrap; gap: 8px;">
+            <div>
+              <div class="res-card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                NIT Trichy Lab Coupon Calibration Loop
+              </div>
+              <div class="res-card-sub">Upload experimental coupon CSVs to plot on Defect Map &amp; compute live Bayesian Bias Correction</div>
+            </div>
+            <span class="res-tag" id="labModelModeBadge" style="background: rgba(148,163,184,0.16); color: #cbd5e1; border-color: rgba(148,163,184,0.35);">RAW LITERATURE MODEL</span>
+          </div>
+
+          <div id="labCsvDropzone" onclick="document.getElementById('labCsvFileInput')?.click()" ondragover="event.preventDefault(); this.style.borderColor='#38bdf8';" ondragleave="this.style.borderColor='rgba(56,189,248,0.35)';" ondrop="handleLabCsvDrop(event)" style="border: 1.5px dashed rgba(56,189,248,0.35); border-radius: 8px; padding: 12px; text-align: center; background: rgba(4,8,16,0.6); cursor: pointer; margin-bottom: 10px;">
+            <div style="font-size: 12px; font-weight: 700; color: #e2e8f0;">Drop NIT Trichy Lab Coupon CSV here or click to browse</div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-top: 3px; font-family: 'JetBrains Mono', monospace;">Columns: sample_id, process, P_W, v_mm_s, h_um, t_um, T0_C, post_proc, measured_HV, measured_YS_MPa, measured_UTS_MPa, measured_elong_pct</div>
+            <input type="file" id="labCsvFileInput" accept=".csv,text/csv" style="display: none;" onchange="handleLabCsvFileInput(this)">
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px;">
+            <button type="button" class="step-btn" onclick="downloadLabCsvTemplate()">Download Sample Template</button>
+            <button type="button" class="step-btn" id="btnLoadDemoCoupons" onclick="loadDemoLabCoupons()" style="color: #34d399; border-color: rgba(16,185,129,0.35);">Load NIT Demo Coupons (N=4)</button>
+            <button type="button" class="step-btn" onclick="clearLabCoupons()" style="color: #f87171; border-color: rgba(244,63,94,0.3);">Clear</button>
+            <label style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); cursor: pointer;">
+              <input type="checkbox" id="chkLabBiasCorrection" onchange="toggleLabBiasCorrection(this.checked)">
+              Bayesian Bias-Corrected Prediction
+            </label>
+          </div>
+
+          <div id="labCsvStatus" style="font-size: 11px; color: var(--text-muted); padding: 6px 10px; border-radius: 6px; background: rgba(15,23,42,0.7); border: 1px solid rgba(255,255,255,0.06); margin-bottom: 10px;">
+            No experimental lab coupons loaded. Using baseline raw literature model predictions.
+          </div>
+
+          <div class="metric-score-row" id="labMetricsSummary" style="margin-top: 0;">
+            <div class="metric-score-card"><div class="metric-score-val" id="labMaeHv" style="color: #38bdf8;">—</div><div class="metric-score-lbl">HV MAE / RMSE</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="labBiasHv" style="color: #fbbf24;">—</div><div class="metric-score-lbl">HV Bayes Shift</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="labMaeYs" style="color: #34d399;">—</div><div class="metric-score-lbl">YS MAE (MPa)</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="labMaeEl" style="color: #c084fc;">—</div><div class="metric-score-lbl">Elong MAE (%)</div></div>
+          </div>
+        </div>
+      </div>
+
       <!-- ========================================================
            SCIENTIFIC RIGOR SUITE (RESEARCH-GRADE EXPANSION)
            ======================================================== -->
@@ -6666,6 +8077,9 @@ window.addEventListener('click', function(e) {
               <text x="470" y="70" fill="#fde047" font-size="10" font-weight="bold">BALLING</text>
             </g>
 
+            <!-- Dynamic Experimental Lab Coupons Layer -->
+            <g id="labExperimentalMarkersGroup"></g>
+
             <!-- Dynamic Operating Point -->
             <circle id="svgCursor" cx="240" cy="180" r="7" fill="#50d8e9" stroke="#fff" stroke-width="2">
               <animate attributeName="r" values="6;9;6" dur="2s" repeatCount="indefinite"/>
@@ -7283,6 +8697,28 @@ window.addEventListener('click', function(e) {
                     </div>
                   </div>
                   <div class="audit-status-badge pass" id="aud_fatigue_badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>PASS</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 7: Interstitial Oxygen Chemistry Limit -->
+              <div class="audit-row-card" id="aud_o2_row">
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: #f8fafc;" id="aud_o2_title">Interstitial Oxygen Content (wt% O)</div>
+                  <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;" id="aud_o2_sub">Within Grade 5 / ELI interstitial limit; prevents embrittlement</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                  <div style="text-align: right;">
+                    <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
+                    <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
+                      <span style="color: #38bdf8; font-weight: 700;" id="aud_o2_val">0.160 wt%</span>
+                      <span style="color: #475569; margin: 0 4px;">|</span>
+                      <span style="color: #94a3b8;" id="aud_o2_thresh">≤ 0.200 wt%</span>
+                    </div>
+                  </div>
+                  <div class="audit-status-badge pass" id="aud_o2_badge">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                     <span>PASS</span>
                   </div>
@@ -8759,6 +10195,7 @@ function calculatePhysics() {
     });
     if (typeof updateAstmAuditor === 'function') updateAstmAuditor();
     if (typeof updateTwinScaleAndHud === 'function') updateTwinScaleAndHud();
+    if (typeof renderTi64Phase3Curves === 'function') renderTi64Phase3Curves(window.latestPhysicsState);
     updateDefectMapSvg(currentProcess, p, v);
     updateMeltPoolAndThermal();
     if (typeof renderBonthaProfileTable === 'function') renderBonthaProfileTable();
@@ -9093,24 +10530,89 @@ function calculatePhysics() {
     }
   }
 
-  // 4. Hardness & Tensile Properties (Calibrated for Ti-6Al-4V ASTM F2924 / F3001 / F3187)
-  const effectiveHallPetchSlope = Math.min(42, alloy.hallPetchSlope * 0.55);
-  const hallPetchIncrement = effectiveHallPetchSlope / Math.sqrt(Math.max(0.45, lathSpacing));
-  let baseHardness = alloy.baseHardnessHV + hallPetchIncrement;
+  // 4. Deep Ti-6Al-4V Physical Metallurgy: Interstitial O2, Powder Reuse, Orientation & Explicit alpha-Lath Hall-Petch Kinetics
+  const o2InputEl = document.getElementById('sl_oxygen');
+  const reuseInputEl = document.getElementById('sl_reuse');
+  const autoReuseChk = document.getElementById('chk_auto_reuse');
+  const oriSel = document.getElementById('buildOrientationSelect');
+  const rotSel = document.getElementById('scanRotationSelect');
 
-  let postMultiplier = 1.0;
-  if (post === 'Stress-relieved') postMultiplier = 0.94;
-  if (post === 'Annealed') postMultiplier = 0.88;
-  if (post === 'HIP') postMultiplier = 0.85;
-  if (post === 'Bi-modal') postMultiplier = 0.90;
-  if (post === 'Solution-Aged') postMultiplier = 0.98;
+  const reuseCyclesVal = reuseInputEl ? parseInt(reuseInputEl.value, 10) : 0;
+  const autoCoupleVal = autoReuseChk ? Boolean(autoReuseChk.checked) : true;
+  const rawO2Slider = o2InputEl ? parseFloat(o2InputEl.value) : NaN;
+  const buildOriDeg = oriSel ? parseInt(oriSel.value, 10) : 0;
+  const scanRotDeg = rotSel ? parseInt(rotSel.value, 10) : 67;
+
+  const met = evaluateTi64Metallurgy({
+    alloyId: currentAlloy,
+    processId: currentProcess,
+    coolingRateKs: coolingRate,
+    postProcessing: post,
+    oxygenWtPct: (autoCoupleVal && reuseCyclesVal > 0 && !Number.isFinite(rawO2Slider)) ? undefined : (Number.isFinite(rawO2Slider) ? rawO2Slider : undefined),
+    powderReuseCycles: reuseCyclesVal,
+    autoCoupleReuse: autoCoupleVal,
+    buildOrientationDeg: buildOriDeg,
+    scanRotationDeg: scanRotDeg,
+    lofIndex: lofIndex,
+    densityPct: densityPct
+  });
+
+  // Sync sidebar O2 / T_beta / Reuse / Chemistry badge UI
+  if (o2InputEl && document.activeElement !== o2InputEl && autoCoupleVal) {
+    // When auto-coupling and user didn't drag O2 manually, reflect effective value cleanly
+    if (Math.abs(parseFloat(o2InputEl.value) - met.oxygen.effectiveOxygenWtPct) > 0.0005 && reuseCyclesVal > 0) {
+      o2InputEl.value = met.oxygen.effectiveOxygenWtPct.toFixed(3);
+    }
+  }
+  setTxt('val_oxygen', met.oxygen.effectiveOxygenWtPct.toFixed(3) + ' wt%');
+  setTxt('val_beta_transus', met.oxygen.betaTransusC.toFixed(1) + ' °C');
+  setTxt('val_o2_hardening', `Δσ₀ ${met.oxygen.solidSolutionDeltaYsMpa >= 0 ? '+' : ''}${Math.round(met.oxygen.solidSolutionDeltaYsMpa)} MPa`);
+  setTxt('val_reuse', met.oxygen.powderReuseCycles + (met.oxygen.powderReuseCycles === 1 ? ' cycle' : ' cycles'));
+  setTxt('lbl_aniso_badge', `${met.anisotropy.buildOrientationDeg}° / ${met.anisotropy.scanRotationDeg}° Rot`);
+  const chemPill = document.getElementById('chemistryCompliancePill');
+  if (chemPill) {
+    const isEliGrade = (met.oxygen.alloyId === 'ti64_eli');
+    const stdTag = isEliGrade ? 'ASTM F3001' : 'ASTM F2924';
+    if (met.oxygen.activeAlloyOxygenPass) {
+      chemPill.innerText = `${stdTag} PASS`;
+      chemPill.style.background = 'rgba(16, 185, 129, 0.15)';
+      chemPill.style.color = 'var(--accent-emerald)';
+      chemPill.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+    } else {
+      chemPill.innerText = `${stdTag} O₂ FAIL`;
+      chemPill.style.background = 'rgba(244, 63, 94, 0.18)';
+      chemPill.style.color = '#fb7185';
+      chemPill.style.borderColor = 'rgba(244, 63, 94, 0.5)';
+    }
+  }
 
   const refVed = isWaam ? 57.0 : (isDed ? 198.0 : 72.0);
-  const hvAnalytical = Math.round(baseHardness * postMultiplier);
-  const hvRf = Math.round(hvAnalytical * (1.0 + 0.012 * Math.log10(Math.max(1.0, coolingRate) / 1e4)));
-  const hvXgb = Math.round(hvAnalytical * (1.0 + 0.009 * Math.log10(Math.max(1.0, coolingRate) / 1e4)));
-  const hvSvm = Math.round(hvAnalytical * (1.015 - 0.005 * Math.abs(ved - refVed) / Math.max(25, refVed * 0.5)));
-  const hvGpr = Math.round(hvAnalytical * (1.010 - 0.004 * Math.abs(ved - refVed) / Math.max(25, refVed * 0.5)));
+  const isCalibrated = Boolean(typeof useLabBiasCorrection !== 'undefined' && useLabBiasCorrection && labCalibrationSummary && labCalibrationSummary.sampleCount > 0);
+  const hvBiasShift = (isCalibrated && labCalibrationSummary.hv && Number.isFinite(labCalibrationSummary.hv.bayesianBiasShift))
+    ? labCalibrationSummary.hv.bayesianBiasShift : 0;
+
+  const calBadge = document.getElementById('kpiCalibrationBadge');
+  const labBadge = document.getElementById('labModelModeBadge');
+  [calBadge, labBadge].forEach((b) => {
+    if (!b) return;
+    if (isCalibrated) {
+      b.innerText = `LAB-CALIBRATED (N=${labCalibrationSummary.sampleCount})`;
+      b.style.background = 'rgba(16, 185, 129, 0.20)';
+      b.style.color = '#34d399';
+      b.style.borderColor = 'rgba(16, 185, 129, 0.45)';
+    } else {
+      b.innerText = 'RAW LITERATURE MODEL';
+      b.style.background = 'rgba(148, 163, 184, 0.14)';
+      b.style.color = '#cbd5e1';
+      b.style.borderColor = 'rgba(148, 163, 184, 0.35)';
+    }
+  });
+
+  const hvAnalytical = Math.round(met.predictedHv + hvBiasShift);
+  const hvRf = Math.round(hvAnalytical * (1.0 + 0.010 * Math.log10(Math.max(1.0, coolingRate) / 1e4)));
+  const hvXgb = Math.round(hvAnalytical * (1.0 + 0.008 * Math.log10(Math.max(1.0, coolingRate) / 1e4)));
+  const hvSvm = Math.round(hvAnalytical * (1.012 - 0.005 * Math.abs(ved - refVed) / Math.max(25, refVed * 0.5)));
+  const hvGpr = Math.round(hvAnalytical * (1.008 - 0.004 * Math.abs(ved - refVed) / Math.max(25, refVed * 0.5)));
   const hvEnsemble = Math.round((hvAnalytical + hvRf + hvXgb + hvSvm + hvGpr) / 5);
 
   const stateKey = (function() {
@@ -9121,11 +10623,8 @@ function calculatePhysics() {
     if (post === 'Solution-Aged' || post === 'Bi-modal') return 'sta';
     return globalMaterialState || 'hip';
   })();
-  const stateMeta = (typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY[stateKey])
-    ? MATERIAL_STATE_REGISTRY[stateKey]
-    : { taborFactor: 2.95, utsToYsRatio: 1.09, benchmarkHvRange: [320, 360] };
-  const taborFactor = stateMeta.taborFactor || 2.95;
-  const utsToYsRatio = stateMeta.utsToYsRatio || 1.09;
+  const taborFactor = met.taborFactor || 2.95;
+  const utsToYsRatio = met.utsToYsRatio || 1.09;
 
   const currentActiveId = (typeof activeModelId !== 'undefined' ? activeModelId : 'ensemble');
   const activePredHv = (currentActiveId === 'analytical') ? hvAnalytical :
@@ -9139,29 +10638,23 @@ function calculatePhysics() {
   const utsTabor = Math.round(activePredHv * taborFactor);
   const yieldStrength = Math.round(utsTabor / utsToYsRatio);
 
-  // Dynamic Elongation with process-specific α+β vs α' as-built ductility & porosity knockdown
+  // Dynamic Elongation with process-specific α+β vs α' ductility, porosity, interstitial O2 & orientation anisotropy
   const asBuiltEl = isWaam ? 12.8 : (isDed ? 11.2 : 7.5);
   const srEl = isWaam ? 14.0 : (isDed ? 12.2 : 9.8);
   const baseElongation = (post === 'HIP' ? 16.2 : (post === 'Bi-modal' ? 17.5 : (post === 'Annealed' ? 13.0 : (post === 'Stress-relieved' ? srEl : asBuiltEl))));
   const poreKnockdown = Math.exp(-0.45 * Math.max(0, 100 - densityPct));
   const lofDuctilityPenalty = lofIndex > 1.0 ? Math.max(0.15, 1.0 - (lofIndex - 1.0) * 1.4) : 1.0;
   const keyholeDuctilityPenalty = keyholeRatio > 1.0 ? Math.max(0.4, 1.0 - (keyholeRatio - 1.0) * 0.5) : 1.0;
-  const elongationPct = Math.max(1.0, Math.min(22.0, baseElongation * poreKnockdown * lofDuctilityPenalty * keyholeDuctilityPenalty));
+  const elongationPct = Math.max(1.0, Math.min(22.0, baseElongation * poreKnockdown * lofDuctilityPenalty * keyholeDuctilityPenalty * met.oxygen.ductilityMultiplier * met.anisotropy.elongationFactor));
 
-  // Dynamic Interstitial Oxygen Content (Grade 5: < 0.20 wt. %, Grade 23 ELI: < 0.13 wt. %)
-  const isEli = (currentAlloy === 'ti64_eli' || currentAlloy === 'ti64_gr23' || (alloy.name && alloy.name.includes('ELI')));
-  const baseO2 = isEli ? 0.105 : 0.160;
-  const o2Pickup = isWaam
-    ? 0.00004 * Math.min(450, heatInputJmm)
-    : (isDed ? 0.00010 * Math.min(220, heatInputJmm) : 0.00015 * Math.min(180, ved));
-  const o2Content = parseFloat((baseO2 + o2Pickup).toFixed(3));
-  const o2Limit = isEli ? 0.130 : 0.200;
-  const o2Pass = o2Content < o2Limit;
+  const o2Content = met.oxygen.effectiveOxygenWtPct;
+  const o2Limit = met.oxygen.alloyId === 'ti64_eli' ? 0.130 : 0.200;
+  const o2Pass = met.oxygen.activeAlloyOxygenPass;
 
-  // Dynamic Charpy V-Notch Toughness (J)
+  // Dynamic Charpy V-Notch Toughness (J) & K_IC
   const baseCvn = (post === 'HIP' ? 25.5 : (post === 'Bi-modal' ? 23.0 : (post === 'Annealed' ? 19.0 : (post === 'Stress-relieved' ? 14.5 : (isWaam ? 18.0 : (isDed ? 15.5 : 10.8))))));
   const cvnKnockdown = Math.max(0.2, 1.0 - 0.22 * Math.pow(Math.max(0, 100 - densityPct), 1.3));
-  const charpyJ = parseFloat(Math.max(2.5, baseCvn * cvnKnockdown * lofDuctilityPenalty).toFixed(1));
+  const charpyJ = parseFloat(Math.max(2.5, baseCvn * cvnKnockdown * lofDuctilityPenalty * met.oxygen.kicMultiplier).toFixed(1));
   const cvnPass = charpyJ >= 15.0;
 
   // Update Density KPIs (Model Hardness, HRC, and UTS cards are updated reactively by renderUnifiedModelsUI)
@@ -9200,7 +10693,7 @@ function calculatePhysics() {
   document.getElementById('po_g').innerText = thermalGradientG.toExponential(2) + ' K/m';
   document.getElementById('po_r').innerText = solidVelocityR.toFixed(4) + ' m/s';
   document.getElementById('po_gr').innerText = `${bonthaMorphLabel} (${grRatio.toExponential(1)} K·s/m² | Hunt Gⁿ/R)`;
-  document.getElementById('po_lambda').innerText = lathSpacing.toFixed(2) + ' µm (λα\' lath floor 0.55 µm)';
+  document.getElementById('po_lambda').innerText = met.lath.alphaLathWidthUm.toFixed(2) + ` µm (α/α' Lath · HP +${Math.round(met.hallPetchIncrementMpa)} MPa)`;
   document.getElementById('po_enthalpy').innerText = (isWaam || isDed) ? `HI ${heatInputJmm.toFixed(0)} J/mm` : normalizedEnthalpy.toFixed(1);
   document.getElementById('po_porosity').innerText = porosityPct + ' %';
   document.getElementById('po_hybrid').innerText = `${meltPoolWidth} x ${meltPoolDepth} µm (${regimeLabel.includes('Transition') ? 'Transition Mode' : regimeLabel.split(' ')[0]})`;
@@ -9208,12 +10701,14 @@ function calculatePhysics() {
   document.getElementById('po_gpr_hv').innerText = hvGpr + ' HV';
   document.getElementById('po_hp_hv').innerText = hvAnalytical + ' HV';
   document.getElementById('po_uts_val').innerText = utsTabor + ' MPa';
+  setTxt('po_oxygen', `${met.oxygen.effectiveOxygenWtPct.toFixed(3)} wt% | Tβ ${met.oxygen.betaTransusC.toFixed(1)}°C`);
+  setTxt('po_kic', `${met.predictedKicMpaM05.toFixed(1)} MPa·m^0.5`);
 
   // Tab 1 Expected Microstructure Cards & Benchmark Range Labels
   const isMartensiticAsBuilt = post === 'None' && coolingRate >= 410;
   setTxt('microSolid', coolingRate >= 410 ? 'Martensitic α\' Quench' : (isWaam ? 'Widmanstätten α+β Basketweave' : 'Colony / Basketweave α+β'));
-  setTxt('microMorph', post === 'Bi-modal' ? 'Bi-modal (Equiaxed α_p + α/β)' : (post === 'HIP' || post === 'Annealed' ? 'Lamellar α+β + Prior-β GB' : (isMartensiticAsBuilt ? `Acicular α' Needles (${bonthaMorphShort})` : `α+β Colony (${bonthaMorphShort})`)));
-  setTxt('microPost', post === 'None' ? (isWaam ? 'As-deposited α+β (ASTM F3187 / WAAM)' : (isDed ? 'As-deposited (ASTM F3187 L-DED)' : 'As-built (ASTM F2924 Class 1)')) : `${post} (${(isWaam || isDed) ? 'ASTM F3187' : 'ASTM F2924'} Decomposed)`);
+  setTxt('microMorph', (post === 'Bi-modal' ? 'Bi-modal (Equiaxed α_p + α/β)' : (post === 'HIP' || post === 'Annealed' ? 'Lamellar α+β + Prior-β GB' : (isMartensiticAsBuilt ? `Acicular α' Needles (${bonthaMorphShort})` : `α+β Colony (${bonthaMorphShort})`))) + ` · λ_α=${met.lath.alphaLathWidthUm.toFixed(2)} µm · ${met.anisotropy.orientationLabel} / ${met.anisotropy.scanRotationDeg}° Rot`);
+  setTxt('microPost', post === 'None' ? (isWaam ? 'As-deposited α+β (ASTM F3187 / WAAM)' : (isDed ? 'As-deposited (ASTM F3187 L-DED)' : 'As-built (ASTM F2924 Class 1)')) : `${post} (${(isWaam || isDed) ? 'ASTM F3187' : 'ASTM F2924'} Decomposed · Tβ=${met.oxygen.betaTransusC.toFixed(1)}°C)`);
 
   // Evaluate Out-of-Distribution (OOD) extrapolation risk against N=178 literature envelope
   const oodResult = evaluateOodRisk({
@@ -9269,12 +10764,22 @@ function calculatePhysics() {
   const fatigueThreshold = Math.round(utsTabor * kBaseFatigue * densityFatigueFactor * lofFatigueFactor * keyholeFatigueFactor * stressFatigueFactor);
 
   window.latestPhysicsState = {
+    alloyId: met.oxygen.alloyId,
     yieldStrength,
     tensileStrength: utsTabor,
     elongationPct,
     densityPct,
     residualStress: residualStressMPa,
     fatigueThreshold,
+    o2Content: met.oxygen.effectiveOxygenWtPct,
+    o2Limit,
+    o2Pass,
+    betaTransusC: met.oxygen.betaTransusC,
+    powderReuseCycles: met.oxygen.powderReuseCycles,
+    alphaLathWidthUm: met.lath.alphaLathWidthUm,
+    buildOrientationDeg: met.anisotropy.buildOrientationDeg,
+    scanRotationDeg: met.anisotropy.scanRotationDeg,
+    kicToughness: met.predictedKicMpaM05,
     post,
     stateKey,
     ved,
@@ -9320,12 +10825,20 @@ function calculatePhysics() {
   const alphaPrimePct = coolingRate >= 410
     ? (post === 'HIP' || post === 'Annealed' ? 0.0 : (post === 'Stress-relieved' ? 32.0 : 88.5))
     : (post === 'None' ? Math.max(8, Math.round((coolingRate / 410) * 60)) : 0.0);
+  const regimeWithMet = Object.assign({}, regimeInfo, {
+    metallurgyOptions: {
+      buildOrientationDeg: met.anisotropy.buildOrientationDeg,
+      scanRotationDeg: met.anisotropy.scanRotationDeg,
+      oxygenWtPct: met.oxygen.effectiveOxygenWtPct,
+      residualStressFactor: met.anisotropy.residualStressFactor
+    }
+  });
   const specimenStressField = computeSpecimenStressField(
     currentProcess,
     currentAlloy,
     { P: p, v: v, h: h, t: t, T0: preheat, db: spot, coolingRate: coolingRate },
     post,
-    regimeInfo
+    regimeWithMet
   );
   window.twinPhysicsState = {
     process: currentProcess,
@@ -9336,14 +10849,24 @@ function calculatePhysics() {
     alphaPrimePct,
     residualStressMPa: specimenStressField.peakSurfaceStressMpa,
     yieldStrength, tensileStrength: utsTabor,
+    alphaLathWidthUm: met.lath.alphaLathWidthUm,
+    buildOrientationDeg: met.anisotropy.buildOrientationDeg,
+    scanRotationDeg: met.anisotropy.scanRotationDeg,
+    oxygenWtPct: met.oxygen.effectiveOxygenWtPct,
     post,
     stateKey,
-    regime: regimeInfo,
+    regime: regimeWithMet,
     stressField: specimenStressField
   };
   window.latestPhysicsState.stressField = specimenStressField;
+  window.latestPhysicsState.hv = primaryHv;
+  window.latestPhysicsState.preheat = preheat;
+  window.latestPhysicsState.process = currentProcess;
   if (typeof updateTwinScaleAndHud === 'function') {
     updateTwinScaleAndHud();
+  }
+  if (typeof renderTi64Phase3Curves === 'function') {
+    renderTi64Phase3Curves(window.latestPhysicsState);
   }
 
   // 6. Update Bontha Solidification Map Cursor (Bontha et al. 2006, 2009)
@@ -9523,6 +11046,21 @@ function updateDefectMapSvg(proc, p, v) {
 
   const svgP = Math.max(30, Math.min(310, mapY(p)));
   const svgV = Math.max(70, Math.min(560, mapX(v)));
+
+  const markersGrp = document.getElementById('labExperimentalMarkersGroup');
+  if (markersGrp) {
+    if (typeof uploadedLabCoupons !== 'undefined' && Array.isArray(uploadedLabCoupons) && uploadedLabCoupons.length > 0) {
+      const matching = uploadedLabCoupons.filter(c => c.process === proc);
+      markersGrp.innerHTML = matching.map((c) => {
+        const mx = Math.max(70, Math.min(560, mapX(c.v_mm_s)));
+        const my = Math.max(30, Math.min(310, mapY(c.P_W)));
+        return `<polygon points="${mx.toFixed(1)},${(my - 6).toFixed(1)} ${(mx + 6).toFixed(1)},${my.toFixed(1)} ${mx.toFixed(1)},${(my + 6).toFixed(1)} ${(mx - 6).toFixed(1)},${my.toFixed(1)}" fill="#fbbf24" stroke="#0f172a" stroke-width="1.5"><title>${c.sample_id} (${c.P_W}W, ${c.v_mm_s}mm/s, HV=${c.measured_HV || 'N/A'})</title></polygon><text x="${(mx + 8).toFixed(1)}" y="${(my - 6).toFixed(1)}" fill="#fde047" font-size="9" font-family="monospace">${c.sample_id}</text>`;
+      }).join('');
+    } else {
+      markersGrp.innerHTML = '';
+    }
+  }
+
   const cursor = document.getElementById('svgCursor');
   if (cursor) {
     cursor.setAttribute('cx', svgV);
@@ -9753,6 +11291,16 @@ function configureProcessControls(proc) {
 function resetDefaults() {
   configureProcessControls(currentProcess);
   document.getElementById('postProcessingSelect').value = 'HIP';
+  const reuseSl = document.getElementById('sl_reuse');
+  if (reuseSl) reuseSl.value = '0';
+  const autoChk = document.getElementById('chk_auto_reuse');
+  if (autoChk) autoChk.checked = true;
+  const o2Sl = document.getElementById('sl_oxygen');
+  if (o2Sl) o2Sl.value = (currentAlloy === 'ti64_eli' ? '0.110' : '0.160');
+  const oriSel = document.getElementById('buildOrientationSelect');
+  if (oriSel) oriSel.value = '0';
+  const rotSel = document.getElementById('scanRotationSelect');
+  if (rotSel) rotSel.value = '67';
   const prevAuto = autoSync;
   autoSync = false;
   updateVedSolver(parseFloat(document.getElementById('targetVedSlider').value));

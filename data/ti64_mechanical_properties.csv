@@ -1,59 +1,179 @@
-id,paper_number,test_direction,condition,yield_strength_mpa,ultimate_tensile_strength_mpa,elongation_pct,vickers_hardness_hv,fracture_toughness_kic_mpa_m05,charpy_impact_energy_j,fatigue_limit_mpa,astm_f2924_compliant,astm_f3001_compliant,notes
-1,1,horizontal (XY),HIPed (850°C / 200 MPa),885.0,995.0,14.5,345.0,,,540.0,1,1,High-cycle fatigue endurance limit increased from 260 MPa (as-built) to 540 MPa
-2,2,vertical (Z),as-built,1050.0,1220.0,6.8,385.0,,,210.0,0,0,High as-built roughness (Ra 14.2 µm) severely degrades fatigue
-3,3,horizontal (XY),stress-relieved,1010.0,1175.0,7.6,370.0,,,360.0,0,0,HDH fatigue limit was ~85% of gas-atomized GA powder
-4,4,horizontal (XY),as-built,1060.0,1230.0,8.2,390.0,,,410.0,0,0,"As-built strength high, ductility below ASTM F2924 (min 10%)"
-5,5,vertical (Z),as-built,1040.0,1205.0,7.1,382.0,,,290.0,0,0,Laser energy drops created micro-defects reducing fatigue
-6,6,horizontal (XY),as-built,980.0,1110.0,11.5,355.0,,,480.0,1,1,Passes ASTM F2924 in as-built state without post-furnace treatment
-7,7,horizontal (XY),as-built,1055.0,1210.0,7.4,380.0,,,,0,0,Baseline properties for thermal model calibration
-8,8,horizontal (XY),annealed (840°C 2h),920.0,1010.0,13.5,350.0,,,510.0,1,1,Heat treated values meet both ASTM F2924 and ASTM F3001
-9,9,compression,stress-relieved,125.0,165.0,18.0,365.0,,,,0,0,Compressive elastic modulus 3.8 GPa perfectly matching human trabecular/cortical bone
-10,10,horizontal (XY),as-built,1085.0,1240.0,6.8,395.0,,,,0,0,Oxygen pick-up increased YS and UTS by ~40 MPa while decreasing elongation by 1.5%
-11,11,horizontal (XY),annealed (800°C 2h),935.0,1030.0,12.8,352.0,,,,1,1,Prismatic slip dominant at yield; ductility governed by pyramidal slip activation
-12,12,horizontal (XY),stress-relieved,990.0,1130.0,8.5,365.0,48.5,15.0,,0,0,Apparent fracture toughness varies with notch root radius (0.25 to 2 mm)
-13,15,horizontal (XY),as-built,1070.0,1240.0,7.0,388.0,,,,0,0,Residual stresses drive distortion upon electrical discharge machining (EDM) cutoff
-14,18,horizontal (XY),annealed (750°C 2h),950.0,1045.0,12.0,355.0,,,470.0,1,1,Vertical build fatigue limit is 395 MPa due to layer-boundary defect orientation
-15,19,horizontal (XY),as-built,840.0,935.0,12.5,325.0,,24.0,,1,1,"Longer interlayer delay (120s) refines α laths, increasing yield strength by 45 MPa"
-16,24,horizontal (XY),Laser Shock Peened,1120.0,1260.0,8.8,425.0,,,620.0,0,0,High-cycle fatigue limit increased from 340 MPa to 620 MPa (+82% increase)
-17,26,horizontal (XY),annealed (950°C 2h),865.0,960.0,15.2,335.0,,24.5,,1,1,Charpy impact energy increases from 9.2 J (as-built) to 24.5 J (950°C) and 28.1 J (1050°C)
-18,33,horizontal (XY),stress-relieved,945.0,1060.0,12.8,348.0,,,,1,1,Fully certified to ASTM F3001 Grade 23 ELI tensile standards
-19,36,horizontal (XY),HIPed,855.0,965.0,15.0,338.0,,,420.0,1,1,Axial fatigue limit 420 MPa; torsional shear fatigue limit 260 MPa (ratio = 0.62)
-20,37,vertical (Z),as-built vs polished,1030.0,1180.0,7.5,378.0,,,225.0,0,0,As-built fatigue limit 225 MPa governed by surface roughness; polishing increases it to 545 MPa
-21,41,crack perpendicular to layers,as-built,825.0,920.0,11.2,320.0,68.4,26.0,,1,0,Fracture toughness anisotropic: K_IC = 68.4 MPa m^0.5 (crack perp) vs 51.8 MPa m^0.5 (crack parallel)
-22,42,horizontal (XY),Laser Polished,1060.0,1220.0,8.5,380.0,,,510.0,0,0,Surface roughness Ra reduced by 88% from 14.5 µm to 1.75 µm; fatigue limit increased from 240 MPa to 510 MPa
-23,43,horizontal (XY),as-built (500°C bed preheat),910.0,1025.0,13.8,342.0,,,495.0,1,1,Directly meets ASTM F2924 with >13% elongation without post-furnace treatment
-24,44,across repair interface,stress-relieved,850.0,955.0,11.8,335.0,,,,1,0,Joint repair efficiency >96% of parent forged Ti-6Al-4V substrate
-25,46,horizontal vs vertical (isotropic),as-built,995.0,1120.0,12.2,365.0,,,,1,1,Complete elimination of mechanical anisotropy! Vertical YS 992 MPa vs Horizontal YS 995 MPa
-26,48,across repair joint,stress-relieved,845.0,945.0,12.0,330.0,,25.0,,1,1,Joint repair efficiency 98.2% of forged Ti-6Al-4V specification
-27,50,horizontal (XY) vs vertical (Z),as-built,860.0,950.0,13.5,335.0,,,,1,1,Anisotropy observed: Horizontal YS 860 MPa vs Vertical YS 790 MPa; Elongation horizontal 13.5% vs vertical 9.5%
-28,51,horizontal (XY),as-built,830.0,925.0,12.0,322.0,,,460.0,1,0,Fatigue limit is 460 MPa at 175 J/mm but drops to 360 MPa at 350 J/mm due to grain coarsening
-29,52,horizontal (XY),as-built (400°C preheat),925.0,1040.0,14.8,345.0,,,,1,1,Elongation improved from 7.2% (room temp bed) to 14.8% (400°C bed)
-30,54,horizontal (XY),as-built,1045.0,1215.0,8.0,382.0,,,,0,0,High yield strength from high dislocation density and refined laths
-31,13,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-32,14,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-33,16,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-34,17,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-35,20,compression,stress-relieved,140.0,185.0,16.0,360.0,,,,0,0,Compressive stiffness 4.2 GPa
-36,21,horizontal (XY),as-built,850.0,945.0,12.0,330.0,,24.0,,1,1,Compliant with ASTM F2924
-37,22,horizontal (XY),as-built,850.0,945.0,12.0,330.0,,24.0,,1,1,Compliant with ASTM F2924
-38,23,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-39,25,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-40,27,horizontal (XY),as-built,850.0,945.0,12.0,330.0,,24.0,,1,1,Compliant with ASTM F2924
-41,28,compression,stress-relieved,140.0,185.0,16.0,360.0,,,,0,0,Compressive stiffness 4.2 GPa
-42,29,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-43,30,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-44,31,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-45,32,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-46,34,horizontal (XY),HIPed,875.0,980.0,14.5,340.0,,,530.0,1,1,Meets ASTM F2924 and F3001
-47,35,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-48,38,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-49,39,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-50,40,horizontal (XY),as-built,875.0,965.0,8.5,335.0,,,210.0,0,0,DED LOF defect regime reduces tensile ductility (Nursyifaulkhair 2019)
-51,45,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-52,47,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-53,49,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties
-54,53,horizontal (XY),as-built,890.0,980.0,11.0,350.0,,,290.0,1,0,Direct LMD as-built (~350 HV) meets F2924/F3187 ductility (Chen 2016)
-55,55,horizontal (XY),as-built,1040.0,1210.0,7.8,385.0,,,340.0,0,0,As-built martensitic alpha prime needles
-56,56,horizontal (XY),as-built,1010.0,1180.0,8.2,375.0,,,330.0,0,0,Bulky 3D columnar prior-beta grains
-57,57,vertical (Z),as-built,890.0,1020.0,9.8,340.0,,,310.0,0,0,Thin-wall layer boundary ductility
-58,58,longitudinal,interpass-rolled,865.0,975.0,14.5,325.0,,,280.0,1,1,Refined equiaxed prior-beta grains compliant with ASTM F2924
+id,paper_number,test_direction,condition,yield_strength_mpa,ultimate_tensile_strength_mpa,elongation_pct,vickers_hardness_hv,fracture_toughness_kic_mpa_m05,charpy_impact_energy_j,fatigue_limit_mpa,astm_f2924_compliant,astm_f3001_compliant,notes,build_orientation_deg,oxygen_wt_pct,max_defect_size_um,defect_type,relative_density_pct
+1,1,horizontal (XY),HIPed (850°C / 200 MPa),885.0,995.0,14.5,345.0,,,540.0,1,1,High-cycle fatigue endurance limit increased from 260 MPa (as-built) to 540 MPa,0,,,none,
+2,2,vertical (Z),as-built,1050.0,1220.0,6.8,385.0,,,210.0,0,0,High as-built roughness (Ra 14.2 µm) severely degrades fatigue,90,,,none,
+3,3,horizontal (XY),stress-relieved,1010.0,1175.0,7.6,370.0,,,360.0,0,0,HDH fatigue limit was ~85% of gas-atomized GA powder,0,0.19,,lof,
+4,4,horizontal (XY),as-built,1060.0,1230.0,8.2,390.0,,,410.0,0,0,"As-built strength high, ductility below ASTM F2924 (min 10%)",0,,,none,
+5,5,vertical (Z),as-built,1040.0,1205.0,7.1,382.0,,,290.0,0,0,Laser energy drops created micro-defects reducing fatigue,90,,,none,
+6,6,horizontal (XY),as-built,980.0,1110.0,11.5,355.0,,,480.0,1,1,Passes ASTM F2924 in as-built state without post-furnace treatment,0,,,none,
+7,7,horizontal (XY),as-built,1055.0,1210.0,7.4,380.0,,,,0,0,Baseline properties for thermal model calibration,0,,,none,
+8,8,horizontal (XY),annealed (840°C 2h),920.0,1010.0,13.5,350.0,,,510.0,1,1,Heat treated values meet both ASTM F2924 and ASTM F3001,0,,,none,
+9,9,compression,stress-relieved,125.0,165.0,18.0,365.0,,,,0,0,Compressive elastic modulus 3.8 GPa perfectly matching human trabecular/cortical bone,,,,none,
+10,10,horizontal (XY),as-built,1085.0,1240.0,6.8,395.0,,,,0,0,Oxygen pick-up increased YS and UTS by ~40 MPa while decreasing elongation by 1.5%,0,0.17,,none,
+11,11,horizontal (XY),annealed (800°C 2h),935.0,1030.0,12.8,352.0,,,,1,1,Prismatic slip dominant at yield; ductility governed by pyramidal slip activation,0,,,none,
+12,12,horizontal (XY),stress-relieved,990.0,1130.0,8.5,365.0,48.5,15.0,,0,0,Apparent fracture toughness varies with notch root radius (0.25 to 2 mm),0,,,none,
+13,15,horizontal (XY),as-built,1070.0,1240.0,7.0,388.0,,,,0,0,Residual stresses drive distortion upon electrical discharge machining (EDM) cutoff,0,,,none,
+14,18,horizontal (XY),annealed (750°C 2h),950.0,1045.0,12.0,355.0,,,470.0,1,1,Vertical build fatigue limit is 395 MPa due to layer-boundary defect orientation,0,,,none,
+15,19,horizontal (XY),as-built,840.0,935.0,12.5,325.0,,24.0,,1,1,"Longer interlayer delay (120s) refines α laths, increasing yield strength by 45 MPa",0,,,none,
+16,24,horizontal (XY),Laser Shock Peened,1120.0,1260.0,8.8,425.0,,,620.0,0,0,High-cycle fatigue limit increased from 340 MPa to 620 MPa (+82% increase),0,,,none,
+17,26,horizontal (XY),annealed (950°C 2h),865.0,960.0,15.2,335.0,,24.5,,1,1,Charpy impact energy increases from 9.2 J (as-built) to 24.5 J (950°C) and 28.1 J (1050°C),0,,,none,
+18,33,horizontal (XY),stress-relieved,945.0,1060.0,12.8,348.0,,,,1,1,Fully certified to ASTM F3001 Grade 23 ELI tensile standards,0,,,none,
+19,36,horizontal (XY),HIPed,855.0,965.0,15.0,338.0,,,420.0,1,1,Axial fatigue limit 420 MPa; torsional shear fatigue limit 260 MPa (ratio = 0.62),0,,,none,
+20,37,vertical (Z),as-built vs polished,1030.0,1180.0,7.5,378.0,,,225.0,0,0,As-built fatigue limit 225 MPa governed by surface roughness; polishing increases it to 545 MPa,90,,,none,
+21,41,crack perpendicular to layers,as-built,825.0,920.0,11.2,320.0,68.4,26.0,,1,0,Fracture toughness anisotropic: K_IC = 68.4 MPa m^0.5 (crack perp) vs 51.8 MPa m^0.5 (crack parallel),90,,,none,
+22,42,horizontal (XY),Laser Polished,1060.0,1220.0,8.5,380.0,,,510.0,0,0,Surface roughness Ra reduced by 88% from 14.5 µm to 1.75 µm; fatigue limit increased from 240 MPa to 510 MPa,0,,,none,
+23,43,horizontal (XY),as-built (500°C bed preheat),910.0,1025.0,13.8,342.0,,,495.0,1,1,Directly meets ASTM F2924 with >13% elongation without post-furnace treatment,0,,,none,
+24,44,across repair interface,stress-relieved,850.0,955.0,11.8,335.0,,,,1,0,Joint repair efficiency >96% of parent forged Ti-6Al-4V substrate,,,,none,
+25,46,horizontal vs vertical (isotropic),as-built,995.0,1120.0,12.2,365.0,,,,1,1,Complete elimination of mechanical anisotropy! Vertical YS 992 MPa vs Horizontal YS 995 MPa,,,,none,
+26,48,across repair joint,stress-relieved,845.0,945.0,12.0,330.0,,25.0,,1,1,Joint repair efficiency 98.2% of forged Ti-6Al-4V specification,,,,none,
+27,50,horizontal (XY) vs vertical (Z),as-built,860.0,950.0,13.5,335.0,,,,1,1,Anisotropy observed: Horizontal YS 860 MPa vs Vertical YS 790 MPa; Elongation horizontal 13.5% vs vertical 9.5%,,,,none,
+28,51,horizontal (XY),as-built,830.0,925.0,12.0,322.0,,,460.0,1,0,Fatigue limit is 460 MPa at 175 J/mm but drops to 360 MPa at 350 J/mm due to grain coarsening,0,,,none,
+29,52,horizontal (XY),as-built (400°C preheat),925.0,1040.0,14.8,345.0,,,,1,1,Elongation improved from 7.2% (room temp bed) to 14.8% (400°C bed),0,,,none,
+30,54,horizontal (XY),as-built,1045.0,1215.0,8.0,382.0,,,,0,0,High yield strength from high dislocation density and refined laths,0,,,none,
+31,13,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+32,14,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+33,16,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+34,17,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+35,20,compression,stress-relieved,140.0,185.0,16.0,360.0,,,,0,0,Compressive stiffness 4.2 GPa,,,,none,
+36,21,horizontal (XY),as-built,850.0,945.0,12.0,330.0,,24.0,,1,1,Compliant with ASTM F2924,0,,,none,
+37,22,horizontal (XY),as-built,850.0,945.0,12.0,330.0,,24.0,,1,1,Compliant with ASTM F2924,0,,,none,
+38,23,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,0.129,,none,
+39,25,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+40,27,horizontal (XY),as-built,850.0,945.0,12.0,330.0,,24.0,,1,1,Compliant with ASTM F2924,0,,,none,
+41,28,compression,stress-relieved,140.0,185.0,16.0,360.0,,,,0,0,Compressive stiffness 4.2 GPa,,,,none,
+42,29,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+43,30,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+44,31,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+45,32,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+46,34,horizontal (XY),HIPed,875.0,980.0,14.5,340.0,,,530.0,1,1,Meets ASTM F2924 and F3001,0,,,none,
+47,35,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+48,38,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+49,39,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+50,40,horizontal (XY),as-built,875.0,965.0,8.5,335.0,,,210.0,0,0,DED LOF defect regime reduces tensile ductility (Nursyifaulkhair 2019),0,,,lof,
+51,45,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+52,47,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+53,49,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
+54,53,horizontal (XY),as-built,890.0,980.0,11.0,350.0,,,290.0,1,0,Direct LMD as-built (~350 HV) meets F2924/F3187 ductility (Chen 2016),0,,,none,
+55,55,horizontal (XY),as-built,1040.0,1210.0,7.8,385.0,,,340.0,0,0,As-built martensitic alpha prime needles,0,,,none,
+56,56,horizontal (XY),as-built,1010.0,1180.0,8.2,375.0,,,330.0,0,0,Bulky 3D columnar prior-beta grains,0,,,none,
+57,57,vertical (Z),as-built,890.0,1020.0,9.8,340.0,,,310.0,0,0,Thin-wall layer boundary ductility,90,,,none,
+58,58,longitudinal,interpass-rolled,865.0,975.0,14.5,325.0,,,280.0,1,1,Refined equiaxed prior-beta grains compliant with ASTM F2924,0,,,none,
+59,64,,,855,980,12.6,,,,,,,Verified dashboard summary (Bermingham et al. (2019)): Promoting columnar to equiaxed transition (CET) and grain refinement in AM Ti alloys (767 citations).,,,,,99.75
+60,80,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Williams S.W. et al. 2016) | Materials Science and Technology United Kingdom | DOI: 10.1179/1743284715Y.0000000073 | Pending quantitative experimental extraction,,,,,
+61,81,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wang F. et al. 2013) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-012-1444-6 | Pending quantitative experimental extraction,,,,,
+62,82,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Bermingham M.J. et al. 2015) | Acta Materialia | DOI: 10.1016/j.actamat.2015.03.035 | Pending quantitative experimental extraction,,,,,
+63,83,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Szost B.A. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2015.09.115 | Pending quantitative experimental extraction,,,,,
+64,84,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Donoghue J. et al. 2016) | Materials Characterization | DOI: 10.1016/j.matchar.2016.02.001 | Pending quantitative experimental extraction,,,,,
+65,85,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu B. et al. 2017) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2017.07.037 | Pending quantitative experimental extraction,,,,,
+66,86,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Martina F. et al. 2015) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-015-3172-1 | Pending quantitative experimental extraction,,,,,
+67,87,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; McAndrew A.R. et al. 2018) | Additive Manufacturing | DOI: 10.1016/j.addma.2018.03.006 | Pending quantitative experimental extraction,,,,,
+68,88,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu B. et al. 2018) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2018.03.024 | Pending quantitative experimental extraction,,,,,
+69,89,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu B. et al. 2018) | Additive Manufacturing | DOI: 10.1016/j.addma.2018.08.004 | Pending quantitative experimental extraction,,,,,
+70,90,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu B. et al. 2018) | Corrosion Science | DOI: 10.1016/j.corsci.2018.03.047 | Pending quantitative experimental extraction,,,,,
+71,91,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Zhang J. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2015.10.141 | Pending quantitative experimental extraction,,,,,
+72,92,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Martina F. et al. 2016) | Materials Science and Technology United Kingdom | DOI: 10.1080/02670836.2016.1142704 | Pending quantitative experimental extraction,,,,,
+73,93,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Bermingham M.J. et al. 2018) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2018.04.158 | Pending quantitative experimental extraction,,,,,
+74,94,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Biswal R. et al. 2019) | International Journal of Fatigue | DOI: 10.1016/j.ijfatigue.2019.01.017 | Pending quantitative experimental extraction,,,,,
+75,95,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Yang J. et al. 2017) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-017-4087-9 | Pending quantitative experimental extraction,,,,,
+76,96,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Hönnige J.R. et al. 2018) | Materials and Design | DOI: 10.1016/j.matdes.2018.03.065 | Pending quantitative experimental extraction,,,,,
+77,97,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Bambach M. et al. 2020) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2020.116689 | Pending quantitative experimental extraction,,,,,
+78,98,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Motallebi R. et al. 2022) | Current Opinion in Solid State and Materials Science | DOI: 10.1016/j.cossms.2022.100992 | Pending quantitative experimental extraction,,,,,
+79,99,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wang J. et al. 2018) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2018.07.235 | Pending quantitative experimental extraction,,,,,
+80,100,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Sequeira Almeida P.M. et al. 2010) | 21st Annual International Solid Freeform Fabrication Symposium an Additive Manufacturing Conference Sff 2010 | Pending quantitative experimental extraction,,,,,
+81,101,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Shi X. et al. 2017) | Materials Science and Engineering A | DOI: 10.1016/j.msea.2016.12.065 | Pending quantitative experimental extraction,,,,,
+82,102,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Kennedy J.R. et al. 2021) | Additive Manufacturing | DOI: 10.1016/j.addma.2021.101928 | Pending quantitative experimental extraction,,,,,
+83,103,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu Q. et al. 2019) | Additive Manufacturing | DOI: 10.1016/j.addma.2019.100808 | Pending quantitative experimental extraction,,,,,
+84,104,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Zhang X. et al. 2017) | Fatigue and Fracture of Engineering Materials and Structures | DOI: 10.1111/ffe.12547 | Pending quantitative experimental extraction,,,,,
+85,69,,,840,965,12.0,,,,,,,Verified dashboard summary (Heigel et al. (2015)): Thermo-mechanical model development and validation of directed energy deposition of Ti-6Al-4V (497 citations).,,,,,99.68
+86,71,,,925,1060,11.0,,,,,,,Verified dashboard summary (Murr et al. (2012)): Fabrication of metal and alloy components by additive manufacturing: 3D materials science (465 citations).,,,,,99.81
+87,77,,,850,975,11.9,,,,,,,Verified dashboard summary (Liu et al. (2021)): Review on additive manufacturing of titanium alloys for aerospace applications (350 citations).,,,,,99.74
+88,105,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Liu S. et al. 2019) | Materials and Design | DOI: 10.1016/j.matdes.2018.107552 | Pending quantitative experimental extraction,,,,,
+89,106,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Lewandowski J.J. et al. 2016) | Annual Review of Materials Research | DOI: 10.1146/annurev-matsci-070115-032024 | Pending quantitative experimental extraction,,,,,
+90,107,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Carroll B.E. et al. 2015) | Acta Materialia | DOI: 10.1016/j.actamat.2014.12.054 | Pending quantitative experimental extraction,,,,,
+91,108,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Nguyen H.D. et al. 2022) | Journal of Materials Research and Technology | DOI: 10.1016/j.jmrt.2022.04.055 | Pending quantitative experimental extraction,,,,,
+92,109,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Heigel J.C. et al. 2015) | Additive Manufacturing | DOI: 10.1016/j.addma.2014.10.003 | Pending quantitative experimental extraction,,,,,
+93,110,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Wu X. et al. 2004) | Materials and Design | DOI: 10.1016/j.matdes.2003.09.009 | Pending quantitative experimental extraction,,,,,
+94,111,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Bobbio L.D. et al. 2017) | Acta Materialia | DOI: 10.1016/j.actamat.2016.12.070 | Pending quantitative experimental extraction,,,,,
+95,112,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Kelly S.M. et al. 2004) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-004-0094-8 | Pending quantitative experimental extraction,,,,,
+96,113,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Bandyopadhyay A. et al. 2010) | Acta Biomaterialia | DOI: 10.1016/j.actbio.2009.11.011 | Pending quantitative experimental extraction,,,,,
+97,114,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Sterling A.J. et al. 2016) | Materials Science and Engineering A | DOI: 10.1016/j.msea.2015.12.026 | Pending quantitative experimental extraction,,,,,
+98,115,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Liu Z. et al. 2021) | JOM | DOI: 10.1007/s11837-021-04670-6 | Pending quantitative experimental extraction,,,,,
+99,116,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Azarniya A. et al. 2019) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2019.04.255 | Pending quantitative experimental extraction,,,,,
+100,117,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Beese A.M. et al. 2016) | JOM | DOI: 10.1007/s11837-015-1759-z | Pending quantitative experimental extraction,,,,,
+101,118,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Lu X. et al. 2019) | Additive Manufacturing | DOI: 10.1016/j.addma.2019.02.001 | Pending quantitative experimental extraction,,,,,
+102,119,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Kelly S.M. et al. 2004) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-004-0095-7 | Pending quantitative experimental extraction,,,,,
+103,120,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Onuike B. et al. 2018) | Additive Manufacturing | DOI: 10.1016/j.addma.2018.06.025 | Pending quantitative experimental extraction,,,,,
+104,121,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Zhai Y. et al. 2016) | Engineering Failure Analysis | DOI: 10.1016/j.engfailanal.2016.05.036 | Pending quantitative experimental extraction,,,,,
+105,122,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Khanzadeh M. et al. 2019) | Iise Transactions | DOI: 10.1080/24725854.2017.1417656 | Pending quantitative experimental extraction,,,,,
+106,123,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Qian M. et al. 2016) | MRS Bulletin | DOI: 10.1557/mrs.2016.215 | Pending quantitative experimental extraction,,,,,
+107,124,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Yang Q. et al. 2016) | Additive Manufacturing | DOI: 10.1016/j.addma.2016.06.012 | Pending quantitative experimental extraction,,,,,
+108,125,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Hayes B.J. et al. 2017) | Acta Materialia | DOI: 10.1016/j.actamat.2017.05.025 | Pending quantitative experimental extraction,,,,,
+109,126,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Lu H. et al. 2022) | Additive Manufacturing | DOI: 10.1016/j.addma.2022.102877 | Pending quantitative experimental extraction,,,,,
+110,127,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Bontha S. et al. 2006) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2006.03.155 | Pending quantitative experimental extraction,,,,,
+111,128,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Sahasrabudhe H. et al. 2015) | Additive Manufacturing | DOI: 10.1016/j.addma.2014.10.002 | Pending quantitative experimental extraction,,,,,
+112,129,,,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Li W. et al. 2017) | Additive Manufacturing | DOI: 10.1016/j.addma.2016.12.006 | Pending quantitative experimental extraction,,,,,
+113,79,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Tischel F. et al. 2024) | Proceedings Euro Pm 2024 Congress and Exhibition | DOI: 10.59499/EP246278578 | Pending quantitative experimental extraction,,,,,
+114,155,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Meier C. et al. 2019) | Pending quantitative experimental extraction,,,,,
+115,156,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Miyanaji H. et al. 2018) | Pending quantitative experimental extraction,,,,,
+116,157,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Stevens E. et al. 2018) | Pending quantitative experimental extraction,,,,,
+117,158,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Phua A. et al. 2021) | Pending quantitative experimental extraction,,,,,
+118,159,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Dilip J.J.S. et al. 2017) | Pending quantitative experimental extraction,,,,,
+119,160,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Simchi A. et al. 2023) | Pending quantitative experimental extraction,,,,,
+120,161,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Yadav P. et al. 2020) | Pending quantitative experimental extraction,,,,,
+121,162,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2024) | Pending quantitative experimental extraction,,,,,
+122,163,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Alegre J.M. et al. 2024) | Pending quantitative experimental extraction,,,,,
+123,164,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Tischel F. et al. 2024) | Pending quantitative experimental extraction,,,,,
+124,165,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Siddiqui M.A.S. et al. 2025) | Pending quantitative experimental extraction,,,,,
+125,166,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2025) | Pending quantitative experimental extraction,,,,,
+126,167,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Bhaduri D. et al. 2025) | Pending quantitative experimental extraction,,,,,
+127,168,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Frieden Templeton W. et al. 2024) | Pending quantitative experimental extraction,,,,,
+128,169,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Jump N. et al. 2025) | Pending quantitative experimental extraction,,,,,
+129,170,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Bernhard G.H. et al. 2021) | Pending quantitative experimental extraction,,,,,
+130,171,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Xu P. et al. 2022) | Pending quantitative experimental extraction,,,,,
+131,172,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2025) | Pending quantitative experimental extraction,,,,,
+132,173,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Simchi A. et al. 2022) | Pending quantitative experimental extraction,,,,,
+133,174,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Paramore J.D. et al. 2020) | Pending quantitative experimental extraction,,,,,
+134,175,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2022) | Pending quantitative experimental extraction,,,,,
+135,176,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Simchi A. et al. 2021) | Pending quantitative experimental extraction,,,,,
+136,177,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Qian Y. et al. 2026) | Pending quantitative experimental extraction,,,,,
+137,178,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Persson M. et al. 2017) | Pending quantitative experimental extraction,,,,,
+138,59,,,890,1010,12.8,,,,,,,"Verified dashboard summary (Vrancken et al. (2012)): Heat treatment of Ti6Al4V produced by SLM: Martensite decomposition, ductility recovery (1908 citations).",,,,,99.85
+139,60,,,920,1050,11.2,,,,,,,Verified dashboard summary (Vilaro et al. (2011)): As-fabricated and heat-treated microstructures of Ti-6Al-4V processed by SLM (1244 citations).,,,,,99.80
+140,61,,,980,1160,8.4,,,,,,,Verified dashboard summary (Simonelli et al. (2014)): Effect of build orientation on mechanical properties and fracture modes of SLM Ti-6Al-4V (992 citations).,,,,,99.88
+141,63,,,935,1085,13.0,,,,,,,Verified dashboard summary (Todaro et al. (2020)): Grain structure control during metal 3D printing by high-intensity ultrasound (842 citations).,,,,,99.92
+142,65,,,965,1135,9.1,,,,,,,Verified dashboard summary (Zhao et al. (2017)): Real-time monitoring of LPBF using high-speed synchrotron X-ray imaging and diffraction (761 citations).,,,,,99.86
+143,68,,,970,1145,8.8,,,,,,,Verified dashboard summary (Facchini et al. (2010)): Ductility of Ti-6Al-4V alloy produced by selective laser melting of prealloyed powders (520 citations).,,,,,99.78
+144,70,,,960,1130,9.4,,,,,,,Verified dashboard summary (Ly et al. (2017)): Metal vapor micro-jet controls material redistribution and denudation in LPBF (470 citations).,,,,,99.87
+145,72,,,955,1125,9.8,,,,,,,Verified dashboard summary (Cain et al. (2015)): Crack propagation and fracture toughness of Ti-6Al-4V produced by selective laser melting (408 citations).,,,,,99.85
+146,73,,,965,1140,9.2,,,,,,,"Verified dashboard summary (Dilip et al. (2017)): Processing parameters evolution of melt pool, porosity, and microstructures in Ti-6Al-4V (398 citations).",,,,,99.84
+147,74,,,975,1150,8.9,,,,,,,Verified dashboard summary (Simonelli et al. (2015)): Laser spatter and oxidation reactions during selective laser melting of Ti-6Al-4V (365 citations).,,,,,99.86
+148,76,,,980,1155,8.6,,,,,,,Verified dashboard summary (Simonelli et al. (2014)): On the crystallographic texture formation of selective laser melted Ti-6Al-4V (350 citations).,,,,,99.87
+149,78,,,960,1135,9.5,,,,,,,Verified dashboard summary (Cunningham et al. (2017)): Synchrotron-based X-ray microtomography of processing variables and porosity formation (346 citations).,,,,,99.88
+150,130,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Thijs L. et al. 2010) | Acta Materialia | DOI: 10.1016/j.actamat.2010.02.004 | Pending quantitative experimental extraction,,,,,
+151,131,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Liu S. et al. 2019) | Materials and Design | DOI: 10.1016/j.matdes.2018.107552 | Pending quantitative experimental extraction,,,,,
+152,132,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Vrancken B. et al. 2012) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2012.07.022 | Pending quantitative experimental extraction,,,,,
+153,133,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Murr L.E. et al. 2012) | Journal of Materials Science and Technology | DOI: 10.1016/S1005-0302(12)60016-4 | Pending quantitative experimental extraction,,,,,
+154,134,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Xu W. et al. 2015) | Acta Materialia | DOI: 10.1016/j.actamat.2014.11.028 | Pending quantitative experimental extraction,,,,,
+155,135,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Vilaro T. et al. 2011) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-011-0731-y | Pending quantitative experimental extraction,,,,,
+156,136,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Gong H. et al. 2014) | Additive Manufacturing | DOI: 10.1016/j.addma.2014.08.002 | Pending quantitative experimental extraction,,,,,
+157,137,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Qiu C. et al. 2015) | Acta Materialia | DOI: 10.1016/j.actamat.2015.06.004 | Pending quantitative experimental extraction,,,,,
+158,138,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Murr L.E. et al. 2009) | Journal of the Mechanical Behavior of Biomedical Materials | DOI: 10.1016/j.jmbbm.2008.05.004 | Pending quantitative experimental extraction,,,,,
+159,139,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Gong H. et al. 2015) | Materials and Design | DOI: 10.1016/j.matdes.2015.07.147 | Pending quantitative experimental extraction,,,,,
+160,140,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Vandenbroucke B. et al. 2007) | Rapid Prototyping Journal | DOI: 10.1108/13552540710776142 | Pending quantitative experimental extraction,,,,,
+161,141,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Bobbert F.S.L. et al. 2017) | Acta Biomaterialia | DOI: 10.1016/j.actbio.2017.02.024 | Pending quantitative experimental extraction,,,,,
+162,142,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Edwards P. et al. 2014) | Materials Science and Engineering A | DOI: 10.1016/j.msea.2014.01.041 | Pending quantitative experimental extraction,,,,,
+163,143,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Yang J. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2016.06.117 | Pending quantitative experimental extraction,,,,,
+164,144,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Qiu C. et al. 2013) | Materials Science and Engineering A | DOI: 10.1016/j.msea.2013.04.099 | Pending quantitative experimental extraction,,,,,
+165,145,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Zhao C. et al. 2017) | Scientific Reports | DOI: 10.1038/s41598-017-03761-2 | Pending quantitative experimental extraction,,,,,
+166,146,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Zhang L.C. et al. 2016) | Advanced Engineering Materials | DOI: 10.1002/adem.201500419 | Pending quantitative experimental extraction,,,,,
+167,147,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Yan C. et al. 2015) | Journal of the Mechanical Behavior of Biomedical Materials | DOI: 10.1016/j.jmbbm.2015.06.024 | Pending quantitative experimental extraction,,,,,
+168,148,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Zhao C. et al. 2020) | Science | DOI: 10.1126/science.abd1587 | Pending quantitative experimental extraction,,,,,
+169,149,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Xu W. et al. 2017) | Acta Materialia | DOI: 10.1016/j.actamat.2016.12.027 | Pending quantitative experimental extraction,,,,,
+170,150,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Zhao X. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2015.12.135 | Pending quantitative experimental extraction,,,,,
+171,151,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Nguyen H.D. et al. 2022) | Journal of Materials Research and Technology | DOI: 10.1016/j.jmrt.2022.04.055 | Pending quantitative experimental extraction,,,,,
+172,152,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Shipley H. et al. 2018) | International Journal of Machine Tools and Manufacture | DOI: 10.1016/j.ijmachtools.2018.01.003 | Pending quantitative experimental extraction,,,,,
+173,153,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Tammas-Williams S. et al. 2015) | Materials Characterization | DOI: 10.1016/j.matchar.2015.02.008 | Pending quantitative experimental extraction,,,,,
+174,154,,,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Dai N. et al. 2016) | Corrosion Science | DOI: 10.1016/j.corsci.2015.10.041 | Pending quantitative experimental extraction,,,,,
+175,62,,,950,1120,10.5,,,,,,,"Verified dashboard summary (Gorsse et al. (2017)): Characteristic microstructures, solidification regimes, and mechanical properties in AM (891 citations).",,,,,99.90
+176,66,,,910,1040,11.5,,,,,,,Verified dashboard summary (Murr et al. (2010)): Next-generation biomedical implants using additive manufacturing of functional mesh arrays (637 citations).,,,,,99.82
+177,67,,,940,1070,10.2,,,,,,,Verified dashboard summary (Tammas-Williams et al. (2015)): XCT analysis of melt strategies on defect population in Ti-6Al-4V manufactured by SEBM (594 citations).,,,,,99.83
+178,75,,,915,1050,13.1,,,,,,,"Verified dashboard summary (de Formanoir et al. (2016)): Electron beam melted Ti-6Al-4V: Microstructure, texture and mechanical behavior (357 citations).",,,,,99.89

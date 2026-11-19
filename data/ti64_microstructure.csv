@@ -1,55 +1,179 @@
-id,paper_number,condition,phases_identified,alpha_fraction_pct,beta_fraction_pct,alpha_prime_fraction_pct,alpha_lath_thickness_um,prior_beta_grain_width_um,prior_beta_morphology,characterization_methods,notes
-1,1,HIPed (850°C / 200 MPa),"alpha,beta",92.5,7.5,0.0,1.6,85.0,columnar,"SEM,EBSD,XRD",Sub-transus low-T HIP prevented grain coarsening while achieving 99.98% relative density
-2,2,as-built,alpha_prime,0.0,2.0,98.0,0.7,60.0,columnar,"OM,SEM,XRD",High-aspect acicular martensite with high dislocation density
-3,3,stress-relieved (650°C 2h),"alpha_prime,alpha",40.0,4.0,56.0,0.9,70.0,columnar,"SEM,EBSD,EDS",Higher interstitial oxygen (0.19 wt%) in HDH powder restricted ductility
-4,4,as-built,alpha_prime,5.0,2.0,93.0,0.65,55.0,columnar,"SEM,EBSD",Microstructure mapping linked into defect knowledge graph
-5,5,as-built,alpha_prime,0.0,1.5,98.5,0.72,62.0,columnar,"SEM,EDS,EBSD",Fine acicular α martensite needles inside prior-β grains
-6,6,as-built (in-situ heat treated),"alpha,beta",88.0,12.0,0.0,1.1,78.0,columnar,"Synchrotron XRD,SEM,TEM,EBSD",Direct formation of stable α+β without acicular martensite
-7,7,as-built,alpha_prime,0.0,3.0,97.0,0.68,58.0,columnar,"OM,SEM",Columnar prior-β aligned with heat dissipation flux
-8,8,as-built vs heat-treated (840°C 2h),"alpha_prime,alpha,beta",85.0,10.0,5.0,1.5,80.0,columnar,"OM,SEM,TEM,EBSD,XRD",Decomposition of α martensite into lamellar α+β via post-heat treatment
-9,9,stress-relieved (650°C 3h),"alpha_prime,alpha",35.0,5.0,60.0,0.8,40.0,mixed,"micro-CT,SEM,EDS",Strut surface roughness and internal microporosity evaluated by micro-CT
-10,10,as-built (Cycle 10 powder),alpha_prime,0.0,2.5,97.5,0.65,65.0,columnar,"SEM,EDS,PSD,XRD",Interstitial oxygen increased from 0.13 wt% (Cycle 1) to 0.17 wt% (Cycle 10)
-11,11,as-built vs annealed (800°C 2h),"alpha_prime,alpha,beta",82.0,11.0,7.0,1.25,72.0,columnar,"High-Res EBSD,In-situ SEM,TEM","Basal <a>, prismatic <a>, and 1st order pyramidal <c+a> slip systems quantified"
-12,12,stress-relieved,"alpha_prime,alpha",30.0,3.0,67.0,0.75,60.0,columnar,"SEM,Optical",Notch root microstructure and crack initiation path
-13,15,as-built,alpha_prime,0.0,1.0,99.0,0.62,55.0,columnar,"Neutron Diffraction,Synchrotron XRD,SEM",Neutron diffraction residual strain mapping through specimen thickness
-14,18,annealed (750°C 2h),"alpha,beta",87.0,13.0,0.0,1.15,75.0,columnar,"OM,SEM,Fractography",Lamellar α+β basketweave structure provides superior crack deflection
-15,19,as-built (varying interlayer delay: 0s to 120s),"alpha,beta",89.0,11.0,0.0,2.8,1400.0,columnar,"OM,SEM,EBSD,Pyrometry",Large prior-β columnar grains (>1 mm width) traversing multiple layers
-16,24,Laser Shock Peened (LSP),"alpha_prime,alpha",50.0,5.0,45.0,0.5,55.0,columnar,"TEM,EBSD,X-ray Stress Analyzer",Surface nanocrystallization and ultra-high dislocation density (~10^15 m^-2)
-17,26,"annealed (700°C, 800°C, 950°C, 1050°C)","alpha,beta",86.0,14.0,0.0,2.2,90.0,columnar,"OM,SEM,XRD,Charpy Instrumented",Acicular martensite fully decomposes into coarsened α+β lamellae above 800°C
-18,33,stress-relieved (650°C 2h),"alpha_prime,alpha",45.0,5.0,50.0,0.95,65.0,columnar,"OM,SEM,EBSD,XRD","Extra low interstitial content (O2 < 0.12 wt%, N2 < 0.02 wt%, C < 0.03 wt%)"
-19,36,HIPed (920°C / 100 MPa),"alpha,beta",88.0,12.0,0.0,2.4,95.0,columnar,"SEM,EBSD,Fractography",Standard HIP microstructure with fully globularized and coarsened α+β lamellae
-20,37,as-built vs machined/polished,alpha_prime,0.0,2.0,98.0,0.7,60.0,columnar,"SEM,X-ray CT,Confocal Profilometry",X-ray CT quantified 3D pore distributions and sphericity
-21,41,as-built (W-DED),"alpha,beta",90.0,10.0,0.0,2.6,1200.0,columnar,"OM,SEM,EBSD,CTOD Testing",Epitaxial columnar prior-β grains aligned along build direction Z
-22,42,Laser Polished (continuous wave vs pulsed),"alpha_prime,alpha",60.0,5.0,35.0,0.45,50.0,columnar,"Interferometry,SEM,EDS,Vickers",Ultra-fine refined surface remelt layer with high hardness (380 HV)
-23,43,as-built (500°C bed preheat),"alpha,beta",89.0,11.0,0.0,1.4,75.0,columnar,"Atom Probe Tomography (APT),Synchrotron XRD,SEM,TEM","APT reveals nanoscale elemental partitioning: Al concentrates in α (6.8 wt%), V concentrates in β (14.2 wt%)"
-24,44,repaired + stress-relieved,"alpha,beta",88.0,12.0,0.0,2.1,450.0,columnar,"OM,SEM,EDS line scan across interface",Defect-free epitaxial bonding across repair-substrate interface
-25,46,as-built (Ti64 + 1.0 wt% Fe),"alpha,beta",84.0,16.0,0.0,1.1,28.0,equiaxed,"EBSD pole figures,SEM,EDS,TEM",Columnar-to-Equiaxed Transition (CET) achieved! Columnar prior-β replaced by 28 µm equiaxed grains
-26,48,repaired + stress-relieved (650°C 2h),"alpha,beta",89.0,11.0,0.0,2.3,850.0,columnar,"OM,SEM,EBSD,X-ray Radiography",Zero lack-of-fusion defects at groove sidewall interfaces
-27,13,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-28,50,as-built (Laser-DED),"alpha,beta",88.5,11.5,0.0,2.2,650.0,columnar,"EBSD,SEM,OM,XRD",Strong <001> prior-β fiber crystallographic texture along build direction
-29,51,as-built (wire-DED),"alpha,beta",89.0,11.0,0.0,2.9,1100.0,columnar,"OM,SEM,EBSD,Rotating Bending Fatigue",Prior-β column width increased from 650 µm (175 J/mm) to 1350 µm (350 J/mm)
-30,52,as-built (400°C bed preheat),"alpha,beta",88.0,12.0,0.0,1.35,72.0,columnar,"OM,SEM,XRD,Tensile",Fine lamellar α+β basketweave achieved directly on the build plate
-31,54,as-built,"alpha_prime,alpha",15.0,3.0,82.0,0.75,58.0,columnar,"EBSD Parent Reconstruction,SEM,TEM",Reconstructed 12 variants of α from parent β via Burgers {0001}α // {110}β
-32,14,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-33,16,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-34,17,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-35,20,etched / stress-relieved,"alpha_prime,alpha",40.0,5.0,55.0,0.85,45.0,mixed,"micro-CT,SEM",Porous architecture with tuned pore sizes
-36,21,as-built,"alpha,beta",88.0,12.0,0.0,2.2,750.0,columnar,"OM,SEM,EBSD",Coarser lamellar structure typical of DED
-37,22,as-built,"alpha,beta",88.0,12.0,0.0,2.2,750.0,columnar,"OM,SEM,EBSD",Coarser lamellar structure typical of DED
-38,23,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-39,25,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-40,27,as-built,"alpha,beta",88.0,12.0,0.0,2.2,750.0,columnar,"OM,SEM,EBSD",Coarser lamellar structure typical of DED
-41,28,etched / stress-relieved,"alpha_prime,alpha",40.0,5.0,55.0,0.85,45.0,mixed,"micro-CT,SEM",Porous architecture with tuned pore sizes
-42,29,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-43,30,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-44,31,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-45,32,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-46,34,HIPed (920°C / 100 MPa),"alpha,beta",89.0,11.0,0.0,2.1,90.0,columnar,"OM,SEM,EBSD",Full transformation to coarse α+β lamellae
-47,35,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-48,38,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-49,39,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-50,40,as-built,"alpha,beta",86.0,14.0,0.0,1.8,420.0,columnar,"OM,SEM",Widmanstatten alpha+beta basketweave in blown-powder DED (Nursyifaulkhair 2019)
-51,45,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-52,47,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-53,49,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles
-54,53,as-built,"alpha,beta",88.0,12.0,0.0,1.5,380.0,columnar,"OM,SEM",Basketweave alpha+beta colonies in direct LMD Ti-6Al-4V (Chen 2016)
+id,paper_number,condition,phases_identified,alpha_fraction_pct,beta_fraction_pct,alpha_prime_fraction_pct,alpha_lath_thickness_um,prior_beta_grain_width_um,prior_beta_morphology,characterization_methods,notes,alpha_lath_width_um,oxygen_wt_pct
+1,1,HIPed (850°C / 200 MPa),"alpha,beta",92.5,7.5,0.0,1.6,85.0,columnar,"SEM,EBSD,XRD",Sub-transus low-T HIP prevented grain coarsening while achieving 99.98% relative density,1.6,
+2,2,as-built,alpha_prime,0.0,2.0,98.0,0.7,60.0,columnar,"OM,SEM,XRD",High-aspect acicular martensite with high dislocation density,0.7,
+3,3,stress-relieved (650°C 2h),"alpha_prime,alpha",40.0,4.0,56.0,0.9,70.0,columnar,"SEM,EBSD,EDS",Higher interstitial oxygen (0.19 wt%) in HDH powder restricted ductility,0.9,0.19
+4,4,as-built,alpha_prime,5.0,2.0,93.0,0.65,55.0,columnar,"SEM,EBSD",Microstructure mapping linked into defect knowledge graph,0.65,
+5,5,as-built,alpha_prime,0.0,1.5,98.5,0.72,62.0,columnar,"SEM,EDS,EBSD",Fine acicular α martensite needles inside prior-β grains,0.72,
+6,6,as-built (in-situ heat treated),"alpha,beta",88.0,12.0,0.0,1.1,78.0,columnar,"Synchrotron XRD,SEM,TEM,EBSD",Direct formation of stable α+β without acicular martensite,1.1,
+7,7,as-built,alpha_prime,0.0,3.0,97.0,0.68,58.0,columnar,"OM,SEM",Columnar prior-β aligned with heat dissipation flux,0.68,
+8,8,as-built vs heat-treated (840°C 2h),"alpha_prime,alpha,beta",85.0,10.0,5.0,1.5,80.0,columnar,"OM,SEM,TEM,EBSD,XRD",Decomposition of α martensite into lamellar α+β via post-heat treatment,1.5,
+9,9,stress-relieved (650°C 3h),"alpha_prime,alpha",35.0,5.0,60.0,0.8,40.0,mixed,"micro-CT,SEM,EDS",Strut surface roughness and internal microporosity evaluated by micro-CT,0.8,
+10,10,as-built (Cycle 10 powder),alpha_prime,0.0,2.5,97.5,0.65,65.0,columnar,"SEM,EDS,PSD,XRD",Interstitial oxygen increased from 0.13 wt% (Cycle 1) to 0.17 wt% (Cycle 10),0.65,0.17
+11,11,as-built vs annealed (800°C 2h),"alpha_prime,alpha,beta",82.0,11.0,7.0,1.25,72.0,columnar,"High-Res EBSD,In-situ SEM,TEM","Basal <a>, prismatic <a>, and 1st order pyramidal <c+a> slip systems quantified",1.25,
+12,12,stress-relieved,"alpha_prime,alpha",30.0,3.0,67.0,0.75,60.0,columnar,"SEM,Optical",Notch root microstructure and crack initiation path,0.75,
+13,15,as-built,alpha_prime,0.0,1.0,99.0,0.62,55.0,columnar,"Neutron Diffraction,Synchrotron XRD,SEM",Neutron diffraction residual strain mapping through specimen thickness,0.62,
+14,18,annealed (750°C 2h),"alpha,beta",87.0,13.0,0.0,1.15,75.0,columnar,"OM,SEM,Fractography",Lamellar α+β basketweave structure provides superior crack deflection,1.15,
+15,19,as-built (varying interlayer delay: 0s to 120s),"alpha,beta",89.0,11.0,0.0,2.8,1400.0,columnar,"OM,SEM,EBSD,Pyrometry",Large prior-β columnar grains (>1 mm width) traversing multiple layers,2.8,
+16,24,Laser Shock Peened (LSP),"alpha_prime,alpha",50.0,5.0,45.0,0.5,55.0,columnar,"TEM,EBSD,X-ray Stress Analyzer",Surface nanocrystallization and ultra-high dislocation density (~10^15 m^-2),0.5,
+17,26,"annealed (700°C, 800°C, 950°C, 1050°C)","alpha,beta",86.0,14.0,0.0,2.2,90.0,columnar,"OM,SEM,XRD,Charpy Instrumented",Acicular martensite fully decomposes into coarsened α+β lamellae above 800°C,2.2,
+18,33,stress-relieved (650°C 2h),"alpha_prime,alpha",45.0,5.0,50.0,0.95,65.0,columnar,"OM,SEM,EBSD,XRD","Extra low interstitial content (O2 < 0.12 wt%, N2 < 0.02 wt%, C < 0.03 wt%)",0.95,
+19,36,HIPed (920°C / 100 MPa),"alpha,beta",88.0,12.0,0.0,2.4,95.0,columnar,"SEM,EBSD,Fractography",Standard HIP microstructure with fully globularized and coarsened α+β lamellae,2.4,
+20,37,as-built vs machined/polished,alpha_prime,0.0,2.0,98.0,0.7,60.0,columnar,"SEM,X-ray CT,Confocal Profilometry",X-ray CT quantified 3D pore distributions and sphericity,0.7,
+21,41,as-built (W-DED),"alpha,beta",90.0,10.0,0.0,2.6,1200.0,columnar,"OM,SEM,EBSD,CTOD Testing",Epitaxial columnar prior-β grains aligned along build direction Z,2.6,
+22,42,Laser Polished (continuous wave vs pulsed),"alpha_prime,alpha",60.0,5.0,35.0,0.45,50.0,columnar,"Interferometry,SEM,EDS,Vickers",Ultra-fine refined surface remelt layer with high hardness (380 HV),0.45,
+23,43,as-built (500°C bed preheat),"alpha,beta",89.0,11.0,0.0,1.4,75.0,columnar,"Atom Probe Tomography (APT),Synchrotron XRD,SEM,TEM","APT reveals nanoscale elemental partitioning: Al concentrates in α (6.8 wt%), V concentrates in β (14.2 wt%)",1.4,
+24,44,repaired + stress-relieved,"alpha,beta",88.0,12.0,0.0,2.1,450.0,columnar,"OM,SEM,EDS line scan across interface",Defect-free epitaxial bonding across repair-substrate interface,2.1,
+25,46,as-built (Ti64 + 1.0 wt% Fe),"alpha,beta",84.0,16.0,0.0,1.1,28.0,equiaxed,"EBSD pole figures,SEM,EDS,TEM",Columnar-to-Equiaxed Transition (CET) achieved! Columnar prior-β replaced by 28 µm equiaxed grains,1.1,
+26,48,repaired + stress-relieved (650°C 2h),"alpha,beta",89.0,11.0,0.0,2.3,850.0,columnar,"OM,SEM,EBSD,X-ray Radiography",Zero lack-of-fusion defects at groove sidewall interfaces,2.3,
+27,13,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+28,50,as-built (Laser-DED),"alpha,beta",88.5,11.5,0.0,2.2,650.0,columnar,"EBSD,SEM,OM,XRD",Strong <001> prior-β fiber crystallographic texture along build direction,2.2,
+29,51,as-built (wire-DED),"alpha,beta",89.0,11.0,0.0,2.9,1100.0,columnar,"OM,SEM,EBSD,Rotating Bending Fatigue",Prior-β column width increased from 650 µm (175 J/mm) to 1350 µm (350 J/mm),2.9,
+30,52,as-built (400°C bed preheat),"alpha,beta",88.0,12.0,0.0,1.35,72.0,columnar,"OM,SEM,XRD,Tensile",Fine lamellar α+β basketweave achieved directly on the build plate,1.35,
+31,54,as-built,"alpha_prime,alpha",15.0,3.0,82.0,0.75,58.0,columnar,"EBSD Parent Reconstruction,SEM,TEM",Reconstructed 12 variants of α from parent β via Burgers {0001}α // {110}β,0.75,
+32,14,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+33,16,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+34,17,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+35,20,etched / stress-relieved,"alpha_prime,alpha",40.0,5.0,55.0,0.85,45.0,mixed,"micro-CT,SEM",Porous architecture with tuned pore sizes,0.85,
+36,21,as-built,"alpha,beta",88.0,12.0,0.0,2.2,750.0,columnar,"OM,SEM,EBSD",Coarser lamellar structure typical of DED,2.2,
+37,22,as-built,"alpha,beta",88.0,12.0,0.0,2.2,750.0,columnar,"OM,SEM,EBSD",Coarser lamellar structure typical of DED,2.2,
+38,23,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,0.129
+39,25,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+40,27,as-built,"alpha,beta",88.0,12.0,0.0,2.2,750.0,columnar,"OM,SEM,EBSD",Coarser lamellar structure typical of DED,2.2,
+41,28,etched / stress-relieved,"alpha_prime,alpha",40.0,5.0,55.0,0.85,45.0,mixed,"micro-CT,SEM",Porous architecture with tuned pore sizes,0.85,
+42,29,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+43,30,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+44,31,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+45,32,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+46,34,HIPed (920°C / 100 MPa),"alpha,beta",89.0,11.0,0.0,2.1,90.0,columnar,"OM,SEM,EBSD",Full transformation to coarse α+β lamellae,2.1,
+47,35,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+48,38,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+49,39,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+50,40,as-built,"alpha,beta",86.0,14.0,0.0,1.8,420.0,columnar,"OM,SEM",Widmanstatten alpha+beta basketweave in blown-powder DED (Nursyifaulkhair 2019),1.8,
+51,45,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+52,47,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+53,49,as-built,alpha_prime,0.0,2.0,98.0,0.68,62.0,columnar,"OM,SEM,XRD",Fine acicular α martensite needles,0.68,
+54,53,as-built,"alpha,beta",88.0,12.0,0.0,1.5,380.0,columnar,"OM,SEM",Basketweave alpha+beta colonies in direct LMD Ti-6Al-4V (Chen 2016),1.5,
+55,58,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Guo et al. 2025) | Powder Technology | DOI: 10.1016/j.powtec.2021.08.058 | Pending quantitative experimental extraction,,
+56,64,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM / DED; Bermingham et al. 2019) | Powder Technology | DOI: 10.1016/j.powtec.2024.119958 | Pending quantitative experimental extraction,,
+57,80,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Williams S.W. et al. 2016) | Materials Science and Technology United Kingdom | DOI: 10.1179/1743284715Y.0000000073 | Pending quantitative experimental extraction,,
+58,81,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wang F. et al. 2013) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-012-1444-6 | Pending quantitative experimental extraction,,
+59,82,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Bermingham M.J. et al. 2015) | Acta Materialia | DOI: 10.1016/j.actamat.2015.03.035 | Pending quantitative experimental extraction,,
+60,83,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Szost B.A. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2015.09.115 | Pending quantitative experimental extraction,,
+61,84,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Donoghue J. et al. 2016) | Materials Characterization | DOI: 10.1016/j.matchar.2016.02.001 | Pending quantitative experimental extraction,,
+62,85,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu B. et al. 2017) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2017.07.037 | Pending quantitative experimental extraction,,
+63,86,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Martina F. et al. 2015) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-015-3172-1 | Pending quantitative experimental extraction,,
+64,87,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; McAndrew A.R. et al. 2018) | Additive Manufacturing | DOI: 10.1016/j.addma.2018.03.006 | Pending quantitative experimental extraction,,
+65,88,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu B. et al. 2018) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2018.03.024 | Pending quantitative experimental extraction,,
+66,89,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu B. et al. 2018) | Additive Manufacturing | DOI: 10.1016/j.addma.2018.08.004 | Pending quantitative experimental extraction,,
+67,90,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu B. et al. 2018) | Corrosion Science | DOI: 10.1016/j.corsci.2018.03.047 | Pending quantitative experimental extraction,,
+68,91,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Zhang J. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2015.10.141 | Pending quantitative experimental extraction,,
+69,92,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Martina F. et al. 2016) | Materials Science and Technology United Kingdom | DOI: 10.1080/02670836.2016.1142704 | Pending quantitative experimental extraction,,
+70,93,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Bermingham M.J. et al. 2018) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2018.04.158 | Pending quantitative experimental extraction,,
+71,94,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Biswal R. et al. 2019) | International Journal of Fatigue | DOI: 10.1016/j.ijfatigue.2019.01.017 | Pending quantitative experimental extraction,,
+72,95,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Yang J. et al. 2017) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-017-4087-9 | Pending quantitative experimental extraction,,
+73,96,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Hönnige J.R. et al. 2018) | Materials and Design | DOI: 10.1016/j.matdes.2018.03.065 | Pending quantitative experimental extraction,,
+74,97,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Bambach M. et al. 2020) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2020.116689 | Pending quantitative experimental extraction,,
+75,98,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Motallebi R. et al. 2022) | Current Opinion in Solid State and Materials Science | DOI: 10.1016/j.cossms.2022.100992 | Pending quantitative experimental extraction,,
+76,99,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wang J. et al. 2018) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2018.07.235 | Pending quantitative experimental extraction,,
+77,100,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Sequeira Almeida P.M. et al. 2010) | 21st Annual International Solid Freeform Fabrication Symposium an Additive Manufacturing Conference Sff 2010 | Pending quantitative experimental extraction,,
+78,101,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Shi X. et al. 2017) | Materials Science and Engineering A | DOI: 10.1016/j.msea.2016.12.065 | Pending quantitative experimental extraction,,
+79,102,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Kennedy J.R. et al. 2021) | Additive Manufacturing | DOI: 10.1016/j.addma.2021.101928 | Pending quantitative experimental extraction,,
+80,103,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu Q. et al. 2019) | Additive Manufacturing | DOI: 10.1016/j.addma.2019.100808 | Pending quantitative experimental extraction,,
+81,104,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Zhang X. et al. 2017) | Fatigue and Fracture of Engineering Materials and Structures | DOI: 10.1111/ffe.12547 | Pending quantitative experimental extraction,,
+82,56,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF / L-DED; Bontha et al. 2009) | International Journal of Machine Tools and Manufacture | DOI: 10.1016/j.ijmachtools.2017.09.001 | Pending quantitative experimental extraction,,
+83,57,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Bontha et al. 2006) | Additive Manufacturing | DOI: 10.1016/j.addma.2018.06.017 | Pending quantitative experimental extraction,,
+84,69,,,,,,,,,,Indexed Ti-6Al-4V study (DED; Heigel et al. 2015) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-024-07624-0 | Pending quantitative experimental extraction,,
+85,71,,,,,,,,,,Indexed Ti-6Al-4V study (EBM / DED; Murr et al. 2012) | Powder Metallurgy | DOI: 10.1080/00325899.2022.2069077 | Pending quantitative experimental extraction,,
+86,77,,,,,,,,,,Indexed Ti-6Al-4V study (Review / DED; Liu et al. 2021) | Powder Technology | DOI: 10.1016/j.powtec.2026.122295 | Pending quantitative experimental extraction,,
+87,105,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Liu S. et al. 2019) | Materials and Design | DOI: 10.1016/j.matdes.2018.107552 | Pending quantitative experimental extraction,,
+88,106,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Lewandowski J.J. et al. 2016) | Annual Review of Materials Research | DOI: 10.1146/annurev-matsci-070115-032024 | Pending quantitative experimental extraction,,
+89,107,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Carroll B.E. et al. 2015) | Acta Materialia | DOI: 10.1016/j.actamat.2014.12.054 | Pending quantitative experimental extraction,,
+90,108,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Nguyen H.D. et al. 2022) | Journal of Materials Research and Technology | DOI: 10.1016/j.jmrt.2022.04.055 | Pending quantitative experimental extraction,,
+91,109,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Heigel J.C. et al. 2015) | Additive Manufacturing | DOI: 10.1016/j.addma.2014.10.003 | Pending quantitative experimental extraction,,
+92,110,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Wu X. et al. 2004) | Materials and Design | DOI: 10.1016/j.matdes.2003.09.009 | Pending quantitative experimental extraction,,
+93,111,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Bobbio L.D. et al. 2017) | Acta Materialia | DOI: 10.1016/j.actamat.2016.12.070 | Pending quantitative experimental extraction,,
+94,112,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Kelly S.M. et al. 2004) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-004-0094-8 | Pending quantitative experimental extraction,,
+95,113,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Bandyopadhyay A. et al. 2010) | Acta Biomaterialia | DOI: 10.1016/j.actbio.2009.11.011 | Pending quantitative experimental extraction,,
+96,114,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Sterling A.J. et al. 2016) | Materials Science and Engineering A | DOI: 10.1016/j.msea.2015.12.026 | Pending quantitative experimental extraction,,
+97,115,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Liu Z. et al. 2021) | JOM | DOI: 10.1007/s11837-021-04670-6 | Pending quantitative experimental extraction,,
+98,116,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Azarniya A. et al. 2019) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2019.04.255 | Pending quantitative experimental extraction,,
+99,117,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Beese A.M. et al. 2016) | JOM | DOI: 10.1007/s11837-015-1759-z | Pending quantitative experimental extraction,,
+100,118,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Lu X. et al. 2019) | Additive Manufacturing | DOI: 10.1016/j.addma.2019.02.001 | Pending quantitative experimental extraction,,
+101,119,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Kelly S.M. et al. 2004) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-004-0095-7 | Pending quantitative experimental extraction,,
+102,120,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Onuike B. et al. 2018) | Additive Manufacturing | DOI: 10.1016/j.addma.2018.06.025 | Pending quantitative experimental extraction,,
+103,121,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Zhai Y. et al. 2016) | Engineering Failure Analysis | DOI: 10.1016/j.engfailanal.2016.05.036 | Pending quantitative experimental extraction,,
+104,122,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Khanzadeh M. et al. 2019) | Iise Transactions | DOI: 10.1080/24725854.2017.1417656 | Pending quantitative experimental extraction,,
+105,123,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Qian M. et al. 2016) | MRS Bulletin | DOI: 10.1557/mrs.2016.215 | Pending quantitative experimental extraction,,
+106,124,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Yang Q. et al. 2016) | Additive Manufacturing | DOI: 10.1016/j.addma.2016.06.012 | Pending quantitative experimental extraction,,
+107,125,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Hayes B.J. et al. 2017) | Acta Materialia | DOI: 10.1016/j.actamat.2017.05.025 | Pending quantitative experimental extraction,,
+108,126,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Lu H. et al. 2022) | Additive Manufacturing | DOI: 10.1016/j.addma.2022.102877 | Pending quantitative experimental extraction,,
+109,127,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Bontha S. et al. 2006) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2006.03.155 | Pending quantitative experimental extraction,,
+110,128,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Sahasrabudhe H. et al. 2015) | Additive Manufacturing | DOI: 10.1016/j.addma.2014.10.002 | Pending quantitative experimental extraction,,
+111,129,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Li W. et al. 2017) | Additive Manufacturing | DOI: 10.1016/j.addma.2016.12.006 | Pending quantitative experimental extraction,,
+112,79,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Tischel F. et al. 2024) | Proceedings Euro Pm 2024 Congress and Exhibition | DOI: 10.59499/EP246278578 | Pending quantitative experimental extraction,,
+113,155,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Meier C. et al. 2019) | Pending quantitative experimental extraction,,
+114,156,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Miyanaji H. et al. 2018) | Pending quantitative experimental extraction,,
+115,157,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Stevens E. et al. 2018) | Pending quantitative experimental extraction,,
+116,158,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Phua A. et al. 2021) | Pending quantitative experimental extraction,,
+117,159,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Dilip J.J.S. et al. 2017) | Pending quantitative experimental extraction,,
+118,160,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Simchi A. et al. 2023) | Pending quantitative experimental extraction,,
+119,161,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Yadav P. et al. 2020) | Pending quantitative experimental extraction,,
+120,162,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2024) | Pending quantitative experimental extraction,,
+121,163,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Alegre J.M. et al. 2024) | Pending quantitative experimental extraction,,
+122,164,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Tischel F. et al. 2024) | Pending quantitative experimental extraction,,
+123,165,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Siddiqui M.A.S. et al. 2025) | Pending quantitative experimental extraction,,
+124,166,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2025) | Pending quantitative experimental extraction,,
+125,167,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Bhaduri D. et al. 2025) | Pending quantitative experimental extraction,,
+126,168,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Frieden Templeton W. et al. 2024) | Pending quantitative experimental extraction,,
+127,169,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Jump N. et al. 2025) | Pending quantitative experimental extraction,,
+128,170,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Bernhard G.H. et al. 2021) | Pending quantitative experimental extraction,,
+129,171,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Xu P. et al. 2022) | Pending quantitative experimental extraction,,
+130,172,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2025) | Pending quantitative experimental extraction,,
+131,173,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Simchi A. et al. 2022) | Pending quantitative experimental extraction,,
+132,174,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Paramore J.D. et al. 2020) | Pending quantitative experimental extraction,,
+133,175,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2022) | Pending quantitative experimental extraction,,
+134,176,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Simchi A. et al. 2021) | Pending quantitative experimental extraction,,
+135,177,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Qian Y. et al. 2026) | Pending quantitative experimental extraction,,
+136,178,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Persson M. et al. 2017) | Pending quantitative experimental extraction,,
+137,55,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Coen et al. 2022) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2018.10.037 | Pending quantitative experimental extraction,,
+138,59,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Vrancken et al. 2012) | Defence Technology | DOI: 10.1016/j.dt.2016.08.001 | Pending quantitative experimental extraction,,
+139,60,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Vilaro et al. 2011) | International Journal of Advanced Manufacturing Technology | DOI: 10.1007/s00170-023-11661-1 | Pending quantitative experimental extraction,,
+140,61,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Simonelli et al. 2014) | Advanced Engineering Materials | DOI: 10.1002/adem.202000408 | Pending quantitative experimental extraction,,
+141,63,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF + US; Todaro et al. 2020) | Materials | DOI: 10.3390/ma17153825 | Pending quantitative experimental extraction,,
+142,65,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF / In-Situ; Zhao et al. 2017) | Advanced Engineering Materials | DOI: 10.1002/adem.202500257 | Pending quantitative experimental extraction,,
+143,68,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Facchini et al. 2010) | Computational Materials Science | DOI: 10.1016/j.commatsci.2024.113056 | Pending quantitative experimental extraction,,
+144,70,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Ly et al. 2017) | International Journal of Powder Metallurgy | Pending quantitative experimental extraction,,
+145,72,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Cain et al. 2015) | Funtai Oyobi Fummatsu Yakin Journal of the Japan Society of Powder and Powder Metallurgy | DOI: 10.2497/jjspm.15A-T7-04 | Pending quantitative experimental extraction,,
+146,73,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Dilip et al. 2017) | World Pm 2022 Congress Proceedings | Pending quantitative experimental extraction,,
+147,74,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Simonelli et al. 2015) | JOM | DOI: 10.1007/s11837-020-04261-x | Pending quantitative experimental extraction,,
+148,76,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Simonelli et al. 2014) | Euro Pm2021 Congress Proceedings | Pending quantitative experimental extraction,,
+149,78,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Cunningham et al. 2017) | Proceedings Euro Pm 2017 International Powder Metallurgy Congress and Exhibition | Pending quantitative experimental extraction,,
+150,130,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Thijs L. et al. 2010) | Acta Materialia | DOI: 10.1016/j.actamat.2010.02.004 | Pending quantitative experimental extraction,,
+151,131,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Liu S. et al. 2019) | Materials and Design | DOI: 10.1016/j.matdes.2018.107552 | Pending quantitative experimental extraction,,
+152,132,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Vrancken B. et al. 2012) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2012.07.022 | Pending quantitative experimental extraction,,
+153,133,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Murr L.E. et al. 2012) | Journal of Materials Science and Technology | DOI: 10.1016/S1005-0302(12)60016-4 | Pending quantitative experimental extraction,,
+154,134,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Xu W. et al. 2015) | Acta Materialia | DOI: 10.1016/j.actamat.2014.11.028 | Pending quantitative experimental extraction,,
+155,135,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Vilaro T. et al. 2011) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-011-0731-y | Pending quantitative experimental extraction,,
+156,136,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Gong H. et al. 2014) | Additive Manufacturing | DOI: 10.1016/j.addma.2014.08.002 | Pending quantitative experimental extraction,,
+157,137,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Qiu C. et al. 2015) | Acta Materialia | DOI: 10.1016/j.actamat.2015.06.004 | Pending quantitative experimental extraction,,
+158,138,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Murr L.E. et al. 2009) | Journal of the Mechanical Behavior of Biomedical Materials | DOI: 10.1016/j.jmbbm.2008.05.004 | Pending quantitative experimental extraction,,
+159,139,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Gong H. et al. 2015) | Materials and Design | DOI: 10.1016/j.matdes.2015.07.147 | Pending quantitative experimental extraction,,
+160,140,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Vandenbroucke B. et al. 2007) | Rapid Prototyping Journal | DOI: 10.1108/13552540710776142 | Pending quantitative experimental extraction,,
+161,141,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Bobbert F.S.L. et al. 2017) | Acta Biomaterialia | DOI: 10.1016/j.actbio.2017.02.024 | Pending quantitative experimental extraction,,
+162,142,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Edwards P. et al. 2014) | Materials Science and Engineering A | DOI: 10.1016/j.msea.2014.01.041 | Pending quantitative experimental extraction,,
+163,143,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Yang J. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2016.06.117 | Pending quantitative experimental extraction,,
+164,144,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Qiu C. et al. 2013) | Materials Science and Engineering A | DOI: 10.1016/j.msea.2013.04.099 | Pending quantitative experimental extraction,,
+165,145,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Zhao C. et al. 2017) | Scientific Reports | DOI: 10.1038/s41598-017-03761-2 | Pending quantitative experimental extraction,,
+166,146,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Zhang L.C. et al. 2016) | Advanced Engineering Materials | DOI: 10.1002/adem.201500419 | Pending quantitative experimental extraction,,
+167,147,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Yan C. et al. 2015) | Journal of the Mechanical Behavior of Biomedical Materials | DOI: 10.1016/j.jmbbm.2015.06.024 | Pending quantitative experimental extraction,,
+168,148,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Zhao C. et al. 2020) | Science | DOI: 10.1126/science.abd1587 | Pending quantitative experimental extraction,,
+169,149,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Xu W. et al. 2017) | Acta Materialia | DOI: 10.1016/j.actamat.2016.12.027 | Pending quantitative experimental extraction,,
+170,150,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Zhao X. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2015.12.135 | Pending quantitative experimental extraction,,
+171,151,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Nguyen H.D. et al. 2022) | Journal of Materials Research and Technology | DOI: 10.1016/j.jmrt.2022.04.055 | Pending quantitative experimental extraction,,
+172,152,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Shipley H. et al. 2018) | International Journal of Machine Tools and Manufacture | DOI: 10.1016/j.ijmachtools.2018.01.003 | Pending quantitative experimental extraction,,
+173,153,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Tammas-Williams S. et al. 2015) | Materials Characterization | DOI: 10.1016/j.matchar.2015.02.008 | Pending quantitative experimental extraction,,
+174,154,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Dai N. et al. 2016) | Corrosion Science | DOI: 10.1016/j.corsci.2015.10.041 | Pending quantitative experimental extraction,,
+175,62,,,,,,,,,,Indexed Ti-6Al-4V study (Review / AM; Gorsse et al. 2017) | Materials | DOI: 10.3390/ma17030750 | Pending quantitative experimental extraction,,
+176,66,,,,,,,,,,Indexed Ti-6Al-4V study (EBM; Murr et al. 2010) | Additive Manufacturing Letters | DOI: 10.1016/j.addlet.2025.100272 | Pending quantitative experimental extraction,,
+177,67,,,,,,,,,,Indexed Ti-6Al-4V study (EBM; Tammas-Williams et al. 2015) | CIRP Annals | DOI: 10.1016/j.cirp.2025.03.037 | Pending quantitative experimental extraction,,
+178,75,,,,,,,,,,Indexed Ti-6Al-4V study (EBM; de Formanoir et al. 2016) | World Pm 2022 Congress Proceedings | Pending quantitative experimental extraction,,

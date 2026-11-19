@@ -1,59 +1,179 @@
-id,paper_number,laser_power_w,scan_speed_mms,layer_thickness_um,hatch_spacing_um,volumetric_energy_density_j_mm3,beam_spot_diameter_um,wire_feed_speed_m_min,powder_feed_rate_g_min,scan_strategy,notes
-1,1,280.0,1200.0,30.0,100.0,77.8,80.0,,,Stripe 67° alternating,"LPBF EOS M290, Ti-6Al-4V ELI powder"
-2,2,175.0,900.0,50.0,90.0,55.6,100.0,,,Contour + Core raster,Contour scan parameter optimization for surface roughness
-3,3,280.0,1250.0,30.0,105.0,71.1,85.0,,,Chessboard 5x5 mm,Hydride-Dehydride (HDH) low-cost irregular powder
-4,4,250.0,1000.0,30.0,100.0,83.3,80.0,,,Bidirectional raster,LPBF defect taxonomy parameter mapping
-5,5,300.0,1300.0,40.0,110.0,52.4,90.0,,,Meander 90°,In-situ anomaly detection with Spiking Neural Networks
-6,6,200.0,800.0,30.0,80.0,104.2,75.0,,,High thermal accumulation tight pitch,In-situ heat treatment during SLM
-7,7,200.0,900.0,30.0,100.0,74.1,80.0,,,Stripe,Thermal conductivity benchmark of powder vs solid Ti64
-8,8,250.0,1100.0,30.0,100.0,75.8,80.0,,,67° alternating rotation,Comprehensive review consensus baseline for LPBF Ti-6Al-4V
-9,9,180.0,950.0,30.0,90.0,70.2,75.0,,,Strut contour + hatch,Diamond cellular lattice for bone implants (porosity 55-75%)
-10,10,200.0,900.0,30.0,105.0,70.5,80.0,,,Stripe,Powder recycling study across 10 successive print cycles
-11,11,275.0,1150.0,30.0,100.0,79.7,85.0,,,Meander 67°,In-situ SEM tensile testing and crystal plasticity
-12,12,200.0,900.0,30.0,100.0,74.1,80.0,,,Stripe,Notch fracture mechanics of AM Ti-6Al-4V
-13,15,250.0,1000.0,30.0,100.0,83.3,80.0,,,Alternating stripe 90°,LLNL bridge specimen residual stress validation
-14,18,200.0,900.0,30.0,100.0,74.1,80.0,,,Island / Checkerboard,High-cycle fatigue and Paris crack growth rate study
-15,19,3200.0,16.7,1200.0,2800.0,47.6,3500.0,2.8,,Oscillating weave,Laser Hot Wire DED (LHW-DED) high-deposition-rate AM
-16,24,250.0,1050.0,30.0,100.0,79.4,80.0,,,Stripe,Post-processing via Laser Shock Peening (LSP)
-17,26,200.0,900.0,30.0,100.0,74.1,80.0,,,Island,Systematic heat treatment and Charpy impact study
-18,33,275.0,1150.0,30.0,100.0,79.7,80.0,,,Stripe 67°,Nuclear and aerospace qualification of Ti-6Al-4V ELI
-19,36,280.0,1200.0,30.0,105.0,71.1,85.0,,,Bidirectional 67°,Multiaxial fatigue testing: pure torsion vs axial
-20,37,280.0,1200.0,30.0,100.0,77.8,80.0,,,Stripe,197 fatigue bar statistical campaign across varied scanning speeds
-21,41,2500.0,12.5,1500.0,3000.0,44.4,3000.0,2.2,,Bidirectional line,Wire laser-directed energy deposition (W-DED) fracture toughness
-22,42,200.0,900.0,30.0,100.0,74.1,80.0,,,Stripe,LPBF baseline + post-process Laser Surface Polishing (LSP)
-23,43,200.0,900.0,30.0,100.0,74.1,80.0,,,Chessboard 5x5 mm,High-temperature powder bed preheating (500°C)
-24,44,1200.0,15.0,600.0,1200.0,111.1,1800.0,,8.5,5-axis adaptive cavity fill,DED blown-powder repair of aeronautical Ti-6Al-4V compressor blades
-25,46,200.0,800.0,30.0,90.0,92.6,75.0,,,Island 5x5 mm,In-situ trace iron (Fe) addition (0.5 to 1.5 wt%) for grain refinement
-26,48,2200.0,14.0,1100.0,2400.0,59.5,2800.0,2.4,,Coaxial wire multi-pass,Coaxial wire laser metal deposition groove repair of aerospace forgings
-27,50,1800.0,10.0,800.0,1800.0,125.0,2200.0,,12.0,Bidirectional line with 90° rotation,Anisotropy study in laser-directed energy deposited Ti-6Al-4V
-28,51,2400.0,10.0,1200.0,2500.0,66.7,2600.0,2.0,,Linear single track walls,Wire-laser DED heat input variation (175 J/mm to 350 J/mm)
-29,52,200.0,900.0,30.0,100.0,74.1,80.0,,,Stripe,LPBF powder bed preheating from 25°C to 400°C
-30,54,250.0,1000.0,30.0,100.0,83.3,80.0,,,Bidirectional raster,Burgers orientation relationship (BOR) parent-β reconstruction
-31,13,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-32,14,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-33,16,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-34,17,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-35,20,180.0,950.0,30.0,90.0,70.2,75.0,,,Contour + hatch,Biomedical porous scaffold
-36,21,2000.0,12.0,1000.0,2200.0,75.8,2500.0,2.0,,Linear raster,DED Ti-6Al-4V regime
-37,22,2000.0,12.0,1000.0,2200.0,75.8,2500.0,2.0,,Linear raster,DED Ti-6Al-4V regime
-38,23,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-39,25,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-40,27,2000.0,12.0,1000.0,2200.0,75.8,2500.0,2.0,,Linear raster,DED Ti-6Al-4V regime
-41,28,180.0,950.0,30.0,90.0,70.2,75.0,,,Contour + hatch,Biomedical porous scaffold
-42,29,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-43,30,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-44,31,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-45,32,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-46,34,250.0,1100.0,30.0,100.0,75.8,80.0,,,Stripe 67°,LPBF followed by HIP
-47,35,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-48,38,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-49,39,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-50,40,800.0,15.0,500.0,1100.0,97.0,1000.0,,6.0,Linear bidirectional,Blown-powder DED Ti-6Al-4V (Nursyifaulkhair 2019: 700-900W 15 mm/s 1mm spot)
-51,45,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-52,47,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-53,49,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set
-54,53,450.0,16.7,400.0,1000.0,67.4,1000.0,,7.5,Single-track & block raster,Direct Laser Metal Deposition (Chen 2016: 450W steady / 1000W init 16.7 mm/s 1mm spot)
-55,55,250.0,1000.0,30.0,100.0,83.3,60.0,,,Bidirectional 90 deg,KU Leuven hybrid conduction-keyhole validation
-56,56,300.0,800.0,40.0,110.0,85.2,100.0,,,Meander,Bulky 3D G vs R process map and CET transition
-57,57,450.0,10.6,500.0,1200.0,70.8,1200.0,,8.5,Linear raster,Thin-wall thermal process map and solid velocity
-58,58,1800.0,6.0,1200.0,4500.0,55.6,4000.0,2.4,,Continuous CMT,Cold metal transfer with interpass rolling
+id,paper_number,laser_power_w,scan_speed_mms,layer_thickness_um,hatch_spacing_um,volumetric_energy_density_j_mm3,beam_spot_diameter_um,wire_feed_speed_m_min,powder_feed_rate_g_min,scan_strategy,notes,scan_rotation_deg,powder_reuse_cycles,oxygen_wt_pct
+1,1,280.0,1200.0,30.0,100.0,77.8,80.0,,,Stripe 67° alternating,"LPBF EOS M290, Ti-6Al-4V ELI powder",67,,
+2,2,175.0,900.0,50.0,90.0,55.6,100.0,,,Contour + Core raster,Contour scan parameter optimization for surface roughness,,,
+3,3,280.0,1250.0,30.0,105.0,71.1,85.0,,,Chessboard 5x5 mm,Hydride-Dehydride (HDH) low-cost irregular powder,,,0.19
+4,4,250.0,1000.0,30.0,100.0,83.3,80.0,,,Bidirectional raster,LPBF defect taxonomy parameter mapping,,,
+5,5,300.0,1300.0,40.0,110.0,52.4,90.0,,,Meander 90°,In-situ anomaly detection with Spiking Neural Networks,90,,
+6,6,200.0,800.0,30.0,80.0,104.2,75.0,,,High thermal accumulation tight pitch,In-situ heat treatment during SLM,,,
+7,7,200.0,900.0,30.0,100.0,74.1,80.0,,,Stripe,Thermal conductivity benchmark of powder vs solid Ti64,,,
+8,8,250.0,1100.0,30.0,100.0,75.8,80.0,,,67° alternating rotation,Comprehensive review consensus baseline for LPBF Ti-6Al-4V,67,,
+9,9,180.0,950.0,30.0,90.0,70.2,75.0,,,Strut contour + hatch,Diamond cellular lattice for bone implants (porosity 55-75%),,,
+10,10,200.0,900.0,30.0,105.0,70.5,80.0,,,Stripe,Powder recycling study across 10 successive print cycles,,10,0.17
+11,11,275.0,1150.0,30.0,100.0,79.7,85.0,,,Meander 67°,In-situ SEM tensile testing and crystal plasticity,67,,
+12,12,200.0,900.0,30.0,100.0,74.1,80.0,,,Stripe,Notch fracture mechanics of AM Ti-6Al-4V,,,
+13,15,250.0,1000.0,30.0,100.0,83.3,80.0,,,Alternating stripe 90°,LLNL bridge specimen residual stress validation,90,,
+14,18,200.0,900.0,30.0,100.0,74.1,80.0,,,Island / Checkerboard,High-cycle fatigue and Paris crack growth rate study,,,
+15,19,3200.0,16.7,1200.0,2800.0,47.6,3500.0,2.8,,Oscillating weave,Laser Hot Wire DED (LHW-DED) high-deposition-rate AM,,,
+16,24,250.0,1050.0,30.0,100.0,79.4,80.0,,,Stripe,Post-processing via Laser Shock Peening (LSP),,,
+17,26,200.0,900.0,30.0,100.0,74.1,80.0,,,Island,Systematic heat treatment and Charpy impact study,,,
+18,33,275.0,1150.0,30.0,100.0,79.7,80.0,,,Stripe 67°,Nuclear and aerospace qualification of Ti-6Al-4V ELI,67,,
+19,36,280.0,1200.0,30.0,105.0,71.1,85.0,,,Bidirectional 67°,Multiaxial fatigue testing: pure torsion vs axial,67,,
+20,37,280.0,1200.0,30.0,100.0,77.8,80.0,,,Stripe,197 fatigue bar statistical campaign across varied scanning speeds,,,
+21,41,2500.0,12.5,1500.0,3000.0,44.4,3000.0,2.2,,Bidirectional line,Wire laser-directed energy deposition (W-DED) fracture toughness,,,
+22,42,200.0,900.0,30.0,100.0,74.1,80.0,,,Stripe,LPBF baseline + post-process Laser Surface Polishing (LSP),,,
+23,43,200.0,900.0,30.0,100.0,74.1,80.0,,,Chessboard 5x5 mm,High-temperature powder bed preheating (500°C),,,
+24,44,1200.0,15.0,600.0,1200.0,111.1,1800.0,,8.5,5-axis adaptive cavity fill,DED blown-powder repair of aeronautical Ti-6Al-4V compressor blades,,,
+25,46,200.0,800.0,30.0,90.0,92.6,75.0,,,Island 5x5 mm,In-situ trace iron (Fe) addition (0.5 to 1.5 wt%) for grain refinement,,,
+26,48,2200.0,14.0,1100.0,2400.0,59.5,2800.0,2.4,,Coaxial wire multi-pass,Coaxial wire laser metal deposition groove repair of aerospace forgings,,,
+27,50,1800.0,10.0,800.0,1800.0,125.0,2200.0,,12.0,Bidirectional line with 90° rotation,Anisotropy study in laser-directed energy deposited Ti-6Al-4V,90,,
+28,51,2400.0,10.0,1200.0,2500.0,66.7,2600.0,2.0,,Linear single track walls,Wire-laser DED heat input variation (175 J/mm to 350 J/mm),,,
+29,52,200.0,900.0,30.0,100.0,74.1,80.0,,,Stripe,LPBF powder bed preheating from 25°C to 400°C,,,
+30,54,250.0,1000.0,30.0,100.0,83.3,80.0,,,Bidirectional raster,Burgers orientation relationship (BOR) parent-β reconstruction,,,
+31,13,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+32,14,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+33,16,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+34,17,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+35,20,180.0,950.0,30.0,90.0,70.2,75.0,,,Contour + hatch,Biomedical porous scaffold,,,
+36,21,2000.0,12.0,1000.0,2200.0,75.8,2500.0,2.0,,Linear raster,DED Ti-6Al-4V regime,,,
+37,22,2000.0,12.0,1000.0,2200.0,75.8,2500.0,2.0,,Linear raster,DED Ti-6Al-4V regime,,,
+38,23,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,10,0.129
+39,25,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+40,27,2000.0,12.0,1000.0,2200.0,75.8,2500.0,2.0,,Linear raster,DED Ti-6Al-4V regime,,,
+41,28,180.0,950.0,30.0,90.0,70.2,75.0,,,Contour + hatch,Biomedical porous scaffold,,,
+42,29,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+43,30,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+44,31,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+45,32,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+46,34,250.0,1100.0,30.0,100.0,75.8,80.0,,,Stripe 67°,LPBF followed by HIP,67,,
+47,35,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+48,38,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+49,39,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+50,40,800.0,15.0,500.0,1100.0,97.0,1000.0,,6.0,Linear bidirectional,Blown-powder DED Ti-6Al-4V (Nursyifaulkhair 2019: 700-900W 15 mm/s 1mm spot),,,
+51,45,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+52,47,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+53,49,225.0,1050.0,30.0,95.0,75.3,80.0,,,Stripe 67°,Standard LPBF parameter set,67,,
+54,53,450.0,16.7,400.0,1000.0,67.4,1000.0,,7.5,Single-track & block raster,Direct Laser Metal Deposition (Chen 2016: 450W steady / 1000W init 16.7 mm/s 1mm spot),,,
+55,55,250.0,1000.0,30.0,100.0,83.3,60.0,,,Bidirectional 90 deg,KU Leuven hybrid conduction-keyhole validation,90,,
+56,56,300.0,800.0,40.0,110.0,85.2,100.0,,,Meander,Bulky 3D G vs R process map and CET transition,,,
+57,57,450.0,10.6,500.0,1200.0,70.8,1200.0,,8.5,Linear raster,Thin-wall thermal process map and solid velocity,,,
+58,58,1800.0,6.0,1200.0,4500.0,55.6,4000.0,2.4,,Continuous CMT,Cold metal transfer with interpass rolling,,,
+59,64,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM / DED; Bermingham et al. 2019) | Powder Technology | DOI: 10.1016/j.powtec.2024.119958 | Pending quantitative experimental extraction,,,
+60,80,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Williams S.W. et al. 2016) | Materials Science and Technology United Kingdom | DOI: 10.1179/1743284715Y.0000000073 | Pending quantitative experimental extraction,,,
+61,81,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wang F. et al. 2013) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-012-1444-6 | Pending quantitative experimental extraction,,,
+62,82,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Bermingham M.J. et al. 2015) | Acta Materialia | DOI: 10.1016/j.actamat.2015.03.035 | Pending quantitative experimental extraction,,,
+63,83,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Szost B.A. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2015.09.115 | Pending quantitative experimental extraction,,,
+64,84,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Donoghue J. et al. 2016) | Materials Characterization | DOI: 10.1016/j.matchar.2016.02.001 | Pending quantitative experimental extraction,,,
+65,85,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu B. et al. 2017) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2017.07.037 | Pending quantitative experimental extraction,,,
+66,86,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Martina F. et al. 2015) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-015-3172-1 | Pending quantitative experimental extraction,,,
+67,87,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; McAndrew A.R. et al. 2018) | Additive Manufacturing | DOI: 10.1016/j.addma.2018.03.006 | Pending quantitative experimental extraction,,,
+68,88,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu B. et al. 2018) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2018.03.024 | Pending quantitative experimental extraction,,,
+69,89,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu B. et al. 2018) | Additive Manufacturing | DOI: 10.1016/j.addma.2018.08.004 | Pending quantitative experimental extraction,,,
+70,90,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu B. et al. 2018) | Corrosion Science | DOI: 10.1016/j.corsci.2018.03.047 | Pending quantitative experimental extraction,,,
+71,91,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Zhang J. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2015.10.141 | Pending quantitative experimental extraction,,,
+72,92,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Martina F. et al. 2016) | Materials Science and Technology United Kingdom | DOI: 10.1080/02670836.2016.1142704 | Pending quantitative experimental extraction,,,
+73,93,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Bermingham M.J. et al. 2018) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2018.04.158 | Pending quantitative experimental extraction,,,
+74,94,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Biswal R. et al. 2019) | International Journal of Fatigue | DOI: 10.1016/j.ijfatigue.2019.01.017 | Pending quantitative experimental extraction,,,
+75,95,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Yang J. et al. 2017) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-017-4087-9 | Pending quantitative experimental extraction,,,
+76,96,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Hönnige J.R. et al. 2018) | Materials and Design | DOI: 10.1016/j.matdes.2018.03.065 | Pending quantitative experimental extraction,,,
+77,97,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Bambach M. et al. 2020) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2020.116689 | Pending quantitative experimental extraction,,,
+78,98,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Motallebi R. et al. 2022) | Current Opinion in Solid State and Materials Science | DOI: 10.1016/j.cossms.2022.100992 | Pending quantitative experimental extraction,,,
+79,99,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wang J. et al. 2018) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2018.07.235 | Pending quantitative experimental extraction,,,
+80,100,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Sequeira Almeida P.M. et al. 2010) | 21st Annual International Solid Freeform Fabrication Symposium an Additive Manufacturing Conference Sff 2010 | Pending quantitative experimental extraction,,,
+81,101,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Shi X. et al. 2017) | Materials Science and Engineering A | DOI: 10.1016/j.msea.2016.12.065 | Pending quantitative experimental extraction,,,
+82,102,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Kennedy J.R. et al. 2021) | Additive Manufacturing | DOI: 10.1016/j.addma.2021.101928 | Pending quantitative experimental extraction,,,
+83,103,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu Q. et al. 2019) | Additive Manufacturing | DOI: 10.1016/j.addma.2019.100808 | Pending quantitative experimental extraction,,,
+84,104,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Zhang X. et al. 2017) | Fatigue and Fracture of Engineering Materials and Structures | DOI: 10.1111/ffe.12547 | Pending quantitative experimental extraction,,,
+85,69,,,,,,,,,,Indexed Ti-6Al-4V study (DED; Heigel et al. 2015) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-024-07624-0 | Pending quantitative experimental extraction,,,
+86,71,,,,,,,,,,Indexed Ti-6Al-4V study (EBM / DED; Murr et al. 2012) | Powder Metallurgy | DOI: 10.1080/00325899.2022.2069077 | Pending quantitative experimental extraction,,,
+87,77,,,,,,,,,,Indexed Ti-6Al-4V study (Review / DED; Liu et al. 2021) | Powder Technology | DOI: 10.1016/j.powtec.2026.122295 | Pending quantitative experimental extraction,,,
+88,105,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Liu S. et al. 2019) | Materials and Design | DOI: 10.1016/j.matdes.2018.107552 | Pending quantitative experimental extraction,,,
+89,106,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Lewandowski J.J. et al. 2016) | Annual Review of Materials Research | DOI: 10.1146/annurev-matsci-070115-032024 | Pending quantitative experimental extraction,,,
+90,107,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Carroll B.E. et al. 2015) | Acta Materialia | DOI: 10.1016/j.actamat.2014.12.054 | Pending quantitative experimental extraction,,,
+91,108,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Nguyen H.D. et al. 2022) | Journal of Materials Research and Technology | DOI: 10.1016/j.jmrt.2022.04.055 | Pending quantitative experimental extraction,,,
+92,109,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Heigel J.C. et al. 2015) | Additive Manufacturing | DOI: 10.1016/j.addma.2014.10.003 | Pending quantitative experimental extraction,,,
+93,110,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Wu X. et al. 2004) | Materials and Design | DOI: 10.1016/j.matdes.2003.09.009 | Pending quantitative experimental extraction,,,
+94,111,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Bobbio L.D. et al. 2017) | Acta Materialia | DOI: 10.1016/j.actamat.2016.12.070 | Pending quantitative experimental extraction,,,
+95,112,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Kelly S.M. et al. 2004) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-004-0094-8 | Pending quantitative experimental extraction,,,
+96,113,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Bandyopadhyay A. et al. 2010) | Acta Biomaterialia | DOI: 10.1016/j.actbio.2009.11.011 | Pending quantitative experimental extraction,,,
+97,114,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Sterling A.J. et al. 2016) | Materials Science and Engineering A | DOI: 10.1016/j.msea.2015.12.026 | Pending quantitative experimental extraction,,,
+98,115,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Liu Z. et al. 2021) | JOM | DOI: 10.1007/s11837-021-04670-6 | Pending quantitative experimental extraction,,,
+99,116,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Azarniya A. et al. 2019) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2019.04.255 | Pending quantitative experimental extraction,,,
+100,117,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Beese A.M. et al. 2016) | JOM | DOI: 10.1007/s11837-015-1759-z | Pending quantitative experimental extraction,,,
+101,118,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Lu X. et al. 2019) | Additive Manufacturing | DOI: 10.1016/j.addma.2019.02.001 | Pending quantitative experimental extraction,,,
+102,119,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Kelly S.M. et al. 2004) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-004-0095-7 | Pending quantitative experimental extraction,,,
+103,120,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Onuike B. et al. 2018) | Additive Manufacturing | DOI: 10.1016/j.addma.2018.06.025 | Pending quantitative experimental extraction,,,
+104,121,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Zhai Y. et al. 2016) | Engineering Failure Analysis | DOI: 10.1016/j.engfailanal.2016.05.036 | Pending quantitative experimental extraction,,,
+105,122,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Khanzadeh M. et al. 2019) | Iise Transactions | DOI: 10.1080/24725854.2017.1417656 | Pending quantitative experimental extraction,,,
+106,123,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Qian M. et al. 2016) | MRS Bulletin | DOI: 10.1557/mrs.2016.215 | Pending quantitative experimental extraction,,,
+107,124,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Yang Q. et al. 2016) | Additive Manufacturing | DOI: 10.1016/j.addma.2016.06.012 | Pending quantitative experimental extraction,,,
+108,125,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Hayes B.J. et al. 2017) | Acta Materialia | DOI: 10.1016/j.actamat.2017.05.025 | Pending quantitative experimental extraction,,,
+109,126,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Lu H. et al. 2022) | Additive Manufacturing | DOI: 10.1016/j.addma.2022.102877 | Pending quantitative experimental extraction,,,
+110,127,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Bontha S. et al. 2006) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2006.03.155 | Pending quantitative experimental extraction,,,
+111,128,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Sahasrabudhe H. et al. 2015) | Additive Manufacturing | DOI: 10.1016/j.addma.2014.10.002 | Pending quantitative experimental extraction,,,
+112,129,,,,,,,,,,Indexed Ti-6Al-4V study (L-DED; Li W. et al. 2017) | Additive Manufacturing | DOI: 10.1016/j.addma.2016.12.006 | Pending quantitative experimental extraction,,,
+113,79,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Tischel F. et al. 2024) | Proceedings Euro Pm 2024 Congress and Exhibition | DOI: 10.59499/EP246278578 | Pending quantitative experimental extraction,,,
+114,155,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Meier C. et al. 2019) | Pending quantitative experimental extraction,,,
+115,156,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Miyanaji H. et al. 2018) | Pending quantitative experimental extraction,,,
+116,157,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Stevens E. et al. 2018) | Pending quantitative experimental extraction,,,
+117,158,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Phua A. et al. 2021) | Pending quantitative experimental extraction,,,
+118,159,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Dilip J.J.S. et al. 2017) | Pending quantitative experimental extraction,,,
+119,160,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Simchi A. et al. 2023) | Pending quantitative experimental extraction,,,
+120,161,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Yadav P. et al. 2020) | Pending quantitative experimental extraction,,,
+121,162,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2024) | Pending quantitative experimental extraction,,,
+122,163,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Alegre J.M. et al. 2024) | Pending quantitative experimental extraction,,,
+123,164,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Tischel F. et al. 2024) | Pending quantitative experimental extraction,,,
+124,165,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Siddiqui M.A.S. et al. 2025) | Pending quantitative experimental extraction,,,
+125,166,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2025) | Pending quantitative experimental extraction,,,
+126,167,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Bhaduri D. et al. 2025) | Pending quantitative experimental extraction,,,
+127,168,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Frieden Templeton W. et al. 2024) | Pending quantitative experimental extraction,,,
+128,169,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Jump N. et al. 2025) | Pending quantitative experimental extraction,,,
+129,170,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Bernhard G.H. et al. 2021) | Pending quantitative experimental extraction,,,
+130,171,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Xu P. et al. 2022) | Pending quantitative experimental extraction,,,
+131,172,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2025) | Pending quantitative experimental extraction,,,
+132,173,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Simchi A. et al. 2022) | Pending quantitative experimental extraction,,,
+133,174,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Paramore J.D. et al. 2020) | Pending quantitative experimental extraction,,,
+134,175,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2022) | Pending quantitative experimental extraction,,,
+135,176,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Simchi A. et al. 2021) | Pending quantitative experimental extraction,,,
+136,177,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Qian Y. et al. 2026) | Pending quantitative experimental extraction,,,
+137,178,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Persson M. et al. 2017) | Pending quantitative experimental extraction,,,
+138,59,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Vrancken et al. 2012) | Defence Technology | DOI: 10.1016/j.dt.2016.08.001 | Pending quantitative experimental extraction,,,
+139,60,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Vilaro et al. 2011) | International Journal of Advanced Manufacturing Technology | DOI: 10.1007/s00170-023-11661-1 | Pending quantitative experimental extraction,,,
+140,61,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Simonelli et al. 2014) | Advanced Engineering Materials | DOI: 10.1002/adem.202000408 | Pending quantitative experimental extraction,,,
+141,63,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF + US; Todaro et al. 2020) | Materials | DOI: 10.3390/ma17153825 | Pending quantitative experimental extraction,,,
+142,65,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF / In-Situ; Zhao et al. 2017) | Advanced Engineering Materials | DOI: 10.1002/adem.202500257 | Pending quantitative experimental extraction,,,
+143,68,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Facchini et al. 2010) | Computational Materials Science | DOI: 10.1016/j.commatsci.2024.113056 | Pending quantitative experimental extraction,,,
+144,70,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Ly et al. 2017) | International Journal of Powder Metallurgy | Pending quantitative experimental extraction,,,
+145,72,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Cain et al. 2015) | Funtai Oyobi Fummatsu Yakin Journal of the Japan Society of Powder and Powder Metallurgy | DOI: 10.2497/jjspm.15A-T7-04 | Pending quantitative experimental extraction,,,
+146,73,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Dilip et al. 2017) | World Pm 2022 Congress Proceedings | Pending quantitative experimental extraction,,,
+147,74,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Simonelli et al. 2015) | JOM | DOI: 10.1007/s11837-020-04261-x | Pending quantitative experimental extraction,,,
+148,76,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Simonelli et al. 2014) | Euro Pm2021 Congress Proceedings | Pending quantitative experimental extraction,,,
+149,78,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Cunningham et al. 2017) | Proceedings Euro Pm 2017 International Powder Metallurgy Congress and Exhibition | Pending quantitative experimental extraction,,,
+150,130,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Thijs L. et al. 2010) | Acta Materialia | DOI: 10.1016/j.actamat.2010.02.004 | Pending quantitative experimental extraction,,,
+151,131,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Liu S. et al. 2019) | Materials and Design | DOI: 10.1016/j.matdes.2018.107552 | Pending quantitative experimental extraction,,,
+152,132,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Vrancken B. et al. 2012) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2012.07.022 | Pending quantitative experimental extraction,,,
+153,133,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Murr L.E. et al. 2012) | Journal of Materials Science and Technology | DOI: 10.1016/S1005-0302(12)60016-4 | Pending quantitative experimental extraction,,,
+154,134,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Xu W. et al. 2015) | Acta Materialia | DOI: 10.1016/j.actamat.2014.11.028 | Pending quantitative experimental extraction,,,
+155,135,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Vilaro T. et al. 2011) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-011-0731-y | Pending quantitative experimental extraction,,,
+156,136,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Gong H. et al. 2014) | Additive Manufacturing | DOI: 10.1016/j.addma.2014.08.002 | Pending quantitative experimental extraction,,,
+157,137,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Qiu C. et al. 2015) | Acta Materialia | DOI: 10.1016/j.actamat.2015.06.004 | Pending quantitative experimental extraction,,,
+158,138,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Murr L.E. et al. 2009) | Journal of the Mechanical Behavior of Biomedical Materials | DOI: 10.1016/j.jmbbm.2008.05.004 | Pending quantitative experimental extraction,,,
+159,139,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Gong H. et al. 2015) | Materials and Design | DOI: 10.1016/j.matdes.2015.07.147 | Pending quantitative experimental extraction,,,
+160,140,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Vandenbroucke B. et al. 2007) | Rapid Prototyping Journal | DOI: 10.1108/13552540710776142 | Pending quantitative experimental extraction,,,
+161,141,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Bobbert F.S.L. et al. 2017) | Acta Biomaterialia | DOI: 10.1016/j.actbio.2017.02.024 | Pending quantitative experimental extraction,,,
+162,142,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Edwards P. et al. 2014) | Materials Science and Engineering A | DOI: 10.1016/j.msea.2014.01.041 | Pending quantitative experimental extraction,,,
+163,143,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Yang J. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2016.06.117 | Pending quantitative experimental extraction,,,
+164,144,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Qiu C. et al. 2013) | Materials Science and Engineering A | DOI: 10.1016/j.msea.2013.04.099 | Pending quantitative experimental extraction,,,
+165,145,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Zhao C. et al. 2017) | Scientific Reports | DOI: 10.1038/s41598-017-03761-2 | Pending quantitative experimental extraction,,,
+166,146,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Zhang L.C. et al. 2016) | Advanced Engineering Materials | DOI: 10.1002/adem.201500419 | Pending quantitative experimental extraction,,,
+167,147,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Yan C. et al. 2015) | Journal of the Mechanical Behavior of Biomedical Materials | DOI: 10.1016/j.jmbbm.2015.06.024 | Pending quantitative experimental extraction,,,
+168,148,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Zhao C. et al. 2020) | Science | DOI: 10.1126/science.abd1587 | Pending quantitative experimental extraction,,,
+169,149,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Xu W. et al. 2017) | Acta Materialia | DOI: 10.1016/j.actamat.2016.12.027 | Pending quantitative experimental extraction,,,
+170,150,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Zhao X. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2015.12.135 | Pending quantitative experimental extraction,,,
+171,151,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Nguyen H.D. et al. 2022) | Journal of Materials Research and Technology | DOI: 10.1016/j.jmrt.2022.04.055 | Pending quantitative experimental extraction,,,
+172,152,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Shipley H. et al. 2018) | International Journal of Machine Tools and Manufacture | DOI: 10.1016/j.ijmachtools.2018.01.003 | Pending quantitative experimental extraction,,,
+173,153,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Tammas-Williams S. et al. 2015) | Materials Characterization | DOI: 10.1016/j.matchar.2015.02.008 | Pending quantitative experimental extraction,,,
+174,154,,,,,,,,,,Indexed Ti-6Al-4V study (LPBF; Dai N. et al. 2016) | Corrosion Science | DOI: 10.1016/j.corsci.2015.10.041 | Pending quantitative experimental extraction,,,
+175,62,,,,,,,,,,Indexed Ti-6Al-4V study (Review / AM; Gorsse et al. 2017) | Materials | DOI: 10.3390/ma17030750 | Pending quantitative experimental extraction,,,
+176,66,,,,,,,,,,Indexed Ti-6Al-4V study (EBM; Murr et al. 2010) | Additive Manufacturing Letters | DOI: 10.1016/j.addlet.2025.100272 | Pending quantitative experimental extraction,,,
+177,67,,,,,,,,,,Indexed Ti-6Al-4V study (EBM; Tammas-Williams et al. 2015) | CIRP Annals | DOI: 10.1016/j.cirp.2025.03.037 | Pending quantitative experimental extraction,,,
+178,75,,,,,,,,,,Indexed Ti-6Al-4V study (EBM; de Formanoir et al. 2016) | World Pm 2022 Congress Proceedings | Pending quantitative experimental extraction,,,

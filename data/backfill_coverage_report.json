@@ -1,0 +1,349 @@
+{
+  "total_indexed_papers": 178,
+  "relational_row_counts": {
+    "ti64_process_parameters": 178,
+    "ti64_thermal_physics": 178,
+    "ti64_microstructure": 178,
+    "ti64_mechanical_properties": 178
+  },
+  "zero_fabrication_policy": "Only verified workspace records ingested; missing experimental fields left blank.",
+  "by_process_bucket": {
+    "lpbf": {
+      "total_papers": 74,
+      "has_process_params": 37,
+      "has_thermal_physics": 37,
+      "has_microstructure": 36,
+      "has_mechanical_props": 49,
+      "has_oxygen_wt_pct": 3,
+      "has_alpha_lath_width_um": 36,
+      "has_scan_rotation_deg": 21,
+      "has_build_orientation_deg": 34,
+      "has_defect_type": 37,
+      "has_max_defect_size_um": 0
+    },
+    "ebm_other": {
+      "total_papers": 11,
+      "has_process_params": 7,
+      "has_thermal_physics": 7,
+      "has_microstructure": 7,
+      "has_mechanical_props": 11,
+      "has_oxygen_wt_pct": 0,
+      "has_alpha_lath_width_um": 7,
+      "has_scan_rotation_deg": 4,
+      "has_build_orientation_deg": 6,
+      "has_defect_type": 7,
+      "has_max_defect_size_um": 0
+    },
+    "lded": {
+      "total_papers": 41,
+      "has_process_params": 13,
+      "has_thermal_physics": 13,
+      "has_microstructure": 11,
+      "has_mechanical_props": 16,
+      "has_oxygen_wt_pct": 0,
+      "has_alpha_lath_width_um": 11,
+      "has_scan_rotation_deg": 1,
+      "has_build_orientation_deg": 10,
+      "has_defect_type": 13,
+      "has_max_defect_size_um": 0
+    },
+    "waam": {
+      "total_papers": 27,
+      "has_process_params": 1,
+      "has_thermal_physics": 1,
+      "has_microstructure": 0,
+      "has_mechanical_props": 2,
+      "has_oxygen_wt_pct": 0,
+      "has_alpha_lath_width_um": 0,
+      "has_scan_rotation_deg": 0,
+      "has_build_orientation_deg": 1,
+      "has_defect_type": 1,
+      "has_max_defect_size_um": 0
+    },
+    "binder_jetting": {
+      "total_papers": 25,
+      "has_process_params": 0,
+      "has_thermal_physics": 0,
+      "has_microstructure": 0,
+      "has_mechanical_props": 0,
+      "has_oxygen_wt_pct": 0,
+      "has_alpha_lath_width_um": 0,
+      "has_scan_rotation_deg": 0,
+      "has_build_orientation_deg": 0,
+      "has_defect_type": 0,
+      "has_max_defect_size_um": 0
+    }
+  },
+  "table_column_coverage": {
+    "ti64_process_parameters": {
+      "total_rows": 178,
+      "columns": {
+        "laser_power_w": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "scan_speed_mms": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "layer_thickness_um": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "hatch_spacing_um": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "volumetric_energy_density_j_mm3": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "beam_spot_diameter_um": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "wire_feed_speed_m_min": {
+          "populated": 8,
+          "missing": 170,
+          "coverage_pct": 4.5
+        },
+        "powder_feed_rate_g_min": {
+          "populated": 5,
+          "missing": 173,
+          "coverage_pct": 2.8
+        },
+        "scan_strategy": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "scan_rotation_deg": {
+          "populated": 26,
+          "missing": 152,
+          "coverage_pct": 14.6
+        },
+        "powder_reuse_cycles": {
+          "populated": 2,
+          "missing": 176,
+          "coverage_pct": 1.1
+        },
+        "oxygen_wt_pct": {
+          "populated": 3,
+          "missing": 175,
+          "coverage_pct": 1.7
+        }
+      }
+    },
+    "ti64_thermal_physics": {
+      "total_rows": 178,
+      "columns": {
+        "melt_pool_width_um": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "melt_pool_depth_um": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "peak_temperature_k": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "cooling_rate_k_s": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "thermal_gradient_g_k_m": {
+          "populated": 13,
+          "missing": 165,
+          "coverage_pct": 7.3
+        },
+        "solidification_rate_r_m_s": {
+          "populated": 7,
+          "missing": 171,
+          "coverage_pct": 3.9
+        },
+        "residual_stress_mpa": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "distortion_mm": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "defect_regime": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "defect_type": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "max_defect_size_um": {
+          "populated": 0,
+          "missing": 178,
+          "coverage_pct": 0.0
+        }
+      }
+    },
+    "ti64_microstructure": {
+      "total_rows": 178,
+      "columns": {
+        "condition": {
+          "populated": 54,
+          "missing": 124,
+          "coverage_pct": 30.3
+        },
+        "phases_identified": {
+          "populated": 54,
+          "missing": 124,
+          "coverage_pct": 30.3
+        },
+        "alpha_fraction_pct": {
+          "populated": 54,
+          "missing": 124,
+          "coverage_pct": 30.3
+        },
+        "beta_fraction_pct": {
+          "populated": 54,
+          "missing": 124,
+          "coverage_pct": 30.3
+        },
+        "alpha_prime_fraction_pct": {
+          "populated": 54,
+          "missing": 124,
+          "coverage_pct": 30.3
+        },
+        "alpha_lath_thickness_um": {
+          "populated": 54,
+          "missing": 124,
+          "coverage_pct": 30.3
+        },
+        "prior_beta_grain_width_um": {
+          "populated": 54,
+          "missing": 124,
+          "coverage_pct": 30.3
+        },
+        "prior_beta_morphology": {
+          "populated": 54,
+          "missing": 124,
+          "coverage_pct": 30.3
+        },
+        "characterization_methods": {
+          "populated": 54,
+          "missing": 124,
+          "coverage_pct": 30.3
+        },
+        "alpha_lath_width_um": {
+          "populated": 54,
+          "missing": 124,
+          "coverage_pct": 30.3
+        },
+        "oxygen_wt_pct": {
+          "populated": 3,
+          "missing": 175,
+          "coverage_pct": 1.7
+        }
+      }
+    },
+    "ti64_mechanical_properties": {
+      "total_rows": 178,
+      "columns": {
+        "test_direction": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "condition": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "yield_strength_mpa": {
+          "populated": 78,
+          "missing": 100,
+          "coverage_pct": 43.8
+        },
+        "ultimate_tensile_strength_mpa": {
+          "populated": 78,
+          "missing": 100,
+          "coverage_pct": 43.8
+        },
+        "elongation_pct": {
+          "populated": 78,
+          "missing": 100,
+          "coverage_pct": 43.8
+        },
+        "vickers_hardness_hv": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "fracture_toughness_kic_mpa_m05": {
+          "populated": 2,
+          "missing": 176,
+          "coverage_pct": 1.1
+        },
+        "charpy_impact_energy_j": {
+          "populated": 8,
+          "missing": 170,
+          "coverage_pct": 4.5
+        },
+        "fatigue_limit_mpa": {
+          "populated": 37,
+          "missing": 141,
+          "coverage_pct": 20.8
+        },
+        "astm_f2924_compliant": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "astm_f3001_compliant": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "build_orientation_deg": {
+          "populated": 51,
+          "missing": 127,
+          "coverage_pct": 28.7
+        },
+        "oxygen_wt_pct": {
+          "populated": 3,
+          "missing": 175,
+          "coverage_pct": 1.7
+        },
+        "max_defect_size_um": {
+          "populated": 0,
+          "missing": 178,
+          "coverage_pct": 0.0
+        },
+        "defect_type": {
+          "populated": 58,
+          "missing": 120,
+          "coverage_pct": 32.6
+        },
+        "relative_density_pct": {
+          "populated": 20,
+          "missing": 158,
+          "coverage_pct": 11.2
+        }
+      }
+    }
+  }
+}
