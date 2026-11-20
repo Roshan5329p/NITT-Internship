@@ -7207,6 +7207,56 @@ window.addEventListener('click', function(e) {
       </div>
 
       <!-- ========================================================
+           PARAMETER-DRIVEN 6-TOPIC MECHANICAL BEHAVIOR GRAPHS
+           (Coupled live to Process, Sliders, O2, Post-Processing & CAD)
+           ======================================================== -->
+      <div class="res-card" style="margin-top: 16px;" id="predMechCurvesCard">
+        <div class="res-card-header" style="flex-wrap: wrap; gap: 10px; align-items: center;">
+          <div style="min-width: 240px;">
+            <div class="res-card-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path d="M3 3v18h18"/><path d="M6 15l4-5 4 3 5-7"/></svg>
+              <span>Process-Driven Ti-6Al-4V Mechanical Curves</span>
+              <span class="brand-badge" id="predCurvesParamBadge" style="font-size: 10px; white-space: nowrap; color: #38bdf8; background: rgba(56,189,248,0.1); border-color: rgba(56,189,248,0.35);">LPBF · 280W · 960mm/s · HIP</span>
+            </div>
+            <div class="res-card-sub">Live constitutive response coupled to AM Process, Sliders, O₂, Orientation, Post-Processing &amp; CAD thermal shift</div>
+          </div>
+          <div id="predMechControlBox" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 11px;"></div>
+        </div>
+
+        <div class="mp-control-group" id="predMechPills" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; margin-bottom: 12px; background: rgba(7,12,20,0.85); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px;">
+          <button type="button" class="mp-toggle-btn active" onclick="selectPredMechTopic('Stress-Strain', this)" style="font-size: 11px; padding: 5px 10px;">1. Stress vs Strain</button>
+          <button type="button" class="mp-toggle-btn" onclick="selectPredMechTopic('Eng. Stress-Strain', this)" style="font-size: 11px; padding: 5px 10px;">2. Eng. Stress–Strain</button>
+          <button type="button" class="mp-toggle-btn" onclick="selectPredMechTopic('Compression', this)" style="font-size: 11px; padding: 5px 10px;">3. Compression</button>
+          <button type="button" class="mp-toggle-btn" onclick="selectPredMechTopic('Fatigue HCF/LCF', this)" style="font-size: 11px; padding: 5px 10px;">4. Fatigue (HCF / LCF)</button>
+          <button type="button" class="mp-toggle-btn" onclick="selectPredMechTopic('Creep', this)" style="font-size: 11px; padding: 5px 10px;">5. Creep</button>
+          <button type="button" class="mp-toggle-btn" onclick="selectPredMechTopic('Hardness', this)" style="font-size: 11px; padding: 5px 10px;">6. Hardness (HV)</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 10px;">
+          <div style="background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 7px 10px;">
+            <div style="font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.4px; color: #64748b;">Tensile YS / UTS / El</div>
+            <div id="predMechReadout" style="font-size: 11.5px; font-family: 'JetBrains Mono', monospace; color: #34d399; font-weight: 700; margin-top: 2px;">909 / 991 MPa · 13.7%</div>
+          </div>
+          <div style="background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 7px 10px;">
+            <div style="font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.4px; color: #64748b;">Hardness &amp; Microstructure</div>
+            <div id="predMechMicroTag" style="font-size: 11.5px; font-family: 'JetBrains Mono', monospace; color: #38bdf8; font-weight: 700; margin-top: 2px;">336 HV · λ_α=3.58 µm · 0.160% O₂</div>
+          </div>
+          <div style="background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 7px 10px;">
+            <div style="font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.4px; color: #64748b;">Energy, Density &amp; Stress</div>
+            <div id="predMechRegimeTag" style="font-size: 11.5px; font-family: 'JetBrains Mono', monospace; color: #fbbf24; font-weight: 700; margin-top: 2px;">VED 66.3 · 99.98% · 15 MPa</div>
+          </div>
+        </div>
+
+        <div style="background: linear-gradient(180deg, rgba(8,14,26,0.98) 0%, rgba(4,8,16,0.98) 100%); border: 1px solid rgba(56,189,248,0.16); border-radius: 12px; padding: 12px 14px 10px 14px;">
+          <canvas id="predMechCanvas" style="width: 100%; height: 320px; display: block;"></canvas>
+          <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <div id="predMechLegend" style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 11px; color: #e2e8f0;"></div>
+          </div>
+          <div id="predMechNote" style="margin-top: 6px; font-size: 11px; color: #94a3b8; line-height: 1.45;"></div>
+        </div>
+      </div>
+
+      <!-- ========================================================
            PHASE 4: INVERSE Ti-6Al-4V RECIPE SOLVER & LAB CALIBRATION
            ======================================================== -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; margin-top: 16px;" id="phase4SuiteGrid">
@@ -11457,6 +11507,9 @@ function calculatePhysics() {
   if (typeof renderTi64Phase3Curves === 'function') {
     renderTi64Phase3Curves(window.latestPhysicsState);
   }
+  if (typeof renderPredMechCurves === 'function') {
+    renderPredMechCurves(window.latestPhysicsState);
+  }
 
   // 6. Update Bontha Solidification Map Cursor (Bontha et al. 2006, 2009)
   const logR = Math.log10(Math.max(1e-4, bonthaR));
@@ -12049,8 +12102,11 @@ function switchTab(tabId, btn) {
   if (tabId === 'cad-analyzer' && typeof initCadAnalyzerTab === 'function') {
     initCadAnalyzerTab();
   }
+  if (tabId === 'predictions' && typeof renderPredMechCurves === 'function') {
+    setTimeout(() => renderPredMechCurves(window.latestPhysicsState), 30);
+  }
   if (tabId === 'literature' && typeof drawLitTopicGraph === 'function') {
-    drawLitTopicGraph();
+    setTimeout(() => drawLitTopicGraph(), 30);
   }
   if (tabId === 'melt-pool') {
     updateMeltPoolAndThermal();
@@ -15283,43 +15339,141 @@ function setLitTopicSubMode(k, v) {
 }
 window.setLitTopicSubMode = setLitTopicSubMode;
 
+function _setupCrispCanvasChart(canvas, cssHeight = 320) {
+  const rect = canvas.getBoundingClientRect();
+  const W = Math.max(460, Math.round((rect && rect.width) ? rect.width : 820));
+  const H = cssHeight;
+  const dpr = Math.min(2.5, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  const pad = { l: 64, r: 22, t: 22, b: 42 };
+  const pw = W - pad.l - pad.r;
+  const ph = H - pad.t - pad.b;
+
+  const drawAxes = (xMin, xMax, yMin, yMax, xLbl, yLbl, xTicks, yTicks, xFmt, yFmt) => {
+    const sx = x => pad.l + ((x - xMin) / Math.max(1e-9, xMax - xMin)) * pw;
+    const sy = y => pad.t + ph - ((y - yMin) / Math.max(1e-9, yMax - yMin)) * ph;
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.save();
+    ctx.setLineDash([3, 4]);
+    ctx.lineWidth = 1;
+    ctx.font = '10.5px "JetBrains Mono", monospace';
+    for (const xt of xTicks) {
+      const x = sx(xt);
+      ctx.strokeStyle = 'rgba(148,163,184,0.08)';
+      ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + ph); ctx.stroke();
+      ctx.fillStyle = '#64748b'; ctx.textAlign = 'center';
+      ctx.fillText(xFmt ? xFmt(xt) : String(xt), x, pad.t + ph + 16);
+    }
+    for (const yt of yTicks) {
+      const y = sy(yt);
+      ctx.strokeStyle = 'rgba(148,163,184,0.11)';
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + pw, y); ctx.stroke();
+      ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'right';
+      ctx.fillText(yFmt ? yFmt(yt) : String(yt), pad.l - 9, y + 3.5);
+    }
+    ctx.restore();
+
+    // Crisp L-shaped axes (clean modern scientific plot, no heavy box)
+    ctx.strokeStyle = 'rgba(148,163,184,0.38)';
+    ctx.lineWidth = 1.25;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t);
+    ctx.lineTo(pad.l, pad.t + ph);
+    ctx.lineTo(pad.l + pw, pad.t + ph);
+    ctx.stroke();
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '600 11px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(xLbl, pad.l + pw / 2, H - 7);
+    ctx.save();
+    ctx.translate(16, pad.t + ph / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(yLbl, 0, 0);
+    ctx.restore();
+    return { sx, sy };
+  };
+
+  const plot = (ax, pts, col, dash = false, fillArea = false) => {
+    if (!pts || !pts.length) return;
+    if (fillArea && !dash) {
+      ctx.save();
+      const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + ph);
+      grad.addColorStop(0, col + '33');
+      grad.addColorStop(1, col + '00');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      pts.forEach(([x, y], i) => i ? ctx.lineTo(ax.sx(x), ax.sy(y)) : ctx.moveTo(ax.sx(x), ax.sy(y)));
+      ctx.lineTo(ax.sx(pts[pts.length - 1][0]), pad.t + ph);
+      ctx.lineTo(ax.sx(pts[0][0]), pad.t + ph);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.save();
+    ctx.strokeStyle = col;
+    ctx.lineWidth = dash ? 1.8 : 2.6;
+    if (dash) ctx.setLineDash([6, 4]);
+    else { ctx.shadowColor = col + '66'; ctx.shadowBlur = 7; }
+    ctx.beginPath();
+    pts.forEach(([x, y], i) => i ? ctx.lineTo(ax.sx(x), ax.sy(y)) : ctx.moveTo(ax.sx(x), ax.sy(y)));
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  const dot = (ax, x, y, col, r = 5, lbl = '') => {
+    const px = ax.sx(x), py = ax.sy(y);
+    ctx.save();
+    ctx.fillStyle = col;
+    ctx.shadowColor = col; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#040810'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();
+    if (lbl) {
+      ctx.font = '600 10.5px "JetBrains Mono", monospace';
+      const tw = ctx.measureText(lbl).width;
+      const bw = tw + 12, bh = 20;
+      const bx = Math.max(pad.l + 4, Math.min(W - pad.r - bw - 4, px + 8));
+      const by = Math.max(pad.t + 4, Math.min(pad.t + ph - bh - 4, py - 24));
+      ctx.fillStyle = 'rgba(11, 18, 32, 0.92)';
+      ctx.strokeStyle = col + '88';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, 5); else ctx.rect(bx, by, bw, bh);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#f8fafc'; ctx.textAlign = 'left';
+      ctx.fillText(lbl, bx + 6, by + 13.5);
+    }
+    ctx.restore();
+  };
+
+  const setLegend = (legEl, items) => {
+    if (!legEl) return;
+    legEl.innerHTML = items.map(([c, t, d]) => `<span style="display:inline-flex;align-items:center;gap:6px;"><span style="display:inline-block;width:16px;height:3px;border-radius:2px;background:${d ? 'transparent' : c};${d ? 'border-top:2px dashed ' + c + ';' : ''}"></span><span>${t}</span></span>`).join('');
+  };
+
+  return { ctx, W, H, pad, pw, ph, drawAxes, plot, dot, setLegend };
+}
+
 function drawLitTopicGraph() {
   const canvas = document.getElementById('litTopicCanvas');
   if (!canvas) return;
-  const ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height;
   const topic = activeLitPlotTopic || 'Stress-Strain';
   const ctrlBox = document.getElementById('litTopicControlBox');
   const noteEl = document.getElementById('litTopicNote');
   const legEl = document.getElementById('litTopicLegend');
 
-  const pad = { l: 58, r: 20, t: 18, b: 38 }, pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
-  const drawAxes = (xMin, xMax, yMin, yMax, xLbl, yLbl, xTicks, yTicks, xFmt, yFmt) => {
-    const sx = x => pad.l + ((x - xMin) / (xMax - xMin)) * pw;
-    const sy = y => pad.t + ph - ((y - yMin) / (yMax - yMin)) * ph;
-    ctx.clearRect(0, 0, W, H);
-    ctx.strokeStyle = 'rgba(148,163,184,0.16)'; ctx.lineWidth = 1;
-    ctx.font = '10px JetBrains Mono, monospace'; ctx.fillStyle = '#94a3b8';
-    for (const xt of xTicks) {
-      const x = sx(xt); ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + ph); ctx.stroke();
-      ctx.textAlign = 'center'; ctx.fillText(xFmt ? xFmt(xt) : String(xt), x, pad.t + ph + 14);
-    }
-    for (const yt of yTicks) {
-      const y = sy(yt); ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + pw, y); ctx.stroke();
-      ctx.textAlign = 'right'; ctx.fillText(yFmt ? yFmt(yt) : String(yt), pad.l - 6, y + 3.5);
-    }
-    ctx.strokeStyle = '#64748b'; ctx.strokeRect(pad.l, pad.t, pw, ph);
-    ctx.fillStyle = '#cbd5e1'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(xLbl, pad.l + pw / 2, H - 6);
-    ctx.save(); ctx.translate(14, pad.t + ph / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(yLbl, 0, 0); ctx.restore();
-    return { sx, sy };
-  };
-  const plot = (ax, pts, col, dash) => {
-    ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 2.2; if (dash) ctx.setLineDash([5, 4]);
-    ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(ax.sx(x), ax.sy(y)) : ctx.moveTo(ax.sx(x), ax.sy(y))); ctx.stroke(); ctx.restore();
-  };
-  const setLeg = (arr) => {
-    if (legEl) legEl.innerHTML = arr.map(([c, t]) => `<span><span style="display:inline-block;width:14px;height:3px;background:${c};vertical-align:middle;margin-right:5px;"></span>${t}</span>`).join('');
-  };
+  const ch = _setupCrispCanvasChart(canvas, 270);
+  const { ctx, drawAxes, plot, setLegend } = ch;
+  const setLeg = (arr) => setLegend(legEl, arr);
 
   if (topic === 'Stress-Strain') {
     if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setLitTopicSubMode('tempC',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="25" ${litPlotState.tempC==='25'?'selected':''}>25 °C (RT)</option><option value="400" ${litPlotState.tempC==='400'?'selected':''}>400 °C</option><option value="600" ${litPlotState.tempC==='600'?'selected':''}>600 °C</option></select>`;
@@ -15401,6 +15555,227 @@ function drawLitTopicGraph() {
   }
 }
 window.drawLitTopicGraph = drawLitTopicGraph;
+
+// =========================================================================
+// LIVE PROCESS- & PARAMETER-DRIVEN 6-TOPIC CURVES IN PREDICTIONS SECTION
+// =========================================================================
+let activePredMechTopic = 'Stress-Strain';
+const predMechState = { tempC: '25', showOverlay: true, compMode: 'rate', fatigueMode: 'hcf', creepTemp: '550', creepStress: '350', creepView: 'strain-time', hvView: 'temp' };
+
+function selectPredMechTopic(topic, btn) {
+  activePredMechTopic = topic;
+  document.querySelectorAll('#predMechPills .mp-toggle-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderPredMechCurves(window.latestPhysicsState);
+}
+window.selectPredMechTopic = selectPredMechTopic;
+
+function setPredMechCtrl(k, v) {
+  predMechState[k] = v;
+  renderPredMechCurves(window.latestPhysicsState);
+}
+window.setPredMechCtrl = setPredMechCtrl;
+
+function renderPredMechCurves(physInput) {
+  const canvas = document.getElementById('predMechCanvas');
+  if (!canvas) return;
+  const st = physInput || window.latestPhysicsState || {};
+  const ys = Number(st.yieldStrength) || 865;
+  const uts = Number(st.tensileStrength) || 945;
+  const elong = Number(st.elongationPct) || 14.5;
+  const hv = Number(st.hv) || 339;
+  const lath = Number(st.alphaLathWidthUm) || 2.8;
+  const post = st.post || 'HIP';
+  const proc = (st.process || (typeof currentProcess !== 'undefined' ? currentProcess : 'lpbf')).toUpperCase();
+  const coolingRate = Number(st.coolingRate) || 4.8e5;
+  const o2 = Number(st.o2Content) || 0.16;
+  const densityPct = Number(st.densityPct) || 99.6;
+  const lofIndex = Number(st.lofIndex) || 0.7;
+  const keyholeRatio = Number(st.keyholeRatio) || 0.75;
+  const surfStress = Number(st.residualStress) || 40;
+  const ved = Number(st.ved) || 66.3;
+
+  const badgeEl = document.getElementById('predCurvesParamBadge');
+  if (badgeEl) badgeEl.innerText = `${proc} · P=${Math.round(st.p||280)}W · v=${Math.round(st.v||960)}mm/s · T₀=${Math.round(st.preheat||200)}°C · ${post}`;
+  const readEl = document.getElementById('predMechReadout');
+  if (readEl) readEl.innerText = `${ys} / ${uts} MPa · ${elong.toFixed(1)}%`;
+  const microEl = document.getElementById('predMechMicroTag');
+  if (microEl) microEl.innerText = `${hv} HV · λ_α=${lath.toFixed(2)} µm · ${o2.toFixed(3)}% O₂`;
+  const regEl = document.getElementById('predMechRegimeTag');
+  if (regEl) regEl.innerText = `VED ${ved.toFixed(1)} · ${densityPct.toFixed(2)}% · ${surfStress} MPa`;
+
+  const ctrlBox = document.getElementById('predMechControlBox');
+  const noteEl = document.getElementById('predMechNote');
+  const legEl = document.getElementById('predMechLegend');
+
+  const ch = _setupCrispCanvasChart(canvas, 320);
+  const { ctx, drawAxes, dot, setLegend } = ch;
+  const plot = (ax, pts, col, dash = false) => ch.plot(ax, pts, col, dash, !dash);
+  const setLeg = (items) => setLegend(legEl, items);
+
+  const isAsBuilt = (post === 'None' || post === 'As-Built');
+  const compPost = isAsBuilt ? 'HIP' : 'None';
+  const compMet = typeof evaluateTi64Metallurgy === 'function'
+    ? evaluateTi64Metallurgy({ alloyId: st.alloyId || 'ti64_gr5', processId: (st.process || 'lpbf'), coolingRateKs: coolingRate, postProcessing: compPost, oxygenWtPct: o2, buildOrientationDeg: st.buildOrientationDeg, scanRotationDeg: st.scanRotationDeg, lofIndex, densityPct })
+    : null;
+  const compYs = compMet ? compMet.hallPetchYieldStrengthMpa : (isAsBuilt ? 865 : 1080);
+  const compUts = compMet ? compMet.predictedUtsMpa : (isAsBuilt ? 945 : 1185);
+  const compEl = isAsBuilt ? 14.5 : 6.8;
+
+  if (activePredMechTopic === 'Stress-Strain') {
+    if (ctrlBox) ctrlBox.innerHTML = `
+      <select onchange="setPredMechCtrl('tempC',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 7px;">
+        <option value="25" ${predMechState.tempC==='25'?'selected':''}>Test Temp: 25 °C (RT)</option>
+        <option value="400" ${predMechState.tempC==='400'?'selected':''}>Test Temp: 400 °C</option>
+        <option value="600" ${predMechState.tempC==='600'?'selected':''}>Test Temp: 600 °C</option>
+      </select>
+      <label style="color:#cbd5e1;cursor:pointer;"><input type="checkbox" ${predMechState.showOverlay?'checked':''} onchange="setPredMechCtrl('showOverlay',this.checked)"> Ref Overlay (${isAsBuilt?'HIP':'As-Built'})</label>`;
+    const tc = Number(predMechState.tempC), tf = tc===25?1:(tc===400?0.74:0.48), ef = tc===25?1:(tc===400?1.25:1.65);
+    const curTrue = generateStressStrainCurve({ yieldStrengthMpa: ys * tf, utsMpa: uts * tf, elongationPct: elong * ef });
+    const cmpTrue = generateStressStrainCurve({ yieldStrengthMpa: compYs * tf, utsMpa: compUts * tf, elongationPct: compEl * ef });
+    const maxEps = Math.max(0.18, Math.ceil(Math.max(elong * ef / 100, predMechState.showOverlay ? compEl * ef / 100 : 0) * 1.15 * 20) / 20);
+    const maxSig = Math.max(1400, Math.ceil(Math.max(uts * tf * 1.25, predMechState.showOverlay ? compUts * tf * 1.25 : 0) / 200) * 200);
+    const ax = drawAxes(0, maxEps, 0, maxSig, 'True Strain (ε_T)', 'True Stress σ_T (MPa)', [0, maxEps*0.25, maxEps*0.5, maxEps*0.75, maxEps], [0, maxSig*0.25, maxSig*0.5, maxSig*0.75, maxSig], v => v.toFixed(2), v => String(Math.round(v)));
+    if (predMechState.showOverlay) plot(ax, cmpTrue.points.map(pt => [pt.trueStrainPct/100, pt.trueStressMpa]), '#fbbf24', true);
+    const pts = curTrue.points.map(pt => [pt.trueStrainPct/100, pt.trueStressMpa]);
+    plot(ax, pts, '#38bdf8');
+    const last = pts[pts.length - 1];
+    dot(ax, last[0], last[1], '#34d399', 4.5, `Fracture ε_T=${last[0].toFixed(3)}`);
+    setLeg([['#38bdf8', `Active [${proc} · ${post}] @ ${tc}°C (YS ${Math.round(ys*tf)}, UTS ${Math.round(uts*tf)} MPa)`], ...(predMechState.showOverlay ? [['#fbbf24', `Same build params w/ ${compPost} reference`, true]] : [])]);
+    if (noteEl) noteEl.innerText = `True stress–strain coupled to active ${proc} parameters (cooling rate ${coolingRate.toExponential(1)} K/s, α-lath ${lath.toFixed(2)} µm, O₂ ${o2.toFixed(3)} wt%). Strain-hardening exponent n=${curTrue.strainHardeningN.toFixed(3)}.`;
+  } else if (activePredMechTopic === 'Eng. Stress-Strain') {
+    if (ctrlBox) ctrlBox.innerHTML = `<label style="color:#cbd5e1;cursor:pointer;"><input type="checkbox" ${predMechState.showOverlay?'checked':''} onchange="setPredMechCtrl('showOverlay',this.checked)"> Overlay True σ_T &amp; Ref</label>`;
+    const curSs = generateStressStrainCurve({ yieldStrengthMpa: ys, utsMpa: uts, elongationPct: elong });
+    const cmpSs = generateStressStrainCurve({ yieldStrengthMpa: compYs, utsMpa: compUts, elongationPct: compEl });
+    const maxEps = Math.max(18, Math.ceil(Math.max(elong, predMechState.showOverlay ? compEl : 0) + 3));
+    const maxSig = Math.max(1350, Math.ceil(Math.max(uts * 1.2, compUts * 1.15) / 200) * 200);
+    const ax = drawAxes(0, maxEps, 0, maxSig, 'Engineering Strain (%)', 'Engineering Stress σ_e (MPa)', [0, 4, 8, 12, 16, Math.round(maxEps)].filter(x => x <= maxEps), [0, 300, 600, 900, 1200], v => `${v}%`);
+    if (predMechState.showOverlay) {
+      plot(ax, cmpSs.points.map(pt => [pt.engStrainPct, pt.engStressMpa]), '#fbbf24', true);
+      plot(ax, curSs.points.filter(pt => pt.engStressMpa >= uts * 0.999 || pt.engStrainPct <= curSs.uniformElongationPct).map(pt => [pt.trueStrainPct, pt.trueStressMpa]), '#34d399', true);
+    }
+    const pts = curSs.points.map(pt => [pt.engStrainPct, pt.engStressMpa]);
+    plot(ax, pts, '#38bdf8');
+    const pk = pts.reduce((a, b) => b[1] > a[1] ? b : a, pts[0]);
+    dot(ax, pk[0], pk[1], '#fb7185', 4.5, `UTS ${uts} MPa @ ${pk[0].toFixed(1)}%`);
+    setLeg([['#38bdf8', `Engineering σ_e–ε_e (${proc} · ${post}: YS ${ys}, UTS ${uts}, El ${elong.toFixed(1)}%)`], ...(predMechState.showOverlay ? [['#34d399', 'True σ_T up to Considère necking', true], ['#fbbf24', `${compPost} Ref`, true]] : [])]);
+    if (noteEl) noteEl.innerText = `Live Engineering tensile curve: linear elastic modulus 113.8 GPa -> 0.2% yield at ${ys} MPa -> Considère UTS peak at ${uts} MPa -> post-necking drop to fracture (${elong.toFixed(1)}% total elongation).`;
+  } else if (activePredMechTopic === 'Compression') {
+    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setPredMechCtrl('compMode',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 7px;"><option value="rate" ${predMechState.compMode==='rate'?'selected':''}>Room Temp + SHPB Strain Rate</option><option value="hot" ${predMechState.compMode==='hot'?'selected':''}>Hot-Working (650–950°C Softening)</option></select>`;
+    const ysComp = ys * 1.06; // Ti-6Al-4V HCP tension-compression SD effect (~+6%)
+    const hardSpan = Math.max(120, (uts - ys) * 3.8);
+    if (predMechState.compMode === 'rate') {
+      const ax = drawAxes(0, 0.35, 0, 1900, 'Compressive True Strain (ε_c)', 'Compressive Stress (MPa)', [0,0.07,0.14,0.21,0.28,0.35], [0,400,800,1200,1600], v => v.toFixed(2));
+      const jc = (ed, ts) => Array.from({length:65}, (_,i)=>{ const e=(i/64)*0.34, ey=ysComp/116000; return [e, e<=ey?e*116000:(ysComp+hardSpan*Math.pow(e-ey,0.40))*(1+0.021*Math.log(ed/0.001))*(1-ts*Math.max(0,e-0.04))]; });
+      plot(ax, jc(0.001, 0), '#38bdf8');
+      plot(ax, jc(1.0, 0.08), '#34d399');
+      plot(ax, jc(1500, 0.34), '#fb7185');
+      dot(ax, 0.015, ysComp, '#38bdf8', 4, `σ_y,comp = ${Math.round(ysComp)} MPa`);
+      setLeg([['#38bdf8', `Quasi-Static 0.001 s⁻¹ (${proc} · ${post})`], ['#34d399', 'Medium Rate 1 s⁻¹'], ['#fb7185', 'SHPB Dynamic 1500 s⁻¹ (adiabatic softening)']]);
+      if (noteEl) noteEl.innerText = `Compressive flow anchored to live YS (${ys} MPa tensile -> ${Math.round(ysComp)} MPa compressive via HCP strength differential). Lack-of-fusion / porosity affects tensile fracture far more than confined compression.`;
+    } else {
+      const lathScale = Math.max(0.85, Math.min(1.20, Math.pow(Math.max(0.4, lath) / 1.5, -0.14)));
+      const ax = drawAxes(0, 0.65, 0, 650, 'Compressive Strain (ε_c)', 'Hot Flow Stress (MPa)', [0,0.15,0.3,0.45,0.6], [0,150,300,450,600], v => v.toFixed(2));
+      const hot = (pk, ss) => Array.from({length:60}, (_,i)=>{ const e=(i/59)*0.62; return [e, e<0.04?(pk*lathScale)*(e/0.04):ss*lathScale+(pk-ss)*lathScale*Math.exp(-(e-0.04)*5.2)]; });
+      plot(ax, hot(460,330), '#fb7185'); plot(ax, hot(255,158), '#fbbf24'); plot(ax, hot(110,68), '#38bdf8');
+      setLeg([['#fb7185', `650 °C (λ_α=${lath.toFixed(2)} µm factor ×${lathScale.toFixed(2)})`], ['#fbbf24', '850 °C (α-lamellae globularization)'], ['#38bdf8', '950 °C (Near Tβ=' + (st.betaTransusC||995).toFixed(0) + '°C)']]);
+      if (noteEl) noteEl.innerText = `Hot-compression softening driven by initial α-lath width (λ_α=${lath.toFixed(2)} µm from ${proc} cooling rate + ${post}) and dynamic O₂-shifted β-transus (${(st.betaTransusC||995).toFixed(1)}°C).`;
+    }
+  } else if (activePredMechTopic === 'Fatigue HCF/LCF') {
+    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setPredMechCtrl('fatigueMode',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 7px;"><option value="hcf" ${predMechState.fatigueMode==='hcf'?'selected':''}>HCF: Murakami S–N (10⁴–10⁸)</option><option value="lcf" ${predMechState.fatigueMode==='lcf'?'selected':''}>LCF: Coffin-Manson ε_a–2N_f</option></select>`;
+    if (predMechState.fatigueMode === 'hcf') {
+      const defectProf = inferActiveDefectProfile({ postProcessing: post, densityPct, lofIndex, keyholeRatio });
+      const curSn = computeMurakamiSnFatigueCurve({ hv, utsMpa: uts, surfaceResidualStressMpa: surfStress, defectType: defectProf.defectType, maxDefectSizeUm: defectProf.maxDefectSizeUm });
+      const cmpSn = computeMurakamiSnFatigueCurve(isAsBuilt ? { hv: 335, utsMpa: 985, surfaceResidualStressMpa: 35, defectType: 'none', maxDefectSizeUm: 12 } : { hv: 395, utsMpa: 1180, surfaceResidualStressMpa: 380, defectType: 'lof', maxDefectSizeUm: 120 });
+      const ax = drawAxes(4, 8, 100, 1150, 'log10 Cycles to Failure (N_f)', 'Cyclic Stress Amplitude σ_a (MPa)', [4,5,6,7,8], [200,400,600,800,1000], v => `10^${v}`);
+      plot(ax, cmpSn.points.map(p => [p.logCycles, p.stressAmplitudeMpa]), isAsBuilt ? '#34d399' : '#fbbf24', true);
+      plot(ax, curSn.points.map(p => [p.logCycles, p.stressAmplitudeMpa]), '#38bdf8');
+      dot(ax, 7, curSn.enduranceLimitMpa, '#34d399', 4.5, `Limit ${curSn.enduranceLimitMpa} MPa`);
+      setLeg([['#38bdf8', `Active [${proc} · ${post}] (${defectProf.defectType.toUpperCase()} d=${defectProf.maxDefectSizeUm}µm, σ_res=${surfStress}MPa)`], [isAsBuilt ? '#34d399' : '#fbbf24', isAsBuilt ? 'HIP Baseline Ref' : 'As-Built LOF Ref', true]]);
+      if (noteEl) noteEl.innerText = `Live Murakami √area fatigue curve: endurance limit shifts with active VED (${ved.toFixed(1)} J/mm³) LOF/keyhole defect size (${defectProf.maxDefectSizeUm} µm), density (${densityPct.toFixed(2)}%), and residual stress (${surfStress} MPa).`;
+    } else {
+      const sfPrime = uts * 1.42, E = 113800, bExp = -0.085, cExp = -0.58;
+      const efPrime = Math.max(0.06, Math.log(1 / Math.max(0.55, 1 - Math.min(0.42, (elong / 100) * 1.8))) * Math.pow(densityPct / 100, 3));
+      const ax = drawAxes(1.5, 6, 0.001, 0.03, 'log10 Reversals (2N_f)', 'Total Strain Amplitude ε_a', [2,3,4,5,6], [0.005,0.01,0.015,0.02,0.025], v => `10^${v}`, v => v.toFixed(3));
+      const tot=[], pl=[], el=[]; for(let i=0;i<=42;i++){ const x=1.6+i*0.1, rev=Math.pow(10,x), ee=(sfPrime/E)*Math.pow(rev,bExp), ep=efPrime*Math.pow(rev,cExp); el.push([x,ee]); pl.push([x,ep]); tot.push([x,Math.min(0.029,ee+ep)]); }
+      plot(ax, tot, '#38bdf8'); plot(ax, pl, '#fb7185', true); plot(ax, el, '#34d399', true);
+      const nt = Math.log10(Math.pow((efPrime * E) / sfPrime, 1 / (bExp - cExp)));
+      if (nt >= 1.6 && nt <= 5.9) dot(ax, nt, 2 * (sfPrime/E)*Math.pow(Math.pow(10,nt), bExp), '#fbbf24', 4.5, `2N_t ≈ 10^${nt.toFixed(1)}`);
+      setLeg([['#38bdf8', `Active Total Strain ε_a (σ'_f=${Math.round(sfPrime)} MPa, ε'_f=${efPrime.toFixed(2)})`], ['#fb7185', 'LCF Plastic (Coffin-Manson)', true], ['#34d399', 'HCF Elastic (Basquin)', true]]);
+      if (noteEl) noteEl.innerText = `Live Coffin-Manson + Basquin LCF model coupled to UTS (${uts} MPa) and ductility (${elong.toFixed(1)}%). Lower ductility (as-built/high O₂) drops transition life 2N_t.`;
+    }
+  } else if (activePredMechTopic === 'Creep') {
+    if (ctrlBox) ctrlBox.innerHTML = `
+      <select onchange="setPredMechCtrl('creepTemp',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;">
+        <option value="450" ${predMechState.creepTemp==='450'?'selected':''}>450 °C</option>
+        <option value="500" ${predMechState.creepTemp==='500'?'selected':''}>500 °C</option>
+        <option value="550" ${predMechState.creepTemp==='550'?'selected':''}>550 °C</option>
+        <option value="600" ${predMechState.creepTemp==='600'?'selected':''}>600 °C</option>
+      </select>
+      <select onchange="setPredMechCtrl('creepView',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;">
+        <option value="strain-time" ${predMechState.creepView==='strain-time'?'selected':''}>Creep ε vs t</option>
+        <option value="norton" ${predMechState.creepView==='norton'?'selected':''}>Norton Power-Law</option>
+      </select>`;
+    const Tc = Number(predMechState.creepTemp), TK = Tc + 273.15;
+    const microMult = (post === 'HIP' || post === 'Bi-modal' ? 0.72 : (post === 'Annealed' ? 0.85 : (post === 'Stress-relieved' ? 1.15 : 1.75))) * (1 + Math.max(0, 99.6 - densityPct) * 0.45);
+    const arrh = Math.exp((-265000 / 8.314) * (1 / TK - 1 / 823.15)); // ref 550C = 823.15K
+    if (predMechState.creepView === 'strain-time') {
+      const rateAct = 0.022 * arrh * microMult, rateRef = 0.022 * arrh;
+      const tRuptAct = Math.max(18, Math.min(200, 105 / Math.max(0.25, arrh * microMult)));
+      const tRuptRef = Math.max(25, Math.min(200, 105 / Math.max(0.25, arrh)));
+      const maxT = Math.max(80, Math.ceil(Math.max(tRuptAct, tRuptRef) * 1.05 / 20) * 20);
+      const ax = drawAxes(0, maxT, 0, 6.5, 'Creep Exposure Time t (h)', 'Creep Strain ε_cr (%) @ 350 MPa', [0, maxT*0.25, maxT*0.5, maxT*0.75, maxT], [0,1.5,3,4.5,6], v => String(Math.round(v)), v => v.toFixed(1));
+      const mkCr = (r, tr) => Array.from({length:65}, (_,i)=>{ const t=(i/64)*Math.min(maxT*0.98, tr); return [t, Math.min(6.35, 0.45*(1-Math.exp(-t/7))+r*t+(t>tr*0.72?2.4*Math.pow((t-tr*0.72)/(tr*0.28),2.2):0))]; });
+      plot(ax, mkCr(rateRef, tRuptRef), '#fbbf24', true);
+      plot(ax, mkCr(rateAct, tRuptAct), '#38bdf8');
+      setLeg([['#38bdf8', `Active [${proc} · ${post}] @ ${Tc}°C (ε̇_min=${rateAct.toFixed(4)} %/h, t_rupt≈${Math.round(tRuptAct)}h)`], ['#fbbf24', `Wrought Mill-Annealed Baseline @ ${Tc}°C`, true]]);
+      if (noteEl) noteEl.innerText = `Live Norton-Arrhenius creep prediction: ${post} microstructure (λ_α=${lath.toFixed(2)} µm, density ${densityPct.toFixed(2)}%) yields creep rate multiplier ×${microMult.toFixed(2)} relative to wrought Ti-6Al-4V.`;
+    } else {
+      const shift = Math.log10(microMult * arrh);
+      const ax = drawAxes(2.2, 2.75, -9, -3, 'Stress σ (MPa, log axis)', 'log10 Min. Creep Rate (1/h)', [2.3,2.45,2.6,2.7], [-9,-7.5,-6,-4.5,-3], v => String(Math.round(Math.pow(10,v))), v => `10^${v}`);
+      plot(ax, [[2.25,-17.8+4.8*2.25],[2.72,-17.8+4.8*2.72]], '#fbbf24', true);
+      plot(ax, [[2.25,-17.8+shift+4.8*2.25],[2.72,-17.8+shift+4.8*2.72]], '#38bdf8');
+      setLeg([['#38bdf8', `Active [${proc} · ${post}] @ ${Tc}°C (n=4.8, shift ${shift>=0?'+':''}${shift.toFixed(2)} dec)`], ['#fbbf24', 'Mill-Annealed Ref @ 550°C', true]]);
+      if (noteEl) noteEl.innerText = `Log-log Norton power-law rate (n ≈ 4.8): lamellar α+β coarsening from HIP/Annealing lowers dislocation-climb creep rate compared to fine as-built α' LPBF.`;
+    }
+  } else {
+    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setPredMechCtrl('hvView',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 7px;"><option value="temp" ${predMechState.hvView==='temp'?'selected':''}>Heat-Treatment Curve vs HV</option><option value="hallpetch" ${predMechState.hvView==='hallpetch'?'selected':''}>Hall-Petch λ_α⁻½ vs HV</option></select>`;
+    const stateTempMap = { 'None': 25, 'As-Built': 25, 'Stress-relieved': 650, 'Annealed': 730, 'HIP': 920, 'Bi-modal': 940, 'Solution-Aged': 540 };
+    const actT = stateTempMap[post] ?? 920;
+    const statesSeq = [['None',25], ['Solution-Aged',540], ['Stress-relieved',650], ['Annealed',730], ['HIP',920]];
+    const trajPts = statesSeq.map(([pName, tC]) => {
+      const m = typeof evaluateTi64Metallurgy === 'function'
+        ? evaluateTi64Metallurgy({ alloyId: st.alloyId||'ti64_gr5', processId: st.process||'lpbf', coolingRateKs: coolingRate, postProcessing: pName, oxygenWtPct: o2, buildOrientationDeg: st.buildOrientationDeg, scanRotationDeg: st.scanRotationDeg, lofIndex, densityPct })
+        : null;
+      return { pName, tC, hvVal: m ? m.predictedHv : 340, invSqrt: m ? m.lath.invSqrtLathUm : 0.7 };
+    });
+    if (predMechState.hvView === 'temp') {
+      const ax = drawAxes(0, 1000, 270, 440, 'Post-Build Heat Treatment Temp (°C)', 'Predicted Vickers Hardness (HV)', [0,200,400,600,800,1000], [280,320,360,400,440]);
+      plot(ax, trajPts.map(x => [x.tC, x.hvVal]), '#fbbf24');
+      dot(ax, actT, hv, '#34d399', 6, `Active: ${hv} HV (${post})`);
+      setLeg([['#fbbf24', `Active [${proc}] Hardness vs Heat-Treatment Trajectory (Ṫ=${coolingRate.toExponential(1)} K/s, O₂=${o2.toFixed(3)}%)`], ['#34d399', `Current Operating Point (${hv} HV)`]]);
+      if (noteEl) noteEl.innerText = `Hall-Petch + Ostwald lath coarsening hardness model for your active ${proc} cooling rate (${coolingRate.toExponential(1)} K/s): ${post} yields λ_α=${lath.toFixed(2)} µm and ${hv} HV (STA aging peak shown at 540°C).`;
+    } else {
+      const xMin = 0.4, xMax = 1.85;
+      const ax = drawAxes(xMin, xMax, 270, 440, 'Hall-Petch λ_α⁻¹/² (μm⁻¹/²)', 'Predicted Hardness (HV)', [0.5,0.8,1.1,1.4,1.7], [280,320,360,400,440], v => v.toFixed(2));
+      const hpLine = [[0.45, trajPts[trajPts.length-1].hvVal - 15], [1.75, trajPts[0].hvVal + 12]];
+      plot(ax, hpLine, '#38bdf8');
+      const actInvSqrt = 1 / Math.sqrt(Math.max(0.1, lath));
+      dot(ax, Math.min(1.8, Math.max(0.45, actInvSqrt)), hv, '#34d399', 6, `Active: ${hv} HV (λ=${lath.toFixed(2)}µm)`);
+      setLeg([['#38bdf8', 'Hall-Petch + Tabor HV Slope (k_HP = 220 MPa·μm¹/²)'], ['#34d399', `Active ${proc} · ${post} Point (${hv} HV)`]]);
+      if (noteEl) noteEl.innerText = `Direct Hall-Petch hardness relationship: HV ≈ UTS / Tabor(state), shifting dynamically with solidification cooling rate (P=${Math.round(st.p||280)}W, v=${Math.round(st.v||960)}mm/s), heat-treatment coarsening, and interstitial O₂ (${o2.toFixed(3)} wt%).`;
+    }
+  }
+}
+window.renderPredMechCurves = renderPredMechCurves;
+let _crispResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(_crispResizeTimer);
+  _crispResizeTimer = setTimeout(() => {
+    if (document.getElementById('view_predictions')?.classList.contains('active')) renderPredMechCurves(window.latestPhysicsState);
+    if (document.getElementById('view_literature')?.classList.contains('active')) drawLitTopicGraph();
+  }, 120);
+});
 
 
 // ==========================================
