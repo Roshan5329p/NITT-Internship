@@ -190,26 +190,6 @@ export const DEFAULT_MACHINE_PRESETS: readonly MachinePreset[] = [
     isPlaceholderRates: true,
     isCustom: false,
     notes: 'Large aerospace structural preforms with machining allowance. Placeholder rates.'
-  },
-  {
-    id: 'nit-trichy-custom',
-    name: 'NIT Trichy Custom Ti-6Al-4V System (Editable)',
-    vendor: 'NIT Trichy AM Lab',
-    process: 'lpbf',
-    envelopeMm: [250, 250, 300],
-    powerRangeW: [100, 400],
-    laserCount: 1,
-    spotRangeUm: [75, 100],
-    layerRangeUm: [20, 60],
-    maxSpeedMmS: 2500,
-    preheatMaxC: 200,
-    atmosphere: 'Argon (O₂ < 0.1%)',
-    hourlyRateUsd: 65,
-    materialCostPerKgUsd: 275,
-    gasCostPerHourUsd: 10,
-    isPlaceholderRates: true,
-    isCustom: true,
-    notes: 'Editable preset for NIT Trichy lab equipment — click Edit Machine Specs to set exact values.'
   }
 ];
 
@@ -227,7 +207,7 @@ export function loadMachinePresets(storage?: Pick<Storage, 'getItem'>): MachineP
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
       for (const item of parsed) {
-        if (item && typeof item.id === 'string' && Array.isArray(item.envelopeMm) && item.envelopeMm.length === 3) {
+        if (item && typeof item.id === 'string' && item.id !== 'nit-trichy-custom' && Array.isArray(item.envelopeMm) && item.envelopeMm.length === 3) {
           baseMap.set(item.id, {
             ...item,
             isCustom: true

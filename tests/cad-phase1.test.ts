@@ -111,8 +111,9 @@ describe('CAD Phase 1: Guardrails, Parsers, Native Format Guide & Machine Preset
     expect(parsedAscii.degenerateTrianglesSkipped).toBe(1);
   });
 
-  it('manages editable placeholder machine presets and persists custom NIT edits', () => {
-    expect(DEFAULT_MACHINE_PRESETS.length).toBeGreaterThanOrEqual(8);
+  it('manages editable placeholder machine presets and persists custom edits', () => {
+    expect(DEFAULT_MACHINE_PRESETS.length).toBe(8);
+    expect(DEFAULT_MACHINE_PRESETS.some((m) => m.id === 'nit-trichy-custom')).toBe(false);
     const storeMap = new Map<string, string>();
     const mockStorage = {
       getItem: (k: string) => storeMap.get(k) ?? null,
@@ -120,13 +121,13 @@ describe('CAD Phase 1: Guardrails, Parsers, Native Format Guide & Machine Preset
     };
 
     const custom = {
-      ...DEFAULT_MACHINE_PRESETS.find((m) => m.id === 'nit-trichy-custom')!,
+      ...DEFAULT_MACHINE_PRESETS.find((m) => m.id === 'eos-m290')!,
       envelopeMm: [300, 300, 350] as [number, number, number],
       hourlyRateUsd: 55
     };
     saveCustomMachinePreset(custom, mockStorage);
     const reloaded = loadMachinePresets(mockStorage);
-    const hit = reloaded.find((m) => m.id === 'nit-trichy-custom');
+    const hit = reloaded.find((m) => m.id === 'eos-m290');
     expect(hit?.envelopeMm).toEqual([300, 300, 350]);
     expect(hit?.hourlyRateUsd).toBe(55);
   });

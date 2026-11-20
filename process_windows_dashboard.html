@@ -16358,8 +16358,7 @@ const CAD_DEFAULT_MACHINES = [
   { id: 'truprint-1000', name: 'TRUMPF TruPrint 1000 (Ø100×100)', vendor: 'TRUMPF', process: 'lpbf', envelopeMm: [100, 100, 100], powerRangeW: [50, 200], layerRangeUm: [10, 50], hourlyRateUsd: 70, materialCostPerKgUsd: 310, gasCostPerHourUsd: 7, isCustom: false },
   { id: 'generic-powder-lded', name: 'Generic Powder-Fed L-DED Cell', vendor: 'Generic Lab', process: 'ded-laser', envelopeMm: [600, 600, 500], powerRangeW: [400, 4000], layerRangeUm: [250, 1000], hourlyRateUsd: 140, materialCostPerKgUsd: 260, gasCostPerHourUsd: 22, isCustom: false },
   { id: 'generic-wire-lded', name: 'Generic Wire-Laser DED Cell', vendor: 'Generic Lab', process: 'ded-laser', envelopeMm: [900, 900, 700], powerRangeW: [800, 6000], layerRangeUm: [500, 1500], hourlyRateUsd: 160, materialCostPerKgUsd: 145, gasCostPerHourUsd: 25, isCustom: false },
-  { id: 'generic-robotic-waam', name: 'Generic Robotic CMT / GMAW WAAM', vendor: 'Generic Lab', process: 'waam', envelopeMm: [1500, 1200, 1000], powerRangeW: [1000, 4500], layerRangeUm: [800, 2200], hourlyRateUsd: 85, materialCostPerKgUsd: 115, gasCostPerHourUsd: 18, isCustom: false },
-  { id: 'nit-trichy-custom', name: 'NIT Trichy Custom Ti-6Al-4V System (Editable)', vendor: 'NIT Trichy Lab', process: 'lpbf', envelopeMm: [250, 250, 300], powerRangeW: [100, 400], layerRangeUm: [20, 60], hourlyRateUsd: 65, materialCostPerKgUsd: 275, gasCostPerHourUsd: 10, isCustom: true }
+  { id: 'generic-robotic-waam', name: 'Generic Robotic CMT / GMAW WAAM', vendor: 'Generic Lab', process: 'waam', envelopeMm: [1500, 1200, 1000], powerRangeW: [1000, 4500], layerRangeUm: [800, 2200], hourlyRateUsd: 85, materialCostPerKgUsd: 115, gasCostPerHourUsd: 18, isCustom: false }
 ];
 
 function _loadCadMachines() {
@@ -16369,7 +16368,7 @@ function _loadCadMachines() {
     const raw = localStorage.getItem('nit_am_custom_machines_v1');
     if (raw) {
       const arr = JSON.parse(raw);
-      if (Array.isArray(arr)) arr.forEach(m => { if (m && m.id && Array.isArray(m.envelopeMm)) map.set(m.id, Object.assign({}, m, { isCustom: true })); });
+      if (Array.isArray(arr)) arr.forEach(m => { if (m && m.id && m.id !== 'nit-trichy-custom' && Array.isArray(m.envelopeMm)) map.set(m.id, Object.assign({}, m, { isCustom: true })); });
     }
   } catch (e) {}
   cadMachinesList = Array.from(map.values());
