@@ -18,13 +18,13 @@ export const APP_METADATA = {
 // 2. Literature Dataset Metrics (Single Source of Truth)
 // Eliminates conflicting counts (e.g. 154 vs 173 vs 178) across UI banners and table headers.
 export const LITERATURE_DATASET_META = {
-  totalPublications: 178,     // Total indexed peer-reviewed studies
+  totalPublications: 214,     // Total indexed peer-reviewed studies
   looBenchmarkCount: 54,      // Calibrated Leave-One-Out (LOO) benchmark papers
   totalVariants: 289,         // Curated experimental alloy variants
   trackedMetricsCount: 42,    // Physical, thermal, and microstructural metrics
-  summaryBannerText: "178 Peer-Reviewed Publications • 289 Curated Variants • 42 Metrics",
-  tableSubtitleText: "Calibrated against 54 Leave-One-Out (LOO) Benchmark Papers across 178 Indexed Studies & 289 Variants",
-  dateRange: "2016–2026"
+  summaryBannerText: "214 Peer-Reviewed Publications • 289 Curated Variants • 42 Metrics",
+  tableSubtitleText: "Calibrated against 54 Leave-One-Out (LOO) Benchmark Papers across 214 Indexed Studies & 289 Variants",
+  dateRange: "2001–2026"
 } as const;
 
 export const LITERATURE_META = LITERATURE_DATASET_META;

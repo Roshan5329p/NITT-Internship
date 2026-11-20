@@ -154,9 +154,9 @@ assert.strictEqual(global.getActiveMeltPoolPresetId('lpbf', 200, 950), '200w');
 assert.strictEqual(global.getActiveMeltPoolPresetId('lpbf', 280, 960), null);
 console.log('  ✅ PASS: Preset matching highlights within ±1% tolerance and unhighlights when sliders diverge');
 
-// 7. Test Single-Source Literature Count (LITERATURE_META.totalPublications = 178)
-assert.strictEqual(global.LITERATURE_META.totalPublications, 178);
-assert.strictEqual(global.LITERATURE_DATASET_META.totalPublications, 178);
-console.log('  ✅ PASS: Single-source LITERATURE_META.totalPublications = 178');
+// 7. Test Single-Source Literature Count (LITERATURE_META.totalPublications = 214)
+assert.strictEqual(global.LITERATURE_META.totalPublications, 214);
+assert.strictEqual(global.LITERATURE_DATASET_META.totalPublications, 214);
+console.log('  ✅ PASS: Single-source LITERATURE_META.totalPublications = 214');
 
 console.log('\n🎉 All 7 Regime Classification & Rosenthal Sync test suites passed (100%)!');

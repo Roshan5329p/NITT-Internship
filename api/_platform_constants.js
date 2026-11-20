@@ -14,13 +14,13 @@ export const APP_METADATA = {
 };
 
 export const LITERATURE_DATASET_META = {
-  totalPublications: 178,
+  totalPublications: 214,
   looBenchmarkCount: 54,
   totalVariants: 289,
   trackedMetricsCount: 42,
-  summaryBannerText: "178 Indexed Publications • 289 Curated Variants • 42 Metrics",
-  tableSubtitleText: "Calibrated against 54 LOO Benchmark Papers across 178 Indexed Studies & 289 Variants",
-  dateRange: "2016–2026"
+  summaryBannerText: "214 Indexed Publications • 289 Curated Variants • 42 Metrics",
+  tableSubtitleText: "Calibrated against 54 LOO Benchmark Papers across 214 Indexed Studies & 289 Variants",
+  dateRange: "2001–2026"
 };
 
 export const THERMOPHYSICAL_BASELINE = {

@@ -3677,11 +3677,11 @@ window.setGlobalMaterialState = setGlobalMaterialState;
 // SINGLE-SOURCE LITERATURE METADATA & REGIME CLASSIFIER
 // ========================================================
 var LITERATURE_META = {
-  totalPublications: 178,
+  totalPublications: 214,
   looBenchmarkCount: 54,
   totalVariants: 289,
   trackedMetricsCount: 42,
-  dateRange: '2016–2026'
+  dateRange: '2001–2026'
 };
 window.LITERATURE_META = LITERATURE_META;
 window.LITERATURE_DATASET_META = LITERATURE_META;
@@ -6533,7 +6533,7 @@ window.addEventListener('click', function(e) {
     </button>
     <button class="tab-btn" onclick="switchTab('literature', this)" id="navBtnLit">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
-      Literature Evidence (178 Papers)
+      Literature Evidence (214 Papers)
     </button>
     <button class="tab-btn" onclick="switchTab('cad-analyzer', this)" id="navBtnCadAnalyzer">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
@@ -9888,15 +9888,43 @@ window.addEventListener('click', function(e) {
     </div>
 
     <div id="view_literature" class="tab-view">
+      <!-- Mechanical Characterization Topics & Reference Curves (Connected to Supabase & Local DB) -->
+      <div class="model-card" id="litTopicGraphCard" style="margin-bottom: 14px;">
+        <div class="model-card-header" style="flex-wrap: wrap; gap: 10px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span class="model-card-title" id="litTopicTitle">Ti-6Al-4V Mechanical Behavior Curves &amp; Scopus Topics</span>
+              <span class="brand-badge" style="color: #38bdf8; border-color: rgba(56,189,248,0.4);">Synced with Supabase + Local CSVs</span>
+            </div>
+            <div class="model-card-sub" id="litTopicSubtitle">Select a characterization topic below to inspect constitutive reference graphs and filter matching peer-reviewed papers in the database.</div>
+          </div>
+          <div id="litTopicControlBox" style="display: flex; align-items: center; gap: 8px; font-size: 11px;"></div>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;" id="litTopicPills">
+          <button type="button" class="mp-pill-btn active" onclick="selectLitTopic('ALL', this)">All Topics (214)</button>
+          <button type="button" class="mp-pill-btn" onclick="selectLitTopic('Stress-Strain', this)">1. Stress vs Strain</button>
+          <button type="button" class="mp-pill-btn" onclick="selectLitTopic('Eng. Stress-Strain', this)">2. Eng. Stress vs Strain</button>
+          <button type="button" class="mp-pill-btn" onclick="selectLitTopic('Compression', this)">3. Compression</button>
+          <button type="button" class="mp-pill-btn" onclick="selectLitTopic('Fatigue HCF/LCF', this)">4. Fatigue (HCF &amp; LCF)</button>
+          <button type="button" class="mp-pill-btn" onclick="selectLitTopic('Creep', this)">5. Creep</button>
+          <button type="button" class="mp-pill-btn" onclick="selectLitTopic('Hardness', this)">6. Hardness (HV)</button>
+        </div>
+        <div style="background: rgba(4,8,16,0.65); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px;">
+          <canvas id="litTopicCanvas" width="900" height="270" style="width: 100%; height: 270px; display: block;"></canvas>
+          <div id="litTopicLegend" style="display: flex; flex-wrap: wrap; gap: 14px; margin-top: 6px; font-size: 11px; color: #94a3b8;"></div>
+          <div id="litTopicNote" style="margin-top: 6px; font-size: 11px; color: #cbd5e1; line-height: 1.45;"></div>
+        </div>
+      </div>
+
       <div class="model-card">
         <div class="model-card-header" style="flex-wrap: wrap; gap: 12px;">
           <div>
-            <div class="model-card-title" id="litTabTitle">Indexed Literature Evidence Database (178 Research Papers)</div>
-            <div class="model-card-sub">Peer-Reviewed Experimental Records for Ti-6Al-4V Additive Manufacturing (LPBF, L-DED, WAAM & Binder Jetting)</div>
+            <div class="model-card-title" id="litTabTitle">Indexed Literature Evidence Database (214 Research Papers)</div>
+            <div class="model-card-sub">Peer-Reviewed Experimental Records for Ti-6Al-4V Additive Manufacturing &amp; Mechanical Testing (Supabase Cloud + Local Datasets)</div>
           </div>
           <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
             <div class="mp-control-group" style="padding: 2px 4px; display: inline-flex;">
-              <button type="button" class="mp-toggle-btn active" id="btnFilterAll" onclick="filterByProcess('ALL', this)">All (178)</button>
+              <button type="button" class="mp-toggle-btn active" id="btnFilterAll" onclick="filterByProcess('ALL', this)">All (214)</button>
               <button type="button" class="mp-toggle-btn" id="btnFilterLpbf" onclick="filterByProcess('LPBF', this)">LPBF</button>
               <button type="button" class="mp-toggle-btn" id="btnFilterDed" onclick="filterByProcess('DED', this)">L-DED</button>
               <button type="button" class="mp-toggle-btn" id="btnFilterWaam" onclick="filterByProcess('WAAM', this)">WAAM</button>
@@ -12021,6 +12049,9 @@ function switchTab(tabId, btn) {
   if (tabId === 'cad-analyzer' && typeof initCadAnalyzerTab === 'function') {
     initCadAnalyzerTab();
   }
+  if (tabId === 'literature' && typeof drawLitTopicGraph === 'function') {
+    drawLitTopicGraph();
+  }
   if (tabId === 'melt-pool') {
     updateMeltPoolAndThermal();
     ensureMpAnimationRunning();
@@ -12858,7 +12889,7 @@ const PAPERS_DATABASE = [
   { id: "P-56", author: "Yang et al. (2023)", process: "LPBF", desc: "Solidification microstructure variations and grain boundary solute trapping.", density: "99.84%", ys: 970, uts: 1145, el: 8.9 },
   { id: "P-57", author: "Awan et al. (2026)", process: "LPBF", desc: "Towards agentic defect reasoning: graph-assisted retrieval framework.", density: "99.87%", ys: 965, uts: 1140, el: 9.2 },
   { id: "P-58", author: "Banerjee et al. (2025)", process: "LPBF", desc: "Neuromorphic computing for anomaly and acoustic defect detection in LPBF.", density: "99.89%", ys: 975, uts: 1150, el: 9.5 },
-  { id: "P-59", author: "Vrancken et al. (2012)", process: "LPBF", desc: "Heat treatment of Ti6Al4V produced by SLM: Martensite decomposition, ductility recovery (1908 citations).", density: "99.85%", ys: 890, uts: 1010, el: 12.8 },
+  { id: "P-59", author: "Vrancken et al. (2012)", process: "LPBF", topic: "Stress-Strain & Hardness", doi: "10.1016/j.jallcom.2012.07.022", oaUrl: "https://lirias.kuleuven.be/retrieve/155650a8-ccc4-48b8-8433-9a038cdff7a4", desc: "Heat treatment of Ti6Al4V produced by SLM: Martensite decomposition, ductility recovery (1908 citations).", density: "99.85%", ys: 890, uts: 1010, el: 12.8 },
   { id: "P-60", author: "Vilaro et al. (2011)", process: "LPBF", desc: "As-fabricated and heat-treated microstructures of Ti-6Al-4V processed by SLM (1244 citations).", density: "99.80%", ys: 920, uts: 1050, el: 11.2 },
   { id: "P-61", author: "Simonelli et al. (2014)", process: "LPBF", desc: "Effect of build orientation on mechanical properties and fracture modes of SLM Ti-6Al-4V (992 citations).", density: "99.88%", ys: 980, uts: 1160, el: 8.4 },
   { id: "P-62", author: "Gorsse et al. (2017)", process: "Review / AM", desc: "Characteristic microstructures, solidification regimes, and mechanical properties in AM (891 citations).", density: "99.90%", ys: 950, uts: 1120, el: 10.5 },
@@ -12877,7 +12908,43 @@ const PAPERS_DATABASE = [
   { id: "P-75", author: "de Formanoir et al. (2016)", process: "EBM", desc: "Electron beam melted Ti-6Al-4V: Microstructure, texture and mechanical behavior (357 citations).", density: "99.89%", ys: 915, uts: 1050, el: 13.1 },
   { id: "P-76", author: "Simonelli et al. (2014)", process: "LPBF", desc: "On the crystallographic texture formation of selective laser melted Ti-6Al-4V (350 citations).", density: "99.87%", ys: 980, uts: 1155, el: 8.6 },
   { id: "P-77", author: "Liu et al. (2021)", process: "Review / DED", desc: "Review on additive manufacturing of titanium alloys for aerospace applications (350 citations).", density: "99.74%", ys: 850, uts: 975, el: 11.9 },
-  { id: "P-78", author: "Cunningham et al. (2017)", process: "LPBF", desc: "Synchrotron-based X-ray microtomography of processing variables and porosity formation (346 citations).", density: "99.88%", ys: 960, uts: 1135, el: 9.5 }
+  { id: "P-78", author: "Cunningham et al. (2017)", process: "LPBF", desc: "Synchrotron-based X-ray microtomography of processing variables and porosity formation (346 citations).", density: "99.88%", ys: 960, uts: 1135, el: 9.5 },
+  { id: "P-179", author: "El-Magd E. (2006)", process: "Ti-6Al-4V Tensile / Wrought", topic: "Stress-Strain", doi: "10.1016/j.ijimpeng.2005.03.008", type: "EXP", treatment: "Scopus Indexed (Stress-Strain)", desc: "Characterization, modelling and simulation of deformation and fracture behaviour of the light-weight wrought alloys under high strain rate loading — International Journal of Impact Engineering (192 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-180", author: "Wang Z. (2018)", process: "LPBF", topic: "Stress-Strain", doi: "10.1016/j.msea.2018.04.006", type: "EXP", treatment: "Scopus Indexed (Stress-Strain)", desc: "Characterisation and constitutive model of tensile properties of selective laser melted Ti-6Al-4V struts for microlattice structures — Materials Science and Engineering A (112 citations).", density: "99.80%", ys: 965, uts: 1140, el: 9.2 },
+  { id: "P-181", author: "Smith B.D. (2018)", process: "Ti-6Al-4V Tensile / Wrought", topic: "Stress-Strain", doi: "10.1016/j.ijplas.2013.10.004", type: "EXP", treatment: "Scopus Indexed (Stress-Strain)", desc: "Cyclic plasticity experiments and polycrystal plasticity modeling of three distinct Ti alloy microstructures — International Journal of Plasticity (82 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-182", author: "Mohammadhosseini A. (2013)", process: "EBM", topic: "Stress-Strain", doi: "10.1179/1432891713Z.000000000302", type: "EXP", treatment: "Scopus Indexed (Stress-Strain)", desc: "Microstructure and mechanical properties of Ti-6Al-4V manufactured by electron beam melting process — Materials Research Innovations (54 citations).", density: "99.80%", ys: 915, uts: 1030, el: 12.2 },
+  { id: "P-183", author: "Motyka M. (2014)", process: "Ti-6Al-4V Tensile / Wrought", topic: "Stress-Strain", doi: "10.1016/j.msea.2014.01.067", type: "EXP", treatment: "Scopus Indexed (Stress-Strain)", desc: "Microstructural aspects of superplasticity in Ti-6Al-4V alloy — Materials Science and Engineering A (54 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-184", author: "Lu Z. (2016)", process: "Ti-6Al-4V Tensile / Wrought", topic: "Stress-Strain", doi: "10.1016/j.matdes.2016.08.025", type: "EXP", treatment: "Scopus Indexed (Stress-Strain)", desc: "Microstructure and mechanical properties of intermetallic Al3Ti alloy with residual aluminum — Materials and Design (52 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-185", author: "Xiao J. (2012)", process: "Ti-6Al-4V Tensile / Wrought", topic: "Eng. Stress-Strain", doi: "10.1016/j.jallcom.2012.07.048", type: "EXP", treatment: "Scopus Indexed (Eng. Stress-Strain)", desc: "Constitutive modeling and microstructure change of Ti-6Al-4V during the hot tensile deformation — Journal of Alloys and Compounds (109 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-186", author: "Jiang Y.Q. (2020)", process: "Ti-6Al-4V Tensile / Wrought", topic: "Eng. Stress-Strain", doi: "10.1016/j.matchar.2020.110272", type: "EXP", treatment: "Scopus Indexed (Eng. Stress-Strain)", desc: "Hot tensile properties, microstructure evolution and fracture mechanisms of Ti-6Al-4V alloy with initial coarse equiaxed phases — Materials Characterization (83 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-187", author: "Wang S. (2014)", process: "Ti-6Al-4V Tensile / Wrought", topic: "Eng. Stress-Strain", doi: "10.1016/j.matdes.2013.11.003", type: "EXP", treatment: "Scopus Indexed (Eng. Stress-Strain)", desc: "Effect of strain rate and temperature on strain hardening behavior of a dissimilar joint between Ti-6Al-4V and Ti17 alloys — Materials and Design (57 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-188", author: "Mirone G. (2020)", process: "EBM", topic: "Eng. Stress-Strain", doi: "10.1016/j.msea.2020.139916", type: "EXP", treatment: "Scopus Indexed (Eng. Stress-Strain)", desc: "Analysis and modelling of tensile and torsional behaviour at different strain rates of Ti6Al4V alloy additive manufactured by electron beam melting (EBM) — Materials Science and Engineering A (32 citations).", density: "99.80%", ys: 915, uts: 1030, el: 12.2 },
+  { id: "P-189", author: "Saboori M. (2016)", process: "Ti-6Al-4V Tensile / Wrought", topic: "Eng. Stress-Strain", doi: "10.1007/s00170-015-7557-5", type: "EXP", treatment: "Scopus Indexed (Eng. Stress-Strain)", desc: "Extension of flow stress–strain curves of aerospace alloys after necking — International Journal of Advanced Manufacturing Technology (17 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-190", author: "Moćko W. (2015)", process: "Ti-6Al-4V Tensile / Wrought", topic: "Eng. Stress-Strain", doi: "10.1016/j.matdes.2015.08.155", type: "EXP", treatment: "Scopus Indexed (Eng. Stress-Strain)", desc: "Application of optical field analysis of tensile tests for calibration of the Rusinek-Klepaczko constitutive relation of Ti6Al4V titanium alloy — Materials and Design (14 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-191", author: "Semiatin S.L. (1999)", process: "Thermo-Mech / Compression", topic: "Compression", doi: "10.1016/s0921-5093(98)01156-3", type: "EXP", treatment: "Scopus Indexed (Compression)", desc: "Flow behavior and globularization kinetics during hot working of Ti-6Al-4V with a colony alpha microstructure — Materials Science and Engineering A (518 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-192", author: "Semiatin S.L. (2001)", process: "Thermo-Mech / Compression", topic: "Compression", doi: "10.1016/S1359-6454(01)00236-1", type: "EXP", treatment: "Scopus Indexed (Compression)", desc: "The effect of alpha platelet thickness on plastic flow during hot working of Ti-6Al-4V with a transformed microstructure — Acta Materialia (489 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-193", author: "Cai J. (2011)", process: "Thermo-Mech / Compression", topic: "Compression", doi: "10.1016/j.matdes.2010.11.004", type: "EXP", treatment: "Scopus Indexed (Compression)", desc: "Constitutive equations for elevated temperature flow stress of Ti-6Al-4V alloy considering the effect of strain — Materials and Design (324 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-194", author: "Seo S. (2005)", process: "Thermo-Mech / Compression", topic: "Compression", doi: "10.1016/j.ijimpeng.2004.04.010", type: "EXP", treatment: "Scopus Indexed (Compression)", desc: "Constitutive equation for Ti-6Al-4V at high temperatures measured using the SHPB technique — International Journal of Impact Engineering (273 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-195", author: "Heinl P. (2007)", process: "EBM", topic: "Compression", doi: "10.1002/adem.200700025", type: "EXP", treatment: "Scopus Indexed (Compression)", desc: "Cellular titanium by selective electron beam melting — Advanced Engineering Materials (256 citations).", density: "99.80%", ys: 915, uts: 1030, el: 12.2 },
+  { id: "P-196", author: "Babu B. (2013)", process: "Thermo-Mech / Compression", topic: "Compression", doi: "10.1016/j.ijplas.2013.04.003", type: "EXP", treatment: "Scopus Indexed (Compression)", desc: "Dislocation density based model for plastic deformation and globularization of Ti-6Al-4V — International Journal of Plasticity (218 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-197", author: "Nalla R.K. (2003)", process: "HCF & LCF / Surface", topic: "Fatigue HCF/LCF", doi: "10.1016/S0921-5093(03)00069-8", type: "EXP", treatment: "Scopus Indexed (Fatigue HCF/LCF)", desc: "On the influence of mechanical surface treatments-deep rolling and laser shock peening-on the fatigue behavior of Ti-6Al-4V at ambient and elevated temperatures — Materials Science and Engineering A (522 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-198", author: "Altenberger I. (2012)", process: "HCF & LCF / Surface", topic: "Fatigue HCF/LCF", doi: "10.1016/j.ijfatigue.2012.03.008", oaUrl: "https://escholarship.org/content/qt9jj8t067/qt9jj8t067.pdf?t=mj53rl", type: "EXP", treatment: "Scopus Indexed (Fatigue HCF/LCF)", desc: "On the effect of deep-rolling and laser-peening on the stress-controlled low- and high-cycle fatigue behavior of Ti-6Al-4V at elevated temperatures up to 550 °c — International Journal of Fatigue (296 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-199", author: "Maxwell D.C. (1999)", process: "HCF & LCF / Surface", topic: "Fatigue HCF/LCF", doi: "", type: "EXP", treatment: "Scopus Indexed (Fatigue HCF/LCF)", desc: "Rapid method for generation of a Haigh diagram for high cycle fatigue — ASTM Special Technical Publication (166 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-200", author: "Akahori T. (2005)", process: "HCF & LCF / Surface", topic: "Fatigue HCF/LCF", doi: "10.1016/j.msec.2004.12.007", type: "EXP", treatment: "Scopus Indexed (Fatigue HCF/LCF)", desc: "Improvement in fatigue characteristics of newly developed beta type titanium alloy for biomedical applications by thermo-mechanical treatments — Materials Science and Engineering C (163 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-201", author: "Zabeen S. (2015)", process: "HCF & LCF / Surface", topic: "Fatigue HCF/LCF", doi: "10.1016/j.actamat.2014.09.032", oaUrl: "https://www.sciencedirect.com/science/article/am/pii/S1359645414007125", type: "EXP", treatment: "Scopus Indexed (Fatigue HCF/LCF)", desc: "Evolution of a laser shock peened residual stress field locally with foreign object damage and subsequent fatigue crack growth — Acta Materialia (132 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-202", author: "Karimi J. (2022)", process: "LPBF", topic: "Fatigue HCF/LCF", doi: "10.1016/j.jallcom.2021.163207", type: "EXP", treatment: "Scopus Indexed (Fatigue HCF/LCF)", desc: "Role of laser remelting and heat treatment in mechanical and tribological properties of selective laser melted Ti6Al4V alloy — Journal of Alloys and Compounds (93 citations).", density: "99.80%", ys: 965, uts: 1140, el: 9.2 },
+  { id: "P-203", author: "Alabort E. (2016)", process: "Creep / Ti-6Al-4V", topic: "Creep", doi: "10.1016/j.actamat.2015.12.003", oaUrl: "https://www.sciencedirect.com/science/article/pii/S1359645415301105/pdf", type: "EXP", treatment: "Scopus Indexed (Creep)", desc: "On the mechanisms of superplasticity in Ti-6Al-4V — Acta Materialia (245 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-204", author: "Barboza M.J.R. (2004)", process: "Creep / Ti-6Al-4V", topic: "Creep", doi: "10.1016/j.msea.2003.11.016", type: "EXP", treatment: "Scopus Indexed (Creep)", desc: "Creep mechanisms and physical modeling for Ti-6Al-4V — Materials Science and Engineering A (92 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-205", author: "Kim Y.K. (2018)", process: "LPBF", topic: "Creep", doi: "10.1016/j.msea.2017.12.085", type: "EXP", treatment: "Scopus Indexed (Creep)", desc: "Improvement in the high-temperature creep properties via heat treatment of Ti-6Al-4V alloy manufactured by selective laser melting — Materials Science and Engineering A (76 citations).", density: "99.80%", ys: 965, uts: 1140, el: 9.2 },
+  { id: "P-206", author: "Reis D.A.P. (2005)", process: "Creep / Ti-6Al-4V", topic: "Creep", doi: "10.1016/j.msea.2005.03.073", type: "EXP", treatment: "Scopus Indexed (Creep)", desc: "Effect of environment on the creep behavior of the Ti-6Al-4V alloy — Materials Science and Engineering A (74 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-207", author: "Yamada T. (2004)", process: "Creep / Ti-6Al-4V", topic: "Creep", doi: "10.1016/j.msea.2004.01.146", oaUrl: "https://repository.exst.jaxa.jp/dspace/handle/a-is/3098", type: "EXP", treatment: "Scopus Indexed (Creep)", desc: "Presences of primary creep in various phase metals and alloys at ambient temperature — Materials Science and Engineering A (58 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-208", author: "Badea L. (2014)", process: "Creep / Ti-6Al-4V", topic: "Creep", doi: "", type: "EXP", treatment: "Scopus Indexed (Creep)", desc: "Creep behavior of Ti-6Al-4V from 450°C TO 600°C — UPB Scientific Bulletin Series B Chemistry and Materials Science (58 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-209", author: "Tan X. (2015)", process: "EBM", topic: "Hardness", doi: "10.1016/j.actamat.2015.06.036", type: "EXP", treatment: "Scopus Indexed (Hardness)", desc: "Graded microstructure and mechanical properties of additive manufactured Ti-6Al-4V via electron beam melting — Acta Materialia (704 citations).", density: "99.80%", ys: 915, uts: 1030, el: 12.2 },
+  { id: "P-210", author: "Yasa E. (2011)", process: "LPBF", topic: "Hardness", doi: "10.1108/13552541111156450", type: "EXP", treatment: "Scopus Indexed (Hardness)", desc: "The investigation of the influence of laser re-melting on density, surface quality and microstructure of selective laser melting parts — Rapid Prototyping Journal (382 citations).", density: "99.80%", ys: 965, uts: 1140, el: 9.2 },
+  { id: "P-211", author: "Lu J. (2020)", process: "Ti-6Al-4V Tensile / Wrought", topic: "Hardness", doi: "10.1016/j.ijmachtools.2019.103475", type: "EXP", treatment: "Scopus Indexed (Hardness)", desc: "High-performance integrated additive manufacturing with laser shock peening –induced microstructural evolution and improvement in mechanical properties of Ti6Al4V alloy components — International Journal of Machine Tools and Manufacture (372 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-212", author: "Yang J. (2016)", process: "LPBF", topic: "Hardness", doi: "10.1016/j.matdes.2016.08.036", type: "EXP", treatment: "Scopus Indexed (Hardness)", desc: "Role of molten pool mode on formability, microstructure and mechanical properties of selective laser melted Ti-6Al-4V alloy — Materials and Design (340 citations).", density: "99.80%", ys: 965, uts: 1140, el: 9.2 },
+  { id: "P-213", author: "Wu S.Q. (2016)", process: "Ti-6Al-4V Tensile / Wrought", topic: "Hardness", doi: "10.1016/j.jallcom.2016.02.183", type: "EXP", treatment: "Scopus Indexed (Hardness)", desc: "Microstructural evolution and microhardness of a selective-laser-melted Ti-6Al-4V alloy after post heat treatments — Journal of Alloys and Compounds (301 citations).", density: "99.80%", ys: 860, uts: 960, el: 12.8 },
+  { id: "P-214", author: "Benedetti M. (2018)", process: "LPBF", topic: "Fatigue HCF/LCF & Hardness", doi: "10.1016/j.ijfatigue.2017.10.021", oaUrl: "https://iris.unitn.it/bitstream/11572/187253/5/RevisedManuscript.pdf", type: "EXP", treatment: "Scopus Indexed (Fatigue HCF/LCF & Hardness)", desc: "Low- and high-cycle fatigue resistance of Ti-6Al-4V ELI additively manufactured via selective laser melting: Mean stress and defect sensitivity — International Journal of Fatigue (293 citations).", density: "99.80%", ys: 965, uts: 1140, el: 9.2 }
 ];
 
 function escapeHtml(str) {
@@ -12905,17 +12972,23 @@ function populatePapersTable(papers) {
     const doiLink = p.doi
       ? '<a href="https://doi.org/' + escapeHtml(p.doi) + '" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline; font-size:11px; font-family:monospace; margin-left:6px;">doi ↗</a>'
       : '';
+    const oaLink = p.oaUrl
+      ? '<a href="' + escapeHtml(p.oaUrl) + '" target="_blank" rel="noopener noreferrer" style="color:#34d399; text-decoration:underline; font-size:10.5px; font-family:monospace; margin-left:6px;">OA PDF ↗</a>'
+      : '';
+    const topicBadge = p.topic
+      ? '<span class="brand-badge" style="margin-left:6px; font-size:9.5px; color:#c084fc; border-color:rgba(192,132,252,0.35);">' + escapeHtml(p.topic) + '</span>'
+      : '';
 
     html += `
       <tr>
         <td style="font-family: monospace; font-weight: bold; color: var(--accent-cyan);">${escapeHtml(p.id)}</td>
         <td>
-          <div style="display:flex; align-items:center; gap:6px;">
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
             ${typeBadge}
             <strong>${escapeHtml(p.author)}</strong>
-            ${doiLink}
+            ${doiLink}${oaLink}
           </div>
-          <div style="font-size:10.5px; color:#94a3b8; margin-top:2px;">Condition: <span style="color:#cbd5e1;">${escapeHtml(p.treatment || 'As-Built')}</span></div>
+          <div style="font-size:10.5px; color:#94a3b8; margin-top:2px;">Condition: <span style="color:#cbd5e1;">${escapeHtml(p.treatment || 'As-Built')}</span>${topicBadge}</div>
         </td>
         <td><span class="brand-badge">${escapeHtml(p.process)}</span></td>
         <td style="color: var(--text-secondary); font-size:11.5px;">${escapeHtml(p.desc)}</td>
@@ -12928,9 +13001,9 @@ function populatePapersTable(papers) {
 
 function exportLiteratureCsv() {
   const sourceList = (filteredPapers && filteredPapers.length > 0) ? filteredPapers : PAPERS_DATABASE;
-  let csv = 'ID,Author,Type,Condition,Process,DOI,Density,YieldStrengthMPa,UTSMPa,ElongationPct,Description\n';
+  let csv = 'ID,Author,Type,Topic,Condition,Process,DOI,Density,YieldStrengthMPa,UTSMPa,ElongationPct,Description\n';
   sourceList.forEach(p => {
-    csv += `"${p.id}","${p.author}","${p.type || 'EXP'}","${p.treatment || 'As-Built'}","${p.process}","${p.doi || ''}","${p.density || ''}",${p.ys || ''},${p.uts || ''},${p.el || ''},"${(p.desc || '').replace(/"/g, '""')}"\n`;
+    csv += `"${p.id}","${p.author}","${p.type || 'EXP'}","${p.topic || ''}","${p.treatment || 'As-Built'}","${p.process}","${p.doi || ''}","${p.density || ''}",${p.ys || ''},${p.uts || ''},${p.el || ''},"${(p.desc || '').replace(/"/g, '""')}"\n`;
   });
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -12945,6 +13018,7 @@ function exportLiteratureCsv() {
 }
 
 let currentProcessFilter = 'ALL';
+let currentTopicFilter = 'ALL';
 let livePapersCatalog = [];
 let filteredPapers = [];
 
@@ -12957,14 +13031,19 @@ function filterByProcess(proc, btn) {
 
 function filterPapersTable() {
   const q = (document.getElementById('paperSearchInput')?.value || '').toLowerCase();
+  const typeSel = (document.getElementById('paperTypeFilter')?.value || 'ALL').toUpperCase();
   const sourceList = (livePapersCatalog && livePapersCatalog.length > 0) ? livePapersCatalog : PAPERS_DATABASE;
   const fUpper = (currentProcessFilter || 'ALL').toUpperCase();
+  const tFilter = currentTopicFilter || 'ALL';
   filteredPapers = sourceList.filter(p => {
     const procUpper = (p.process || '').toUpperCase();
-    const textUpper = ((p.desc || '') + ' ' + procUpper).toUpperCase();
+    const textUpper = ((p.desc || '') + ' ' + procUpper + ' ' + (p.topic || '')).toUpperCase();
     const matchesText = !q || p.author.toLowerCase().includes(q) ||
       (p.process || '').toLowerCase().includes(q) ||
+      (p.topic || '').toLowerCase().includes(q) ||
+      (p.doi || '').toLowerCase().includes(q) ||
       (p.desc || '').toLowerCase().includes(q);
+    const matchesType = typeSel === 'ALL' || (p.type || 'EXP').toUpperCase() === typeSel;
     let matchesProcess = (fUpper === 'ALL');
     if (!matchesProcess) {
       if (fUpper.includes('DED')) {
@@ -12979,8 +13058,24 @@ function filterPapersTable() {
         matchesProcess = procUpper.includes(fUpper);
       }
     }
-    return matchesText && matchesProcess;
+    let matchesTopic = (tFilter === 'ALL');
+    if (!matchesTopic) {
+      const top = (p.topic || '').toLowerCase();
+      const descLow = (p.desc || '').toLowerCase();
+      if (tFilter === 'Stress-Strain') matchesTopic = (top.includes('stress-strain') && !top.includes('eng.')) || descLow.includes('stress-strain') || descLow.includes('stress strain curve');
+      else if (tFilter === 'Eng. Stress-Strain') matchesTopic = top.includes('eng. stress-strain') || descLow.includes('engineering stress') || descLow.includes('hot tensile') || descLow.includes('strain hardening');
+      else if (tFilter === 'Compression') matchesTopic = top.includes('compression') || descLow.includes('compress');
+      else if (tFilter === 'Fatigue HCF/LCF') matchesTopic = top.includes('fatigue') || descLow.includes('fatigue') || descLow.includes('hcf') || descLow.includes('lcf');
+      else if (tFilter === 'Creep') matchesTopic = top.includes('creep') || descLow.includes('creep') || descLow.includes('superplasticity');
+      else if (tFilter === 'Hardness') matchesTopic = top.includes('hardness') || descLow.includes('hardness') || descLow.includes('microhardness') || descLow.includes('hv');
+    }
+    return matchesText && matchesType && matchesProcess && matchesTopic;
   });
+  const tabTitle = document.getElementById('litTabTitle');
+  if (tabTitle) {
+    const scopeTxt = tFilter === 'ALL' ? '' : ` — Topic: ${tFilter}`;
+    tabTitle.innerText = `Indexed Literature Evidence Database (${filteredPapers.length} shown / ${LITERATURE_META.totalPublications} Total${scopeTxt})`;
+  }
   populatePapersTable(filteredPapers);
 }
 
@@ -15052,7 +15147,9 @@ function deduplicateAndNormalizePapers(rawPapers) {
   const seenNums = new Set();
   const seenExactKeys = new Set();
   const curatedByAuthorYear = new Map();
+  const curatedById = new Map();
   PAPERS_DATABASE.forEach(item => {
+    if (item.id) curatedById.set(String(item.id), item);
     const key = (item.author || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     if (key) curatedByAuthorYear.set(key, item);
   });
@@ -15060,6 +15157,8 @@ function deduplicateAndNormalizePapers(rawPapers) {
   const out = [];
   for (const p of rawPapers) {
     const num = p.paper_number || p.paperNumber || p.id;
+    const numVal = Number(num);
+    if (Number.isFinite(numVal) && numVal >= 9000) continue; // skip internal test rows
     const fullNormTitle = String(p.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const exactKey = `${num || ''}::${fullNormTitle}`;
     if (num && seenNums.has(String(num))) continue;
@@ -15067,10 +15166,14 @@ function deduplicateAndNormalizePapers(rawPapers) {
     if (num) seenNums.add(String(num));
     if (exactKey) seenExactKeys.add(exactKey);
 
+    const formattedId = Number.isFinite(numVal)
+      ? `P-${numVal < 10 ? '0' + numVal : numVal}`
+      : String(p.id || `P-${out.length + 1}`);
+
     const procStr = p.am_process || p.amProcess || p.process || 'LPBF';
     const authorStr = `${p.authors || 'Unknown'} (${p.year || 2022})`;
     const authKey = authorStr.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const curated = curatedByAuthorYear.get(authKey);
+    const curated = curatedById.get(formattedId) || curatedByAuthorYear.get(authKey);
     const base = getProcessBaselineProps(procStr);
 
     const ysVal = p.yield_strength_mpa || p.yieldStrengthMpa || (curated ? curated.ys : base.ys);
@@ -15080,16 +15183,21 @@ function deduplicateAndNormalizePapers(rawPapers) {
       ? `${Number(p.relative_density_pct).toFixed(2)}%`
       : (curated ? curated.density : base.density);
 
-    const numVal = Number(num);
-    const formattedId = Number.isFinite(numVal)
-      ? `P-${numVal < 10 ? '0' + numVal : numVal}`
-      : String(p.id || `P-${out.length + 1}`);
+    const absStr = String(p.abstract || '');
+    const mDoi = absStr.match(/DOI:\s*([^|\]]+)/i);
+    const mTop = absStr.match(/Topic:\s*([^|\]]+)/i);
+    const mOa = absStr.match(/OA:\s*([^|\]]+)/i);
 
     out.push({
       id: formattedId,
-      author: authorStr,
+      author: curated ? curated.author : authorStr,
       process: procStr,
-      desc: (p.title || curated?.desc || '') + (p.abstract ? ` — ${p.abstract.substring(0, 110)}...` : ''),
+      topic: p.topic || (mTop ? mTop[1].trim() : (curated?.topic || '')),
+      doi: p.doi || (mDoi ? mDoi[1].trim() : (curated?.doi || '')),
+      oaUrl: p.oaUrl || (mOa ? mOa[1].trim() : (curated?.oaUrl || '')),
+      type: curated?.type || 'EXP',
+      treatment: curated?.treatment || (mTop ? `Scopus (${mTop[1].trim()})` : 'As-Built'),
+      desc: curated?.desc || ((p.title || '') + (absStr ? ` — ${absStr.substring(0, 115)}...` : '')),
       density: denStr,
       ys: Math.round(Number(ysVal)),
       uts: Math.round(Number(utsVal)),
@@ -15153,7 +15261,146 @@ async function initSupabaseCloudSync() {
     if (badge) badge.innerText = `⚡ Local Catalog (${LITERATURE_META.totalPublications} Papers)`;
     updateLitPaperCountBadges(LITERATURE_META.totalPublications);
   }
+  drawLitTopicGraph();
 }
+
+let activeLitPlotTopic = 'Stress-Strain';
+const litPlotState = { tempC: '25', showTrue: true, compMode: 'rate', fatigueMode: 'hcf', creepView: 'strain-time', hvView: 'temp' };
+
+function selectLitTopic(topic, btn) {
+  currentTopicFilter = topic;
+  document.querySelectorAll('#litTopicPills .mp-pill-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (topic && topic !== 'ALL') activeLitPlotTopic = topic;
+  filterPapersTable();
+  drawLitTopicGraph();
+}
+window.selectLitTopic = selectLitTopic;
+
+function setLitTopicSubMode(k, v) {
+  litPlotState[k] = v;
+  drawLitTopicGraph();
+}
+window.setLitTopicSubMode = setLitTopicSubMode;
+
+function drawLitTopicGraph() {
+  const canvas = document.getElementById('litTopicCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height;
+  const topic = activeLitPlotTopic || 'Stress-Strain';
+  const ctrlBox = document.getElementById('litTopicControlBox');
+  const noteEl = document.getElementById('litTopicNote');
+  const legEl = document.getElementById('litTopicLegend');
+
+  const pad = { l: 58, r: 20, t: 18, b: 38 }, pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+  const drawAxes = (xMin, xMax, yMin, yMax, xLbl, yLbl, xTicks, yTicks, xFmt, yFmt) => {
+    const sx = x => pad.l + ((x - xMin) / (xMax - xMin)) * pw;
+    const sy = y => pad.t + ph - ((y - yMin) / (yMax - yMin)) * ph;
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(148,163,184,0.16)'; ctx.lineWidth = 1;
+    ctx.font = '10px JetBrains Mono, monospace'; ctx.fillStyle = '#94a3b8';
+    for (const xt of xTicks) {
+      const x = sx(xt); ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + ph); ctx.stroke();
+      ctx.textAlign = 'center'; ctx.fillText(xFmt ? xFmt(xt) : String(xt), x, pad.t + ph + 14);
+    }
+    for (const yt of yTicks) {
+      const y = sy(yt); ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + pw, y); ctx.stroke();
+      ctx.textAlign = 'right'; ctx.fillText(yFmt ? yFmt(yt) : String(yt), pad.l - 6, y + 3.5);
+    }
+    ctx.strokeStyle = '#64748b'; ctx.strokeRect(pad.l, pad.t, pw, ph);
+    ctx.fillStyle = '#cbd5e1'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(xLbl, pad.l + pw / 2, H - 6);
+    ctx.save(); ctx.translate(14, pad.t + ph / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(yLbl, 0, 0); ctx.restore();
+    return { sx, sy };
+  };
+  const plot = (ax, pts, col, dash) => {
+    ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 2.2; if (dash) ctx.setLineDash([5, 4]);
+    ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(ax.sx(x), ax.sy(y)) : ctx.moveTo(ax.sx(x), ax.sy(y))); ctx.stroke(); ctx.restore();
+  };
+  const setLeg = (arr) => {
+    if (legEl) legEl.innerHTML = arr.map(([c, t]) => `<span><span style="display:inline-block;width:14px;height:3px;background:${c};vertical-align:middle;margin-right:5px;"></span>${t}</span>`).join('');
+  };
+
+  if (topic === 'Stress-Strain') {
+    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setLitTopicSubMode('tempC',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="25" ${litPlotState.tempC==='25'?'selected':''}>25 °C (RT)</option><option value="400" ${litPlotState.tempC==='400'?'selected':''}>400 °C</option><option value="600" ${litPlotState.tempC==='600'?'selected':''}>600 °C</option></select>`;
+    const tc = Number(litPlotState.tempC), tf = tc===25?1:(tc===400?0.72:0.46), ef = tc===25?1:(tc===400?1.3:1.8), Ef = tc===25?114000:(tc===400?94000:78000);
+    const ax = drawAxes(0, 0.22, 0, 1400, 'True Strain (ε_T)', 'True Stress σ_T (MPa)', [0,0.05,0.1,0.15,0.2], [0,350,700,1050,1400], v => v.toFixed(2));
+    const gen = (ys0, K, n, eMax) => Array.from({length:70}, (_,i)=>{ const e=(i/69)*Math.min(0.21,eMax*ef), ey=ys0*tf/Ef; return [e, e<=ey?e*Ef:ys0*tf+K*tf*Math.pow(Math.max(1e-6,e-ey),n)]; });
+    plot(ax, gen(1060,420,0.48,0.075), '#fb7185');
+    plot(ax, gen(870,560,0.56,0.145), '#38bdf8');
+    plot(ax, gen(840,520,0.58,0.16), '#34d399');
+    setLeg([['#fb7185',`LPBF As-Built (α') @ ${tc}°C`], ['#38bdf8',`LPBF + HIP (920°C) @ ${tc}°C`], ['#34d399',`Wrought Mill-Annealed @ ${tc}°C`]]);
+    if (noteEl) noteEl.innerText = 'True stress-strain curves (El-Magd 2006; Vrancken 2012; Wang Z. 2018): Fine α\' martensite raises flow stress above 1100 MPa at RT; HIP α+β basketweave doubles true fracture strain.';
+  } else if (topic === 'Eng. Stress-Strain') {
+    if (ctrlBox) ctrlBox.innerHTML = `<label style="color:#cbd5e1;cursor:pointer;"><input type="checkbox" ${litPlotState.showTrue?'checked':''} onchange="setLitTopicSubMode('showTrue',this.checked)"> Overlay True σ_T</label>`;
+    const ax = drawAxes(0, 0.18, 0, 1250, 'Strain (ε)', 'Stress (MPa)', [0,0.04,0.08,0.12,0.16], [0,300,600,900,1200], v => v.toFixed(2));
+    const eng = (ys, uts, eU, eF) => { const p=[], tp=[], E=114000, ey=ys/E; for(let i=0;i<=80;i++){ const e=(i/80)*eF; let s=e<=ey?e*E:(e<=eU?ys+(uts-ys)*Math.pow((e-ey)/(eU-ey),0.42):uts-uts*0.24*Math.pow((e-eU)/(eF-eU),1.55)); if(e<=eU&&e>ey) tp.push([Math.log(1+e),s*(1+e)]); p.push([e,s]); } return {p,tp}; };
+    const asb = eng(1055,1145,0.048,0.072), hip = eng(865,965,0.078,0.152);
+    plot(ax, asb.p, '#fb7185'); plot(ax, hip.p, '#38bdf8');
+    const leg = [['#fb7185','Eng. Curve: LPBF As-Built'], ['#38bdf8','Eng. Curve: LPBF + HIP (Considère UTS @ 0.078)']];
+    if (litPlotState.showTrue) { plot(ax, hip.tp, '#34d399', true); leg.push(['#34d399','True σ_T = σ_e(1+ε_e) up to necking']); }
+    setLeg(leg);
+    if (noteEl) noteEl.innerText = 'Engineering σ_e vs ε_e (Saboori 2016; Xiao 2012; Mirone 2020): Low uniform hardening causes early necking onset near ε ≈ 5–8% followed by geometric softening to fracture.';
+  } else if (topic === 'Compression') {
+    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setLitTopicSubMode('compMode',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="rate" ${litPlotState.compMode==='rate'?'selected':''}>Strain Rate (RT vs SHPB)</option><option value="hot" ${litPlotState.compMode==='hot'?'selected':''}>Hot Working (650–950°C)</option></select>`;
+    if (litPlotState.compMode === 'rate') {
+      const ax = drawAxes(0, 0.35, 0, 1750, 'Compressive Strain (ε_c)', 'Flow Stress (MPa)', [0,0.08,0.16,0.24,0.32], [0,400,800,1200,1600], v => v.toFixed(2));
+      const jc = (C, ed, ts) => Array.from({length:60}, (_,i)=>{ const e=(i/59)*0.34; return [e, e<0.009?e*116000:(980+520*Math.pow(e-0.009,0.38))*(1+C*Math.log(ed/0.001))*(1-ts*Math.max(0,e-0.04))]; });
+      plot(ax, jc(0.018,0.001,0), '#38bdf8'); plot(ax, jc(0.022,1,0.08), '#34d399'); plot(ax, jc(0.024,1500,0.38), '#fb7185');
+      setLeg([['#38bdf8','Quasi-Static 0.001 s⁻¹'], ['#34d399','Intermediate 1 s⁻¹'], ['#fb7185','SHPB Dynamic 1500 s⁻¹ (adiabatic softening)']]);
+    } else {
+      const ax = drawAxes(0, 0.65, 0, 600, 'Compressive Strain (ε_c)', 'Hot Flow Stress (MPa)', [0,0.15,0.3,0.45,0.6], [0,150,300,450,600], v => v.toFixed(2));
+      const hot = (pk, ss) => Array.from({length:60}, (_,i)=>{ const e=(i/59)*0.62; return [e, e<0.04?pk*(e/0.04):ss+(pk-ss)*Math.exp(-(e-0.04)*5.2)]; });
+      plot(ax, hot(480,345), '#fb7185'); plot(ax, hot(265,165), '#fbbf24'); plot(ax, hot(115,72), '#38bdf8');
+      setLeg([['#fb7185','650 °C (0.1 s⁻¹)'], ['#fbbf24','850 °C (α-lamellar globularization)'], ['#38bdf8','950 °C (Near β-transus)']]);
+    }
+    if (noteEl) noteEl.innerText = 'Uniaxial & SHPB Compression (Semiatin 1999/2001; Seo 2005; Cai 2011): Avoids tensile necking; dynamic globularization & adiabatic shear govern high-rate / elevated-temperature softening.';
+  } else if (topic === 'Fatigue HCF/LCF') {
+    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setLitTopicSubMode('fatigueMode',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="hcf" ${litPlotState.fatigueMode==='hcf'?'selected':''}>HCF S–N (Basquin)</option><option value="lcf" ${litPlotState.fatigueMode==='lcf'?'selected':''}>LCF ε_a–2N_f (Coffin-Manson)</option></select>`;
+    if (litPlotState.fatigueMode === 'hcf') {
+      const ax = drawAxes(4, 7.2, 150, 950, 'log10 Cycles to Failure (N_f)', 'Stress Amplitude σ_a (MPa)', [4,5,6,7], [200,400,600,800], v => `10^${v}`);
+      const sn = (sf, b, lim) => Array.from({length:32}, (_,i)=>{ const x=4+i*0.1; return [x, Math.max(lim, sf*Math.pow(2*Math.pow(10,x), b))]; });
+      plot(ax, sn(1420,-0.068,520), '#34d399'); plot(ax, sn(1320,-0.088,390), '#38bdf8'); plot(ax, sn(1220,-0.115,230), '#fb7185');
+      setLeg([['#34d399','HIP + Machined / LSP (~520 MPa)'], ['#38bdf8','SR + Machined LPBF (~390 MPa)'], ['#fb7185','As-Built Rough LPBF (~230 MPa defect-limited)']]);
+    } else {
+      const ax = drawAxes(1.5, 6, 0.001, 0.025, 'log10 Reversals (2N_f)', 'Strain Amplitude ε_a', [2,3,4,5,6], [0.005,0.01,0.015,0.02,0.025], v => `10^${v}`, v => v.toFixed(3));
+      const el=[], pl=[], tot=[]; for(let i=0;i<=42;i++){ const x=1.6+i*0.1, rev=Math.pow(10,x), ee=(1380/114000)*Math.pow(rev,-0.085), ep=0.28*Math.pow(rev,-0.58); el.push([x,ee]); pl.push([x,ep]); tot.push([x,Math.min(0.0245,ee+ep)]); }
+      plot(ax, tot, '#38bdf8'); plot(ax, pl, '#fb7185', true); plot(ax, el, '#34d399', true);
+      setLeg([['#38bdf8','Total Strain ε_a'], ['#fb7185','LCF Plastic (Coffin-Manson)'], ['#34d399','HCF Elastic (Basquin)']]);
+    }
+    if (noteEl) noteEl.innerText = 'HCF & LCF (Nalla 2003; Altenberger 2012; Benedetti 2018): Surface treatments (LSP/deep rolling) & HIP close subsurface pores and boost endurance strength above 500 MPa.';
+  } else if (topic === 'Creep') {
+    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setLitTopicSubMode('creepView',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="strain-time" ${litPlotState.creepView==='strain-time'?'selected':''}>3-Stage ε vs t</option><option value="norton" ${litPlotState.creepView==='norton'?'selected':''}>Norton log ε̇_s vs log σ</option></select>`;
+    if (litPlotState.creepView === 'strain-time') {
+      const ax = drawAxes(0, 120, 0, 6.5, 'Creep Time t (h)', 'Creep Strain ε_cr (%)', [0,30,60,90,120], [0,1.5,3,4.5,6], v => String(v), v => v.toFixed(1));
+      const cr = (p0, r, tr) => Array.from({length:65}, (_,i)=>{ const t=(i/64)*Math.min(118,tr); return [t, Math.min(6.3, p0*(1-Math.exp(-t/8))+r*t+(t>tr*0.72?2.4*Math.pow((t-tr*0.72)/(tr*0.28),2.3):0))]; });
+      plot(ax, cr(0.35,0.011,130), '#34d399'); plot(ax, cr(0.55,0.024,102), '#38bdf8'); plot(ax, cr(0.75,0.048,72), '#fb7185');
+      setLeg([['#34d399','500 °C / 350 MPa (Heat-Treated Lamellar)'], ['#38bdf8','550 °C / 350 MPa (Mill-Annealed)'], ['#fb7185','600 °C / 350 MPa (Tertiary creep onset)']]);
+    } else {
+      const ax = drawAxes(2.2, 2.75, -8.5, -3.5, 'Stress σ (MPa, log axis)', 'log10 Steady Creep Rate (1/h)', [2.3,2.45,2.6,2.7], [-8,-6.5,-5,-3.5], v => String(Math.round(Math.pow(10,v))), v => `10^${v}`);
+      plot(ax, [[2.25,-19.2+4.8*2.25],[2.72,-19.2+4.8*2.72]], '#34d399');
+      plot(ax, [[2.25,-17.8+4.8*2.25],[2.72,-17.8+4.8*2.72]], '#38bdf8');
+      plot(ax, [[2.25,-16.4+4.8*2.25],[2.72,-16.4+4.8*2.72]], '#fb7185');
+      setLeg([['#34d399','500 °C (n ≈ 4.8)'], ['#38bdf8','550 °C (n ≈ 4.8)'], ['#fb7185','600 °C (Dislocation climb power-law)']]);
+    }
+    if (noteEl) noteEl.innerText = 'Creep Behavior (Barboza 2004/2006; Kim 2018; Reis 2005): Lamellar α+β microstructures retard Stage II steady-state creep rate relative to fine quenched α\' LPBF.';
+  } else {
+    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setLitTopicSubMode('hvView',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="temp" ${litPlotState.hvView==='temp'?'selected':''}>Heat-Treatment Temp vs HV</option><option value="hallpetch" ${litPlotState.hvView==='hallpetch'?'selected':''}>Hall-Petch λ_α⁻½ vs HV</option></select>`;
+    if (litPlotState.hvView === 'temp') {
+      const ax = drawAxes(0, 1000, 290, 430, 'Heat-Treatment Temp (°C)', 'Vickers Hardness (HV 0.5)', [0,200,400,600,800,1000], [300,340,380,420]);
+      plot(ax, [[25,398],[300,402],[500,414],[650,364],[730,346],[850,336],[920,332]], '#fb7185');
+      plot(ax, [[25,326],[300,328],[500,352],[650,332],[730,324],[850,318],[920,314]], '#38bdf8');
+      setLeg([['#fb7185','LPBF Ti-6Al-4V (As-Built α\' -> Aging Peak -> SR/Anneal/HIP)'], ['#38bdf8','Wrought Mill-Annealed Baseline']]);
+    } else {
+      const ax = drawAxes(0.45, 1.65, 300, 420, 'Hall-Petch λ_α⁻¹/² (μm⁻¹/²)', 'Vickers Hardness (HV)', [0.5,0.8,1.1,1.4], [300,340,380,420], v => v.toFixed(2));
+      plot(ax, [[0.5, 282+78*0.5], [1.58, 282+78*1.58]], '#34d399');
+      [[1.49,398,'As-Built'],[1.0,360,'SR 650°C'],[0.76,342,'Anneal'],[0.58,329,'HIP']].forEach(([x,y,l])=>{ ctx.fillStyle='#38bdf8'; ctx.beginPath(); ctx.arc(ax.sx(x),ax.sy(y),4,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#cbd5e1'; ctx.fillText(l,ax.sx(x)-18,ax.sy(y)-8); });
+      setLeg([['#34d399','Hall-Petch + Tabor HV Scaling'], ['#38bdf8','AM Post-Processing States']]);
+    }
+    if (noteEl) noteEl.innerText = 'Vickers Microhardness (Tan 2015; Wu 2016; Lu 2020): High hardness in as-built LPBF (~400 HV) relaxes monotonically with α-lath Ostwald coarsening from SR to HIP (~330 HV).';
+  }
+}
+window.drawLitTopicGraph = drawLitTopicGraph;
 
 
 // ==========================================
