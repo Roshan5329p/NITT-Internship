@@ -10136,7 +10136,7 @@ window.addEventListener('click', function(e) {
               <span class="brand-badge" style="color: #38bdf8; border-color: rgba(56,189,248,0.4);">100% Browser-Local (Zero Upload)</span>
               <span class="brand-badge" id="cadStatusBadge" style="color: #94a3b8; border-color: rgba(148,163,184,0.35);">Waiting for CAD file</span>
             </div>
-            <div class="model-card-sub">Supports .stl (≤150 MB), .step/.stp/.iges (≤60 MB in-browser WASM), and .ipt/.prt STEP export guidance. Files remain in local RAM only.</div>
+            <div class="model-card-sub">Supports .stl (≤1 GB streamed in 16 MB chunks), .step/.stp/.iges (≤60 MB in-browser WASM), and .ipt/.prt STEP export guidance. Files remain in local RAM only.</div>
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
             <button type="button" class="step-btn" onclick="loadDemoCadBracket()" style="color: #34d399; border-color: rgba(16,185,129,0.4);">Load Demo Ti-6Al-4V Bracket (.stl)</button>
@@ -10152,26 +10152,40 @@ window.addEventListener('click', function(e) {
           <div style="display: flex; flex-direction: column; gap: 12px;">
             <div id="cadDropzone" onclick="document.getElementById('cadFileInput')?.click()" ondragover="event.preventDefault(); this.style.borderColor='#38bdf8';" ondragleave="this.style.borderColor='rgba(56,189,248,0.38)';" ondrop="handleCadFileDrop(event)" style="border: 1.5px dashed rgba(56,189,248,0.38); border-radius: 10px; padding: 16px; text-align: center; background: rgba(4,8,16,0.65); cursor: pointer;">
               <div style="font-size: 13px; font-weight: 700; color: #f1f5f9;">Drop CAD file here or click to browse</div>
-              <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace;">.stl (max 150 MB) · .step / .stp / .iges (max 60 MB) · .ipt / .prt (guide)</div>
+              <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace;">.stl (max 1 GB) · .step / .stp / .iges (max 60 MB) · .ipt / .prt (guide)</div>
               <input type="file" id="cadFileInput" accept=".stl,.step,.stp,.iges,.igs,.ipt,.prt" style="display: none;" onchange="handleCadFileInput(this)">
             </div>
 
             <label style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); cursor: pointer;">
               <input type="checkbox" id="chkCadForceLoad" onchange="cadForceLoadAnyway = Boolean(this.checked);">
-              Force Load Anyway (High-RAM Workstation override above 150/60 MB caps)
+              Force Load Anyway (High-RAM Workstation override above 1 GB / 60 MB caps)
             </label>
+
+            <!-- Streaming Worker Progress Bar -->
+            <div id="cadProgressWrap" style="display: none; border-radius: 8px; padding: 9px 11px; background: rgba(15,23,42,0.85); border: 1px solid rgba(56,189,248,0.32);">
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; font-family: 'JetBrains Mono', monospace; color: #bae6fd; margin-bottom: 5px; gap: 8px;">
+                <span id="cadProgressLabel" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Streaming STL...</span>
+                <span id="cadProgressPct" style="color: #38bdf8; font-weight: 700; flex-shrink: 0;">0%</span>
+              </div>
+              <div style="width: 100%; height: 6px; border-radius: 999px; background: rgba(148,163,184,0.18); overflow: hidden;">
+                <div id="cadProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #0ea5e9, #34d399); transition: width 0.08s linear;"></div>
+              </div>
+            </div>
 
             <!-- Guardrail / Warning / Unit Banner -->
             <div id="cadGuardrailBox" style="display: none; border-radius: 8px; padding: 10px 12px; font-size: 11px; line-height: 1.45;"></div>
 
             <!-- Unit Selector Row -->
-            <div id="cadUnitRow" style="display: none; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 8px; background: rgba(15,23,42,0.75); border: 1px solid rgba(255,255,255,0.08);">
+            <div id="cadUnitRow" style="display: none; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 8px 10px; border-radius: 8px; background: rgba(15,23,42,0.75); border: 1px solid rgba(255,255,255,0.08);">
               <span style="font-size: 11px; color: var(--text-secondary);">Source CAD Units:</span>
-              <select id="cadSourceUnitSelect" onchange="changeCadSourceUnit(this.value)" style="background: #0b1220; color: #e2e8f0; border: 1px solid rgba(148,163,184,0.35); border-radius: 6px; padding: 4px 8px; font-size: 11px;">
-                <option value="mm" selected>Millimeters (mm, ×1)</option>
-                <option value="inch">Inches (in, ×25.4)</option>
-                <option value="m">Meters (m, ×1000)</option>
-              </select>
+              <div style="display: flex; align-items: center; gap: 6px; margin-left: auto;">
+                <button type="button" id="btnCadConvertInchMm" onclick="convertCadInchesToMm()" class="step-btn" style="display: none; font-size: 10px; padding: 3px 7px; color: #fbbf24; border-color: rgba(251,191,36,0.45);">Convert Inches → mm</button>
+                <select id="cadSourceUnitSelect" onchange="changeCadSourceUnit(this.value)" style="background: #0b1220; color: #e2e8f0; border: 1px solid rgba(148,163,184,0.35); border-radius: 6px; padding: 4px 8px; font-size: 11px;">
+                  <option value="mm" selected>Millimeters (mm, ×1)</option>
+                  <option value="inch">Inches (in, ×25.4)</option>
+                  <option value="m">Meters (m, ×1000)</option>
+                </select>
+              </div>
             </div>
 
             <!-- Option B Native Format Export-to-STEP Guide Card -->
@@ -17241,6 +17255,10 @@ window.addEventListener('click', function(e) {
 // ====================================================================
 var cadForceLoadAnyway = false;
 var cadOriginalMesh = null;
+var cadOriginalProxyVerts = null;
+var cadOriginalProxyNormals = null;
+var cadWorkerFullMetrics = null;
+var cadIsRotatedFromOriginal = false;
 var cadRawMesh = null;
 var cadActiveMesh = null;
 var cadGeometryReport = null;
@@ -17248,6 +17266,9 @@ var cadCurrentFileName = '';
 var cadCurrentUnit = 'mm';
 var cadMachinesList = [];
 var cadActiveMachineId = 'eos-m290';
+var activeCadWorker = null;
+var activeCadWorkerUrl = null;
+var cadViewerRafPending = false;
 
 var cadViewerState = {
   yaw: -0.78,
@@ -17264,14 +17285,47 @@ var cadViewerState = {
   initialized: false
 };
 
+const MAX_CAD_FILE_SIZE = 1024 * 1024 * 1024; // 1 GB hard default limit for streamed STL
+const CAD_STL_PROXY_MAX_TRIS = 60000;
+const CAD_FAST_VOXEL_TRI_THRESHOLD = 250000;
+
 const CAD_GUARDRAIL_RULES = {
   softWarningMb: 50,
-  stlMaxMb: 150,
+  stlMaxMb: 1024,
   brepMaxMb: 60,
   softTriWarn: 1000000,
   decimateTriCap: 2000000,
   nativeSliceBytes: 65536
 };
+
+function _terminateActiveCadWorker() {
+  if (activeCadWorker) {
+    try { activeCadWorker.terminate(); } catch (_) {}
+    activeCadWorker = null;
+  }
+  if (activeCadWorkerUrl) {
+    try { URL.revokeObjectURL(activeCadWorkerUrl); } catch (_) {}
+    activeCadWorkerUrl = null;
+  }
+}
+
+function _setCadProgressUi(visible, pct, labelText) {
+  const wrap = document.getElementById('cadProgressWrap');
+  const bar = document.getElementById('cadProgressBar');
+  const pctEl = document.getElementById('cadProgressPct');
+  const lblEl = document.getElementById('cadProgressLabel');
+  if (!wrap) return;
+  if (!visible) {
+    wrap.style.display = 'none';
+    if (bar) bar.style.width = '0%';
+    return;
+  }
+  const safePct = Math.max(0, Math.min(100, Math.round(Number(pct) || 0)));
+  wrap.style.display = 'block';
+  if (bar) bar.style.width = `${safePct}%`;
+  if (pctEl) pctEl.innerText = `${safePct}%`;
+  if (lblEl && labelText !== undefined) lblEl.innerText = String(labelText);
+}
 
 const CAD_DEFAULT_MACHINES = [
   { id: 'eos-m290', name: 'EOS M 290', vendor: 'EOS', process: 'lpbf', envelopeMm: [250, 250, 325], powerRangeW: [100, 400], layerRangeUm: [20, 60], hourlyRateUsd: 95, materialCostPerKgUsd: 280, gasCostPerHourUsd: 12, isCustom: false },
@@ -17430,13 +17484,288 @@ function _parseStlBufferUi(buffer) {
 
 function _decimateMeshUi(mesh, target) {
   if (mesh.triangleCount <= target) return mesh;
-  const stride = mesh.triangleCount / target;
-  const pos = new Float32Array(target * 9), norm = new Float32Array(target * 9);
-  for (let i = 0; i < target; i++) {
-    const s = Math.min(mesh.triangleCount - 1, Math.floor(i * stride)) * 9, d = i * 9;
+  const stride = Math.max(1, Math.ceil(mesh.triangleCount / target));
+  const outCount = Math.min(target, Math.ceil(mesh.triangleCount / stride));
+  const pos = new Float32Array(outCount * 9), norm = new Float32Array(outCount * 9);
+  for (let i = 0; i < outCount; i++) {
+    const s = Math.min(mesh.triangleCount - 1, i * stride) * 9, d = i * 9;
     for (let k = 0; k < 9; k++) { pos[d+k] = mesh.positions[s+k]; norm[d+k] = mesh.normals[s+k]; }
   }
-  return Object.assign({}, mesh, { triangleCount: target, positions: pos, normals: norm, boundingBox: _cadBbox(pos), wasDecimated: true });
+  return Object.assign({}, mesh, { triangleCount: outCount, positions: pos, normals: norm, boundingBox: _cadBbox(pos), wasDecimated: true });
+}
+
+function _parseStlInStreamingWorker(file, overhangDeg, onProgress) {
+  _terminateActiveCadWorker();
+  return new Promise((resolve, reject) => {
+    const workerCode = [
+      'self.onmessage = async function(ev) {',
+      '  const t0 = Date.now();',
+      '  const file = ev.data && ev.data.file;',
+      '  const overhangDeg = Number(ev.data && ev.data.overhangDeg) || 45;',
+      '  let allVerts = null;',
+      '  try {',
+      '    if (!file || file.size < 15) throw new Error("Invalid STL file (<15 bytes).");',
+      '    const headLen = Math.min(512, file.size);',
+      '    const headBuf = await file.slice(0, headLen).arrayBuffer();',
+      '    const dvHead = new DataView(headBuf);',
+      '    const nTriHead = file.size >= 84 ? dvHead.getUint32(80, true) : 0;',
+      '    const exactBinMatch = file.size >= 84 && (84 + nTriHead * 50 === file.size);',
+      '    let headSample = "";',
+      '    const headBytes = new Uint8Array(headBuf);',
+      '    for (let i = 0; i < headBytes.length; i++) headSample += String.fromCharCode(headBytes[i]);',
+      '    const looksAscii = /^\\s*solid\\b/i.test(headSample) && /\\bfacet\\b/i.test(headSample);',
+      '    const isBinary = exactBinMatch || (!looksAscii && file.size >= 84 && nTriHead > 0 && Math.floor((file.size - 84) / 50) > 0);',
+      '    let nTri = 0;',
+      '    let formatLabel = "STL Binary";',
+      '    let minX = Infinity, minY = Infinity, minZ = Infinity;',
+      '    let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;',
+      '    if (isBinary) {',
+      '      const maxPossible = Math.floor((file.size - 84) / 50);',
+      '      nTri = exactBinMatch ? nTriHead : Math.min(nTriHead, maxPossible);',
+      '      if (!(nTri > 0)) throw new Error("Binary STL has 0 triangles.");',
+      '      allVerts = new Float32Array(nTri * 9);',
+      '      const SLICE_TRIS = 320000;',
+      '      const SLICE_BYTES = SLICE_TRIS * 50; // 16.0 MB aligned chunks',
+      '      let processedTris = 0;',
+      '      let offset = 84;',
+      '      while (processedTris < nTri && offset < file.size) {',
+      '        const end = Math.min(file.size, offset + SLICE_BYTES);',
+      '        const sliceBuf = await file.slice(offset, end).arrayBuffer();',
+      '        const dv = new DataView(sliceBuf);',
+      '        const sliceTris = Math.min(nTri - processedTris, Math.floor(sliceBuf.byteLength / 50));',
+      '        for (let i = 0; i < sliceTris; i++) {',
+      '          const o = i * 50;',
+      '          const b = (processedTris + i) * 9;',
+      '          const ax = dv.getFloat32(o + 12, true), ay = dv.getFloat32(o + 16, true), az = dv.getFloat32(o + 20, true);',
+      '          const bx = dv.getFloat32(o + 24, true), by = dv.getFloat32(o + 28, true), bz = dv.getFloat32(o + 32, true);',
+      '          const cx = dv.getFloat32(o + 36, true), cy = dv.getFloat32(o + 40, true), cz = dv.getFloat32(o + 44, true);',
+      '          allVerts[b] = ax; allVerts[b+1] = ay; allVerts[b+2] = az;',
+      '          allVerts[b+3] = bx; allVerts[b+4] = by; allVerts[b+5] = bz;',
+      '          allVerts[b+6] = cx; allVerts[b+7] = cy; allVerts[b+8] = cz;',
+      '          if (Number.isFinite(ax) && Number.isFinite(bx) && Number.isFinite(cx) && Number.isFinite(az) && Number.isFinite(bz) && Number.isFinite(cz)) {',
+      '            if (ax < minX) minX = ax; if (bx < minX) minX = bx; if (cx < minX) minX = cx;',
+      '            if (ax > maxX) maxX = ax; if (bx > maxX) maxX = bx; if (cx > maxX) maxX = cx;',
+      '            if (ay < minY) minY = ay; if (by < minY) minY = by; if (cy < minY) minY = cy;',
+      '            if (ay > maxY) maxY = ay; if (by > maxY) maxY = by; if (cy > maxY) maxY = cy;',
+      '            if (az < minZ) minZ = az; if (bz < minZ) minZ = bz; if (cz < minZ) minZ = cz;',
+      '            if (az > maxZ) maxZ = az; if (bz > maxZ) maxZ = bz; if (cz > maxZ) maxZ = cz;',
+      '          }',
+      '        }',
+      '        processedTris += sliceTris;',
+      '        offset += sliceTris * 50;',
+      '        self.postMessage({ type: "progress", pct: Math.min(99, Math.round((processedTris / nTri) * 100)), phase: "Streaming Binary STL (" + processedTris.toLocaleString() + " / " + nTri.toLocaleString() + " tris)" });',
+      '      }',
+      '      nTri = processedTris;',
+      '    } else {',
+      '      formatLabel = "STL ASCII";',
+      '      const CHUNK_BYTES = 16 * 1024 * 1024;',
+      '      const decoder = new TextDecoder("utf-8", { fatal: false });',
+      '      let capTris = 65536;',
+      '      allVerts = new Float32Array(capTris * 9);',
+      '      let triVertIdx = 0;',
+      '      let carry = "";',
+      '      let offset = 0;',
+      '      const triTmp = new Float32Array(9);',
+      '      const parseLine = function(line) {',
+      '        const vIdx = line.indexOf("vertex");',
+      '        if (vIdx < 0) {',
+      '          const vUp = line.indexOf("VERTEX");',
+      '          if (vUp < 0) return;',
+      '        }',
+      '        const s = line.trim();',
+      '        if (!/^vertex\\s+/i.test(s)) return;',
+      '        const parts = s.split(/\\s+/);',
+      '        if (parts.length < 4) return;',
+      '        const x = Number(parts[1]), y = Number(parts[2]), z = Number(parts[3]);',
+      '        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return;',
+      '        triTmp[triVertIdx * 3] = x; triTmp[triVertIdx * 3 + 1] = y; triTmp[triVertIdx * 3 + 2] = z;',
+      '        triVertIdx++;',
+      '        if (triVertIdx === 3) {',
+      '          triVertIdx = 0;',
+      '          if (nTri >= capTris) {',
+      '            capTris *= 2;',
+      '            const next = new Float32Array(capTris * 9);',
+      '            next.set(allVerts);',
+      '            allVerts = next;',
+      '          }',
+      '          const b = nTri * 9;',
+      '          for (let k = 0; k < 9; k++) allVerts[b + k] = triTmp[k];',
+      '          if (triTmp[0] < minX) minX = triTmp[0]; if (triTmp[3] < minX) minX = triTmp[3]; if (triTmp[6] < minX) minX = triTmp[6];',
+      '          if (triTmp[0] > maxX) maxX = triTmp[0]; if (triTmp[3] > maxX) maxX = triTmp[3]; if (triTmp[6] > maxX) maxX = triTmp[6];',
+      '          if (triTmp[1] < minY) minY = triTmp[1]; if (triTmp[4] < minY) minY = triTmp[4]; if (triTmp[7] < minY) minY = triTmp[7];',
+      '          if (triTmp[1] > maxY) maxY = triTmp[1]; if (triTmp[4] > maxY) maxY = triTmp[4]; if (triTmp[7] > maxY) maxY = triTmp[7];',
+      '          if (triTmp[2] < minZ) minZ = triTmp[2]; if (triTmp[5] < minZ) minZ = triTmp[5]; if (triTmp[8] < minZ) minZ = triTmp[8];',
+      '          if (triTmp[2] > maxZ) maxZ = triTmp[2]; if (triTmp[5] > maxZ) maxZ = triTmp[5]; if (triTmp[8] > maxZ) maxZ = triTmp[8];',
+      '          nTri++;',
+      '        }',
+      '      };',
+      '      while (offset < file.size) {',
+      '        const end = Math.min(file.size, offset + CHUNK_BYTES);',
+      '        const chunkBuf = await file.slice(offset, end).arrayBuffer();',
+      '        const chunkText = carry + decoder.decode(new Uint8Array(chunkBuf), { stream: end < file.size });',
+      '        const lastNl = chunkText.lastIndexOf("\\n");',
+      '        let block;',
+      '        if (lastNl >= 0) { block = chunkText.slice(0, lastNl); carry = chunkText.slice(lastNl + 1); }',
+      '        else { block = ""; carry = chunkText; }',
+      '        let pos = 0;',
+      '        while (pos < block.length) {',
+      '          const nl = block.indexOf("\\n", pos);',
+      '          const endLine = nl >= 0 ? nl : block.length;',
+      '          if (endLine > pos) parseLine(block.slice(pos, endLine));',
+      '          pos = endLine + 1;',
+      '        }',
+      '        offset = end;',
+      '        self.postMessage({ type: "progress", pct: Math.min(99, Math.round((offset / file.size) * 100)), phase: "Streaming ASCII STL (" + nTri.toLocaleString() + " tris)" });',
+      '      }',
+      '      const tail = carry + decoder.decode();',
+      '      if (tail.length > 0) parseLine(tail);',
+      '      if (!(nTri > 0)) throw new Error("ASCII STL contains 0 valid facet triangles.");',
+      '    }',
+      '    if (!Number.isFinite(minX)) throw new Error("No valid finite vertices found in STL.");',
+      '    const ox = (minX + maxX) * 0.5, oy = (minY + maxY) * 0.5, oz = (minZ + maxZ) * 0.5;',
+      '    const height = Math.max(1e-6, maxZ - minZ);',
+      '    const numSlices = Math.max(8, Math.min(90, Math.round(height / 0.4)));',
+      '    const dzSpan = height / numSlices;',
+      '    const twiceASlice = new Float64Array(numSlices);',
+      '    const nzCutoff = overhangDeg === 45 ? -Math.cos(Math.PI / 4) : -Math.sin((overhangDeg * Math.PI) / 180);',
+      '    const TARGET_PROXY = 60000;',
+      '    const stride = Math.max(1, Math.ceil(nTri / TARGET_PROXY));',
+      '    const maxProxy = Math.min(TARGET_PROXY, Math.ceil(nTri / stride));',
+      '    const proxyVerts = new Float32Array(maxProxy * 9);',
+      '    const proxyNormals = new Float32Array(maxProxy * 9);',
+      '    let proxyIdx = 0;',
+      '    let validCount = 0;',
+      '    let signedVol6 = 0, areaSum = 0, overhangAreaMm2 = 0;',
+      '    for (let t = 0; t < nTri; t++) {',
+      '      const b = t * 9;',
+      '      const x0 = allVerts[b], y0 = allVerts[b+1], z0 = allVerts[b+2];',
+      '      const x1 = allVerts[b+3], y1 = allVerts[b+4], z1 = allVerts[b+5];',
+      '      const x2 = allVerts[b+6], y2 = allVerts[b+7], z2 = allVerts[b+8];',
+      '      if (!Number.isFinite(x0) || !Number.isFinite(y0) || !Number.isFinite(z0) ||',
+      '          !Number.isFinite(x1) || !Number.isFinite(y1) || !Number.isFinite(z1) ||',
+      '          !Number.isFinite(x2) || !Number.isFinite(y2) || !Number.isFinite(z2)) continue;',
+      '      const ux = x1 - x0, uy = y1 - y0, uz = z1 - z0;',
+      '      const vx = x2 - x0, vy = y2 - y0, vz = z2 - z0;',
+      '      const crx = uy * vz - uz * vy, cry = uz * vx - ux * vz, crz = ux * vy - uy * vx;',
+      '      const crLen = Math.hypot(crx, cry, crz);',
+      '      if (!Number.isFinite(crLen) || crLen <= 1e-12) continue;',
+      '      validCount++;',
+      '      const nx = crx / crLen, ny = cry / crLen, nz = crz / crLen;',
+      '      const ax = x0 - ox, ay = y0 - oy, az = z0 - oz;',
+      '      const bx = x1 - ox, by = y1 - oy, bz = z1 - oz;',
+      '      const cx = x2 - ox, cy = y2 - oy, cz = z2 - oz;',
+      '      signedVol6 += ax * (by * cz - bz * cy) + ay * (bz * cx - bx * cz) + az * (bx * cy - by * cx);',
+      '      const area = 0.5 * crLen;',
+      '      areaSum += area;',
+      '      const triAvgZ = (z0 + z1 + z2) / 3;',
+      '      if (nz < nzCutoff && triAvgZ > minZ + 0.15) overhangAreaMm2 += area;',
+      '      const tZMin = Math.min(z0, z1, z2), tZMax = Math.max(z0, z1, z2);',
+      '      const sStart = Math.max(0, Math.ceil((tZMin - minZ) / dzSpan - 0.5));',
+      '      const sEnd = Math.min(numSlices - 1, Math.floor((tZMax - minZ) / dzSpan - 0.5));',
+      '      for (let s = sStart; s <= sEnd; s++) {',
+      '        const zs = minZ + (s + 0.5) * dzSpan;',
+      '        let c0x = 0, c0y = 0, c1x = 0, c1y = 0, cCnt = 0;',
+      '        const da0 = z0 - zs, da1 = z1 - zs, da2 = z2 - zs;',
+      '        if ((da0 <= 0 && da1 > 0) || (da1 <= 0 && da0 > 0)) { const f = (zs - z0) / (z1 - z0); c0x = x0 + f*(x1-x0); c0y = y0 + f*(y1-y0); cCnt = 1; }',
+      '        if ((da1 <= 0 && da2 > 0) || (da2 <= 0 && da1 > 0)) { const f = (zs - z1) / (z2 - z1); const px = x1 + f*(x2-x1), py = y1 + f*(y2-y1); if (cCnt === 0) { c0x = px; c0y = py; } else { c1x = px; c1y = py; } cCnt++; }',
+      '        if (cCnt < 2 && ((da2 <= 0 && da0 > 0) || (da0 <= 0 && da2 > 0))) { const f = (zs - z2) / (z0 - z2); const px = x2 + f*(x0-x2), py = y2 + f*(y0-y2); if (cCnt === 0) { c0x = px; c0y = py; } else { c1x = px; c1y = py; } cCnt++; }',
+      '        if (cCnt === 2) {',
+      '          const sx = c1x - c0x, sy = c1y - c0y;',
+      '          if (sy * nx - sx * ny < 0) twiceASlice[s] += (c1x * c0y - c0x * c1y);',
+      '          else twiceASlice[s] += (c0x * c1y - c1x * c0y);',
+      '        }',
+      '      }',
+      '      if ((t % stride) === 0 && proxyIdx < maxProxy) {',
+      '        const pb = proxyIdx * 9;',
+      '        proxyVerts[pb] = x0; proxyVerts[pb+1] = y0; proxyVerts[pb+2] = z0;',
+      '        proxyVerts[pb+3] = x1; proxyVerts[pb+4] = y1; proxyVerts[pb+5] = z1;',
+      '        proxyVerts[pb+6] = x2; proxyVerts[pb+7] = y2; proxyVerts[pb+8] = z2;',
+      '        proxyNormals[pb] = nx; proxyNormals[pb+1] = ny; proxyNormals[pb+2] = nz;',
+      '        proxyNormals[pb+3] = nx; proxyNormals[pb+4] = ny; proxyNormals[pb+5] = nz;',
+      '        proxyNormals[pb+6] = nx; proxyNormals[pb+7] = ny; proxyNormals[pb+8] = nz;',
+      '        proxyIdx++;',
+      '      }',
+      '    }',
+      '    allVerts = null;',
+      '    if (validCount === 0) throw new Error("No valid non-degenerate triangles in STL.");',
+      '    const finalProxyVerts = proxyIdx === maxProxy ? proxyVerts : proxyVerts.slice(0, proxyIdx * 9);',
+      '    const finalProxyNormals = proxyIdx === maxProxy ? proxyNormals : proxyNormals.slice(0, proxyIdx * 9);',
+      '    const layerSlices = [];',
+      '    let prevA = 0, abruptAreaJumpCount = 0;',
+      '    for (let s = 0; s < numSlices; s++) {',
+      '      const zs = minZ + (s + 0.5) * dzSpan;',
+      '      const area = Math.max(0, Math.abs(twiceASlice[s]) * 0.5);',
+      '      const ratio = s === 0 ? 1.0 : Number(Math.max(0.05, Math.min(20, prevA / Math.max(1e-2, area))).toFixed(2));',
+      '      if (s > 0 && (ratio >= 2.0 || ratio <= 0.5)) abruptAreaJumpCount++;',
+      '      layerSlices.push({ zMm: Number(zs.toFixed(2)), areaMm2: Number(area.toFixed(1)), heatSinkRatio: ratio });',
+      '      prevA = area;',
+      '    }',
+      '    const volumeCm3 = Number((Math.abs(signedVol6) / 6000).toFixed(3));',
+      '    const surfaceAreaCm2 = Number((areaSum / 100).toFixed(2));',
+      '    const windingSign = signedVol6 < -1e-6 ? -1 : 1;',
+      '    const metrics = {',
+      '      originalTriangleCount: validCount,',
+      '      proxyTriangleCount: proxyIdx,',
+      '      boundingBox: { min: [minX, minY, minZ], max: [maxX, maxY, maxZ], size: [maxX - minX, maxY - minY, maxZ - minZ] },',
+      '      volumeCm3,',
+      '      massTi64Grams: Number((volumeCm3 * 4.43).toFixed(2)),',
+      '      surfaceAreaCm2,',
+      '      windingSign,',
+      '      overhangAreaCm2: Number((overhangAreaMm2 / 100).toFixed(2)),',
+      '      overhangFractionPct: areaSum > 0 ? Number(Math.min(100, (overhangAreaMm2 / areaSum) * 100).toFixed(1)) : 0,',
+      '      layerSlices,',
+      '      abruptAreaJumpCount,',
+      '      fastVoxelActive: validCount > 250000,',
+      '      elapsedMs: Date.now() - t0',
+      '    };',
+      '    self.postMessage({ type: "progress", pct: 100, phase: "Finalizing mesh proxy" });',
+      '    self.postMessage({ type: "done", format: formatLabel, metrics, proxyVerts: finalProxyVerts, proxyNormals: finalProxyNormals }, [finalProxyVerts.buffer, finalProxyNormals.buffer]);',
+      '  } catch (err) {',
+      '    allVerts = null;',
+      '    self.postMessage({ type: "error", error: err && err.message ? err.message : "STL streaming worker failed" });',
+      '  }',
+      '};'
+    ].join('\n');
+
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    const workerUrl = URL.createObjectURL(blob);
+    const worker = new Worker(workerUrl);
+    activeCadWorker = worker;
+    activeCadWorkerUrl = workerUrl;
+
+    const cleanup = () => {
+      if (activeCadWorker === worker) {
+        _terminateActiveCadWorker();
+      } else {
+        try { worker.terminate(); } catch (_) {}
+        try { URL.revokeObjectURL(workerUrl); } catch (_) {}
+      }
+    };
+
+    worker.onmessage = (e) => {
+      const msg = e.data || {};
+      if (msg.type === 'progress') {
+        if (typeof onProgress === 'function') onProgress(msg.pct, msg.phase);
+        return;
+      }
+      if (msg.type === 'done') {
+        cleanup();
+        resolve(msg);
+        return;
+      }
+      if (msg.type === 'error') {
+        cleanup();
+        reject(new Error(msg.error || 'STL parse error'));
+      }
+    };
+
+    worker.onerror = () => {
+      cleanup();
+      reject(new Error('Web Worker error while streaming STL file.'));
+    };
+
+    worker.postMessage({ file, overhangDeg });
+  });
 }
 
 function _showCadGuardrail(type, html) {
@@ -17551,28 +17880,33 @@ async function _parseBrepInWorker(buffer, ext, fileName) {
   });
 }
 
-function _applyCadMesh(mesh, fileName, extraWarnings) {
+function _applyCadMesh(mesh, fileName, extraWarnings, fullMetrics) {
   let active = mesh;
   const safeFile = typeof escapeHtml === 'function' ? escapeHtml(fileName || 'part.stl') : String(fileName || 'part.stl');
   const warnings = [...(extraWarnings || [])];
-  if (mesh.triangleCount > CAD_GUARDRAIL_RULES.decimateTriCap) {
-    warnings.push(`Mesh has ${mesh.triangleCount.toLocaleString()} triangles (>2M). Simplified to 1,200,000 triangles for responsive WebGL & analysis.`);
-    active = _decimateMeshUi(mesh, 1200000);
-  } else if (mesh.triangleCount > CAD_GUARDRAIL_RULES.softTriWarn) {
-    warnings.push(`High-density mesh (${mesh.triangleCount.toLocaleString()} triangles > 1M). Adaptive sampling enabled.`);
+  if (!fullMetrics && mesh.triangleCount > CAD_STL_PROXY_MAX_TRIS) {
+    warnings.push(`Mesh has ${mesh.triangleCount.toLocaleString()} triangles. Created ${CAD_STL_PROXY_MAX_TRIS.toLocaleString()}-triangle viewport proxy for locked 60 FPS rendering.`);
+    active = _decimateMeshUi(mesh, CAD_STL_PROXY_MAX_TRIS);
   }
+  cadWorkerFullMetrics = fullMetrics || null;
+  cadIsRotatedFromOriginal = false;
+  cadOriginalProxyVerts = active.positions;
+  cadOriginalProxyNormals = active.normals;
   cadOriginalMesh = active;
   cadRawMesh = active;
   cadCurrentFileName = fileName;
-  const maxSpan = Math.max(...active.boundingBox.size);
-  // Guard authentic < 10 mm LPBF coupons/lattices against false inch auto-scaling
-  cadCurrentUnit = (maxSpan > 0 && maxSpan < 0.5) ? 'm' : ((maxSpan > 0 && maxSpan < 3.5) ? 'inch' : 'mm');
+  const refBbox = (fullMetrics && fullMetrics.boundingBox) ? fullMetrics.boundingBox : active.boundingBox;
+  const maxSpan = Math.max(...refBbox.size);
+  // Prevent false 25.4x inch auto-scaling on small sub-10 mm precision Ti-6Al-4V parts; expose explicit Convert Inches -> mm button instead.
+  cadCurrentUnit = (maxSpan > 0 && maxSpan < 0.25) ? 'm' : 'mm';
   const unitSel = document.getElementById('cadSourceUnitSelect');
   if (unitSel) unitSel.value = cadCurrentUnit;
+  const convBtn = document.getElementById('btnCadConvertInchMm');
+  if (convBtn) convBtn.style.display = (maxSpan > 0 && maxSpan < 15.0) ? 'inline-flex' : 'none';
   if (cadCurrentUnit !== 'mm') {
-    warnings.push(`Max span is ${maxSpan.toFixed(2)} units — auto-selected '${cadCurrentUnit}'. Verify source units below.`);
-  } else if (maxSpan >= 3.5 && maxSpan < 12.0) {
-    warnings.push(`Small max span (${maxSpan.toFixed(2)}): kept 'mm' for micro-feature fidelity — switch to 'inch' below if exported in Imperial units.`);
+    warnings.push(`Max span is ${maxSpan.toFixed(3)} units (< 0.25) — auto-selected meters ('m'). Verify source units below.`);
+  } else if (maxSpan > 0 && maxSpan < 10.0) {
+    warnings.push(`Sub-10 mm precision span (${maxSpan.toFixed(2)}): kept millimeters ('mm') by default to prevent false 25.4× inflation. Click "Convert Inches → mm" if exported in inches.`);
   }
   const unitRow = document.getElementById('cadUnitRow');
   if (unitRow) unitRow.style.display = 'flex';
@@ -17582,6 +17916,13 @@ function _applyCadMesh(mesh, fileName, extraWarnings) {
   changeCadSourceUnit(cadCurrentUnit);
   resetCadCamera();
 }
+
+function convertCadInchesToMm() {
+  const unitSel = document.getElementById('cadSourceUnitSelect');
+  if (unitSel) unitSel.value = 'inch';
+  changeCadSourceUnit('inch');
+}
+window.convertCadInchesToMm = convertCadInchesToMm;
 
 function changeCadSourceUnit(unit) {
   cadCurrentUnit = unit;
@@ -17607,11 +17948,23 @@ function _updateCadMeshSummaryUi() {
     return;
   }
   if (hint) hint.style.display = 'none';
-  const b = cadActiveMesh.boundingBox.size;
+  const factor = cadCurrentUnit === 'inch' ? 25.4 : (cadCurrentUnit === 'm' ? 1000.0 : 1.0);
+  const baseBb = (cadWorkerFullMetrics && !cadIsRotatedFromOriginal && cadWorkerFullMetrics.boundingBox)
+    ? cadWorkerFullMetrics.boundingBox.size
+    : cadRawMesh.boundingBox.size;
+  const b = (cadWorkerFullMetrics && !cadIsRotatedFromOriginal)
+    ? [baseBb[0] * factor, baseBb[1] * factor, baseBb[2] * factor]
+    : cadActiveMesh.boundingBox.size;
   const m = getActiveCadMachine();
   const fits = b[0] <= m.envelopeMm[0] && b[1] <= m.envelopeMm[1] && b[2] <= m.envelopeMm[2];
+  const fullTris = cadActiveMesh.originalTriangleCount || cadActiveMesh.triangleCount;
   const elFmt = document.getElementById('cadStatFormat'); if (elFmt) elFmt.innerText = cadActiveMesh.format;
-  const elTris = document.getElementById('cadStatTris'); if (elTris) elTris.innerText = cadActiveMesh.triangleCount.toLocaleString() + (cadActiveMesh.wasDecimated ? ' (Simp.)' : '');
+  const elTris = document.getElementById('cadStatTris');
+  if (elTris) {
+    elTris.innerText = cadActiveMesh.wasDecimated
+      ? `${fullTris.toLocaleString()} (${cadActiveMesh.triangleCount.toLocaleString()} proxy)`
+      : fullTris.toLocaleString();
+  }
   const elBbox = document.getElementById('cadStatBbox'); if (elBbox) elBbox.innerText = `${b[0].toFixed(1)} × ${b[1].toFixed(1)} × ${b[2].toFixed(1)}`;
   const fitEl = document.getElementById('cadStatFit');
   if (fitEl) {
@@ -17619,11 +17972,13 @@ function _updateCadMeshSummaryUi() {
     fitEl.style.color = fits ? '#34d399' : '#fb7185';
   }
   const st = document.getElementById('cadStatusBadge');
-  if (st) { st.innerText = `${cadCurrentFileName} (${cadActiveMesh.triangleCount.toLocaleString()} tris)`; st.style.color = '#34d399'; }
+  if (st) { st.innerText = `${cadCurrentFileName} (${fullTris.toLocaleString()} tris)`; st.style.color = '#34d399'; }
 }
 
 async function processCadFile(file) {
   if (!file) return;
+  _terminateActiveCadWorker();
+  _setCadProgressUi(false, 0, '');
   const guideCard = document.getElementById('cadNativeGuideCard');
   if (guideCard) guideCard.style.display = 'none';
   const safeName = typeof escapeHtml === 'function' ? escapeHtml(file.name) : String(file.name);
@@ -17632,39 +17987,82 @@ async function processCadFile(file) {
   const warnings = [];
 
   if (!['stl','step','stp','iges','igs','ipt','prt'].includes(ext)) {
-    return _showCadGuardrail('error', `Unsupported format '.${typeof escapeHtml === 'function' ? escapeHtml(ext) : ext}'. Supported: .stl, .step, .stp, .iges, .ipt, .prt.`);
+    return _showCadGuardrail('error', `Unsupported format '.${typeof escapeHtml === 'function' ? escapeHtml(ext) : ext}' for <strong>${safeName}</strong>. Supported: .stl, .step, .stp, .iges, .ipt, .prt.`);
   }
-  if (file.size === 0) return _showCadGuardrail('error', 'Selected file is empty (0 bytes).');
+  if (file.size === 0) return _showCadGuardrail('error', `Selected file <strong>${safeName}</strong> is empty (0 bytes).`);
 
   if (ext === 'ipt' || ext === 'prt') {
     const slice = await file.slice(0, CAD_GUARDRAIL_RULES.nativeSliceBytes).arrayBuffer();
     return _renderNativeCadGuideUi(file.name, new Uint8Array(slice));
   }
 
-  const maxMb = ext === 'stl' ? CAD_GUARDRAIL_RULES.stlMaxMb : CAD_GUARDRAIL_RULES.brepMaxMb;
-  if (mb > CAD_GUARDRAIL_RULES.softWarningMb && mb <= maxMb) {
-    warnings.push(`Large CAD file (${mb.toFixed(1)} MB > 50 MB). Slicing and thickness checks will use adaptive sampling.`);
-  }
-  if (mb > maxMb) {
-    if (!cadForceLoadAnyway) {
-      return _showCadGuardrail('error', `${ext.toUpperCase()} file (${mb.toFixed(1)} MB) exceeds ${maxMb} MB safety limit. Enable "Force Load Anyway" to override.`);
+  if (ext === 'stl') {
+    if (file.size > MAX_CAD_FILE_SIZE) {
+      if (!cadForceLoadAnyway) {
+        return _showCadGuardrail('error', `STL file <strong>${safeName}</strong> (${mb.toFixed(1)} MB) exceeds 1 GB (1,024 MB) safety limit. Enable "Force Load Anyway" to override.`);
+      }
+      warnings.push(`Workstation override active: streaming ${mb.toFixed(1)} MB STL above 1 GB cap.`);
     }
-    warnings.push(`Workstation override active: loading ${mb.toFixed(1)} MB file above ${maxMb} MB cap.`);
+  } else if (mb > CAD_GUARDRAIL_RULES.brepMaxMb) {
+    if (!cadForceLoadAnyway) {
+      return _showCadGuardrail('error', `${ext.toUpperCase()} file <strong>${safeName}</strong> (${mb.toFixed(1)} MB) exceeds ${CAD_GUARDRAIL_RULES.brepMaxMb} MB safety limit. Enable "Force Load Anyway" to override.`);
+    }
+    warnings.push(`Workstation override active: loading ${mb.toFixed(1)} MB file above ${CAD_GUARDRAIL_RULES.brepMaxMb} MB cap.`);
+  }
+
+  if (mb > CAD_GUARDRAIL_RULES.softWarningMb) {
+    warnings.push(`Large CAD file (${mb.toFixed(1)} MB > 50 MB). Streaming 16 MB worker chunks with ≤60,000-triangle viewport proxy.`);
+  }
+
+  const devMem = typeof navigator !== 'undefined' ? navigator.deviceMemory : undefined;
+  if (file.size > 250 * 1024 * 1024 && devMem && devMem < 8) {
+    warnings.push(`<span style="display:inline-block;padding:2px 6px;border-radius:4px;background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.5);font-weight:700;margin-right:6px;">LOW RAM ADVISORY</span>Device reports ${devMem} GB RAM (&lt;8 GB); streaming &gt;250 MB meshes may cause high memory pressure.`);
   }
 
   try {
-    const buf = await file.arrayBuffer();
     if (ext === 'stl') {
-      const mesh = _parseStlBufferUi(buf);
-      _applyCadMesh(mesh, file.name, warnings);
+      const stBadge = document.getElementById('cadStatusBadge');
+      if (stBadge) { stBadge.innerText = `Streaming ${file.name}... 0%`; stBadge.style.color = '#38bdf8'; }
+      _setCadProgressUi(true, 0, `Streaming ${file.name} (16 MB chunks)...`);
+      if (warnings.length > 0) _showCadGuardrail('warn', warnings.join('<br>'));
+      else _showCadGuardrail('ok', `Streaming <strong>${safeName}</strong> (${mb.toFixed(1)} MB) inside isolated Web Worker...`);
+
+      const degVal = parseFloat(document.getElementById('cadOverhangThreshInput')?.value ?? '45');
+  const deg = Math.max(15, Math.min(75, Number.isFinite(degVal) ? degVal : 45));
+      const res = await _parseStlInStreamingWorker(file, deg, (pct, phase) => {
+        _setCadProgressUi(true, pct, `${file.name}: ${phase || 'Streaming'}...`);
+        if (stBadge) { stBadge.innerText = `Streaming ${file.name}... ${pct}%`; stBadge.style.color = '#38bdf8'; }
+      });
+
+      _setCadProgressUi(true, 100, `Complete: ${res.metrics.originalTriangleCount.toLocaleString()} tris`);
+      setTimeout(() => _setCadProgressUi(false, 0, ''), 900);
+
+      if (res.metrics.fastVoxelActive) {
+        warnings.push('Fast voxel estimation active (&gt;250k tris): O(N) full-resolution metrics computed in worker; 60,000-triangle proxy active in 3D viewer.');
+      }
+
+      const proxyMesh = {
+        format: res.format,
+        triangleCount: res.metrics.proxyTriangleCount,
+        originalTriangleCount: res.metrics.originalTriangleCount,
+        wasDecimated: res.metrics.proxyTriangleCount < res.metrics.originalTriangleCount,
+        positions: res.proxyVerts,
+        normals: res.proxyNormals,
+        boundingBox: res.metrics.boundingBox
+      };
+      _applyCadMesh(proxyMesh, file.name, warnings, res.metrics);
     } else {
-      _showCadGuardrail('warn', `Tessellating ${safeName} locally via OpenCascade WebAssembly...`);
+      _showCadGuardrail('warn', `Tessellating <strong>${safeName}</strong> locally via OpenCascade WebAssembly...`);
+      const buf = await file.arrayBuffer();
       const mesh = await _parseBrepInWorker(buf, ext, file.name);
-      _applyCadMesh(mesh, file.name, warnings);
+      _applyCadMesh(mesh, file.name, warnings, null);
     }
   } catch (err) {
+    _setCadProgressUi(false, 0, '');
     const errMsg = err && err.message ? err.message : String(err);
-    _showCadGuardrail('error', `CAD parse failed cleanly: ${typeof escapeHtml === 'function' ? escapeHtml(errMsg) : errMsg}`);
+    const stBadge = document.getElementById('cadStatusBadge');
+    if (stBadge) { stBadge.innerText = 'CAD Load Failed'; stBadge.style.color = '#fb7185'; }
+    _showCadGuardrail('error', `CAD parse failed cleanly for <strong>${safeName}</strong>: ${typeof escapeHtml === 'function' ? escapeHtml(errMsg) : errMsg}`);
   }
 }
 
@@ -17700,11 +18098,15 @@ function loadDemoCadBracket() {
 window.loadDemoCadBracket = loadDemoCadBracket;
 
 function clearLoadedCadPart() {
-  cadOriginalMesh = null; cadRawMesh = null; cadActiveMesh = null; cadGeometryReport = null; cadPrintabilityReport = null; cadOrientationResult = null; cadSimReport = null; cadEconomicsReport = null; cadCurrentFileName = '';
+  _terminateActiveCadWorker();
+  _setCadProgressUi(false, 0, '');
+  cadOriginalMesh = null; cadOriginalProxyVerts = null; cadOriginalProxyNormals = null; cadWorkerFullMetrics = null; cadIsRotatedFromOriginal = false;
+  cadRawMesh = null; cadActiveMesh = null; cadGeometryReport = null; cadPrintabilityReport = null; cadOrientationResult = null; cadSimReport = null; cadEconomicsReport = null; cadCurrentFileName = '';
   window.cadActiveScrubIdx = 0;
   const unitRow = document.getElementById('cadUnitRow'); if (unitRow) unitRow.style.display = 'none';
+  const convBtn = document.getElementById('btnCadConvertInchMm'); if (convBtn) convBtn.style.display = 'none';
   const guardBox = document.getElementById('cadGuardrailBox'); if (guardBox) guardBox.style.display = 'none';
-  document.getElementById('cadNativeGuideCard').style.display = 'none';
+  const guideCard = document.getElementById('cadNativeGuideCard'); if (guideCard) guideCard.style.display = 'none';
   const st = document.getElementById('cadStatusBadge');
   if (st) { st.innerText = 'Waiting for CAD file'; st.style.color = '#94a3b8'; }
   _updateCadMeshSummaryUi();
@@ -17785,13 +18187,65 @@ function _traceBvhUi(ox,oy,oz, dx,dy,dz, pos, root, idx, skipTri) {
   return { dist: best, hits, firstDot };
 }
 
+function _fastVoxelWallEstimateUi(pos, norm, bb, nTri) {
+  const gn = 24;
+  const sx = Math.max(1e-3, bb.size[0]), sy = Math.max(1e-3, bb.size[1]), sz = Math.max(1e-3, bb.size[2]);
+  const voxW = sx / gn, voxH = sy / gn, voxD = sz / gn;
+  const grid = new Uint8Array(gn * gn * gn);
+  const stride = nTri > 12000 ? Math.ceil(nTri / 12000) : 1;
+  for (let t = 0; t < nTri; t += stride) {
+    const i = t * 9;
+    const tx = (pos[i] + pos[i+3] + pos[i+6]) / 3;
+    const ty = (pos[i+1] + pos[i+4] + pos[i+7]) / 3;
+    const tz = (pos[i+2] + pos[i+5] + pos[i+8]) / 3;
+    const vx = Math.max(0, Math.min(gn - 1, Math.floor(((tx - bb.min[0]) / sx) * gn)));
+    const vy = Math.max(0, Math.min(gn - 1, Math.floor(((ty - bb.min[1]) / sy) * gn)));
+    const vz = Math.max(0, Math.min(gn - 1, Math.floor(((tz - bb.min[2]) / sz) * gn)));
+    grid[(vz * gn + vy) * gn + vx] = 1;
+  }
+  const perThick = new Float32Array(nTri);
+  const thickSamples = [];
+  const stepMin = Math.min(voxW, voxH, voxD);
+  const maxSpan = Math.max(1, sx, sy, sz);
+  const sampleStride = nTri > 1200 ? Math.ceil(nTri / 1200) : 1;
+  for (let t = 0; t < nTri; t += sampleStride) {
+    const i = t * 9;
+    const tx = (pos[i] + pos[i+3] + pos[i+6]) / 3;
+    const ty = (pos[i+1] + pos[i+4] + pos[i+7]) / 3;
+    const tz = (pos[i+2] + pos[i+5] + pos[i+8]) / 3;
+    const nx = norm[i], ny = norm[i+1], nz = norm[i+2];
+    let dist = maxSpan;
+    for (let k = 1; k <= gn; k++) {
+      const d = k * stepMin;
+      const px = tx - nx * d, py = ty - ny * d, pz = tz - nz * d;
+      if (px < bb.min[0] || px > bb.max[0] || py < bb.min[1] || py > bb.max[1] || pz < bb.min[2] || pz > bb.max[2]) break;
+      const vx = Math.max(0, Math.min(gn - 1, Math.floor(((px - bb.min[0]) / sx) * gn)));
+      const vy = Math.max(0, Math.min(gn - 1, Math.floor(((py - bb.min[1]) / sy) * gn)));
+      const vz = Math.max(0, Math.min(gn - 1, Math.floor(((pz - bb.min[2]) / sz) * gn)));
+      if (d > stepMin * 1.4 && grid[(vz * gn + vy) * gn + vx]) { dist = d; break; }
+    }
+    const th = Math.max(0.2, Math.min(maxSpan, dist));
+    thickSamples.push(th);
+    for (let s = 0; s < sampleStride && t + s < nTri; s++) perThick[t + s] = th;
+  }
+  thickSamples.sort((a, b) => a - b);
+  return {
+    perThick,
+    minWallThicknessMm: thickSamples.length ? Number(thickSamples[0].toFixed(2)) : 0,
+    medianWallThicknessMm: thickSamples.length ? Number(thickSamples[Math.floor(thickSamples.length * 0.5)].toFixed(2)) : 0
+  };
+}
+
 function analyzeCadGeometryUi(mesh, overhangDeg, minWallLimitMm) {
   const t0 = Date.now(), pos = mesh.positions, norm = mesh.normals, bb = mesh.boundingBox, nTri = mesh.triangleCount;
+  const origTris = mesh.originalTriangleCount || nTri;
+  const fastVoxelActive = origTris > CAD_FAST_VOXEL_TRI_THRESHOLD;
   const ox=(bb.min[0]+bb.max[0])*0.5, oy=(bb.min[1]+bb.max[1])*0.5, oz=(bb.min[2]+bb.max[2])*0.5;
   let signedVol6 = 0, areaSum = 0, sharpConcaveCorners = 0;
-  const checkTopo = nTri <= 200000;
+  const checkTopo = !fastVoxelActive && nTri <= CAD_FAST_VOXEL_TRI_THRESHOLD;
   const edges = checkTopo ? new Map() : null, edgeNorms = checkTopo ? new Map() : null;
-  const nzCutoff = -Math.sin((overhangDeg * Math.PI) / 180), zBase = bb.min[2];
+  const nzCutoff = overhangDeg === 45 ? -Math.cos(Math.PI / 4) : -Math.sin((overhangDeg * Math.PI) / 180);
+  const zBase = bb.min[2];
   const perOverhang = new Uint8Array(nTri);
   let overhangAreaMm2 = 0;
   const triZMin = new Float32Array(nTri), triZMax = new Float32Array(nTri);
@@ -17830,61 +18284,91 @@ function analyzeCadGeometryUi(mesh, overhangDeg, minWallLimitMm) {
   }
   const isWatertight = checkTopo ? (boundaryEdgeCount === 0 && nonManifoldEdgeCount === 0 && signedVol6 > 0) : (signedVol6 > 0);
 
-  const { root, idx } = _buildBvhUi(pos, nTri);
-  const perThick = new Float32Array(nTri), maxSpan = Math.max(1, Math.max(...bb.size)), stride = nTri > 1000 ? Math.ceil(nTri/1000) : 1;
-  const thickSamples = []; let cavityVotes = 0;
-  for (let t = 0; t < nTri; t += stride) {
-    const i = t * 9, tx=(pos[i]+pos[i+3]+pos[i+6])/3, ty=(pos[i+1]+pos[i+4]+pos[i+7])/3, tz=(pos[i+2]+pos[i+5]+pos[i+8])/3;
-    const nx=norm[i], ny=norm[i+1], nz=norm[i+2], eps=Math.min(0.02, maxSpan*1e-4);
-    const hit = _traceBvhUi(tx-nx*eps, ty-ny*eps, tz-nz*eps, -nx,-ny,-nz, pos, root, idx, t);
-    const th = Math.max(0.05, Math.min(maxSpan, Number.isFinite(hit.dist) && hit.dist <= maxSpan*1.1 ? hit.dist : maxSpan));
-    thickSamples.push(th);
-    for (let s=0; s<stride && t+s<nTri; s++) perThick[t+s] = th;
-    if (hit.hits >= 3 && hit.firstDot < -0.5) cavityVotes++;
-  }
-  thickSamples.sort((a,b) => a-b);
-  const minWallThicknessMm = thickSamples.length ? Number(thickSamples[0].toFixed(2)) : 0;
-  const medianWallThicknessMm = thickSamples.length ? Number(thickSamples[Math.floor(thickSamples.length*0.5)].toFixed(2)) : 0;
-  const enclosedCavityCount = isWatertight && cavityVotes >= Math.max(6, Math.round(thickSamples.length*0.08)) ? Math.max(1, Math.round(cavityVotes / Math.max(12, Math.round(thickSamples.length*0.12)))) : 0;
-
-  const height = bb.size[2], numSlices = Math.max(8, Math.min(90, Math.round(height / 0.4)));
-  const layerSlices = []; let prevA = 0, abruptAreaJumpCount = 0;
-  for (let s = 0; s < numSlices; s++) {
-    const z = zBase + ((s + 0.5) / numSlices) * height;
-    let twiceA = 0;
-    for (let t = 0; t < nTri; t++) {
-      if (triZMax[t] < z || triZMin[t] > z) continue;
-      const i = t * 9, pts = [[pos[i],pos[i+1],pos[i+2]],[pos[i+3],pos[i+4],pos[i+5]],[pos[i+6],pos[i+7],pos[i+8]]], cp = [];
-      for (let e=0; e<3; e++) {
-        const a=pts[e], b=pts[(e+1)%3], da=a[2]-z, db=b[2]-z;
-        if ((da<=0 && db>0)||(db<=0 && da>0)) { const f=(z-a[2])/(b[2]-a[2]); cp.push([a[0]+f*(b[0]-a[0]), a[1]+f*(b[1]-a[1])]); }
-      }
-      if (cp.length === 2) {
-        let p0=cp[0], p1=cp[1]; const sx=p1[0]-p0[0], sy=p1[1]-p0[1];
-        if (sy*norm[i] - sx*norm[i+1] < 0) { const tmp=p0; p0=p1; p1=tmp; }
-        twiceA += p0[0]*p1[1] - p1[0]*p0[1];
-      }
+  let perThick, minWallThicknessMm, medianWallThicknessMm, enclosedCavityCount = 0;
+  if (fastVoxelActive) {
+    const vox = _fastVoxelWallEstimateUi(pos, norm, bb, nTri);
+    perThick = vox.perThick;
+    minWallThicknessMm = vox.minWallThicknessMm;
+    medianWallThicknessMm = vox.medianWallThicknessMm;
+  } else {
+    const { root, idx } = _buildBvhUi(pos, nTri);
+    perThick = new Float32Array(nTri);
+    const maxSpan = Math.max(1, Math.max(...bb.size)), stride = nTri > 1000 ? Math.ceil(nTri/1000) : 1;
+    const thickSamples = []; let cavityVotes = 0;
+    for (let t = 0; t < nTri; t += stride) {
+      const i = t * 9, tx=(pos[i]+pos[i+3]+pos[i+6])/3, ty=(pos[i+1]+pos[i+4]+pos[i+7])/3, tz=(pos[i+2]+pos[i+5]+pos[i+8])/3;
+      const nx=norm[i], ny=norm[i+1], nz=norm[i+2], eps=Math.min(0.02, maxSpan*1e-4);
+      const hit = _traceBvhUi(tx-nx*eps, ty-ny*eps, tz-nz*eps, -nx,-ny,-nz, pos, root, idx, t);
+      const th = Math.max(0.05, Math.min(maxSpan, Number.isFinite(hit.dist) && hit.dist <= maxSpan*1.1 ? hit.dist : maxSpan));
+      thickSamples.push(th);
+      for (let s=0; s<stride && t+s<nTri; s++) perThick[t+s] = th;
+      if (hit.hits >= 3 && hit.firstDot < -0.5) cavityVotes++;
     }
-    const area = Math.max(0, Math.abs(twiceA) * 0.5);
-    const ratio = s === 0 ? 1.0 : Number(Math.max(0.05, Math.min(20, prevA / Math.max(1e-2, area))).toFixed(2));
-    if (s > 0 && (ratio >= 2.0 || ratio <= 0.5)) abruptAreaJumpCount++;
-    layerSlices.push({ zMm: Number(z.toFixed(2)), areaMm2: Number(area.toFixed(1)), heatSinkRatio: ratio });
-    prevA = area;
+    thickSamples.sort((a,b) => a-b);
+    minWallThicknessMm = thickSamples.length ? Number(thickSamples[0].toFixed(2)) : 0;
+    medianWallThicknessMm = thickSamples.length ? Number(thickSamples[Math.floor(thickSamples.length*0.5)].toFixed(2)) : 0;
+    enclosedCavityCount = isWatertight && cavityVotes >= Math.max(6, Math.round(thickSamples.length*0.08)) ? Math.max(1, Math.round(cavityVotes / Math.max(12, Math.round(thickSamples.length*0.12)))) : 0;
   }
 
-  const volumeCm3 = Number((Math.abs(signedVol6)/6000).toFixed(3));
-  const surfaceAreaCm2 = Number((areaSum/100).toFixed(2));
-  const windingSign = signedVol6 < -1e-6 ? -1 : 1;
+  let layerSlices, abruptAreaJumpCount;
+  const factor = cadCurrentUnit === 'inch' ? 25.4 : (cadCurrentUnit === 'm' ? 1000.0 : 1.0);
+  const f2 = factor * factor, f3 = factor * factor * factor;
+  const fm = cadWorkerFullMetrics;
+
+  if (fm && !cadIsRotatedFromOriginal && fm.layerSlices && fm.layerSlices.length) {
+    layerSlices = fm.layerSlices.map(sl => ({
+      zMm: Number((sl.zMm * factor).toFixed(2)),
+      areaMm2: Number((sl.areaMm2 * f2).toFixed(1)),
+      heatSinkRatio: sl.heatSinkRatio
+    }));
+    abruptAreaJumpCount = fm.abruptAreaJumpCount;
+  } else {
+    const height = bb.size[2], numSlices = Math.max(8, Math.min(90, Math.round(height / 0.4)));
+    layerSlices = []; let prevA = 0; abruptAreaJumpCount = 0;
+    for (let s = 0; s < numSlices; s++) {
+      const z = zBase + ((s + 0.5) / numSlices) * height;
+      let twiceA = 0;
+      for (let t = 0; t < nTri; t++) {
+        if (triZMax[t] < z || triZMin[t] > z) continue;
+        const i = t * 9, pts = [[pos[i],pos[i+1],pos[i+2]],[pos[i+3],pos[i+4],pos[i+5]],[pos[i+6],pos[i+7],pos[i+8]]], cp = [];
+        for (let e=0; e<3; e++) {
+          const a=pts[e], b=pts[(e+1)%3], da=a[2]-z, db=b[2]-z;
+          if ((da<=0 && db>0)||(db<=0 && da>0)) { const f=(z-a[2])/(b[2]-a[2]); cp.push([a[0]+f*(b[0]-a[0]), a[1]+f*(b[1]-a[1])]); }
+        }
+        if (cp.length === 2) {
+          let p0=cp[0], p1=cp[1]; const sx=p1[0]-p0[0], sy=p1[1]-p0[1];
+          if (sy*norm[i] - sx*norm[i+1] < 0) { const tmp=p0; p0=p1; p1=tmp; }
+          twiceA += p0[0]*p1[1] - p1[0]*p0[1];
+        }
+      }
+      const area = Math.max(0, Math.abs(twiceA) * 0.5);
+      const ratio = s === 0 ? 1.0 : Number(Math.max(0.05, Math.min(20, prevA / Math.max(1e-2, area))).toFixed(2));
+      if (s > 0 && (ratio >= 2.0 || ratio <= 0.5)) abruptAreaJumpCount++;
+      layerSlices.push({ zMm: Number(z.toFixed(2)), areaMm2: Number(area.toFixed(1)), heatSinkRatio: ratio });
+      prevA = area;
+    }
+  }
+
+  const volumeCm3 = fm ? Number((fm.volumeCm3 * f3).toFixed(3)) : Number((Math.abs(signedVol6)/6000).toFixed(3));
+  const surfaceAreaCm2 = fm ? Number((fm.surfaceAreaCm2 * f2).toFixed(2)) : Number((areaSum/100).toFixed(2));
+  const windingSign = fm ? fm.windingSign : (signedVol6 < -1e-6 ? -1 : 1);
+  const proxyOhPct = areaSum > 0 ? Math.min(100, (overhangAreaMm2/areaSum)*100) : 0;
+  const overhangAreaCm2 = (fm && !cadIsRotatedFromOriginal)
+    ? Number((fm.overhangAreaCm2 * f2).toFixed(2))
+    : Number(((surfaceAreaCm2 * proxyOhPct) / 100).toFixed(2));
+  const overhangFractionPct = (fm && !cadIsRotatedFromOriginal)
+    ? fm.overhangFractionPct
+    : Number(proxyOhPct.toFixed(1));
+
   return {
     volumeCm3, massTi64Grams: Number((volumeCm3 * 4.43).toFixed(2)), surfaceAreaCm2,
-    isWatertight, boundaryEdgeCount, nonManifoldEdgeCount, windingSign,
-    overhangAreaCm2: Number((overhangAreaMm2/100).toFixed(2)),
-    overhangFractionPct: areaSum > 0 ? Number(Math.min(100, (overhangAreaMm2/areaSum)*100).toFixed(1)) : 0,
+    isWatertight, boundaryEdgeCount, nonManifoldEdgeCount, windingSign, fastVoxelActive,
+    overhangAreaCm2, overhangFractionPct,
     minWallThicknessMm, medianWallThicknessMm,
     thinWallWarn: minWallThicknessMm < minWallLimitMm,
     sharpConcaveCornerCount: sharpConcaveCorners,
     enclosedCavityCount, layerSlices, abruptAreaJumpCount,
-    elapsedMs: Date.now() - t0, perOverhang, perThick
+    elapsedMs: (fm && !cadIsRotatedFromOriginal ? fm.elapsedMs : (Date.now() - t0)), perOverhang, perThick
   };
 }
 
@@ -17917,7 +18401,7 @@ function computeCadPredictionModifiersUi(geo, fileName, procId) {
 function evaluateCadPrintabilityUi(mesh, geo, mac) {
   const proc = mac.process, sz = mesh.boundingBox.size;
   const fits = sz[0] <= mac.envelopeMm[0] && sz[1] <= mac.envelopeMm[1] && sz[2] <= mac.envelopeMm[2];
-  const minW = proc === 'waam' ? 3.5 : (proc === 'ded-laser' ? 1.2 : 0.4);
+  const minW = proc === 'waam' ? 3.5 : (proc === 'ded-laser' ? 1.2 : (proc === 'binder-jetting' ? 0.8 : 0.4));
   const pos = mesh.positions, norm = mesh.normals, nTri = mesh.triangleCount, zBase = mesh.boundingBox.min[2];
   const xMin = mesh.boundingBox.min[0], yMin = mesh.boundingBox.min[1];
   const xSpan = Math.max(1e-3, sz[0]), ySpan = Math.max(1e-3, sz[1]);
@@ -17970,11 +18454,11 @@ function evaluateCadPrintabilityUi(mesh, geo, mac) {
     ohSampleA += area; supSolid += area * Math.max(0.15, Math.abs(norm[i+2])) * drop;
   }
   const ohMm2 = geo.overhangAreaCm2 * 100;
-  const fill = proc === 'lpbf' ? 0.22 : (proc === 'ded-laser' ? 0.35 : 0.45);
+  const fill = proc === 'lpbf' ? 0.22 : (proc === 'ded-laser' ? 0.35 : (proc === 'binder-jetting' ? 0.05 : 0.45));
   const sc = ohSampleA > 0 ? ohMm2 / ohSampleA : 1.0;
   const supportVolumeCm3 = Number(((supSolid * sc * fill) / 1000).toFixed(2));
   const supportMassGrams = Number((supportVolumeCm3 * 4.43).toFixed(2));
-  const removalDifficulty = ohMm2 <= 1 ? 'None' : ((hardPockets>0 && geo.overhangFractionPct>12) ? 'Hard' : ((geo.overhangFractionPct>6 || maxDrop>18) ? 'Moderate' : 'Easy'));
+  const removalDifficulty = proc === 'binder-jetting' ? 'Powder Bed (Self-Supported)' : (ohMm2 <= 1 ? 'None' : ((hardPockets>0 && geo.overhangFractionPct>12) ? 'Hard' : ((geo.overhangFractionPct>6 || maxDrop>18) ? 'Moderate' : 'Easy')));
 
   const notes = [];
   if (!fits) notes.push(`Exceeds ${mac.name} build volume (${mac.envelopeMm.join('×')} mm) in current orientation.`);
@@ -17983,23 +18467,26 @@ function evaluateCadPrintabilityUi(mesh, geo, mac) {
     wallStatus = proc === 'lpbf' ? 'Fail' : 'Marginal';
     notes.push(`Min wall (${geo.minWallThicknessMm} mm) < ${proc.toUpperCase()} limit (${minW} mm)${proc==='lpbf' ? ' — thicken walls.' : ' — needs CNC finish machining.'}`);
   }
-  if (geo.enclosedCavityCount > 0 && proc === 'lpbf') notes.push(`${geo.enclosedCavityCount} trapped-powder cavity(s) detected — add ≥ Ø2.5 mm drain holes.`);
-  if (!geo.isWatertight) notes.push(`Mesh has ${geo.boundaryEdgeCount} open edges — watertight check failed.`);
-  if (geo.overhangFractionPct > 4) notes.push(`${geo.overhangAreaCm2} cm² overhang requires ~${supportVolumeCm3} cm³ (${supportMassGrams} g) Ti-6Al-4V supports (${removalDifficulty} removal).`);
+  if (geo.enclosedCavityCount > 0 && (proc === 'lpbf' || proc === 'binder-jetting')) notes.push(`${geo.enclosedCavityCount} trapped-powder cavity(s) detected — add ≥ Ø2.5 mm drain holes.`);
+  if (!geo.fastVoxelActive && !geo.isWatertight) notes.push(`Mesh has ${geo.boundaryEdgeCount} open edges — watertight check failed.`);
+  if (geo.overhangFractionPct > 4 && proc !== 'binder-jetting') notes.push(`${geo.overhangAreaCm2} cm² overhang requires ~${supportVolumeCm3} cm³ (${supportMassGrams} g) Ti-6Al-4V supports (${removalDifficulty} removal).`);
+  if (proc === 'binder-jetting') notes.push(`Loose powder bed supports overhangs during printing; monitor green fragility & 15–18% isotropic sintering shrinkage.`);
 
   const maxD = Math.max(...sz);
   const lpbfS = Math.max(10, Math.min(100, Math.round((maxD<=350?92:45) - (geo.minWallThicknessMm<0.4?25:0) - (geo.enclosedCavityCount>0?12:0) - Math.min(18, geo.overhangFractionPct*0.6) + (geo.volumeCm3<=400?6:-12))));
   const ldedS = Math.max(10, Math.min(100, Math.round((geo.volumeCm3>=25?84:62) - (geo.minWallThicknessMm<1.2?18:0) - (geo.overhangFractionPct>15?20:geo.overhangFractionPct*0.8) + (maxD>250?10:0))));
   const waamS = Math.max(10, Math.min(100, Math.round((geo.volumeCm3>=150||maxD>=250?88:48) - (geo.minWallThicknessMm<3.5?28:0) - (geo.overhangFractionPct>10?22:geo.overhangFractionPct*0.9))));
+  const bjS = Math.max(10, Math.min(100, Math.round((maxD<=250?82:48) - (geo.minWallThicknessMm<0.8?22:0) - (geo.enclosedCavityCount>0?14:0) + (geo.overhangFractionPct>12?8:0))));
   const processRanking = [
     { processId: 'lpbf', label: 'LPBF', score: lpbfS, verdict: lpbfS>=75?'Recommended':(lpbfS>=55?'Viable':'Not Suitable') },
     { processId: 'ded-laser', label: 'L-DED', score: ldedS, verdict: ldedS>=75?'Recommended':(ldedS>=55?'Viable (Post-Machine)':'Marginal') },
-    { processId: 'waam', label: 'WAAM', score: waamS, verdict: waamS>=75?'Recommended':(waamS>=52?'Viable (Post-Machine)':'Not Suitable') }
+    { processId: 'waam', label: 'WAAM', score: waamS, verdict: waamS>=75?'Recommended':(waamS>=52?'Viable (Post-Machine)':'Not Suitable') },
+    { processId: 'binder-jetting', label: 'Binder Jet', score: bjS, verdict: bjS>=75?'Recommended':(bjS>=55?'Viable (Sinter/HIP)':'Marginal') }
   ].sort((a,b) => b.score - a.score);
 
   let overallVerdict = 'Printable';
   if (!fits || wallStatus === 'Fail') overallVerdict = 'Not Printable on Selected Machine';
-  else if (ohMm2 > 1 || wallStatus === 'Marginal' || (geo.enclosedCavityCount > 0 && proc === 'lpbf') || !geo.isWatertight) overallVerdict = 'Printable with Supports / Adjustments';
+  else if ((ohMm2 > 1 && proc !== 'binder-jetting') || wallStatus === 'Marginal' || (geo.enclosedCavityCount > 0 && proc === 'lpbf') || (!geo.fastVoxelActive && !geo.isWatertight)) overallVerdict = 'Printable with Supports / Adjustments';
 
   return { overallVerdict, fits, wallStatus, supportEstimate: { supportContactAreaCm2: geo.overhangAreaCm2, supportVolumeCm3, supportMassGrams, removalDifficulty }, notes, processRanking };
 }
@@ -18061,22 +18548,26 @@ function optimizeBuildOrientationsUi(mesh, mac, overhangDeg) {
 }
 
 function applyCadOrientation(idx) {
-  const srcMesh = cadOriginalMesh || cadRawMesh;
-  if (!srcMesh || !cadOrientationResult || !cadOrientationResult.topCandidates[idx]) return;
-  const m = cadOrientationResult.topCandidates[idx].mat;
-  const pos = srcMesh.positions, norm = srcMesh.normals, n = pos.length;
+  const srcVerts = cadOriginalProxyVerts || (cadOriginalMesh && cadOriginalMesh.positions) || (cadRawMesh && cadRawMesh.positions);
+  const srcNorms = cadOriginalProxyNormals || (cadOriginalMesh && cadOriginalMesh.normals) || (cadRawMesh && cadRawMesh.normals);
+  const srcMeta = cadOriginalMesh || cadRawMesh;
+  if (!srcVerts || !srcNorms || !srcMeta || !cadOrientationResult || !cadOrientationResult.topCandidates[idx]) return;
+  const cand = cadOrientationResult.topCandidates[idx];
+  const m = cand.mat;
+  const n = srcVerts.length;
   const nPos = new Float32Array(n), nNorm = new Float32Array(n);
   let minX=Infinity, minY=Infinity, minZ=Infinity;
   for (let i=0; i<n; i+=3) {
-    const x=pos[i], y=pos[i+1], z=pos[i+2];
+    const x=srcVerts[i], y=srcVerts[i+1], z=srcVerts[i+2];
     const rx=m[0]*x+m[1]*y+m[2]*z, ry=m[3]*x+m[4]*y+m[5]*z, rz=m[6]*x+m[7]*y+m[8]*z;
     nPos[i]=rx; nPos[i+1]=ry; nPos[i+2]=rz;
     if(rx<minX)minX=rx; if(ry<minY)minY=ry; if(rz<minZ)minZ=rz;
-    const nx=norm[i], ny=norm[i+1], nz=norm[i+2];
+    const nx=srcNorms[i], ny=srcNorms[i+1], nz=srcNorms[i+2];
     nNorm[i]=m[0]*nx+m[1]*ny+m[2]*nz; nNorm[i+1]=m[3]*nx+m[4]*ny+m[5]*nz; nNorm[i+2]=m[6]*nx+m[7]*ny+m[8]*nz;
   }
   for (let i=0; i<n; i+=3) { nPos[i]-=minX; nPos[i+1]-=minY; nPos[i+2]-=minZ; }
-  cadRawMesh = Object.assign({}, srcMesh, { positions: nPos, normals: nNorm, boundingBox: _cadBbox(nPos) });
+  cadIsRotatedFromOriginal = cand.label !== 'Current (+Z Up)';
+  cadRawMesh = Object.assign({}, srcMeta, { positions: nPos, normals: nNorm, boundingBox: _cadBbox(nPos) });
   changeCadSourceUnit(cadCurrentUnit);
   resetCadCamera();
 }
@@ -18160,10 +18651,12 @@ function simulatePartBuildUi(mesh, geo, printability, mac) {
   const baseT0 = numOr(parseFloat(document.getElementById('sl_preheat')?.value), mac.process==='lpbf'?200:120);
   const db = numOr(parseFloat(document.getElementById('sl_spot')?.value), mac.process==='waam'?3000:(mac.process==='ded-laser'?1500:80));
   const o2 = numOr(parseFloat(document.getElementById('sl_oxygen')?.value), alloyId==='ti64_eli'?0.11:0.16);
-  const oriDeg = numOr(parseInt(document.getElementById('buildOrientationSelect')?.value || '0', 10), 0);
-  const scanRot = numOr(parseInt(document.getElementById('scanRotationSelect')?.value || '67', 10), 67);
+  const oriParsed = parseInt(document.getElementById('buildOrientationSelect')?.value ?? '0', 10);
+  const oriDeg = Number.isFinite(oriParsed) ? oriParsed : 0;
+  const scanParsed = parseInt(document.getElementById('scanRotationSelect')?.value ?? '67', 10);
+  const scanRot = Number.isFinite(scanParsed) ? scanParsed : 67;
 
-  const proc = mac.process, lasers = Math.max(1, mac.laserCount ?? 1), hMm = h * 1e-3, recoatS = proc === 'lpbf' ? 8.5 : 0.5;
+  const proc = mac.process, lasers = Math.max(1, mac.laserCount ?? 1), hMm = h * 1e-3, recoatS = proc === 'lpbf' ? 8.5 : (proc === 'binder-jetting' ? 12.0 : 0.5);
   const ved = (p * 1e6) / Math.max(1, v * h * tUm);
   const slices = (geo.layerSlices && geo.layerSlices.length) ? geo.layerSlices : [{ zMm: Number((mesh.boundingBox.size[2]*0.5).toFixed(2)), areaMm2: 1000, heatSinkRatio: 1.0 }];
 
@@ -18259,18 +18752,19 @@ function simulatePartBuildUi(mesh, geo, printability, mac) {
   }
 
   // Time & Cost Estimate
-  const batchReq = Math.max(1, Math.min(24, parseInt(document.getElementById('cadBatchSizeInput')?.value || '1', 10) || 1));
+  const batchParsed = parseInt(document.getElementById('cadBatchSizeInput')?.value ?? '1', 10);
+  const batchReq = Math.max(1, Math.min(24, Number.isFinite(batchParsed) ? batchParsed : 1));
   const nx = Math.max(1, Math.floor(mac.envelopeMm[0] / Math.max(2, sz[0] + 5)));
   const ny = Math.max(1, Math.floor(mac.envelopeMm[1] / Math.max(2, sz[1] + 5)));
   const plateCap = nx * ny, batch = Math.min(batchReq, plateCap);
   const tMm = Math.max(0.015, tUm * 1e-3), layerCount = Math.max(1, Math.round(sz[2] / tMm));
   const solidMm3 = geo.volumeCm3 * 1000 + printability.supportEstimate.supportVolumeCm3 * 1000;
   const scanH = Number(((solidMm3 * batch) / Math.max(0.5, v * hMm * tMm * lasers) / 3600).toFixed(2));
-  const recoatH = Number(((layerCount * (proc==='lpbf'?8.5:0.6)) / 3600).toFixed(2));
-  const setupH = proc === 'lpbf' ? 1.5 : 0.8;
+  const recoatH = Number(((layerCount * (proc==='lpbf'?8.5:(proc==='binder-jetting'?12.0:0.6))) / 3600).toFixed(2));
+  const setupH = proc === 'lpbf' ? 1.5 : (proc === 'binder-jetting' ? 4.5 : 0.8);
   const totalH = Number((scanH + recoatH + setupH).toFixed(2));
   const pMass = Number((geo.massTi64Grams * batch).toFixed(1)), sMass = Number((printability.supportEstimate.supportMassGrams * batch).toFixed(1));
-  const wastePct = proc==='lpbf' ? 8 : (proc==='ded-laser' ? 28 : 12);
+  const wastePct = proc==='lpbf' ? 8 : (proc==='ded-laser' ? 28 : (proc==='binder-jetting' ? 6 : 12));
   const kgUsed = Number((((pMass + sMass) * (1 + wastePct / 100)) / 1000).toFixed(3));
   const mCost = Number(((scanH + recoatH + 0.5*setupH) * (mac.hourlyRateUsd ?? 95)).toFixed(2));
   const matCost = Number((kgUsed * (mac.materialCostPerKgUsd ?? 280)).toFixed(2));
@@ -18344,7 +18838,8 @@ function runCadGeometryAnalysis() {
     if (typeof calculatePhysics === 'function') calculatePhysics();
     return;
   }
-  const deg = Math.max(15, Math.min(75, parseFloat(document.getElementById('cadOverhangThreshInput')?.value) || 45));
+  const degVal = parseFloat(document.getElementById('cadOverhangThreshInput')?.value ?? '45');
+  const deg = Math.max(15, Math.min(75, Number.isFinite(degVal) ? degVal : 45));
   const mac = getActiveCadMachine();
   const minLimit = mac.process === 'waam' ? 3.5 : (mac.process === 'ded-laser' ? 1.2 : 0.4);
   cadGeometryReport = analyzeCadGeometryUi(cadActiveMesh, deg, minLimit);
@@ -18381,11 +18876,13 @@ function _renderCadGeometryUi() {
   setG('cadGeoArea', `${g.surfaceAreaCm2} cm²`, '#34d399');
   setG('cadGeoOverhang', `${g.overhangAreaCm2} cm² (${g.overhangFractionPct}%)`, g.overhangFractionPct > 10 ? '#fb7185' : '#34d399');
   setG('cadGeoWall', `${g.minWallThicknessMm} / ${g.medianWallThicknessMm} mm`, g.thinWallWarn ? '#fb7185' : '#fbbf24');
-  setG('cadGeoWatertight', g.isWatertight ? '✓ Watertight (0 open)' : `⚠ Open (${g.boundaryEdgeCount} edges)`, g.isWatertight ? '#34d399' : '#fbbf24');
+  setG('cadGeoWatertight', g.fastVoxelActive ? (g.windingSign > 0 ? '✓ Closed Volume (Voxel)' : '⚠ Winding (Voxel)') : (g.isWatertight ? '✓ Watertight (0 open)' : `⚠ Open (${g.boundaryEdgeCount} edges)`), g.isWatertight ? '#34d399' : '#fbbf24');
   setG('cadGeoCorners', `${g.sharpConcaveCornerCount}`, g.sharpConcaveCornerCount > 0 ? '#fbbf24' : '#34d399');
   setG('cadGeoCavities', g.enclosedCavityCount > 0 ? `⚠ ${g.enclosedCavityCount} Trapped` : '0 (Clear)', g.enclosedCavityCount > 0 ? '#fb7185' : '#34d399');
   setG('cadGeoSlicesMeta', `${g.abruptAreaJumpCount} jumps / ${g.layerSlices.length} slices`, g.abruptAreaJumpCount > 0 ? '#fbbf24' : '#38bdf8');
-  setG('cadGeoTimingBadge', `Analyzed in ${g.elapsedMs} ms (BVH + Slicing)`);
+  setG('cadGeoTimingBadge', g.fastVoxelActive
+    ? `Fast voxel estimation active (>250k tris) · ${g.elapsedMs} ms`
+    : `Analyzed in ${g.elapsedMs} ms (BVH + Slicing)`);
 
   const canvas = document.getElementById('cadLayerAreaCanvas');
   if (!canvas || !g.layerSlices.length) return;
@@ -18469,11 +18966,25 @@ function toggleCadViewerOption(opt) {
   renderCadViewer();
 }
 function setCadSectionPct(v) {
-  cadViewerState.sectionPct = parseInt(v, 10) || 100;
+  const parsed = parseInt(v, 10);
+  cadViewerState.sectionPct = Number.isFinite(parsed) ? parsed : 100;
   const el = document.getElementById('cadSectionVal'); if (el) el.innerText = cadViewerState.sectionPct + '%';
   renderCadViewer();
 }
 function resetCadCamera() { cadViewerState.yaw = -0.78; cadViewerState.pitch = 0.48; cadViewerState.zoom = 1.0; renderCadViewer(); }
+function _scheduleCadViewerRender() {
+  if (cadViewerRafPending) return;
+  cadViewerRafPending = true;
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => {
+      cadViewerRafPending = false;
+      renderCadViewer();
+    });
+  } else {
+    cadViewerRafPending = false;
+    renderCadViewer();
+  }
+}
 window.toggleCadViewerOption = toggleCadViewerOption;
 window.setCadSectionPct = setCadSectionPct;
 window.resetCadCamera = resetCadCamera;
@@ -18529,12 +19040,13 @@ function renderCadViewer() {
     ctx.setLineDash([]);
   }
 
-  // 3. Render CAD triangles (painter's depth sort up to 60k preview tris + Z section slice)
+  // 3. Render CAD triangles (up to 60,000 proxy tris when settled, 15,000 LOD during active orbit drag for locked 60 FPS)
   if (cadActiveMesh) {
     const pos = cadActiveMesh.positions, norm = cadActiveMesh.normals;
     const nTri = cadActiveMesh.triangleCount;
     const zClip = czBase + bb.size[2] * (cadViewerState.sectionPct / 100);
-    const step = nTri > 40000 ? Math.ceil(nTri / 40000) : 1;
+    const maxDrawTris = cadViewerState.dragging ? 15000 : CAD_STL_PROXY_MAX_TRIS;
+    const step = nTri > maxDrawTris ? Math.ceil(nTri / maxDrawTris) : 1;
     const drawList = [];
     const windingSign = (cadGeometryReport && cadGeometryReport.windingSign) || 1;
     for (let t = 0; t < nTri; t += step) {
@@ -18605,18 +19117,24 @@ function initCadAnalyzerTab() {
   if (canvas && !cadViewerState.initialized) {
     cadViewerState.initialized = true;
     canvas.addEventListener('mousedown', (e) => { cadViewerState.dragging = true; cadViewerState.lastX = e.clientX; cadViewerState.lastY = e.clientY; canvas.style.cursor = 'grabbing'; });
-    window.addEventListener('mouseup', () => { cadViewerState.dragging = false; canvas.style.cursor = 'grab'; });
+    window.addEventListener('mouseup', () => {
+      if (cadViewerState.dragging) {
+        cadViewerState.dragging = false;
+        if (canvas) canvas.style.cursor = 'grab';
+        renderCadViewer();
+      }
+    });
     window.addEventListener('mousemove', (e) => {
       if (!cadViewerState.dragging) return;
       cadViewerState.yaw += (e.clientX - cadViewerState.lastX) * 0.01;
       cadViewerState.pitch = Math.max(-1.4, Math.min(1.4, cadViewerState.pitch + (e.clientY - cadViewerState.lastY) * 0.01));
       cadViewerState.lastX = e.clientX; cadViewerState.lastY = e.clientY;
-      renderCadViewer();
+      _scheduleCadViewerRender();
     });
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
       cadViewerState.zoom = Math.max(0.25, Math.min(4.0, cadViewerState.zoom * (e.deltaY > 0 ? 0.9 : 1.1)));
-      renderCadViewer();
+      _scheduleCadViewerRender();
     }, { passive: false });
   }
   _updateCadHeatmapLegend();
@@ -18700,7 +19218,8 @@ function exportCadPartReportJson() {
     part: {
       fileName: cadCurrentFileName || 'part.stl',
       format: cadActiveMesh.format,
-      triangleCount: cadActiveMesh.triangleCount,
+      triangleCount: cadActiveMesh.originalTriangleCount || cadActiveMesh.triangleCount,
+      proxyTriangleCount: cadActiveMesh.triangleCount,
       wasDecimated: Boolean(cadActiveMesh.wasDecimated),
       boundingBoxMm: cadActiveMesh.boundingBox.size,
       volumeCm3: g.volumeCm3,
@@ -18776,7 +19295,7 @@ function _populateCadReportBlock() {
   const sz = cadActiveMesh.boundingBox.size;
   setT('repCadFileName', cadCurrentFileName || 'loaded_part.stl');
   setT('repCadBbox', `${sz[0].toFixed(1)} × ${sz[1].toFixed(1)} × ${sz[2].toFixed(1)} mm`);
-  setT('repCadTris', cadActiveMesh.triangleCount.toLocaleString());
+  setT('repCadTris', (cadActiveMesh.originalTriangleCount || cadActiveMesh.triangleCount).toLocaleString());
   setT('repCadVolMass', `${g.volumeCm3} cm³ / ${g.massTi64Grams} g`);
   setT('repCadOverhang', `${g.overhangAreaCm2} cm² (${g.overhangFractionPct}%)`);
   setT('repCadPrintVerdict', p ? p.overallVerdict : '—', p && p.overallVerdict === 'Printable' ? '#34d399' : '#fbbf24');
