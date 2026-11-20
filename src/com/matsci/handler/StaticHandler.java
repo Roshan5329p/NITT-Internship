@@ -66,9 +66,24 @@ public class StaticHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         SecurityHeaders.apply(exchange, false);
 
+        String method = exchange.getRequestMethod();
+        if (!"GET".equalsIgnoreCase(method) && !"HEAD".equalsIgnoreCase(method)) {
+            byte[] body = "405 Method Not Allowed".getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Allow", "GET, HEAD");
+            exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
+            exchange.sendResponseHeaders(405, body.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(body);
+            }
+            return;
+        }
+
         String path = exchange.getRequestURI().getPath();
-        if (path == null || path.equals("/") || path.isEmpty()) {
-            path = "/index.html";
+        if (path == null || path.equals("/") || path.isEmpty()
+                || path.equals("/dashboard") || path.equals("/dashboard/") || path.equals("/dashboard.html")) {
+            path = Files.exists(webDir.toPath().resolve("index.html"))
+                    ? "/index.html"
+                    : "/process_windows_dashboard.html";
         }
 
         String relPath = path.startsWith("/") ? path.substring(1) : path;
@@ -87,11 +102,14 @@ public class StaticHandler implements HttpHandler {
             return;
         }
 
-        // SPA fallback: if not found and does not look like a static asset with a file extension, serve index.html
+        // Fallback to standalone dashboard HTML if directory/route lacks extension
         if (!requestedFile.exists() || requestedFile.isDirectory()) {
             if (!relPath.contains(".")) {
-                requestedFile = new File(webDir, "index.html").getCanonicalFile();
-                relPath = "index.html";
+                String fallbackName = Files.exists(webDir.toPath().resolve("index.html"))
+                        ? "index.html"
+                        : "process_windows_dashboard.html";
+                requestedFile = new File(webDir, fallbackName).getCanonicalFile();
+                relPath = fallbackName;
             }
         }
 
@@ -136,6 +154,11 @@ public class StaticHandler implements HttpHandler {
         byte[] payload = useGzip ? asset.gzipBytes : asset.rawBytes;
         if (useGzip) {
             exchange.getResponseHeaders().set("Content-Encoding", "gzip");
+        }
+
+        if ("HEAD".equalsIgnoreCase(method)) {
+            exchange.sendResponseHeaders(200, -1);
+            return;
         }
 
         exchange.sendResponseHeaders(200, payload.length);

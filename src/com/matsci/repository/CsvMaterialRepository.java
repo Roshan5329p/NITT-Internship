@@ -23,7 +23,6 @@ public class CsvMaterialRepository implements MaterialRepository {
     private final Map<String, Material> materialsById = new LinkedHashMap<>();
     private final Map<String, MaterialVariant> variantsById = new ConcurrentHashMap<>();
     private final List<MaterialVariant> allVariants = new CopyOnWriteArrayList<>();
-    private final Set<String> materialClasses = new TreeSet<>();
     private final Map<String, Set<String>> subclassesByClass = new ConcurrentHashMap<>();
 
     public CsvMaterialRepository(File csvFile, ParameterInferenceService parameterService) throws Exception {
@@ -99,8 +98,15 @@ public class CsvMaterialRepository implements MaterialRepository {
                     if (!AUTHORIZED_PROCESSES.contains(isoCategory)) {
                         continue;
                     }
-                    if (subprocess != null && subprocess.toLowerCase(Locale.ROOT).contains("electron-beam")) {
-                        continue;
+                    if (subprocess != null) {
+                        String subLower = subprocess.toLowerCase(Locale.ROOT);
+                        // Filter only pure electron-beam melting (EBM / EB-PBF), keeping "Laser / electron-beam wire DED"
+                        boolean isPureEbm = (subLower.contains("electron-beam") || subLower.contains("electron beam")
+                                || subLower.contains("eb-pbf") || subLower.contains("ebm"))
+                                && !subLower.contains("laser");
+                        if (isPureEbm) {
+                            continue;
+                        }
                     }
 
                     String maturity = getVal(cols, colMap, "maturity");
@@ -161,7 +167,7 @@ public class CsvMaterialRepository implements MaterialRepository {
                         minFeatureSize, dimensionalAccuracy, buildRate
                     );
 
-                    mClass = isoCategory.isEmpty() ? "Powder Bed Fusion" : isoCategory;
+                    mClass = isoCategory.isEmpty() ? AUTHORIZED_PROCESSES.get(0) : isoCategory;
                     subClass = variant.getAlloyFamilyFullName();
 
                 } else {
@@ -196,7 +202,7 @@ public class CsvMaterialRepository implements MaterialRepository {
 
                     variant = new MaterialVariant(
                         variantId, materialId, materialName, "ab",
-                        "Powder Bed Fusion", processRoute, "commercial", postTreatment,
+                        AUTHORIZED_PROCESSES.get(0), processRoute, "commercial", postTreatment,
                         density, 99.5, 0.5,
                         youngsModulus, yieldStrength, ultimateTensileStrength, elongation,
                         hardnessVickers, fractureToughness, poissonsRatio,
@@ -221,7 +227,6 @@ public class CsvMaterialRepository implements MaterialRepository {
                 }
                 allVariants.add(variant);
 
-                materialClasses.add(mClass);
                 subclassesByClass.computeIfAbsent(mClass.toLowerCase(Locale.ROOT), k -> Collections.synchronizedSet(new TreeSet<>())).add(subClass);
 
                 final String finalFamily = alloyFamily;

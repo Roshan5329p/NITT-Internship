@@ -28,17 +28,26 @@ export default async function handler(req, res) {
       : 'TITLE-ABS-KEY("Ti-6Al-4V" AND ("selective laser melting" OR "LPBF" OR "additive manufacturing") AND ("solidification" OR "melt pool"))';
     const parsedCount = parseInt(q.count, 10);
     const count = Math.max(1, Math.min(Number.isFinite(parsedCount) ? parsedCount : 10, 25));
-    const allowedSorts = new Set(['citedby-count', 'relevance', 'coverDate', '-coverDate', 'pubyear', '-pubyear', 'title']);
-    const sort = allowedSorts.has(q.sort) ? q.sort : 'citedby-count';
+    const allowedSorts = new Set(['citedby-count', 'relevancy', 'coverDate', '-coverDate', 'pubyear', '-pubyear', 'title']);
+    const rawSort = q.sort === 'relevance' ? 'relevancy' : q.sort;
+    const sort = allowedSorts.has(rawSort) ? rawSort : 'citedby-count';
 
     const url = `https://api.elsevier.com/content/search/scopus?query=${encodeURIComponent(rawQuery)}&count=${count}&sort=${encodeURIComponent(sort)}&view=STANDARD`;
 
-    const r = await fetch(url, {
-      headers: {
-        'X-ELS-APIKey': apiKey,
-        'Accept': 'application/json'
-      }
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    let r;
+    try {
+      r = await fetch(url, {
+        headers: {
+          'X-ELS-APIKey': apiKey,
+          'Accept': 'application/json'
+        },
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timer);
+    }
 
     const rateLimit = {
       limit: r.headers.get('x-ratelimit-limit'),
@@ -47,11 +56,11 @@ export default async function handler(req, res) {
     };
 
     if (!r.ok) {
-      const errText = await r.text();
+      await r.text().catch(() => '');
       return res.status(r.status).json({
         status: 'error',
         statusCode: r.status,
-        message: errText,
+        message: 'Upstream Elsevier Scopus service returned an error.',
         rateLimit
       });
     }
@@ -83,6 +92,9 @@ export default async function handler(req, res) {
       papers
     });
   } catch (err) {
+    if (err.name === 'AbortError') {
+      return res.status(504).json({ status: 'error', code: 'UPSTREAM_TIMEOUT', message: 'Upstream Elsevier Scopus service timed out after 8000ms.' });
+    }
     res.status(500).json({ status: 'error', code: 'INTERNAL_ERROR', message: err.message });
   }
 }

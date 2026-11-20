@@ -14,12 +14,12 @@ export const APP_METADATA = {
 };
 
 export const LITERATURE_DATASET_META = {
-  totalPublications: 214,
+  totalPublications: 199,
   looBenchmarkCount: 54,
   totalVariants: 289,
   trackedMetricsCount: 42,
-  summaryBannerText: "214 Indexed Publications • 289 Curated Variants • 42 Metrics",
-  tableSubtitleText: "Calibrated against 54 LOO Benchmark Papers across 214 Indexed Studies & 289 Variants",
+  summaryBannerText: "199 Peer-Reviewed Publications • 289 Curated Variants • 42 Metrics",
+  tableSubtitleText: "Calibrated against 54 Leave-One-Out (LOO) Benchmark Papers across 199 Indexed Studies & 289 Variants",
   dateRange: "2001–2026"
 };
 
@@ -239,9 +239,61 @@ export const ML_MODELS_REGISTRY = [
   }
 ];
 
+// Canonical ASTM E140 Table 1 Vickers (HV) -> Rockwell C (HRC) breakpoints
+export const ASTM_E140_HV_HRC_TABLE = [
+  [240, 20.3],
+  [250, 22.2],
+  [260, 24.0],
+  [270, 25.6],
+  [280, 27.1],
+  [290, 28.5],
+  [300, 29.8],
+  [310, 31.0],
+  [320, 32.2],
+  [330, 33.3],
+  [340, 34.4],
+  [350, 35.5],
+  [360, 36.6],
+  [370, 37.7],
+  [380, 38.8],
+  [390, 39.8],
+  [400, 40.8],
+  [420, 42.7],
+  [440, 44.5],
+  [460, 46.1],
+  [480, 47.7],
+  [500, 49.1],
+  [520, 50.5],
+  [540, 51.7],
+  [560, 53.0],
+  [580, 54.1],
+  [600, 55.2]
+];
+
+export function hvToHrcNumeric(hv) {
+  if (!Number.isFinite(hv)) return 0;
+  if (hv <= ASTM_E140_HV_HRC_TABLE[0][0]) {
+    // Below 240 HV: extrapolate linearly using lower E140 slope (0.19 HRC/HV) clamped at 0
+    return Math.max(0, Number((20.3 - (240 - hv) * 0.19).toFixed(1)));
+  }
+  const last = ASTM_E140_HV_HRC_TABLE[ASTM_E140_HV_HRC_TABLE.length - 1];
+  if (hv >= last[0]) {
+    return Number((last[1] + (hv - last[0]) * 0.055).toFixed(1));
+  }
+  for (let i = 0; i < ASTM_E140_HV_HRC_TABLE.length - 1; i++) {
+    const [hv0, hrc0] = ASTM_E140_HV_HRC_TABLE[i];
+    const [hv1, hrc1] = ASTM_E140_HV_HRC_TABLE[i + 1];
+    if (hv >= hv0 && hv <= hv1) {
+      const t = (hv - hv0) / (hv1 - hv0);
+      return Number((hrc0 + t * (hrc1 - hrc0)).toFixed(1));
+    }
+  }
+  return last[1];
+}
+
 export function hvToHrcStandard(hv) {
   if (hv < 240) return "< 20 HRC";
   if (hv > 600) return "> 55 HRC";
-  const hrc = Math.round(0.088 * hv - 3.8);
+  const hrc = Math.round(hvToHrcNumeric(hv));
   return `${hrc} HRC`;
 }

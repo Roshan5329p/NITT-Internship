@@ -50,6 +50,7 @@ export default function handler(req, res) {
     const { power: p, speed: v, hatch: h, layer: t, spot, preheat } = validation.accepted_parameters;
     const isWaam = proc === 'waam';
     const isDed = proc === 'ded-laser';
+    const isBinderJetting = proc === 'binder-jetting';
 
     // Unit Conventions & Canonical Conversions:
     // P in Watts (W)
@@ -63,116 +64,182 @@ export default function handler(req, res) {
     const tMm = t * 1e-3;
     const spotM = Math.max(1e-6, spot * 1e-6);
 
-    // Volumetric Energy Density (VED): Ev = P / (v · h_mm · t_mm) [J/mm³]
-    const ved = p / Math.max(1e-6, v * hMm * tMm);
-    const linearHeatInput = p / Math.max(0.1, v); // Linear Heat Input (J/mm)
-
-    // Effective Absorptivity (η): default 0.42 for LPBF conduction mode
-    const eta = isWaam ? 0.78 : (isDed ? 0.38 : 0.42);
-    const absorbedP = p * eta;
-    const deltaT = Math.max(50.0, T_LIQUIDUS - preheat);
-
-    // Conduction melt pool width (Eagar-Tsai / Rosenthal formulation)
-    const widthEst = Math.sqrt((8.0 * absorbedP) / Math.max(1e-8, Math.PI * Math.E * RHO * CP * deltaT * vMs));
-    const width = Math.round(Math.max(spot * 0.5, widthEst * 1e6 * 0.75 + spot * 0.4));
-
-    // Aspect ratio & Recoil Pressure Keyhole Transition
-    const intensityWcm2 = (absorbedP / (Math.PI * 0.25 * spotM * spotM)) / 1e4;
-    let aspect = 0.52 * Math.pow(Math.max(0.05, ved / 70.0), 0.25);
-    if (isWaam || isDed) {
-      const condAspect = (isWaam ? 0.26 : 0.28) + Math.min(0.24, linearHeatInput * (isWaam ? 0.00045 : 0.0012));
-      if (intensityWcm2 > 1.5e5) {
-        const khBlend = Math.min(1.0, (intensityWcm2 - 1.5e5) / 2.5e5);
-        aspect = condAspect * (1 - khBlend) + Math.min(3.5, aspect) * khBlend;
-      } else {
-        aspect = condAspect;
-      }
-    }
-    aspect = parseFloat(Math.max(0.22, Math.min(3.5, aspect)).toFixed(2));
-    const depth = Math.round(Math.max(t * 0.2, width * aspect));
-    const length = Math.round(width * ((isDed || isWaam) ? (1.35 + 0.015 * Math.min(40, v)) : (1.2 + 0.0012 * v)));
+    // Volumetric Energy Density (VED): Ev = P / (v · h_mm · t_mm) [J/mm³] (0 for solid-state BJT)
+    const ved = isBinderJetting ? 0.0 : p / Math.max(1e-6, v * hMm * tMm);
+    const linearHeatInput = isBinderJetting ? 0.0 : p / Math.max(0.1, v); // Linear Heat Input (J/mm)
 
     // Material State & Post-Processing Condition
     const rawPost = (q.post || q.condition || 'hip').toLowerCase();
     const isEli = (q.alloy || '').toLowerCase().includes('eli') || (q.alloy || '').toLowerCase().includes('gr23');
     const isHip = rawPost.includes('hip');
+    const isSta = rawPost.includes('sta') || rawPost.includes('solution') || rawPost.includes('aged');
     const isSr = rawPost.includes('stress') || rawPost.includes('650');
     const isAnneal = rawPost.includes('anneal') || rawPost.includes('730');
     const isAsBuilt = rawPost.includes('none') || rawPost.includes('as-built') || rawPost.includes('as_built');
 
-    // Cooling rate & Thermal kinetics at solidus
-    const thermalAccum = isWaam ? 0.15 : (isDed ? 0.45 : 1.0);
-    const coolingRate = Math.round(Math.max(isWaam || isDed ? 1.0 : 100.0,
-      thermalAccum * (2 * Math.PI * K * vMs * Math.pow(deltaT, 2)) / Math.max(5, absorbedP)));
-    const t85 = Number((1.85 * linearHeatInput).toFixed(1));
-    const tBetaMs = Number((2.15 * (eta / 0.42) * (p / Math.max(1.0, v))).toFixed(1));
-    const betaCoolingRate = tBetaMs > 0 ? Math.round(420.0 / (tBetaMs / 1000.0)) : 0;
-    const marangoniV = Math.round(180 * Math.sqrt(p / (isWaam ? 2200.0 : (isDed ? 1500.0 : 200.0))) * Math.pow((isWaam ? 8.0 : (isDed ? 15.0 : 950.0)) / Math.max(1.0, v), 0.25));
-
-    // Defect boundary evaluation & LPBF Processing Windows (Section 3)
-    const remeltRatio = depth / Math.max(1, t);
-    const ballingRatio = length / (Math.max(1, width) * Math.PI);
+    let width = 0;
+    let depth = 0;
+    let length = 0;
+    let aspect = 0;
+    let modeLabel = 'Conduction Mode';
+    let remeltRatio = 0;
+    let ballingRatio = 0;
+    let coolingRate = 0;
+    let t85 = 0;
+    let tBetaMs = 0;
+    let betaCoolingRate = 0;
+    let marangoniV = 0;
     let regime = 'Optimal Conduction Window';
     let safeWindow = false;
-
-    if (isWaam) {
-      if (linearHeatInput < 120 || remeltRatio < 1.2) regime = 'Lack of Fusion';
-      else if (v > 25 || ballingRatio > 1.45) regime = 'Arc Humping / Balling';
-      else if (linearHeatInput > 600 || aspect > 0.95) regime = 'Overheating / Bead Slump';
-      else { regime = 'Optimal WAAM Conduction'; safeWindow = true; }
-    } else if (isDed) {
-      if (v > 60 || ballingRatio > 1.45) regime = 'Balling Risk';
-      else if (linearHeatInput < 75 || remeltRatio < 1.25) regime = 'Lack of Fusion';
-      else if (linearHeatInput > 240 || aspect > 0.95) regime = aspect > 0.95 ? 'Keyholing' : 'Excessive Heat Input';
-      else { regime = 'Optimal DED Conduction'; safeWindow = true; }
-    } else {
-      // Standard LPBF Regimes strictly per Rule Section 3:
-      if (ved < 40.0) {
-        regime = 'Severe Lack-of-Fusion (LOF)';
-      } else if (ved >= 40.0 && ved < 55.0) {
-        regime = 'Sub-optimal / Transition LOF';
-      } else if (ved >= 55.0 && ved <= 85.0) {
-        regime = 'Optimal Conduction Window';
-        safeWindow = true;
-      } else if (ved > 85.0 && ved <= 110.0) {
-        regime = 'Transition / Mild Keyhole';
-      } else {
-        regime = 'Severe Keyhole / Vaporization Instability';
-      }
-    }
-
-    const modeLabel = aspect > 0.8 ? 'Keyhole Mode' : (aspect >= 0.55 ? 'Transition Mode (Incipient Vapor Depression)' : 'Conduction Mode');
-
-    // Relative density estimate (%)
     let relativeDensity = 99.85;
-    if (regime.includes('Severe Lack-of-Fusion')) relativeDensity = 96.2;
-    else if (regime.includes('Sub-optimal')) relativeDensity = 98.4;
-    else if (regime.includes('Optimal')) relativeDensity = 99.88;
-    else if (regime.includes('Transition / Mild')) relativeDensity = 99.65;
-    else if (regime.includes('Severe Keyhole')) relativeDensity = 98.1;
-    if (isHip) relativeDensity = Math.min(99.98, relativeDensity + 0.4);
-
-    // Mechanical Properties & Post-Processing State Rules (Section 4)
     let predHv = 345;
     let predElong = 10.0;
-    if (isAsBuilt) {
-      predHv = 385; // 365-405 HV
-      predElong = 6.8; // < 8% elongation
-    } else if (isSr) {
-      predHv = 375; // 360-390 HV
-      predElong = 10.5;
-    } else if (isAnneal) {
-      predHv = 358; // 345-370 HV
-      predElong = 12.8;
-    } else if (isHip) {
-      predHv = 340; // 320-360 HV
-      predElong = 14.8;
-    }
+    let predUts = 0;
+    let predYs = 0;
+    let taborFactor = 3.05;
 
-    // Tabor Scaling (Section 3): UTS ≈ 3.05 · HV (scaled 2.95 coarse to 3.15 martensite)
-    const taborFactor = isAsBuilt ? 3.15 : (isHip ? 2.95 : 3.05);
-    const predUts = Math.round(predHv * taborFactor);
-    const predYs = Math.round(predUts * 0.91);
+    if (isBinderJetting) {
+      // Solid-state sintering physics (no liquid melt pool)
+      const binderSaturationPct = Number(Math.max(15, Math.min(95, (p / 120.0) * 65.0)).toFixed(1));
+      const sinterTempC = preheat >= 800 ? preheat : 1250;
+      modeLabel = 'Solid-State Sintering (No Melt Pool)';
+      coolingRate = 0.08; // Controlled vacuum furnace cooling [K/s]
+
+      if (!isHip && (binderSaturationPct < 45 || binderSaturationPct > 85 || sinterTempC < 1150)) {
+        regime = 'As-Sintered Porosity & Sub-Optimal Binder Saturation';
+        safeWindow = false;
+        relativeDensity = 93.8;
+      } else if (!isHip) {
+        regime = 'As-Sintered Porosity (~96.5% Density — Requires HIP)';
+        safeWindow = false;
+        relativeDensity = 96.5;
+      } else {
+        regime = 'Optimal Sintered + HIP Window';
+        safeWindow = true;
+        relativeDensity = 99.85;
+      }
+
+      if (isHip) {
+        predHv = 335;
+        predElong = 14.0;
+        predUts = 960;
+        predYs = 860;
+        taborFactor = Number((predUts / predHv).toFixed(2));
+      } else if (isSta) {
+        predHv = 355;
+        predElong = 9.5;
+        predUts = 945;
+        predYs = 845;
+        taborFactor = Number((predUts / predHv).toFixed(2));
+      } else {
+        predHv = 310;
+        predElong = 6.0;
+        predUts = 870;
+        predYs = 780;
+        taborFactor = Number((predUts / predHv).toFixed(2));
+      }
+    } else {
+      // Effective Absorptivity (η): default 0.42 for LPBF conduction mode
+      const eta = isWaam ? 0.78 : (isDed ? 0.38 : 0.42);
+      const absorbedP = p * eta;
+      const deltaT = Math.max(50.0, T_LIQUIDUS - preheat);
+
+      // Conduction melt pool width (Eagar-Tsai / Rosenthal formulation)
+      const widthEst = Math.sqrt((8.0 * absorbedP) / Math.max(1e-8, Math.PI * Math.E * RHO * CP * deltaT * vMs));
+      width = Math.round(Math.max(spot * 0.5, widthEst * 1e6 * 0.75 + spot * 0.4));
+
+      // Aspect ratio & Recoil Pressure Keyhole Transition
+      const intensityWcm2 = (absorbedP / (Math.PI * 0.25 * spotM * spotM)) / 1e4;
+      aspect = 0.52 * Math.pow(Math.max(0.05, ved / 70.0), 0.25);
+      if (isWaam || isDed) {
+        const condAspect = (isWaam ? 0.26 : 0.28) + Math.min(0.24, linearHeatInput * (isWaam ? 0.00045 : 0.0012));
+        if (intensityWcm2 > 1.5e5) {
+          const khBlend = Math.min(1.0, (intensityWcm2 - 1.5e5) / 2.5e5);
+          aspect = condAspect * (1 - khBlend) + Math.min(3.5, aspect) * khBlend;
+        } else {
+          aspect = condAspect;
+        }
+      }
+      aspect = parseFloat(Math.max(0.22, Math.min(3.5, aspect)).toFixed(2));
+      depth = Math.round(Math.max(t * 0.2, width * aspect));
+      length = Math.round(width * ((isDed || isWaam) ? (1.35 + 0.015 * Math.min(40, v)) : (1.2 + 0.0012 * v)));
+
+      // Cooling rate & Thermal kinetics at solidus (aligned with frontend thermalAccum: WAAM 0.55, L-DED 0.85, LPBF 1.0)
+      const thermalAccum = isWaam ? 0.55 : (isDed ? 0.85 : 1.0);
+      coolingRate = Math.round(Math.max(isWaam || isDed ? 1.0 : 100.0,
+        thermalAccum * (2 * Math.PI * K * vMs * Math.pow(deltaT, 2)) / Math.max(5, absorbedP)));
+      t85 = Number((1.85 * linearHeatInput).toFixed(1));
+      tBetaMs = Number((2.15 * (eta / 0.42) * (p / Math.max(1.0, v))).toFixed(1));
+      betaCoolingRate = tBetaMs > 0 ? Math.round(420.0 / (tBetaMs / 1000.0)) : 0;
+      marangoniV = Math.round(180 * Math.sqrt(p / (isWaam ? 2200.0 : (isDed ? 1500.0 : 200.0))) * Math.pow((isWaam ? 8.0 : (isDed ? 15.0 : 950.0)) / Math.max(1.0, v), 0.25));
+
+      // Defect boundary evaluation & Processing Windows
+      remeltRatio = depth / Math.max(1, t);
+      ballingRatio = length / (Math.max(1, width) * Math.PI);
+
+      if (isWaam) {
+        if (linearHeatInput < 120 || remeltRatio < 1.2) regime = 'Lack of Fusion';
+        else if (v > 25 || ballingRatio > 1.45) regime = 'Arc Humping / Balling';
+        else if (linearHeatInput > 600 || aspect > 0.95) regime = 'Overheating / Bead Slump';
+        else { regime = 'Optimal WAAM Conduction'; safeWindow = true; }
+      } else if (isDed) {
+        if (v > 60 || ballingRatio > 1.45) regime = 'Balling Risk';
+        else if (linearHeatInput < 75 || remeltRatio < 1.25) regime = 'Lack of Fusion';
+        else if (linearHeatInput > 240 || aspect > 0.95) regime = aspect > 0.95 ? 'Keyholing' : 'Excessive Heat Input';
+        else { regime = 'Optimal DED Conduction'; safeWindow = true; }
+      } else {
+        // Standard LPBF Regimes strictly per Rule Section 3:
+        if (ved < 40.0) {
+          regime = 'Severe Lack-of-Fusion (LOF)';
+        } else if (ved >= 40.0 && ved < 55.0) {
+          regime = 'Sub-optimal / Transition LOF';
+        } else if (ved >= 55.0 && ved <= 85.0) {
+          regime = 'Optimal Conduction Window';
+          safeWindow = true;
+        } else if (ved > 85.0 && ved <= 110.0) {
+          regime = 'Transition / Mild Keyhole';
+        } else {
+          regime = 'Severe Keyhole / Vaporization Instability';
+        }
+      }
+
+      modeLabel = aspect > 0.8 ? 'Keyhole Mode' : (aspect >= 0.55 ? 'Transition Mode (Incipient Vapor Depression)' : 'Conduction Mode');
+
+      // Relative density estimate (%) with WAAM and L-DED defect knockdowns
+      if (regime.includes('Severe Lack-of-Fusion')) relativeDensity = 96.2;
+      else if (regime === 'Lack of Fusion') relativeDensity = 97.8;
+      else if (regime.includes('Sub-optimal')) relativeDensity = 98.4;
+      else if (regime.includes('Balling')) relativeDensity = 98.2;
+      else if (regime.includes('Overheating') || regime.includes('Excessive Heat Input')) relativeDensity = 99.1;
+      else if (regime === 'Keyholing') relativeDensity = 98.4;
+      else if (regime.includes('Optimal')) relativeDensity = 99.88;
+      else if (regime.includes('Transition / Mild')) relativeDensity = 99.65;
+      else if (regime.includes('Severe Keyhole')) relativeDensity = 98.1;
+      if (isHip) relativeDensity = Math.min(99.98, relativeDensity + 0.4);
+
+      // Mechanical Properties & Post-Processing State Rules (Section 4)
+      if (isAsBuilt) {
+        predHv = 385; // 365-405 HV
+        predElong = 6.8; // < 8% elongation
+      } else if (isSr) {
+        predHv = 375; // 360-390 HV
+        predElong = 10.5;
+      } else if (isAnneal) {
+        predHv = 358; // 345-370 HV
+        predElong = 12.8;
+      } else if (isSta) {
+        predHv = 380; // Solution Treated + Aged (370-395 HV)
+        predElong = 11.2;
+      } else if (isHip) {
+        predHv = 340; // 320-360 HV
+        predElong = 14.8;
+      }
+
+      // Tabor Scaling (Section 3): UTS ≈ 3.05 · HV (scaled 2.95 coarse to 3.15 martensite)
+      taborFactor = isAsBuilt ? 3.15 : (isHip ? 2.95 : (isSta ? 3.08 : 3.05));
+      predUts = Math.round(predHv * taborFactor);
+      predYs = Math.round(predUts * 0.91);
+    }
 
     // ASTM F2924 Compliance Guardrails (Section 5):
     // ALL 3 criteria must hold simultaneously:
@@ -191,11 +258,11 @@ export default function handler(req, res) {
 
     const overallQualified = passChemistry && passDensity && passTensile && passPostProcessing && safeWindow;
 
-    let astmClass = isHip ? 'Class 1' : ((isSr || isAnneal) ? 'Class 2' : 'Class 3');
+    let astmClass = isHip ? 'Class 1' : (isSta ? 'High-Strength Aviation' : ((isSr || isAnneal) ? 'Class 2' : 'Class 3'));
     let astmAssessment = overallQualified
       ? 'ASTM F2924 QUALIFIED (PASS)'
       : (isAsBuilt
-          ? 'NON-COMPLIANT (Ductility Failure: As-Built α\' martensite exhibits <8% elongation; requires Stress-Relief, Annealing, or HIP)'
+          ? 'NON-COMPLIANT (Ductility Failure: As-Built α\' martensite exhibits <8% elongation; requires Stress-Relief, Annealing, STA, or HIP)'
           : (!safeWindow
               ? `NON-COMPLIANT (Defect Regime: ${regime})`
               : 'NON-COMPLIANT (Sub-threshold mechanical criteria)'));
@@ -246,7 +313,7 @@ export default function handler(req, res) {
         safe_processing_window: safeWindow,
         estimated_relative_density_pct: parseFloat(relativeDensity.toFixed(2)),
         balling_ratio: parseFloat(ballingRatio.toFixed(2)),
-        keyhole_threshold_aspect: isWaam || isDed ? 0.95 : 0.80
+        keyhole_threshold_aspect: isBinderJetting ? null : (isWaam || isDed ? 0.95 : 0.80)
       },
       mechanical_properties: {
         vickers_hardness_hv: predHv,
@@ -266,14 +333,16 @@ export default function handler(req, res) {
           density_compliant: passDensity,
           tensile_yield_compliant: predYs >= minYs,
           tensile_uts_compliant: predUts >= minUts,
-          ductility_elongation_compliant: passTensile && passPostProcessing,
+          ductility_elongation_compliant: (predElong >= minElong) && passPostProcessing,
           safe_processing_window: safeWindow
         },
         heat_treatment_protocol: isHip
           ? 'Stress relieved + Hot Isostatically Pressed (920°C / 100 MPa / 2h). Full density (>99.5%) & ductility (≥10%). Required for ASTM Class 1.'
-          : ((isSr || isAnneal)
-              ? 'Thermal stress relief applied (650°C-730°C / 2h). Residual stress relieved, satisfies ASTM Class 2.'
-              : 'As-built acicular α\' martensite exhibits elongation <8% (fails ASTM F2924 Section 9 minimum of 10%; requires Stress-Relief, Annealing, or HIP).'),
+          : (isSta
+              ? 'Solution Treated + Aged (STA: 955°C / 1h WQ + 540°C / 4h). High tensile strength with ≥10% ductility.'
+              : ((isSr || isAnneal)
+                  ? 'Thermal stress relief applied (650°C-730°C / 2h). Residual stress relieved, satisfies ASTM Class 2.'
+                  : 'As-built acicular α\' martensite exhibits elongation <8% (fails ASTM F2924 Section 9 minimum of 10%; requires Stress-Relief, Annealing, STA, or HIP).')),
         tensile_thresholds: {
           min_ys_mpa: minYs,
           min_uts_mpa: minUts,

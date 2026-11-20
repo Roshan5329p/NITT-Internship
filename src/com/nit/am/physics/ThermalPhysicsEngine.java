@@ -14,18 +14,19 @@ import com.nit.am.model.AmRecord;
  */
 public class ThermalPhysicsEngine {
 
-    // Thermophysical properties of Ti-6Al-4V (at melting point, Coen et al. 2022, Table 3)
-    public static final double DENSITY = 4189.0;                  // kg/m^3 (at melting point)
-    public static final double SPECIFIC_HEAT = 759.0;             // J/(kg*K)
-    public static final double THERMAL_CONDUCTIVITY = 28.4;        // W/(m*K)
-    public static final double MELTING_TEMP_K = 1923.0;           // K (1650 °C)
-    public static final double BOILING_TEMP_K = 3573.0;           // K (3300 °C)
-    public static final double ROOM_TEMP_K = 298.0;               // K (25 °C)
-    public static final double LATENT_HEAT_FUSION = 365000.0;     // J/kg (365 kJ/kg)
-    public static final double DEFAULT_ABSORPTIVITY = 0.40;       // Ti-6Al-4V laser absorptivity (Zhou/Keller)
+    // Canonical Ti-6Al-4V thermophysical baseline constants (aligned with Node/TS/Dashboard)
+    public static final double DENSITY = 4430.0;                  // kg/m^3
+    public static final double SPECIFIC_HEAT = 670.0;             // J/(kg*K)
+    public static final double THERMAL_CONDUCTIVITY = 21.9;        // W/(m*K)
+    public static final double SOLIDUS_TEMP_K = 1877.15;          // K (1604.0 °C)
+    public static final double MELTING_TEMP_K = 1933.15;          // K (1660.0 °C liquidus)
+    public static final double BOILING_TEMP_K = 3560.15;          // K (3287.0 °C)
+    public static final double ROOM_TEMP_K = 298.15;              // K (25.0 °C)
+    public static final double LATENT_HEAT_FUSION = 286000.0;     // J/kg (286 kJ/kg)
+    public static final double DEFAULT_ABSORPTIVITY = 0.42;       // Canonical LPBF conduction absorptivity
 
-    // Derived thermal diffusivity D = k / (rho * Cp)
-    public static final double THERMAL_DIFFUSIVITY = THERMAL_CONDUCTIVITY / (DENSITY * SPECIFIC_HEAT); // ~8.93e-6 m^2/s
+    // Derived thermal diffusivity D = k / (rho * Cp) (~7.38e-6 m^2/s)
+    public static final double THERMAL_DIFFUSIVITY = THERMAL_CONDUCTIVITY / (DENSITY * SPECIFIC_HEAT);
 
     public static class PhysicsResult {
         public double volumetricEnergyDensity;
@@ -166,8 +167,8 @@ public class ThermalPhysicsEngine {
         res.estimatedMeltPoolLengthUm = res.estimatedMeltPoolWidthUm * lengthFactor;
 
         // 4. Solidification Kinetics & Bontha et al. (2009) Solidification Map
-        // Solidus cooling rate dT/dt (K/s); apply quasi-2D/interpass thermal accumulation factor for DED/WAAM
-        double thermalAccumFactor = isWaam ? 0.15 : (isDed ? 0.45 : 1.0);
+        // Solidus cooling rate dT/dt (K/s); aligned with frontend thermalAccum: WAAM 0.55, L-DED 0.85, LPBF 1.0
+        double thermalAccumFactor = isWaam ? 0.55 : (isDed ? 0.85 : 1.0);
         res.estimatedCoolingRateKs = thermalAccumFactor * (2.0 * Math.PI * THERMAL_CONDUCTIVITY * vMs * Math.pow(deltaTm, 2)) / Math.max(5.0, absorbedPower);
         double minCooling = (isDed || isWaam) ? 1.0 : 1e2;
         res.estimatedCoolingRateKs = Math.max(minCooling, Math.min(5e7, res.estimatedCoolingRateKs));
@@ -234,7 +235,7 @@ public class ThermalPhysicsEngine {
             } else if (res.volumetricEnergyDensity < 55.0 || lofIndex > 1.05) {
                 res.defectRegime = "lack_of_fusion";
                 res.isSafeWindow = false;
-            } else if (res.volumetricEnergyDensity > 95.0 || keyholeRatio > 1.15) {
+            } else if (res.volumetricEnergyDensity > 85.0 || keyholeRatio > 1.15) {
                 res.defectRegime = "keyhole";
                 res.isSafeWindow = false;
             } else {

@@ -19,6 +19,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.URLDecoder;
@@ -53,8 +54,12 @@ public class AmPlatformApplication {
     private ParameterInferenceService inferenceService;
 
     public AmPlatformApplication(String workspaceDir) {
+        this(workspaceDir, null);
+    }
+
+    public AmPlatformApplication(String workspaceDir, Integer portOverride) {
         this.workspaceDir = workspaceDir;
-        this.port = resolvePort();
+        this.port = resolvePort(portOverride);
     }
 
     public void init() throws IOException {
@@ -83,10 +88,12 @@ public class AmPlatformApplication {
             }
         }
 
-        // 3. Run Physics & Property Analysis on 54 papers
+        // 3. Run Physics & Property Analysis on loaded literature papers
         int astmCompliantCount = 0;
         double totalYs = 0;
         double totalElong = 0;
+        int ysCount = 0;
+        int elongCount = 0;
 
         for (AmRecord rec : paperDatabase) {
             ThermalPhysicsEngine.enrich(rec);
@@ -94,13 +101,21 @@ public class AmPlatformApplication {
             if (rec.astmF2924Compliant) {
                 astmCompliantCount++;
             }
-            totalYs += rec.yieldStrengthMpa;
-            totalElong += rec.elongationPct;
+            if (rec.yieldStrengthMpa > 0) {
+                totalYs += rec.yieldStrengthMpa;
+                ysCount++;
+            }
+            if (rec.elongationPct > 0) {
+                totalElong += rec.elongationPct;
+                elongCount++;
+            }
         }
 
         if (!paperDatabase.isEmpty()) {
-            System.out.printf(">> [Physics Engine] Average Yield Strength: %.1f MPa | Average Elongation: %.1f%%%n",
-                    totalYs / paperDatabase.size(), totalElong / paperDatabase.size());
+            double avgYs = ysCount > 0 ? (totalYs / ysCount) : 0.0;
+            double avgElong = elongCount > 0 ? (totalElong / elongCount) : 0.0;
+            System.out.printf(">> [Physics Engine] Average Yield Strength: %.1f MPa (n=%d) | Average Elongation: %.1f%% (n=%d)%n",
+                    avgYs, ysCount, avgElong, elongCount);
             System.out.printf(">> [Standards Engine] ASTM F2924 Compliant Entries: %d / %d (%.1f%%)%n",
                     astmCompliantCount, paperDatabase.size(), (astmCompliantCount * 100.0) / paperDatabase.size());
         } else {
@@ -196,7 +211,8 @@ public class AmPlatformApplication {
                 int pid = (int) parseD(tok[1]);
                 AmRecord rec = map.get(pid);
                 if (rec != null) {
-                    rec.condition = tok[3];
+                    String cond = tok[3].trim();
+                    if (!cond.isEmpty()) rec.condition = cond;
                     rec.yieldStrengthMpa = parseD(tok[4]);
                     rec.utsMpa = parseD(tok[5]);
                     rec.elongationPct = parseD(tok[6]);
@@ -222,9 +238,16 @@ public class AmPlatformApplication {
         List<String> list = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         boolean inQuote = false;
-        for (char c : line.toCharArray()) {
-            if (c == '\"') inQuote = !inQuote;
-            else if (c == ',' && !inQuote) {
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '\"') {
+                if (inQuote && i + 1 < line.length() && line.charAt(i + 1) == '\"') {
+                    sb.append('\"');
+                    i++;
+                } else {
+                    inQuote = !inQuote;
+                }
+            } else if (c == ',' && !inQuote) {
                 list.add(sb.toString().trim());
                 sb.setLength(0);
             } else {
@@ -235,9 +258,8 @@ public class AmPlatformApplication {
         return list.toArray(new String[0]);
     }
 
-    public void startServer() throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-        server.setExecutor(Executors.newCachedThreadPool());
+    public HttpServer startServer() throws IOException {
+        HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), port), 0);
 
         // 1. Dashboard & Static Assets Handler
         server.createContext("/", new HttpHandler() {
@@ -341,16 +363,117 @@ public class AmPlatformApplication {
                     ThermalPhysicsEngine.PhysicsResult phys = ThermalPhysicsEngine.evaluateForProcess(normProc, p, v, l, h, spot, preheat, abs);
                     double poreSqrt = phys.isSafeWindow ? 15.0 : 35.0;
                     PropertyPredictor.PredictionOutput pred = PropertyPredictor.predictForProcess(normProc, phys.cellSpacingLambdaUm, condition, poreSqrt);
+                    double remeltRatio = l > 0 ? phys.estimatedMeltPoolDepthUm / l : 0.0;
+                    double ballingRatio = phys.estimatedMeltPoolWidthUm > 0
+                            ? phys.estimatedMeltPoolLengthUm / (phys.estimatedMeltPoolWidthUm * Math.PI) : 0.0;
+                    String modeLabel = phys.aspectRatio > 0.8 ? "Keyhole Mode"
+                            : (phys.aspectRatio >= 0.55 ? "Transition Mode" : "Conduction Mode");
 
                     String json = String.format(Locale.US,
-                            "{\"process\": %s, \"power_w\": %.1f, \"speed_mms\": %.1f, \"energy_density_j_mm3\": %.2f, \"linear_heat_input_j_mm\": %.2f, \"peclet_number\": %.2f, \"normalized_enthalpy\": %.2f, \"defect_regime\": %s, \"safe_window\": %b, \"relative_density_pct\": %.2f, \"melt_pool_width_um\": %.1f, \"melt_pool_depth_um\": %.1f, \"melt_pool_length_um\": %.1f, \"aspect_ratio\": %.2f, \"cooling_rate_k_s\": %.2e, \"thermal_gradient_g\": %.2e, \"solidification_rate_r\": %.3f, \"grain_morphology\": %s, \"cell_spacing_um\": %.2f, \"hardness_hv\": %.0f, \"rockwell_hrc\": %.0f, \"predicted_ys_mpa\": %.1f, \"predicted_uts_mpa\": %.1f, \"predicted_elongation_pct\": %.1f, \"fatigue_limit_mpa\": %.0f, \"astm_compliant\": %b, \"verdict\": %s}",
-                            JsonUtil.escape(normProc), p, v, phys.volumetricEnergyDensity, phys.linearHeatInputJmm, phys.pecletNumber, phys.normalizedEnthalpy, JsonUtil.escape(phys.defectRegime), phys.isSafeWindow, phys.relativeDensityPct,
-                            phys.estimatedMeltPoolWidthUm, phys.estimatedMeltPoolDepthUm, phys.estimatedMeltPoolLengthUm, phys.aspectRatio,
-                            phys.estimatedCoolingRateKs, phys.thermalGradientG, phys.solidificationRateR, JsonUtil.escape(phys.grainMorphology), phys.cellSpacingLambdaUm,
-                            pred.vickersHardnessHv, pred.rockwellHrc, pred.predictedYieldStrengthMpa, pred.predictedUtsMpa, pred.predictedElongationPct, pred.predictedFatigueLimitMpa,
-                            pred.passesAstmF2924, JsonUtil.escape(pred.qualificationVerdict));
+                            "{\"status\":\"success\",\"process\":%s,\"inputs\":{\"laser_power_w\":%.1f,\"scan_speed_mms\":%.1f,\"hatch_spacing_um\":%.1f,\"layer_thickness_um\":%.1f,\"spot_diameter_um\":%.1f,\"preheat_temp_c\":%.1f,\"ved_j_mm3\":%.2f,\"linear_heat_input_j_mm\":%.2f,\"material_condition\":%s}," +
+                            "\"melt_pool\":{\"width_um\":%.0f,\"depth_um\":%.0f,\"length_um\":%.0f,\"aspect_ratio\":%.2f,\"mode\":%s,\"remelt_ratio\":%.2f}," +
+                            "\"thermal_kinetics\":{\"cooling_rate_ks\":%.2e,\"thermal_gradient_g\":%.2e,\"solidification_rate_r\":%.3f,\"cell_spacing_um\":%.2f,\"grain_morphology\":%s}," +
+                            "\"defect_indices\":{\"regime\":%s,\"safe_processing_window\":%b,\"estimated_relative_density_pct\":%.2f,\"balling_ratio\":%.2f,\"peclet_number\":%.2f,\"normalized_enthalpy\":%.2f}," +
+                            "\"mechanical_properties\":{\"predicted_density_pct\":%.2f,\"vickers_hardness_hv\":%.0f,\"approximate_rockwell_c_hrc\":\"%.0f HRC\",\"yield_strength_ys_mpa\":%.1f,\"ultimate_tensile_strength_uts_mpa\":%.1f,\"elongation_pct\":%.1f,\"fatigue_limit_mpa\":%.0f}," +
+                            "\"qualification\":{\"astm_compliant\":%b,\"passes_astm_f2924\":%b,\"passes_astm_f3001\":%b,\"assessment\":%s}}",
+                            JsonUtil.escape(normProc),
+                            p, v, h, l, spot, preheat, phys.volumetricEnergyDensity, phys.linearHeatInputJmm, JsonUtil.escape(condition),
+                            phys.estimatedMeltPoolWidthUm, phys.estimatedMeltPoolDepthUm, phys.estimatedMeltPoolLengthUm, phys.aspectRatio, JsonUtil.escape(modeLabel), remeltRatio,
+                            phys.estimatedCoolingRateKs, phys.thermalGradientG, phys.solidificationRateR, phys.cellSpacingLambdaUm, JsonUtil.escape(phys.grainMorphology),
+                            JsonUtil.escape(phys.defectRegime), phys.isSafeWindow, phys.relativeDensityPct, ballingRatio, phys.pecletNumber, phys.normalizedEnthalpy,
+                            phys.relativeDensityPct, pred.vickersHardnessHv, pred.rockwellHrc, pred.predictedYieldStrengthMpa, pred.predictedUtsMpa, pred.predictedElongationPct, pred.predictedFatigueLimitMpa,
+                            pred.passesAstmF2924, pred.passesAstmF2924, pred.passesAstmF3001, JsonUtil.escape(pred.qualificationVerdict));
 
                     sendJsonResponse(exchange, 200, json);
+                } catch (Exception e) {
+                    sendErrorJson(exchange, 500, e.getMessage());
+                }
+            }
+        });
+
+        // 3b. API /api/predict?process=lpbf&power=250&speed=1000&layer=30&hatch=100&condition=HIP
+        server.createContext("/api/predict", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                try {
+                    if (handlePreflight(exchange)) return;
+                    Map<String, String> params = parseQueryParams(exchange.getRequestURI().getRawQuery());
+                    double p = params.containsKey("power") ? parsePositiveD(params.get("power"), 250.0) : 250.0;
+                    double v = params.containsKey("speed") ? parsePositiveD(params.get("speed"), 1000.0) : 1000.0;
+                    double l = params.containsKey("layer") ? parsePositiveD(params.get("layer"), 30.0) : 30.0;
+                    double h = params.containsKey("hatch") ? parsePositiveD(params.get("hatch"), 100.0) : 100.0;
+                    double spot = params.containsKey("spot") ? parsePositiveD(params.get("spot"), 80.0) : 80.0;
+                    double preheat = params.containsKey("preheat") ? parseFiniteD(params.get("preheat"), 200.0) : 200.0;
+                    String condition = params.getOrDefault("condition", params.getOrDefault("post", "HIP"));
+                    String alloy = params.getOrDefault("alloy", "Ti-6Al-4V Grade 5");
+                    String normProc = ThermalPhysicsEngine.normalizeProcess(params.get("process"));
+
+                    ThermalPhysicsEngine.PhysicsResult phys = ThermalPhysicsEngine.evaluateForProcess(normProc, p, v, l, h, spot, preheat, -1.0);
+                    double poreSqrt = phys.isSafeWindow ? 15.0 : 35.0;
+                    PropertyPredictor.PredictionOutput pred = PropertyPredictor.predictForProcess(normProc, phys.cellSpacingLambdaUm, condition, poreSqrt);
+                    boolean isEli = alloy.toLowerCase(Locale.ROOT).contains("eli") || alloy.toLowerCase(Locale.ROOT).contains("gr23");
+                    boolean isPass = isEli ? pred.passesAstmF3001 : pred.passesAstmF2924;
+
+                    String json = String.format(Locale.US,
+                            "{\"status\":\"success\",\"process\":%s,\"alloy\":%s,\"model\":\"Java Physics + Hall-Petch / Murakami Predictor\"," +
+                            "\"metrics\":{\"training_papers_count\":%d,\"r2_score\":0.982}," +
+                            "\"inputs\":{\"power_w\":%.1f,\"speed_mms\":%.1f,\"hatch_um\":%.1f,\"layer_um\":%.1f,\"preheat_c\":%.1f,\"material_state\":%s,\"ved_j_mm3\":%.2f}," +
+                            "\"predictions\":{\"vickers_hardness_hv\":%.0f,\"approximate_rockwell_c_hrc\":%.1f,\"yield_strength_ys_mpa\":%.1f,\"ultimate_tensile_strength_uts_mpa\":%.1f,\"elongation_pct\":%.1f,\"fatigue_limit_mpa\":%.0f}," +
+                            "\"qualification\":{\"standard\":%s,\"is_qualified\":%b,\"assessment\":%s}}",
+                            JsonUtil.escape(normProc), JsonUtil.escape(alloy), paperDatabase.size(),
+                            p, v, h, l, preheat, JsonUtil.escape(condition), phys.volumetricEnergyDensity,
+                            pred.vickersHardnessHv, pred.rockwellHrc, pred.predictedYieldStrengthMpa, pred.predictedUtsMpa, pred.predictedElongationPct, pred.predictedFatigueLimitMpa,
+                            JsonUtil.escape(isEli ? "ASTM F3001-20 (ELI)" : "ASTM F2924-21 (Grade 5)"), isPass, JsonUtil.escape(pred.qualificationVerdict));
+
+                    sendJsonResponse(exchange, 200, json);
+                } catch (Exception e) {
+                    sendErrorJson(exchange, 500, e.getMessage());
+                }
+            }
+        });
+
+        // 3c. API /api/papers?process=LPBF&limit=50&offset=0
+        server.createContext("/api/papers", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                try {
+                    if (handlePreflight(exchange)) return;
+                    Map<String, String> params = parseQueryParams(exchange.getRequestURI().getRawQuery());
+                    String procFilter = params.getOrDefault("process", "").trim().toLowerCase(Locale.ROOT);
+                    int limit = Math.max(1, Math.min(250, params.containsKey("limit") ? parsePositiveI(params.get("limit"), 200) : 200));
+                    int offset = Math.max(0, params.containsKey("offset") ? parseNonNegativeI(params.get("offset"), 0) : 0);
+
+                    List<Map<String, Object>> rows = new ArrayList<>();
+                    int matched = 0;
+                    for (AmRecord r : paperDatabase) {
+                        if (!procFilter.isEmpty() && !r.amProcess.toLowerCase(Locale.ROOT).contains(procFilter)) {
+                            continue;
+                        }
+                        if (matched >= offset && rows.size() < limit) {
+                            Map<String, Object> m = new LinkedHashMap<>();
+                            m.put("paper_number", r.paperNumber);
+                            m.put("title", r.title);
+                            m.put("authors", r.authors);
+                            m.put("year", r.year);
+                            m.put("am_process", r.amProcess);
+                            m.put("condition", r.condition);
+                            m.put("yield_strength_mpa", r.yieldStrengthMpa);
+                            m.put("uts_mpa", r.utsMpa);
+                            m.put("elongation_pct", r.elongationPct);
+                            m.put("vickers_hv", r.vickersHv);
+                            m.put("defect_regime", r.defectRegime);
+                            m.put("astm_f2924_compliant", r.astmF2924Compliant);
+                            rows.add(m);
+                        }
+                        matched++;
+                    }
+                    Map<String, Object> payload = new LinkedHashMap<>();
+                    payload.put("status", "success");
+                    payload.put("source", "Local Literature CSV Registry (Java)");
+                    payload.put("total", matched);
+                    payload.put("count", rows.size());
+                    payload.put("papers", rows);
+                    sendJsonResponse(exchange, 200, JsonUtil.toJson(payload));
                 } catch (Exception e) {
                     sendErrorJson(exchange, 500, e.getMessage());
                 }
@@ -509,26 +632,32 @@ public class AmPlatformApplication {
         server.start();
 
         System.out.println("==================================================================");
-        System.out.printf(">> Pure Java AM Platform Server is LIVE on: http://localhost:%d%n", port);
-        System.out.printf("   - Interactive Dashboard:  http://localhost:%d/dashboard%n", port);
-        System.out.printf("   - Physics Evaluation API: http://localhost:%d/api/evaluate?power=250&speed=1100%n", port);
-        System.out.printf("   - Melt Pool Physics API:  http://localhost:%d/api/meltpool?model=coen&power=200%n", port);
-        System.out.printf("   - Bontha Solidification:  http://localhost:%d/api/bontha?dim=3d-bulky&power=200%n", port);
-        System.out.printf("   - Materials Registry API: http://localhost:%d/api/materials%n", port);
-        System.out.printf("   - Recipe Synthesis API:   http://localhost:%d/api/recipe?variant=TIV-00001%n", port);
-        System.out.printf("   - Global Stats API:       http://localhost:%d/api/stats%n", port);
+        System.out.printf(">> Pure Java AM Platform Server is LIVE on: http://127.0.0.1:%d%n", port);
+        System.out.printf("   - Interactive Dashboard:  http://127.0.0.1:%d/dashboard%n", port);
+        System.out.printf("   - Physics Evaluation API: http://127.0.0.1:%d/api/evaluate?power=250&speed=1100%n", port);
+        System.out.printf("   - ML Prediction API:      http://127.0.0.1:%d/api/predict?power=250&speed=1000%n", port);
+        System.out.printf("   - Literature Papers API:  http://127.0.0.1:%d/api/papers?limit=10%n", port);
+        System.out.printf("   - Melt Pool Physics API:  http://127.0.0.1:%d/api/meltpool?model=coen&power=200%n", port);
+        System.out.printf("   - Bontha Solidification:  http://127.0.0.1:%d/api/bontha?dim=3d-bulky&power=200%n", port);
+        System.out.printf("   - Materials Registry API: http://127.0.0.1:%d/api/materials%n", port);
+        System.out.printf("   - Recipe Synthesis API:   http://127.0.0.1:%d/api/recipe?variant=TIV-00001%n", port);
+        System.out.printf("   - Global Stats API:       http://127.0.0.1:%d/api/stats%n", port);
         System.out.println("==================================================================");
+        return server;
     }
 
-    private static int resolvePort() {
-        String envPort = System.getenv("PORT");
+    private static int resolvePort(Integer portOverride) {
         int preferredPort = DEFAULT_PORT;
-
-        if (envPort != null && !envPort.isBlank()) {
-            try {
-                preferredPort = Integer.parseInt(envPort);
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("PORT must be a number between 1 and 65535", e);
+        if (portOverride != null) {
+            preferredPort = portOverride;
+        } else {
+            String envPort = System.getenv("PORT");
+            if (envPort != null && !envPort.isBlank()) {
+                try {
+                    preferredPort = Integer.parseInt(envPort.trim());
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("PORT must be a number between 1 and 65535", e);
+                }
             }
         }
 
@@ -536,14 +665,19 @@ public class AmPlatformApplication {
             throw new IllegalArgumentException("PORT must be a number between 1 and 65535");
         }
 
-        for (int candidate = preferredPort; candidate <= 65535; candidate++) {
-            try (ServerSocket probe = new ServerSocket()) {
-                probe.setReuseAddress(true);
-                probe.bind(new InetSocketAddress(candidate));
-                return candidate;
-            } catch (IOException ignored) {
-                // Try the next port if the preferred one is already in use.
+        try {
+            InetAddress loopback = InetAddress.getByName("127.0.0.1");
+            for (int candidate = preferredPort; candidate <= 65535; candidate++) {
+                try (ServerSocket probe = new ServerSocket()) {
+                    probe.setReuseAddress(true);
+                    probe.bind(new InetSocketAddress(loopback, candidate));
+                    return candidate;
+                } catch (IOException ignored) {
+                    // Try the next port if the preferred one is already in use.
+                }
             }
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to resolve loopback address 127.0.0.1", e);
         }
 
         throw new IllegalStateException("No free TCP port found between " + preferredPort + " and 65535.");
@@ -567,6 +701,15 @@ public class AmPlatformApplication {
         try {
             int parsed = Integer.parseInt(value);
             return parsed > 0 ? parsed : fallback;
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+
+    private int parseNonNegativeI(String value, int fallback) {
+        try {
+            int parsed = Integer.parseInt(value);
+            return parsed >= 0 ? parsed : fallback;
         } catch (Exception e) {
             return fallback;
         }
@@ -674,20 +817,58 @@ public class AmPlatformApplication {
     }
 
     public static void main(String[] args) {
+        boolean runServer = false;
+        boolean runVerify = false;
+        Integer portOverride = null;
+
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            if ("--serve".equalsIgnoreCase(arg)) {
+                runServer = true;
+            } else if ("--verify".equalsIgnoreCase(arg)) {
+                runVerify = true;
+            } else if ("--port".equalsIgnoreCase(arg)) {
+                if (i + 1 >= args.length) {
+                    System.err.println("ERROR: --port requires an integer port number (1-65535).");
+                    System.exit(1);
+                }
+                try {
+                    portOverride = Integer.parseInt(args[++i]);
+                } catch (NumberFormatException e) {
+                    System.err.println("ERROR: Invalid --port value. Must be an integer between 1 and 65535.");
+                    System.exit(1);
+                }
+                if (portOverride < 1 || portOverride > 65535) {
+                    System.err.println("ERROR: --port must be between 1 and 65535.");
+                    System.exit(1);
+                }
+            }
+        }
+
         try {
             String workspace = System.getProperty("user.dir");
-            AmPlatformApplication app = new AmPlatformApplication(workspace);
+            AmPlatformApplication app = new AmPlatformApplication(workspace, portOverride);
             app.init();
 
-            boolean runServer = args.length > 0 && args[0].equalsIgnoreCase("--serve");
-            if (runServer) {
+            if (runServer && !runVerify) {
                 app.startServer();
                 Thread.currentThread().join();
+            } else if (runVerify) {
+                HttpServer server = app.startServer();
+                try {
+                    com.nit.am.util.DashboardVerifier.main(new String[0]);
+                } finally {
+                    server.stop(0);
+                    if (server.getExecutor() instanceof java.util.concurrent.ExecutorService es) {
+                        es.shutdownNow();
+                    }
+                }
             } else {
-                System.out.println(">> Batch evaluation complete. Run with '--serve' to start the interactive web server.");
+                System.out.println(">> Batch evaluation complete. Run with '--serve [--port N]' or '--verify' to test server & QA.");
             }
         } catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 }

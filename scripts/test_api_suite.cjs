@@ -253,7 +253,11 @@ async function runTests() {
     assert(Number.isFinite(res.body.melt_pool.width_um));
   });
 
-  console.log(`\n📊 Verification Summary: ${passed} / ${total} tests passed (100% success rate).\n`);
+  const pct = total > 0 ? ((passed / total) * 100).toFixed(1) : '0.0';
+  console.log(`\n📊 Verification Summary: ${passed} / ${total} tests passed (${pct}% success rate).\n`);
+  if (total === 0 || passed !== total) {
+    process.exit(1);
+  }
 }
 
 runTests().catch(err => {

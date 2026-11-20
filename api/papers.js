@@ -34,7 +34,7 @@ export default async function handler(req, res) {
 
     let endpoint = `${supabaseUrl}/rest/v1/papers?select=*&order=paper_number.asc&limit=${limit}&offset=${offset}`;
     if (rawProcessFilter) {
-      const sanitizedFilter = rawProcessFilter.replace(/[^a-zA-Z0-9\s\-+_/]/g, '').trim();
+      const sanitizedFilter = rawProcessFilter.replace(/[^a-zA-Z0-9\s\-+/]/g, '').trim();
       const pf = sanitizedFilter.toUpperCase();
       if (pf === 'L-DED' || pf === 'DED') {
         endpoint += `&or=(am_process.ilike.*DED*,am_process.ilike.*LMD*,am_process.ilike.*LENS*)`;
@@ -43,19 +43,27 @@ export default async function handler(req, res) {
       }
     }
 
-    const r = await fetch(endpoint, {
-      headers: {
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`
-      }
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    let r;
+    try {
+      r = await fetch(endpoint, {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`
+        },
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timer);
+    }
 
     if (!r.ok) {
-      const errText = await r.text();
+      await r.text().catch(() => '');
       return res.status(r.status).json({
         status: 'error',
         statusCode: r.status,
-        message: errText
+        message: 'Upstream papers database returned an error.'
       });
     }
 
@@ -78,6 +86,9 @@ export default async function handler(req, res) {
       papers: data
     });
   } catch (err) {
+    if (err.name === 'AbortError') {
+      return res.status(504).json({ status: 'error', code: 'UPSTREAM_TIMEOUT', message: 'Upstream papers database timed out after 8000ms.' });
+    }
     res.status(500).json({ status: 'error', code: 'INTERNAL_ERROR', message: err.message });
   }
 }

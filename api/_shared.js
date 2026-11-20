@@ -4,6 +4,7 @@
  */
 
 export const ALLOWED_ORIGINS = [
+  'https://nit-titanium-am-platform.vercel.app',
   'https://nitt-am-platform.vercel.app',
   'http://localhost:8080',
   'http://127.0.0.1:8080',
@@ -13,13 +14,9 @@ export const ALLOWED_ORIGINS = [
 
 export function setCorsHeaders(req, res) {
   const origin = req.headers ? req.headers.origin : null;
-  if (origin && (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app'))) {
+  res.setHeader('Vary', 'Origin');
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-  } else if (!origin) {
-    // Direct or server-to-server request
-    res.setHeader('Access-Control-Allow-Origin', '*');
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', 'https://nitt-am-platform.vercel.app');
   }
 
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -62,6 +59,15 @@ export const PROCESS_LIMITS = {
     layer: { min: 500, max: 5000, unit: 'µm', default: 1500, reason: 'Single weld layer height ranges from 500 µm to 5000 µm.' },
     spot: { min: 1500, max: 8000, unit: 'µm', default: 3000, reason: 'Effective plasma/arc column footprint diameter is 1500 µm to 8000 µm.' },
     preheat: { min: 20, max: 450, unit: '°C', default: 25, reason: 'Interpass temperature must be monitored and kept ≤150°C to prevent excessive grain coarsening.' }
+  },
+  'binder-jetting': {
+    name: 'Binder Jetting + Sintering (BJT)',
+    power: { min: 20, max: 300, unit: 'W', default: 120, reason: 'Binder saturation proxy index (120 nominal -> 65% binder saturation) ranges from 20 to 300.' },
+    speed: { min: 20, max: 1000, unit: 'mm/s', default: 250, reason: 'Printhead gantry travel speed ranges from 20 mm/s to 1000 mm/s.' },
+    hatch: { min: 20, max: 250, unit: 'µm', default: 50, reason: 'Binder droplet pitch ranges from 20 µm to 250 µm.' },
+    layer: { min: 30, max: 200, unit: 'µm', default: 100, reason: 'Powder bed spread layer thickness ranges from 30 µm to 200 µm.' },
+    spot: { min: 20, max: 150, unit: 'µm', default: 50, reason: 'Printhead nozzle droplet diameter ranges from 20 µm to 150 µm.' },
+    preheat: { min: 20, max: 1450, unit: '°C', default: 1250, reason: 'De-binding / vacuum sintering furnace temperature ranges from 20°C to 1450°C.' }
   }
 };
 

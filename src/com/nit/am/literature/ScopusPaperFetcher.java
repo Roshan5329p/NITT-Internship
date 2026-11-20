@@ -25,6 +25,9 @@ import java.util.regex.Pattern;
 public class ScopusPaperFetcher {
 
     private static final String SCOPUS_SEARCH_URL = "https://api.elsevier.com/content/search/scopus";
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(15))
+            .build();
 
     public static class ScopusPaper {
         public String scopusId;
@@ -92,10 +95,6 @@ public class ScopusPaperFetcher {
         String urlStr = String.format("%s?query=%s&count=%d&sort=%s&view=STANDARD",
                 SCOPUS_SEARCH_URL, encodedQuery, count, encodedSort);
 
-        HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(15))
-                .build();
-
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(urlStr))
                 .header("X-ELS-APIKey", apiKey)
@@ -103,7 +102,7 @@ public class ScopusPaperFetcher {
                 .GET()
                 .build();
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 200) {
             throw new RuntimeException("Scopus API Error (HTTP " + response.statusCode() + "): " + response.body());
@@ -138,8 +137,15 @@ public class ScopusPaperFetcher {
                 boolean inStr = false;
                 while (i < json.length()) {
                     char c = json.charAt(i);
-                    if (c == '"' && (i == 0 || json.charAt(i - 1) != '\\')) {
-                        inStr = !inStr;
+                    if (c == '"') {
+                        // Count trailing backslashes immediately before this quote; odd = escaped quote, even = real delimiter
+                        int bs = 0;
+                        for (int k = i - 1; k >= start && json.charAt(k) == '\\'; k--) {
+                            bs++;
+                        }
+                        if ((bs & 1) == 0) {
+                            inStr = !inStr;
+                        }
                     } else if (!inStr) {
                         if (c == '{') depth++;
                         else if (c == '}') {
@@ -285,9 +291,26 @@ public class ScopusPaperFetcher {
         String sort = "citedby-count";
 
         for (int i = 0; i < args.length; i++) {
-            if ("--query".equals(args[i]) && i + 1 < args.length) query = args[++i];
-            if ("--count".equals(args[i]) && i + 1 < args.length) count = Integer.parseInt(args[++i]);
-            if ("--sort".equals(args[i]) && i + 1 < args.length) sort = args[++i];
+            if ("--query".equals(args[i]) && i + 1 < args.length) {
+                query = args[++i];
+            } else if ("--count".equals(args[i])) {
+                if (i + 1 >= args.length) {
+                    System.err.println("Usage error: --count requires a positive integer (1-25).");
+                    System.exit(1);
+                }
+                try {
+                    count = Integer.parseInt(args[++i]);
+                    if (count < 1) {
+                        System.err.println("Usage error: --count must be >= 1.");
+                        System.exit(1);
+                    }
+                } catch (NumberFormatException e) {
+                    System.err.println("Usage error: invalid integer for --count: " + args[i]);
+                    System.exit(1);
+                }
+            } else if ("--sort".equals(args[i]) && i + 1 < args.length) {
+                sort = args[++i];
+            }
         }
 
         System.out.println("Scopus API Key:  [DETECTED]");

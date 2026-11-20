@@ -58,27 +58,32 @@ public class ProcessWindowPlotter {
         Map<Integer, DataRecord> map = new LinkedHashMap<>();
 
         // 1. Papers
-        List<String> paperLines = Files.readAllLines(papersPath);
+        List<String> paperLines = Files.readAllLines(papersPath, StandardCharsets.UTF_8);
         for (int i = 1; i < paperLines.size(); i++) {
-            String[] tokens = parseCsvLine(paperLines.get(i));
+            String raw = paperLines.get(i).trim();
+            if (raw.isEmpty()) continue;
+            String[] tokens = parseCsvLine(raw);
             if (tokens.length >= 5) {
-                int pid = Integer.parseInt(tokens[0]);
+                int pid = parsePositiveIntSafe(tokens[0]);
+                if (pid <= 0) continue;
                 DataRecord rec = new DataRecord();
                 rec.paperNumber = pid;
                 rec.title = tokens[1];
                 rec.authors = tokens[2];
                 rec.year = parseDoubleSafe(tokens[3]) > 0 ? (int) parseDoubleSafe(tokens[3]) : 2022;
                 rec.amProcess = tokens[4];
-                map.put(pid, rec);
+                map.putIfAbsent(pid, rec);
             }
         }
 
         // 2. Process
-        List<String> procLines = Files.readAllLines(procPath);
+        List<String> procLines = Files.readAllLines(procPath, StandardCharsets.UTF_8);
         for (int i = 1; i < procLines.size(); i++) {
-            String[] tokens = parseCsvLine(procLines.get(i));
+            String raw = procLines.get(i).trim();
+            if (raw.isEmpty()) continue;
+            String[] tokens = parseCsvLine(raw);
             if (tokens.length >= 7) {
-                int pid = (int) parseDoubleSafe(tokens[1]);
+                int pid = parsePositiveIntSafe(tokens[1]);
                 DataRecord rec = map.get(pid);
                 if (rec != null) {
                     rec.laserPowerW = parseDoubleSafe(tokens[2]);
@@ -93,11 +98,13 @@ public class ProcessWindowPlotter {
         }
 
         // 3. Thermal
-        List<String> thermLines = Files.readAllLines(thermPath);
+        List<String> thermLines = Files.readAllLines(thermPath, StandardCharsets.UTF_8);
         for (int i = 1; i < thermLines.size(); i++) {
-            String[] tokens = parseCsvLine(thermLines.get(i));
+            String raw = thermLines.get(i).trim();
+            if (raw.isEmpty()) continue;
+            String[] tokens = parseCsvLine(raw);
             if (tokens.length >= 11) {
-                int pid = (int) parseDoubleSafe(tokens[1]);
+                int pid = parsePositiveIntSafe(tokens[1]);
                 DataRecord rec = map.get(pid);
                 if (rec != null) {
                     rec.meltPoolWidthUm = parseDoubleSafe(tokens[2]);
@@ -110,14 +117,17 @@ public class ProcessWindowPlotter {
         }
 
         // 4. Mech
-        List<String> mechLines = Files.readAllLines(mechPath);
+        List<String> mechLines = Files.readAllLines(mechPath, StandardCharsets.UTF_8);
         for (int i = 1; i < mechLines.size(); i++) {
-            String[] tokens = parseCsvLine(mechLines.get(i));
+            String raw = mechLines.get(i).trim();
+            if (raw.isEmpty()) continue;
+            String[] tokens = parseCsvLine(raw);
             if (tokens.length >= 11) {
-                int pid = (int) parseDoubleSafe(tokens[1]);
+                int pid = parsePositiveIntSafe(tokens[1]);
                 DataRecord rec = map.get(pid);
                 if (rec != null) {
-                    rec.condition = tokens[3];
+                    String cond = tokens[3].trim();
+                    if (!cond.isEmpty()) rec.condition = cond;
                     rec.yieldStrengthMpa = parseDoubleSafe(tokens[4]);
                     rec.utsMpa = parseDoubleSafe(tokens[5]);
                     rec.elongationPct = parseDoubleSafe(tokens[6]);
@@ -133,6 +143,17 @@ public class ProcessWindowPlotter {
         System.out.println("Java loaded " + records.size() + " records successfully.");
     }
 
+    private int parsePositiveIntSafe(String s) {
+        if (s == null || s.trim().isEmpty()) return -1;
+        try {
+            int val = Integer.parseInt(s.trim());
+            return val > 0 ? val : -1;
+        } catch (NumberFormatException e) {
+            double d = parseDoubleSafe(s);
+            return d > 0 ? (int) d : -1;
+        }
+    }
+
     private double parseDoubleSafe(String s) {
         if (s == null || s.trim().isEmpty()) return 0.0;
         try {
@@ -146,9 +167,15 @@ public class ProcessWindowPlotter {
         List<String> tokens = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         boolean inQuotes = false;
-        for (char c : line.toCharArray()) {
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
             if (c == '\"') {
-                inQuotes = !inQuotes;
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '\"') {
+                    sb.append('\"');
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
             } else if (c == ',' && !inQuotes) {
                 tokens.add(sb.toString().trim());
                 sb.setLength(0);
@@ -198,7 +225,7 @@ public class ProcessWindowPlotter {
         // Energy density Ev = P / (v * h * t) => P = Ev * v * h * t = Ev * v * 0.003
         // For h=100um, t=30um => h*t = 0.003 mm^2
         // Ev = 55 J/mm^3 => P = 0.165 * v
-        // Ev = 95 J/mm^3 => P = 0.285 * v
+        // Ev = 85 J/mm^3 => P = 0.255 * v
 
         // Lack of Fusion (LOF) Polygon (below Ev = 55 J/mm^3 or high speed)
         Path2D lofPoly = new Path2D.Double();
@@ -222,27 +249,27 @@ public class ProcessWindowPlotter {
         g.setColor(new Color(254, 243, 199, 210)); // Soft Amber
         g.fill(ballingPoly);
 
-        // Keyholing Regime (above Ev = 95 J/mm^3)
+        // Keyholing Regime (above Ev = 85 J/mm^3)
         Path2D keyholePoly = new Path2D.Double();
         keyholePoly.moveTo(xPix(vMin, vMin, vMax, padLeft, plotW), yPix(pMax, pMin, pMax, padTop, plotH));
         for (double v = vMin; v <= vMax; v += 20) {
-            double pLine = 0.285 * v;
+            double pLine = 0.255 * v;
             if (pLine <= pMax) {
                 keyholePoly.lineTo(xPix(v, vMin, vMax, padLeft, plotW), yPix(pLine, pMin, pMax, padTop, plotH));
             } else {
                 break;
             }
         }
-        keyholePoly.lineTo(xPix(vMin, vMin, vMax, padLeft, plotW), yPix(Math.min(pMax, 0.285 * vMin), pMin, pMax, padTop, plotH));
+        keyholePoly.lineTo(xPix(vMin, vMin, vMax, padLeft, plotW), yPix(Math.min(pMax, 0.255 * vMin), pMin, pMax, padTop, plotH));
         keyholePoly.closePath();
         g.setColor(new Color(237, 233, 254, 210)); // Soft Violet
         g.fill(keyholePoly);
 
-        // Optimal Conduction Safe Processing Zone (55 <= Ev <= 95 J/mm^3, v <= 1500)
+        // Optimal Conduction Safe Processing Zone (55 <= Ev <= 85 J/mm^3, v <= 1500)
         Path2D safePoly = new Path2D.Double();
         safePoly.moveTo(xPix(vMin, vMin, vMax, padLeft, plotW), yPix(0.165 * vMin, pMin, pMax, padTop, plotH));
         for (double v = vMin; v <= 1500; v += 20) {
-            double pLine = Math.min(pMax, 0.285 * v);
+            double pLine = Math.min(pMax, 0.255 * v);
             safePoly.lineTo(xPix(v, vMin, vMax, padLeft, plotW), yPix(pLine, pMin, pMax, padTop, plotH));
         }
         for (double v = 1500; v >= vMin; v -= 20) {
@@ -256,8 +283,8 @@ public class ProcessWindowPlotter {
         // Draw Energy Density Contour Lines
         g.setStroke(new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[]{8.0f, 6.0f}, 0.0f));
         drawIsoCurve(g, 55.0, vMin, vMax, pMin, pMax, padLeft, padTop, plotW, plotH, new Color(220, 38, 38), "Ev = 55 J/mm³ (LOF Boundary)");
-        drawIsoCurve(g, 75.0, vMin, vMax, pMin, pMax, padLeft, padTop, plotW, plotH, new Color(22, 101, 52), "Ev = 75 J/mm³ (Optimal Baseline)");
-        drawIsoCurve(g, 95.0, vMin, vMax, pMin, pMax, padLeft, padTop, plotW, plotH, new Color(109, 40, 217), "Ev = 95 J/mm³ (Keyhole Boundary)");
+        drawIsoCurve(g, 70.0, vMin, vMax, pMin, pMax, padLeft, padTop, plotW, plotH, new Color(22, 101, 52), "Ev = 70 J/mm³ (Optimal Baseline)");
+        drawIsoCurve(g, 85.0, vMin, vMax, pMin, pMax, padLeft, padTop, plotW, plotH, new Color(109, 40, 217), "Ev = 85 J/mm³ (Keyhole Boundary)");
 
         // Grid Lines & Ticks
         drawGridAndAxes(g, padLeft, padTop, plotW, plotH, vMin, vMax, pMin, pMax, 200, 50, "Scan Speed, v (mm/s)", "Laser Power, P (W)");
@@ -606,9 +633,9 @@ public class ProcessWindowPlotter {
         g.setColor(Color.WHITE);
         g.fillRect(padLeft, padTop, plotW, plotH);
 
-        // Optimal Bell Curve region shaded
-        double xOptLeft = xPix(60.0, evMin, evMax, padLeft, plotW);
-        double xOptRight = xPix(90.0, evMin, evMax, padLeft, plotW);
+        // Optimal Bell Curve region shaded (aligned 55 <= Ev <= 85 J/mm³)
+        double xOptLeft = xPix(55.0, evMin, evMax, padLeft, plotW);
+        double xOptRight = xPix(85.0, evMin, evMax, padLeft, plotW);
         g.setColor(new Color(220, 252, 231, 180));
         g.fillRect((int) xOptLeft, padTop, (int) (xOptRight - xOptLeft), plotH);
 
@@ -912,9 +939,9 @@ public class ProcessWindowPlotter {
             .append("      <strong>Physics & Defect Boundaries:</strong>\n")
             .append("      <ul>\n")
             .append("        <li><strong>Lack of Fusion (LOF)</strong> occurs at <code>Ev &lt; 55 J/mm³</code> (red zone): Insufficient melt pool penetration generates irregular, unfused powder cavities.</li>\n")
-            .append("        <li><strong>Keyholing Regime</strong> occurs at <code>Ev &gt; 95 J/mm³</code> (violet zone): High vapor depression recoil pressure causes deep melt pool collapse and spherical entrapped vapor pores.</li>\n")
+            .append("        <li><strong>Keyholing Regime</strong> occurs at <code>Ev &gt; 85 J/mm³</code> (violet zone): High vapor depression recoil pressure causes deep melt pool collapse and spherical entrapped vapor pores.</li>\n")
             .append("        <li><strong>Balling Regime</strong> occurs at scan speeds <code>v &gt; 1500 mm/s</code> (amber zone) due to Plateau-Rayleigh hydrodynamic instability.</li>\n")
-            .append("        <li><strong>Safe Optimal Conduction Window</strong> (emerald zone): <code>55 ≤ Ev ≤ 90 J/mm³</code> ensures relative density &gt; 99.8%.</li>\n")
+            .append("        <li><strong>Safe Optimal Conduction Window</strong> (emerald zone): <code>55 ≤ Ev ≤ 85 J/mm³</code> ensures relative density &gt; 99.8%.</li>\n")
             .append("      </ul>\n")
             .append("    </div>\n  </div>\n");
 

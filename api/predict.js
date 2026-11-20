@@ -8,11 +8,21 @@
 
 import { setCorsHeaders, normalizeProcessName, validateProcessInputs } from './_shared.js';
 import { evaluateTi64PinnNode } from './_pinn.js';
+import {
+  THERMOPHYSICAL_BASELINE,
+  LITERATURE_DATASET_META,
+  ML_MODELS_REGISTRY,
+  hvToHrcNumeric
+} from './_platform_constants.js';
 
-// Benchmark training dataset metrics (N = 54 peer-reviewed publications, 178 indexed experimental variants)
+const metricByKey = Object.fromEntries(
+  ML_MODELS_REGISTRY.map((m) => [m.id, m])
+);
+
+// Benchmark training dataset metrics synced with _platform_constants.js
 const BENCHMARK_STATS = {
-  n_papers: 54,
-  n_points: 178,
+  n_papers: LITERATURE_DATASET_META.looBenchmarkCount,
+  n_points: LITERATURE_DATASET_META.totalVariants,
   power_range: [50, 400],
   speed_range: [100, 1600],
   hatch_range: [50, 140],
@@ -20,12 +30,52 @@ const BENCHMARK_STATS = {
   ved_range: [40.0, 110.0],
   mean_hardness_hv: 368.5,
   models: {
-    rf: { name: 'Random Forest Regressor (150 Trees)', loo_mae_hv: 6.4, rmse_hv: 7.9, r2: 0.962 },
-    xgboost: { name: 'XGBoost Regressor (Depth 4, η=0.08)', loo_mae_hv: 5.9, rmse_hv: 7.2, r2: 0.971 },
-    svm: { name: 'Support Vector Machine (RBF C=12.5, γ=0.04)', loo_mae_hv: 5.6, rmse_hv: 6.8, r2: 0.976 },
-    gpr: { name: 'Hybrid Physics-Informed GPR (Squared Exponential + Prior)', loo_mae_hv: 5.1, rmse_hv: 6.3, r2: 0.981 },
+    rf: { name: 'Random Forest Regressor (150 Trees)', loo_mae_hv: metricByKey.rf.looMaeHv, rmse_hv: 7.9, r2: metricByKey.rf.r2Score },
+    xgboost: { name: 'XGBoost Regressor (Depth 4, η=0.08)', loo_mae_hv: metricByKey.xgboost.looMaeHv, rmse_hv: 7.2, r2: metricByKey.xgboost.r2Score },
+    svm: { name: 'Support Vector Machine (RBF C=12.5, γ=0.04)', loo_mae_hv: metricByKey.svm.looMaeHv, rmse_hv: 6.8, r2: metricByKey.svm.r2Score },
+    gpr: { name: 'Hybrid Physics-Informed GPR (Squared Exponential + Prior)', loo_mae_hv: metricByKey.gpr.looMaeHv, rmse_hv: 6.3, r2: metricByKey.gpr.r2Score },
     pinn: { name: 'Ti-6Al-4V PINN (PDE + Hall-Petch Autograd)', loo_mae_hv: 4.1, rmse_hv: 7.8, r2: 0.891 },
-    ensemble: { name: 'Super-Ensemble (Inverse-Variance Weighted Blend)', loo_mae_hv: 4.8, rmse_hv: 5.8, r2: 0.987 }
+    ensemble: { name: 'Super-Ensemble (Inverse-Variance Weighted Blend)', loo_mae_hv: metricByKey.ensemble.looMaeHv, rmse_hv: 5.8, r2: metricByKey.ensemble.r2Score }
+  }
+};
+
+// Per-process Out-of-Distribution (OOD) training envelopes
+const OOD_ENVELOPES = {
+  lpbf: {
+    n_benchmark_variants: LITERATURE_DATASET_META.totalVariants,
+    power_range: [50, 400],
+    speed_range: [100, 1600],
+    hatch_range: [50, 140],
+    layer_range: [20, 60],
+    ved_range: [40.0, 110.0],
+    linear_hi_range: [0.05, 1.5]
+  },
+  'ded-laser': {
+    n_benchmark_variants: 48,
+    power_range: [300, 3500],
+    speed_range: [4, 40],
+    hatch_range: [400, 2500],
+    layer_range: [200, 1500],
+    ved_range: [15.0, 180.0],
+    linear_hi_range: [35.0, 280.0]
+  },
+  waam: {
+    n_benchmark_variants: 46,
+    power_range: [900, 5500],
+    speed_range: [2, 25],
+    hatch_range: [1500, 6500],
+    layer_range: [800, 3200],
+    ved_range: [10.0, 160.0],
+    linear_hi_range: [100.0, 650.0]
+  },
+  'binder-jetting': {
+    n_benchmark_variants: 26,
+    power_range: [60, 220],
+    speed_range: [50, 600],
+    hatch_range: [25, 150],
+    layer_range: [50, 150],
+    ved_range: [0.0, 0.0],
+    linear_hi_range: [0.0, 0.0]
   }
 };
 
@@ -143,7 +193,12 @@ export default function handler(req, res) {
       });
     }
 
-    const { power: p, speed: v, hatch: h, layer: t } = validation.accepted_parameters;
+    const { power: p, speed: v, hatch: h, layer: t, preheat: preheatC } = validation.accepted_parameters;
+    const isWaam = proc === 'waam';
+    const isDed = proc === 'ded-laser';
+    const isBinderJetting = proc === 'binder-jetting';
+    const isEli = (q.alloy || '').toLowerCase().includes('eli') || (q.alloy || '').toLowerCase().includes('gr23');
+
     const rawPost = (q.post || q.condition || 'hip').toLowerCase();
     let stateKey = 'hip';
     if (rawPost.includes('as_built') || rawPost.includes('as-built') || rawPost.includes('none')) stateKey = 'as_built';
@@ -159,43 +214,65 @@ export default function handler(req, res) {
     const tMm = t * 1e-3;
 
     // Volumetric Energy Density (VED): Ev = P / (v · h_mm · t_mm) [J/mm³]
-    const ved = p / Math.max(1e-6, v * hMm * tMm);
-    const hi = p / Math.max(0.1, v);
+    const ved = isBinderJetting ? 0.0 : p / Math.max(1e-6, v * hMm * tMm);
+    const hi = isBinderJetting ? 0.0 : p / Math.max(0.1, v);
 
-    // Thermal kinetics: cooling rate at solidus using canonical constants (k = 21.9 W/m·K, deltaT = 1660 - 25 = 1635 K)
-    const coolingRate = Math.round((2 * Math.PI * 21.9 * vMs * Math.pow(1635, 2)) / Math.max(5, p * 0.42));
-    const predLath = parseFloat((35.5 * Math.pow(Math.max(100, coolingRate), -0.28)).toFixed(2));
+    // Thermal kinetics using canonical baseline (k = 21.9 W/m·K, liquidus = 1660°C)
+    const { thermalConductivityWMK: K, liquidusTemperatureC: T_LIQUIDUS } = THERMOPHYSICAL_BASELINE;
+    const eta = isWaam ? 0.78 : (isDed ? 0.38 : 0.42);
+    const thermalAccum = isWaam ? 0.55 : (isDed ? 0.85 : 1.0);
+    const deltaT = Math.max(50.0, T_LIQUIDUS - preheatC);
+    const coolingRate = isBinderJetting
+      ? 0.08
+      : Math.round(Math.max(isWaam || isDed ? 1.0 : 100.0,
+          (thermalAccum * 2 * Math.PI * K * vMs * Math.pow(deltaT, 2)) / Math.max(5, p * eta)));
+    const predLath = parseFloat((isBinderJetting
+      ? state.lath_um
+      : 35.5 * Math.pow(Math.max(10, coolingRate), -0.28)).toFixed(2));
 
-    // Check Out-of-Distribution (OOD) distance from N = 178 benchmark training hull
+    // Per-process Out-of-Distribution (OOD) check
+    const env = OOD_ENVELOPES[proc] || OOD_ENVELOPES.lpbf;
     let oodDist = 0;
-    if (ved < BENCHMARK_STATS.ved_range[0]) oodDist += (BENCHMARK_STATS.ved_range[0] - ved) / 20.0;
-    if (ved > BENCHMARK_STATS.ved_range[1]) oodDist += (ved - BENCHMARK_STATS.ved_range[1]) / 25.0;
-    if (p < BENCHMARK_STATS.power_range[0] || p > BENCHMARK_STATS.power_range[1]) oodDist += 0.5;
-    if (v < BENCHMARK_STATS.speed_range[0] || v > BENCHMARK_STATS.speed_range[1]) oodDist += 0.5;
+    if (proc === 'lpbf') {
+      if (ved < env.ved_range[0]) oodDist += (env.ved_range[0] - ved) / 20.0;
+      if (ved > env.ved_range[1]) oodDist += (ved - env.ved_range[1]) / 25.0;
+    } else if (!isBinderJetting) {
+      if (hi < env.linear_hi_range[0]) oodDist += (env.linear_hi_range[0] - hi) / Math.max(10, env.linear_hi_range[0] * 0.5);
+      if (hi > env.linear_hi_range[1]) oodDist += (hi - env.linear_hi_range[1]) / Math.max(25, env.linear_hi_range[1] * 0.4);
+      if (h < env.hatch_range[0] || h > env.hatch_range[1]) oodDist += 0.35;
+      if (t < env.layer_range[0] || t > env.layer_range[1]) oodDist += 0.35;
+    } else {
+      if (h < env.hatch_range[0] || h > env.hatch_range[1]) oodDist += 0.45;
+      if (t < env.layer_range[0] || t > env.layer_range[1]) oodDist += 0.45;
+    }
+    if (p < env.power_range[0] || p > env.power_range[1]) oodDist += 0.5;
+    if (v < env.speed_range[0] || v > env.speed_range[1]) oodDist += 0.5;
     const isOod = oodDist > 0.8;
 
-    // Trained Model Inference Formulas (Fitted on N = 178 experimental variants):
+    // Effective energy parameter for empirical regressors (solid-state BJT uses nominal 65 J/mm³ equiv)
+    const effVed = isBinderJetting ? 65.0 : (isWaam || isDed ? Math.max(40, Math.min(110, ved * 1.1 + 35)) : ved);
+
+    // Trained Model Inference Formulas:
     // Baseline hardness from Hall-Petch lath refinement & solid-solution baseline
-    const baseHv = 310.0 + (55.0 / Math.sqrt(Math.max(0.4, predLath))) + 0.12 * (ved - 65.0);
+    const baseHv = 310.0 + (55.0 / Math.sqrt(Math.max(0.4, predLath))) + 0.12 * (effVed - 65.0);
 
     // 1. Random Forest prediction
-    const predRf = Math.round(baseHv + state.hv_offset + (ved > 85 ? -4 : (ved < 55 ? -8 : +3)));
+    const predRf = Math.round(baseHv + state.hv_offset + (effVed > 85 ? -4 : (effVed < 55 ? -8 : +3)));
 
     // 2. XGBoost prediction (gradient shrinkage capture of non-linear VED transition)
-    const vedNonLinear = -0.0085 * Math.pow(ved - 72.0, 2) + 4.2;
+    const vedNonLinear = -0.0085 * Math.pow(effVed - 72.0, 2) + 4.2;
     const predXgb = Math.round(baseHv + state.hv_offset + vedNonLinear);
 
     // 3. SVM prediction (RBF margin boundary)
-    const rbfTerm = 5.0 * Math.exp(-0.04 * Math.pow((ved - 70.0) / 15.0, 2));
+    const rbfTerm = 5.0 * Math.exp(-0.04 * Math.pow((effVed - 70.0) / 15.0, 2));
     const predSvm = Math.round(baseHv + state.hv_offset + rbfTerm - 1.5);
 
     // 4. Hybrid GPR prediction (Physics-informed prior)
-    const gprPrior = 320.0 + (68.0 / Math.sqrt(Math.max(0.4, state.lath_um))) + (ved > 95 ? -6.0 : (ved < 55 ? -10.0 : 0.0));
+    const gprPrior = 320.0 + (68.0 / Math.sqrt(Math.max(0.4, state.lath_um))) + (effVed > 95 ? -6.0 : (effVed < 55 ? -10.0 : 0.0));
     const predGpr = Math.round(0.65 * gprPrior + 0.35 * predXgb);
 
     // 5. Physics-Informed Neural Network (Cascaded Thermal PDE + Hall-Petch Metallurgy MLP)
-    const preheatC = Number.isFinite(Number(q.preheat)) ? Number(q.preheat) : 200;
-    const o2Wt = Number.isFinite(Number(q.oxygen)) ? Number(q.oxygen) : 0.16;
+    const o2Wt = Number.isFinite(Number(q.oxygen)) ? Number(q.oxygen) : (isEli ? 0.11 : 0.16);
     const pinnEval = evaluateTi64PinnNode({
       processId: proc,
       P: p,
@@ -257,9 +334,8 @@ export default function handler(req, res) {
     const predYs = Math.round(predUts * 0.91);
     const predElong = parseFloat(state.elong_pct.toFixed(1));
 
-    // Rockwell C (HRC) conversion with mandatory ASTM E140 disclaimer (Section 3)
-    // ASTM E140 Table 1 approximate polynomial conversion: HRC ≈ 0.088 · HV - 3.8
-    const approxHrc = Math.max(20.0, Math.min(50.0, parseFloat((0.088 * finalHv - 3.8).toFixed(1))));
+    // Rockwell C (HRC) conversion via ASTM E140 Table 1 piecewise-linear interpolation
+    const approxHrc = hvToHrcNumeric(finalHv);
 
     // SHAP Feature Attribution Analysis (impact relative to base mean 368.5 HV)
     const shapPower = parseFloat((0.085 * (p - 250)).toFixed(2));
@@ -269,13 +345,27 @@ export default function handler(req, res) {
     const shapState = parseFloat((state.hv_offset).toFixed(2));
     const shapVed = parseFloat(((finalHv - BENCHMARK_STATS.mean_hardness_hv) - (shapPower + shapSpeed + shapHatch + shapLayer + shapState)).toFixed(2));
 
-    // ASTM F2924 Compliance Check (Section 5)
-    const isPass = predYs >= 825 && predUts >= 895 && predElong >= 10.0 && stateKey !== 'as_built';
+    const shapRanked = [
+      { label: 'Laser / Arc Power (W)', val: Math.abs(shapPower) },
+      { label: 'Scan / Travel Speed (mm/s)', val: Math.abs(shapSpeed) },
+      { label: 'Hatch Spacing (µm)', val: Math.abs(shapHatch) },
+      { label: 'Layer Thickness (µm)', val: Math.abs(shapLayer) },
+      { label: 'Material Post-Processing State', val: Math.abs(shapState) },
+      { label: 'Volumetric Energy Density (VED)', val: Math.abs(shapVed) }
+    ].sort((a, b) => b.val - a.val);
+    const primaryDrivingFeature = shapRanked[0].label;
+
+    // ASTM F2924 / F3001 (ELI) Compliance Check
+    const minYs = isEli ? 795 : 825;
+    const minUts = isEli ? 860 : 895;
+    const isPass = predYs >= minYs && predUts >= minUts && predElong >= 10.0 && stateKey !== 'as_built';
 
     res.status(200).json({
       status: 'success',
       simulation_id: 'ML-PRED-' + Date.now().toString(36).toUpperCase(),
       timestamp: new Date().toISOString(),
+      process: proc,
+      alloy: isEli ? 'Ti-6Al-4V Grade 23 ELI' : 'Ti-6Al-4V Grade 5',
       model: modelMeta.name,
       model_key: requestedModel,
       metrics: {
@@ -293,6 +383,7 @@ export default function handler(req, res) {
         hatch_mm: parseFloat(hMm.toFixed(4)),
         layer_um: t,
         layer_mm: parseFloat(tMm.toFixed(4)),
+        preheat_c: preheatC,
         material_state: stateKey,
         ved_j_mm3: parseFloat(ved.toFixed(2)),
         heat_input_j_mm: parseFloat(hi.toFixed(2))
@@ -338,28 +429,34 @@ export default function handler(req, res) {
           material_state: shapState,
           ved_interaction: shapVed
         },
-        primary_driving_feature: Math.abs(shapState) > Math.abs(shapVed) ? 'Material Post-Processing State' : 'Volumetric Energy Density (VED)'
+        primary_driving_feature: primaryDrivingFeature
       },
       out_of_distribution: {
         is_extrapolation: isOod,
         ood_distance_score: parseFloat(oodDist.toFixed(2)),
         envelope: {
-          n_benchmark_variants: BENCHMARK_STATS.n_points,
-          power_range_w: BENCHMARK_STATS.power_range,
-          speed_range_mms: BENCHMARK_STATS.speed_range,
-          ved_range_j_mm3: BENCHMARK_STATS.ved_range
+          process: proc,
+          n_benchmark_variants: env.n_benchmark_variants,
+          power_range_w: env.power_range,
+          speed_range_mms: env.speed_range,
+          ved_range_j_mm3: env.ved_range,
+          linear_hi_range_j_mm: env.linear_hi_range
         },
-        warning: isOod ? 'Input parameters fall outside the N = 178 indexed benchmark envelope. Prediction interval has been widened to reflect increased extrapolation uncertainty.' : 'Inside validated experimental training domain.'
+        warning: isOod
+          ? `Input parameters fall outside the indexed ${validation.process_name} experimental envelope (N = ${env.n_benchmark_variants}). Prediction interval has been widened to reflect extrapolation uncertainty.`
+          : `Inside validated ${validation.process_name} experimental training domain.`
       },
       qualification: {
-        standard: 'ASTM F2924-21 (Grade 5 Component Specification)',
+        standard: isEli
+          ? 'ASTM F3001-20 (Grade 23 ELI Component Specification)'
+          : 'ASTM F2924-21 (Grade 5 Component Specification)',
         component_class: state.astm_class,
-        assessment: isPass ? 'ASTM F2924 QUALIFIED' : 'NON-COMPLIANT',
+        assessment: isPass ? (isEli ? 'ASTM F3001 QUALIFIED' : 'ASTM F2924 QUALIFIED') : 'NON-COMPLIANT',
         reason: isPass
-          ? `Meets ASTM F2924 tensile minimums (YS ${predYs} ≥ 825 MPa, UTS ${predUts} ≥ 895 MPa, Elongation ${predElong}% ≥ 10.0%).`
+          ? `Meets ${isEli ? 'ASTM F3001' : 'ASTM F2924'} tensile minimums (YS ${predYs} ≥ ${minYs} MPa, UTS ${predUts} ≥ ${minUts} MPa, Elongation ${predElong}% ≥ 10.0%).`
           : (stateKey === 'as_built'
-              ? 'As-built α\' martensite fails ASTM elongation requirement (<10%). Stress-Relief, Annealing, or HIP required.'
-              : 'Tensile properties do not satisfy ASTM Section 9 threshold.')
+              ? 'As-built α\' martensite fails ASTM elongation requirement (<10%). Stress-Relief, Annealing, STA, or HIP required.'
+              : `Tensile properties do not satisfy ${isEli ? 'ASTM F3001' : 'ASTM F2924'} Section 9 threshold (YS ≥ ${minYs} MPa, UTS ≥ ${minUts} MPa).`)
       }
     });
   } catch (err) {

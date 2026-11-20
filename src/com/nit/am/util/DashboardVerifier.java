@@ -175,7 +175,16 @@ public class DashboardVerifier {
             "http://localhost:8080/api/scopus?count=2"
         };
 
+        String scopusEnv = System.getenv("SCOPUS_API_KEY");
+        String elsevierEnv = System.getenv("ELSEVIER_API_KEY");
+        boolean scopusKeyConfigured = (scopusEnv != null && !scopusEnv.isBlank())
+                || (elsevierEnv != null && !elsevierEnv.isBlank());
+
         for (String urlStr : testUrls200) {
+            if (urlStr.contains("/api/scopus") && !scopusKeyConfigured) {
+                System.out.printf("[HTTP CHECK] %s -> SKIPPED (SCOPUS_API_KEY unset; optional check)%n", urlStr);
+                continue;
+            }
             totalChecks++;
             try {
                 URL url = URI.create(urlStr).toURL();
@@ -200,6 +209,7 @@ public class DashboardVerifier {
                 }
             } catch (Exception e) {
                 System.err.printf("[HTTP CHECK] %s -> Connection error: %s (Server may be restarting)%n", urlStr, e.getMessage());
+                allPassed = false;
             }
         }
 
@@ -222,10 +232,15 @@ public class DashboardVerifier {
             }
         } catch (Exception e) {
             System.err.printf("[HTTP CHECK] http://localhost:8080/app -> Error: %s%n", e.getMessage());
+            allPassed = false;
         }
 
+        double passPct = totalChecks > 0 ? (passCount * 100.0) / totalChecks : 0.0;
         System.out.println("------------------------------------------------------------------");
-        System.out.printf("VERIFICATION SUMMARY: %d / %d Checks Passed (100%% Pure Java Architecture)%n", passCount, totalChecks);
+        System.out.printf("VERIFICATION SUMMARY: %d / %d Checks Passed (%.1f%% Pure Java Architecture)%n", passCount, totalChecks, passPct);
         System.out.println("==================================================================");
+        if (!allPassed) {
+            System.exit(1);
+        }
     }
 }

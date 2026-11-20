@@ -11,6 +11,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.concurrent.Executors;
@@ -30,8 +31,7 @@ public class Main {
             if (!dataFile.exists()) {
                 dataFile = new File(baseDir, "data" + File.separator + "variant_properties_wide.csv");
             }
-            File distDir = new File(baseDir, "dashboard" + File.separator + "dist");
-            File webDir = distDir.exists() && distDir.isDirectory() ? distDir : new File(baseDir, "web");
+            File webDir = baseDir;
 
             if (!dataFile.exists()) {
                 System.err.println("Database file not found in data directory: " + dataFile.getAbsolutePath());
@@ -53,7 +53,8 @@ public class Main {
             System.out.printf("Loaded %d Titanium Alloys across %d Additive Manufacturing process variants.%n",
                 repository.getTotalMaterialCount(), repository.getTotalVariantCount());
 
-            HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+            InetAddress loopback = InetAddress.getByName("127.0.0.1");
+            HttpServer server = HttpServer.create(new InetSocketAddress(loopback, port), 0);
             server.createContext("/api", new ApiHandler(materialService, usageStatsService));
             server.createContext("/", new StaticHandler(webDir));
 
@@ -63,11 +64,11 @@ public class Main {
             System.out.println("------------------------------------------------------------------");
             System.out.println(" Embedded Server running successfully with OWASP Defense Controls!");
             System.out.println(" Open your browser and navigate to:");
-            System.out.printf("   >>> http://localhost:%d <<<%n", port);
+            System.out.printf("   >>> http://127.0.0.1:%d <<<%n", port);
             System.out.println(" REST API available at:");
-            System.out.printf("   >>> http://localhost:%d/api/materials <<<%n", port);
-            System.out.printf("   >>> http://localhost:%d/api/search?q=Ti-6Al-4V <<<%n", port);
-            System.out.printf("   >>> http://localhost:%d/api/compare?ids=TIV-00001,TIV-00003 <<<%n", port);
+            System.out.printf("   >>> http://127.0.0.1:%d/api/materials <<<%n", port);
+            System.out.printf("   >>> http://127.0.0.1:%d/api/search?q=Ti-6Al-4V <<<%n", port);
+            System.out.printf("   >>> http://127.0.0.1:%d/api/compare?ids=TIV-00001,TIV-00003 <<<%n", port);
             System.out.println(" Press Ctrl+C in terminal to stop.");
             System.out.println("==================================================================");
 
@@ -84,24 +85,29 @@ public class Main {
 
         if (envPort != null && !envPort.isBlank()) {
             try {
-                preferredPort = Integer.parseInt(envPort);
+                preferredPort = Integer.parseInt(envPort.trim());
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("PORT must be a number between 1 and 65535", e);
             }
         }
 
-        if (preferredPort < 0 || preferredPort > 65535) {
+        if (preferredPort < 1 || preferredPort > 65535) {
             throw new IllegalArgumentException("PORT must be a number between 1 and 65535");
         }
 
-        for (int candidate = preferredPort; candidate <= 65535; candidate++) {
-            try (ServerSocket probe = new ServerSocket()) {
-                probe.setReuseAddress(true);
-                probe.bind(new InetSocketAddress(candidate));
-                return candidate;
-            } catch (IOException ignored) {
-                // Try the next port if the current one is already occupied.
+        try {
+            InetAddress loopback = InetAddress.getByName("127.0.0.1");
+            for (int candidate = preferredPort; candidate <= 65535; candidate++) {
+                try (ServerSocket probe = new ServerSocket()) {
+                    probe.setReuseAddress(true);
+                    probe.bind(new InetSocketAddress(loopback, candidate));
+                    return candidate;
+                } catch (IOException ignored) {
+                    // Try the next port if the current one is already occupied.
+                }
             }
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to resolve loopback address 127.0.0.1", e);
         }
 
         throw new IllegalStateException("No free TCP port found between " + preferredPort + " and 65535.");

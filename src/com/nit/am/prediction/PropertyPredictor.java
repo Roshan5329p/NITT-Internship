@@ -171,18 +171,14 @@ public class PropertyPredictor {
 
     /**
      * Verifies if an AmRecord complies with ASTM F2924.
+     * Excludes unextracted/missing experimental tensile rows (YS <= 0 or Elong <= 0).
      */
     public static boolean checkAstmF2924(AmRecord rec) {
-        if (rec == null) return false;
-        if (rec.yieldStrengthMpa <= 0 && rec.elongationPct <= 0) {
-            double lath = rec.alphaLathThicknessUm > 0 ? rec.alphaLathThicknessUm :
-                         (rec.priorBetaGrainWidthUm > 0 ? rec.priorBetaGrainWidthUm * 0.05 : 0.45);
-            double pore = (rec.defectRegime != null && rec.defectRegime.toLowerCase().contains("keyhole")) ? 45.0 : 15.0;
-            PredictionOutput pred = predictForProcess(rec.amProcess, lath, rec.condition, pore);
-            return pred.passesAstmF2924;
+        if (rec == null || rec.yieldStrengthMpa <= 0 || rec.elongationPct <= 0) {
+            return false;
         }
         return (rec.yieldStrengthMpa >= ASTM_F2924_MIN_YS) &&
-               (rec.utsMpa == 0 || rec.utsMpa >= ASTM_F2924_MIN_UTS) &&
+               (rec.utsMpa <= 0 || rec.utsMpa >= ASTM_F2924_MIN_UTS) &&
                (rec.elongationPct >= ASTM_F2924_MIN_ELONG);
     }
 }

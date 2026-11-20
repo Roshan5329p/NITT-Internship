@@ -11,10 +11,11 @@ public class SecurityHeaders {
 
     private static final String CSP_POLICY =
         "default-src 'self'; " +
-        "script-src 'self'; " +
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-        "font-src 'self' https://fonts.gstatic.com data:; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; " +
+        "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; " +
         "img-src 'self' data: blob:; " +
+        "worker-src 'self' blob:; " +
         "connect-src 'self' http://localhost:* http://127.0.0.1:*; " +
         "frame-ancestors 'none'; " +
         "base-uri 'self'; " +

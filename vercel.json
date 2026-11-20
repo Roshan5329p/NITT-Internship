@@ -1,88 +1,25 @@
 {
   "version": 2,
-  "name": "nit-titanium-am-platform",
-  "builds": [
-    {
-      "src": "api/*.js",
-      "use": "@vercel/node"
+  "functions": {
+    "api/predict.js": {
+      "includeFiles": "data/pinn_ti64_weights.json"
     },
-    {
-      "src": "process_windows_dashboard.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "plots/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "data/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "docs/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "report/**",
-      "use": "@vercel/static"
+    "api/meltpool.js": {
+      "includeFiles": "data/pinn_ti64_weights.json"
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/api/stats/?",
-      "dest": "/api/stats.js"
+      "source": "/api/(stats|predict|evaluate|meltpool|bontha|materials|papers|scopus)/?",
+      "destination": "/api/$1.js"
     },
     {
-      "src": "/api/predict/?",
-      "dest": "/api/predict.js"
+      "source": "/dashboard/?",
+      "destination": "/process_windows_dashboard.html"
     },
     {
-      "src": "/api/evaluate/?",
-      "dest": "/api/evaluate.js"
-    },
-    {
-      "src": "/api/meltpool/?",
-      "dest": "/api/meltpool.js"
-    },
-    {
-      "src": "/api/bontha/?",
-      "dest": "/api/bontha.js"
-    },
-    {
-      "src": "/api/materials/?",
-      "dest": "/api/materials.js"
-    },
-    {
-      "src": "/api/papers/?",
-      "dest": "/api/papers.js"
-    },
-    {
-      "src": "/api/scopus/?",
-      "dest": "/api/scopus.js"
-    },
-    {
-      "src": "/plots/(.*)",
-      "dest": "/plots/$1"
-    },
-    {
-      "src": "/data/(.*)",
-      "dest": "/data/$1"
-    },
-    {
-      "src": "/docs/(.*)",
-      "dest": "/docs/$1"
-    },
-    {
-      "src": "/report/(.*)",
-      "dest": "/report/$1"
-    },
-    {
-      "src": "/dashboard/?",
-      "dest": "/process_windows_dashboard.html"
-    },
-    {
-      "src": "/",
-      "dest": "/process_windows_dashboard.html"
+      "source": "/",
+      "destination": "/process_windows_dashboard.html"
     }
   ]
 }

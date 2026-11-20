@@ -1,0 +1,231 @@
+{
+  "generated_at": "2026-11-20T07:41:53.241Z",
+  "initial_csv_count": 214,
+  "removed_duplicates_count": 10,
+  "removed_duplicates": [
+    {
+      "paper_number": 109,
+      "kept": 69,
+      "reason": "Duplicate of #69 (Heigel et al. 2015 thermo-mechanical DED model)"
+    },
+    {
+      "paper_number": 115,
+      "kept": 77,
+      "reason": "Duplicate of #77 (Liu et al. 2021 aerospace Ti AM review)"
+    },
+    {
+      "paper_number": 118,
+      "kept": 30,
+      "reason": "Duplicate of #30 (Lu et al. 2019 rectangular & S-shaped DED residual stress)"
+    },
+    {
+      "paper_number": 127,
+      "kept": 57,
+      "reason": "Duplicate of #57 (Bontha et al. 2006 thin-wall thermal process maps)"
+    },
+    {
+      "paper_number": 131,
+      "kept": 105,
+      "reason": "Duplicate of #105 (Liu S. et al. 2019 Ti6Al4V AM review)"
+    },
+    {
+      "paper_number": 132,
+      "kept": 59,
+      "reason": "Duplicate of #59 (Vrancken et al. 2012 SLM Ti6Al4V heat treatment)"
+    },
+    {
+      "paper_number": 135,
+      "kept": 60,
+      "reason": "Duplicate of #60 (Vilaro et al. 2011 SLM Ti-6Al-4V microstructures)"
+    },
+    {
+      "paper_number": 145,
+      "kept": 65,
+      "reason": "Duplicate of #65 (Zhao et al. 2017 synchrotron X-ray LPBF monitoring)"
+    },
+    {
+      "paper_number": 151,
+      "kept": 108,
+      "reason": "Duplicate of #108 (Nguyen H.D. et al. 2022 critical review Ti-6Al-4V)"
+    },
+    {
+      "paper_number": 153,
+      "kept": 67,
+      "reason": "Duplicate of #67 (Tammas-Williams et al. 2015 XCT defect strategies)"
+    }
+  ],
+  "removed_non_ti64_count": 5,
+  "removed_non_ti64": [
+    {
+      "paper_number": 159,
+      "reason": "Non-Ti-6Al-4V alloy: TiAl intermetallic alloy (Dilip et al. 2017)"
+    },
+    {
+      "paper_number": 161,
+      "reason": "Non-Ti-6Al-4V alloy: Titanium Aluminides based materials (Yadav et al. 2020)"
+    },
+    {
+      "paper_number": 171,
+      "reason": "Non-Ti-6Al-4V alloy: Metal-Injection-Molded beta titanium alloys (Xu et al. 2022)"
+    },
+    {
+      "paper_number": 184,
+      "reason": "Non-Ti-6Al-4V alloy: Intermetallic Al3Ti alloy (Lu Z. et al. 2016)"
+    },
+    {
+      "paper_number": 200,
+      "reason": "Non-Ti-6Al-4V alloy: Biomedical beta-type titanium alloy (Akahori et al. 2005)"
+    }
+  ],
+  "cleaned_csv_count": 199,
+  "cleaned_papers_database_count": 199,
+  "orphaned_predictions_rows": 0,
+  "repaired_scopus_notes_count": 10,
+  "repaired_scopus_notes": [
+    {
+      "paper_number": 57,
+      "title": "Thermal process maps for predicting solidification microstructure in laser fabrication of thin-wall structures",
+      "oldNote": "Indexed Ti-6Al-4V study (L-DED; Bontha et al. 2006) | Additive Manufacturing | DOI: 10.1016/j.addma.2018.06.017 | Pending quantitative experimental extraction",
+      "newNote": "Indexed Ti-6Al-4V study (L-DED; Bontha et al. 2006) | Journal of Materials Processing Technology | DOI: 10.1016/j.jmatprotec.2006.03.155",
+      "source": "harvested_100_papers.json (#127 equivalent)"
+    },
+    {
+      "paper_number": 69,
+      "title": "Thermo-mechanical model development and validation of directed energy deposition of Ti-6Al-4V (497 citations).",
+      "oldNote": "Indexed Ti-6Al-4V study (DED; Heigel et al. 2015) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-024-07624-0 | Pending quantitative experimental extraction",
+      "newNote": "Indexed Ti-6Al-4V study (DED; Heigel et al. 2015) | Additive Manufacturing | DOI: 10.1016/j.addma.2014.10.003 | Pending quantitative experimental extraction",
+      "source": "harvested_100_papers.json (#109 equivalent)"
+    },
+    {
+      "paper_number": 77,
+      "title": "Review on additive manufacturing of titanium alloys for aerospace applications (350 citations).",
+      "oldNote": "Indexed Ti-6Al-4V study (Review / DED; Liu et al. 2021) | Powder Technology | DOI: 10.1016/j.powtec.2026.122295 | Pending quantitative experimental extraction",
+      "newNote": "Indexed Ti-6Al-4V study (Review / DED; Liu et al. 2021) | JOM | DOI: 10.1007/s11837-021-04670-6 | Pending quantitative experimental extraction",
+      "source": "harvested_100_papers.json (#115 equivalent)"
+    },
+    {
+      "paper_number": 59,
+      "title": "Heat treatment of Ti6Al4V produced by SLM: Martensite decomposition, ductility recovery (1908 citations).",
+      "oldNote": "Indexed Ti-6Al-4V study (LPBF; Vrancken et al. 2012) | Defence Technology | DOI: 10.1016/j.dt.2016.08.001 | Pending quantitative experimental extraction",
+      "newNote": "Indexed Ti-6Al-4V study (LPBF; Vrancken et al. 2012) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2012.07.022 | Pending quantitative experimental extraction",
+      "source": "scopus_ti64_solidification_papers.csv & #132 equivalent"
+    },
+    {
+      "paper_number": 60,
+      "title": "As-fabricated and heat-treated microstructures of Ti-6Al-4V processed by SLM (1244 citations).",
+      "oldNote": "Indexed Ti-6Al-4V study (LPBF; Vilaro et al. 2011) | International Journal of Advanced Manufacturing Technology | DOI: 10.1007/s00170-023-11661-1 | Pending quantitative experimental extraction",
+      "newNote": "Indexed Ti-6Al-4V study (LPBF; Vilaro et al. 2011) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-011-0731-y | Pending quantitative experimental extraction",
+      "source": "scopus_ti64_solidification_papers.csv & #135 equivalent"
+    },
+    {
+      "paper_number": 61,
+      "title": "Effect of build orientation on mechanical properties and fracture modes of SLM Ti-6Al-4V (992 citations).",
+      "oldNote": "Indexed Ti-6Al-4V study (LPBF; Simonelli et al. 2014) | Advanced Engineering Materials | DOI: 10.1002/adem.202000408 | Pending quantitative experimental extraction",
+      "newNote": "Indexed Ti-6Al-4V study (LPBF; Simonelli et al. 2014) | Materials Science and Engineering A | DOI: 10.1016/j.msea.2014.07.086 | Pending quantitative experimental extraction",
+      "source": "scopus_ti64_solidification_papers.csv"
+    },
+    {
+      "paper_number": 63,
+      "title": "Grain structure control during metal 3D printing by high-intensity ultrasound (842 citations).",
+      "oldNote": "Indexed Ti-6Al-4V study (LPBF + US; Todaro et al. 2020) | Materials | DOI: 10.3390/ma17153825 | Pending quantitative experimental extraction",
+      "newNote": "Indexed Ti-6Al-4V study (LPBF + US; Todaro et al. 2020) | Nature Communications | DOI: 10.1038/s41467-019-13874-z | Pending quantitative experimental extraction",
+      "source": "scopus_ti64_solidification_papers.csv"
+    },
+    {
+      "paper_number": 65,
+      "title": "Real-time monitoring of LPBF using high-speed synchrotron X-ray imaging and diffraction (761 citations).",
+      "oldNote": "Indexed Ti-6Al-4V study (LPBF / In-Situ; Zhao et al. 2017) | Advanced Engineering Materials | DOI: 10.1002/adem.202500257 | Pending quantitative experimental extraction",
+      "newNote": "Indexed Ti-6Al-4V study (LPBF / In-Situ; Zhao et al. 2017) | Scientific Reports | DOI: 10.1038/s41598-017-03761-2 | Pending quantitative experimental extraction",
+      "source": "harvested_100_papers.json (#145 equivalent)"
+    },
+    {
+      "paper_number": 62,
+      "title": "Characteristic microstructures, solidification regimes, and mechanical properties in AM (891 citations).",
+      "oldNote": "Indexed Ti-6Al-4V study (Review / AM; Gorsse et al. 2017) | Materials | DOI: 10.3390/ma17030750 | Pending quantitative experimental extraction",
+      "newNote": "Indexed Ti-6Al-4V study (Review / AM; Gorsse et al. 2017) | Science and Technology of Advanced Materials | DOI: 10.1080/14686996.2017.1361305 | Pending quantitative experimental extraction",
+      "source": "scopus_ti64_solidification_papers.csv"
+    },
+    {
+      "paper_number": 67,
+      "title": "XCT analysis of melt strategies on defect population in Ti-6Al-4V manufactured by SEBM (594 citations).",
+      "oldNote": "Indexed Ti-6Al-4V study (EBM; Tammas-Williams et al. 2015) | CIRP Annals | DOI: 10.1016/j.cirp.2025.03.037 | Pending quantitative experimental extraction",
+      "newNote": "Indexed Ti-6Al-4V study (EBM; Tammas-Williams et al. 2015) | Materials Characterization | DOI: 10.1016/j.matchar.2015.02.008 | Pending quantitative experimental extraction",
+      "source": "harvested_100_papers.json (#153 equivalent)"
+    }
+  ],
+  "cleared_false_notes_count": 14,
+  "unverified_doi_journal_papers_55_to_78": [
+    {
+      "id": 55,
+      "author": "Coen et al.",
+      "title": "Methodology and experimental validation of analytical melt pool models for laser powder bed fusion"
+    },
+    {
+      "id": 56,
+      "author": "Bontha et al.",
+      "title": "Effects of process variables and size-scale on solidification microstructure in beam-based fabrication of bulky 3D structures"
+    },
+    {
+      "id": 58,
+      "author": "Guo et al.",
+      "title": "Research Progress and Application Scenarios of Wire + Arc Additive Manufacturing: From Process Control to Performance Evaluation"
+    },
+    {
+      "id": 64,
+      "author": "Bermingham et al. (2019)",
+      "title": "Promoting columnar to equiaxed transition (CET) and grain refinement in AM Ti alloys (767 citations)."
+    },
+    {
+      "id": 66,
+      "author": "Murr et al. (2010)",
+      "title": "Next-generation biomedical implants using additive manufacturing of functional mesh arrays (637 citations)."
+    },
+    {
+      "id": 68,
+      "author": "Facchini et al. (2010)",
+      "title": "Ductility of Ti-6Al-4V alloy produced by selective laser melting of prealloyed powders (520 citations)."
+    },
+    {
+      "id": 70,
+      "author": "Ly et al. (2017)",
+      "title": "Metal vapor micro-jet controls material redistribution and denudation in LPBF (470 citations)."
+    },
+    {
+      "id": 71,
+      "author": "Murr et al. (2012)",
+      "title": "Fabrication of metal and alloy components by additive manufacturing: 3D materials science (465 citations)."
+    },
+    {
+      "id": 72,
+      "author": "Cain et al. (2015)",
+      "title": "Crack propagation and fracture toughness of Ti-6Al-4V produced by selective laser melting (408 citations)."
+    },
+    {
+      "id": 73,
+      "author": "Dilip et al. (2017)",
+      "title": "Processing parameters evolution of melt pool, porosity, and microstructures in Ti-6Al-4V (398 citations)."
+    },
+    {
+      "id": 74,
+      "author": "Simonelli et al. (2015)",
+      "title": "Laser spatter and oxidation reactions during selective laser melting of Ti-6Al-4V (365 citations)."
+    },
+    {
+      "id": 75,
+      "author": "de Formanoir et al. (2016)",
+      "title": "Electron beam melted Ti-6Al-4V: Microstructure, texture and mechanical behavior (357 citations)."
+    },
+    {
+      "id": 76,
+      "author": "Simonelli et al. (2014)",
+      "title": "On the crystallographic texture formation of selective laser melted Ti-6Al-4V (350 citations)."
+    },
+    {
+      "id": 78,
+      "author": "Cunningham et al. (2017)",
+      "title": "Synchrotron-based X-ray microtomography of processing variables and porosity formation (346 citations)."
+    }
+  ],
+  "pending_experimental_extraction_count": 121,
+  "pending_experimental_extraction_range": "Retained rows from #79..#214 (density/ys/uts/el set to null / blank; zero uniform placeholders)"
+}
