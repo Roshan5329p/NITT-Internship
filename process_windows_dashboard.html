@@ -10229,22 +10229,32 @@ window.addEventListener('click', function(e) {
           <div style="display: flex; flex-direction: column; gap: 10px;">
             <div style="position: relative; background: radial-gradient(circle at 50% 35%, #0f172a, #040812); border: 1px solid rgba(56,189,248,0.22); border-radius: 12px; overflow: hidden;">
               <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(7,12,20,0.8);">
-                <button type="button" class="mp-pill-btn active" id="btnCadWireframe" onclick="toggleCadViewerOption('wireframe')">Wireframe</button>
+                <button type="button" class="mp-pill-btn" id="btnCadWireframe" onclick="toggleCadViewerOption('wireframe')" title="Toggle wireframe edge overlay">Wireframe</button>
                 <button type="button" class="mp-pill-btn active" id="btnCadEnvelope" onclick="toggleCadViewerOption('envelope')">Machine Envelope</button>
                 <button type="button" class="mp-pill-btn active" id="btnCadArrow" onclick="toggleCadViewerOption('arrow')">Build Dir (+Z)</button>
                 <select id="cadOverlayModeSelect" onchange="setCadOverlayMode(this.value)" style="background: #0b1220; color: #38bdf8; border: 1px solid rgba(56,189,248,0.35); border-radius: 6px; padding: 3px 6px; font-size: 10.5px;">
                   <option value="overhang" selected>Overlay: Overhangs (&gt;θ)</option>
+                  <option value="zheight">Overlay: Z-Height</option>
+                  <option value="solid">Overlay: Uniform Metallic</option>
                   <option value="thickness">Overlay: Wall Thickness (mm)</option>
                   <option value="stress">Overlay: Residual Stress Hotspots</option>
                   <option value="thermal">Overlay: Overheating Zones</option>
                 </select>
                 <button type="button" class="mp-pill-btn" onclick="resetCadCamera()">Reset Camera</button>
+                <button type="button" class="mp-pill-btn active" id="btnCadFitMode" onclick="toggleCadFitMode()" title="Switch between close-up part framing and full machine build envelope">Fit Part</button>
                 <div style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--text-secondary);">
                   <span>Overhang θ:</span>
                   <input type="number" id="cadOverhangThreshInput" min="20" max="75" step="1" value="45" onchange="runCadGeometryAnalysis()" style="width: 44px; background: #070c14; color: #fff; border: 1px solid rgba(255,255,255,0.18); border-radius: 4px; padding: 2px 4px; font-size: 10.5px;">
                   <span>Z-Cut:</span>
                   <input type="range" id="cadSectionSlider" min="5" max="100" value="100" oninput="setCadSectionPct(this.value)" style="width: 78px; accent-color: #38bdf8;">
                   <span id="cadSectionVal" style="font-family: monospace; width: 34px;">100%</span>
+                </div>
+              </div>
+              <div id="cadSmallDimBanner" style="display: none; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; background: rgba(245,158,11,0.12); border-bottom: 1px solid rgba(245,158,11,0.35); font-size: 10.5px; color: #fde68a;">
+                <span>Part max dimension is &lt; 5 mm — exported in Inches or Meters?</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <button type="button" class="step-btn" onclick="convertCadInchesToMm()" style="font-size: 10px; padding: 2px 8px; color: #fbbf24; border-color: rgba(251,191,36,0.5);">Convert ×25.4 (in)</button>
+                  <button type="button" class="step-btn" onclick="convertCadMetersToMm()" style="font-size: 10px; padding: 2px 8px; color: #38bdf8; border-color: rgba(56,189,248,0.5);">Convert ×1000 (m)</button>
                 </div>
               </div>
               <div id="cadHeatmapLegend" style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 5px 12px; background: rgba(4,8,16,0.92); border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 10px; font-family: 'JetBrains Mono', monospace; color: #cbd5e1;">
@@ -17274,9 +17284,10 @@ var cadViewerState = {
   yaw: -0.78,
   pitch: 0.48,
   zoom: 1.0,
-  wireframe: true,
+  wireframe: false,
   envelope: true,
   arrow: true,
+  cameraFitMode: 'part',
   overlayMode: 'overhang',
   sectionPct: 100,
   dragging: false,
@@ -17286,7 +17297,7 @@ var cadViewerState = {
 };
 
 const MAX_CAD_FILE_SIZE = 1024 * 1024 * 1024; // 1 GB hard default limit for streamed STL
-const CAD_STL_PROXY_MAX_TRIS = 60000;
+const CAD_STL_PROXY_MAX_TRIS = 100000;
 const CAD_FAST_VOXEL_TRI_THRESHOLD = 250000;
 
 const CAD_GUARDRAIL_RULES = {
@@ -17628,7 +17639,7 @@ function _parseStlInStreamingWorker(file, overhangDeg, onProgress) {
       '    const dzSpan = height / numSlices;',
       '    const twiceASlice = new Float64Array(numSlices);',
       '    const nzCutoff = overhangDeg === 45 ? -Math.cos(Math.PI / 4) : -Math.sin((overhangDeg * Math.PI) / 180);',
-      '    const TARGET_PROXY = 60000;',
+      '    const TARGET_PROXY = 100000;',
       '    const stride = Math.max(1, Math.ceil(nTri / TARGET_PROXY));',
       '    const maxProxy = Math.min(TARGET_PROXY, Math.ceil(nTri / stride));',
       '    const proxyVerts = new Float32Array(maxProxy * 9);',
@@ -17636,7 +17647,18 @@ function _parseStlInStreamingWorker(file, overhangDeg, onProgress) {
       '    let proxyIdx = 0;',
       '    let validCount = 0;',
       '    let signedVol6 = 0, areaSum = 0, overhangAreaMm2 = 0;',
+      '    let rngState = 2463534242;',
+      '    const nextRng = function() { rngState = (Math.imul(rngState, 1664525) + 1013904223) >>> 0; return rngState / 4294967296; };',
+      '    let bucketStart = 0;',
+      '    let bucketPick = Math.floor(nextRng() * Math.min(stride, nTri));',
+      '    let pickedInBucket = false;',
       '    for (let t = 0; t < nTri; t++) {',
+      '      if (t >= bucketStart + stride) {',
+      '        bucketStart += stride;',
+      '        const rem = Math.min(stride, nTri - bucketStart);',
+      '        bucketPick = bucketStart + Math.floor(nextRng() * rem);',
+      '        pickedInBucket = false;',
+      '      }',
       '      const b = t * 9;',
       '      const x0 = allVerts[b], y0 = allVerts[b+1], z0 = allVerts[b+2];',
       '      const x1 = allVerts[b+3], y1 = allVerts[b+4], z1 = allVerts[b+5];',
@@ -17648,7 +17670,7 @@ function _parseStlInStreamingWorker(file, overhangDeg, onProgress) {
       '      const vx = x2 - x0, vy = y2 - y0, vz = z2 - z0;',
       '      const crx = uy * vz - uz * vy, cry = uz * vx - ux * vz, crz = ux * vy - uy * vx;',
       '      const crLen = Math.hypot(crx, cry, crz);',
-      '      if (!Number.isFinite(crLen) || crLen <= 1e-12) continue;',
+      '      if (!Number.isFinite(crLen) || crLen <= 1e-18) continue;',
       '      validCount++;',
       '      const nx = crx / crLen, ny = cry / crLen, nz = crz / crLen;',
       '      const ax = x0 - ox, ay = y0 - oy, az = z0 - oz;',
@@ -17658,7 +17680,7 @@ function _parseStlInStreamingWorker(file, overhangDeg, onProgress) {
       '      const area = 0.5 * crLen;',
       '      areaSum += area;',
       '      const triAvgZ = (z0 + z1 + z2) / 3;',
-      '      if (nz < nzCutoff && triAvgZ > minZ + 0.15) overhangAreaMm2 += area;',
+      '      if (nz < nzCutoff && triAvgZ > minZ + height * 0.002) overhangAreaMm2 += area;',
       '      const tZMin = Math.min(z0, z1, z2), tZMax = Math.max(z0, z1, z2);',
       '      const sStart = Math.max(0, Math.ceil((tZMin - minZ) / dzSpan - 0.5));',
       '      const sEnd = Math.min(numSlices - 1, Math.floor((tZMax - minZ) / dzSpan - 0.5));',
@@ -17675,7 +17697,7 @@ function _parseStlInStreamingWorker(file, overhangDeg, onProgress) {
       '          else twiceASlice[s] += (c0x * c1y - c1x * c0y);',
       '        }',
       '      }',
-      '      if ((t % stride) === 0 && proxyIdx < maxProxy) {',
+      '      if (!pickedInBucket && t >= bucketPick && proxyIdx < maxProxy) {',
       '        const pb = proxyIdx * 9;',
       '        proxyVerts[pb] = x0; proxyVerts[pb+1] = y0; proxyVerts[pb+2] = z0;',
       '        proxyVerts[pb+3] = x1; proxyVerts[pb+4] = y1; proxyVerts[pb+5] = z1;',
@@ -17684,6 +17706,7 @@ function _parseStlInStreamingWorker(file, overhangDeg, onProgress) {
       '        proxyNormals[pb+3] = nx; proxyNormals[pb+4] = ny; proxyNormals[pb+5] = nz;',
       '        proxyNormals[pb+6] = nx; proxyNormals[pb+7] = ny; proxyNormals[pb+8] = nz;',
       '        proxyIdx++;',
+      '        pickedInBucket = true;',
       '      }',
       '    }',
       '    allVerts = null;',
@@ -17691,22 +17714,29 @@ function _parseStlInStreamingWorker(file, overhangDeg, onProgress) {
       '    const finalProxyVerts = proxyIdx === maxProxy ? proxyVerts : proxyVerts.slice(0, proxyIdx * 9);',
       '    const finalProxyNormals = proxyIdx === maxProxy ? proxyNormals : proxyNormals.slice(0, proxyIdx * 9);',
       '    const layerSlices = [];',
+      '    const rawLayerSlices = [];',
       '    let prevA = 0, abruptAreaJumpCount = 0;',
       '    for (let s = 0; s < numSlices; s++) {',
       '      const zs = minZ + (s + 0.5) * dzSpan;',
       '      const area = Math.max(0, Math.abs(twiceASlice[s]) * 0.5);',
-      '      const ratio = s === 0 ? 1.0 : Number(Math.max(0.05, Math.min(20, prevA / Math.max(1e-2, area))).toFixed(2));',
+      '      const ratio = s === 0 ? 1.0 : Number(Math.max(0.05, Math.min(20, prevA / Math.max(1e-12, area))).toFixed(2));',
       '      if (s > 0 && (ratio >= 2.0 || ratio <= 0.5)) abruptAreaJumpCount++;',
       '      layerSlices.push({ zMm: Number(zs.toFixed(2)), areaMm2: Number(area.toFixed(1)), heatSinkRatio: ratio });',
+      '      rawLayerSlices.push({ rawZ: zs, rawArea: area, heatSinkRatio: ratio });',
       '      prevA = area;',
       '    }',
-      '    const volumeCm3 = Number((Math.abs(signedVol6) / 6000).toFixed(3));',
+      '    const rawVolumeUnits3 = Math.abs(signedVol6) / 6;',
+      '    const volumeCm3 = Number((rawVolumeUnits3 / 1000).toFixed(3));',
       '    const surfaceAreaCm2 = Number((areaSum / 100).toFixed(2));',
-      '    const windingSign = signedVol6 < -1e-6 ? -1 : 1;',
+      '    const windingSign = signedVol6 < -1e-18 ? -1 : 1;',
       '    const metrics = {',
       '      originalTriangleCount: validCount,',
       '      proxyTriangleCount: proxyIdx,',
       '      boundingBox: { min: [minX, minY, minZ], max: [maxX, maxY, maxZ], size: [maxX - minX, maxY - minY, maxZ - minZ] },',
+      '      rawVolumeUnits3,',
+      '      rawSurfaceAreaUnits2: areaSum,',
+      '      rawOverhangAreaUnits2: overhangAreaMm2,',
+      '      rawLayerSlices,',
       '      volumeCm3,',
       '      massTi64Grams: Number((volumeCm3 * 4.43).toFixed(2)),',
       '      surfaceAreaCm2,',
@@ -17880,6 +17910,44 @@ async function _parseBrepInWorker(buffer, ext, fileName) {
   });
 }
 
+function isCadDecimatedProxy(mesh) {
+  const m = mesh || cadActiveMesh;
+  if (!m) return false;
+  return Boolean(m.wasDecimated) || ((m.originalTriangleCount || m.triangleCount) > CAD_FAST_VOXEL_TRI_THRESHOLD);
+}
+
+function _syncCadUiGuards() {
+  const decimated = isCadDecimatedProxy(cadActiveMesh);
+  const wfBtn = document.getElementById('btnCadWireframe');
+  if (wfBtn) {
+    if (decimated) {
+      cadViewerState.wireframe = false;
+      wfBtn.classList.remove('active');
+      wfBtn.disabled = true;
+      wfBtn.style.opacity = '0.48';
+      wfBtn.style.cursor = 'not-allowed';
+      wfBtn.title = 'Wireframe disabled on decimated proxy meshes to prevent disconnected edge artifacts';
+    } else {
+      wfBtn.disabled = false;
+      wfBtn.style.opacity = '';
+      wfBtn.style.cursor = '';
+      wfBtn.title = 'Toggle wireframe edge overlay';
+      wfBtn.classList.toggle('active', Boolean(cadViewerState.wireframe));
+    }
+  }
+  const smallBanner = document.getElementById('cadSmallDimBanner');
+  if (smallBanner) {
+    const maxDim = cadActiveMesh ? Math.max(...cadActiveMesh.boundingBox.size) : 0;
+    smallBanner.style.display = (cadActiveMesh && cadCurrentUnit === 'mm' && maxDim > 0 && maxDim < 5.0) ? 'flex' : 'none';
+  }
+  const fitBtn = document.getElementById('btnCadFitMode');
+  if (fitBtn) {
+    const isPart = cadViewerState.cameraFitMode !== 'envelope';
+    fitBtn.innerText = isPart ? 'Fit Part' : 'Fit Envelope';
+    fitBtn.classList.toggle('active', isPart);
+  }
+}
+
 function _applyCadMesh(mesh, fileName, extraWarnings, fullMetrics) {
   let active = mesh;
   const safeFile = typeof escapeHtml === 'function' ? escapeHtml(fileName || 'part.stl') : String(fileName || 'part.stl');
@@ -17895,25 +17963,22 @@ function _applyCadMesh(mesh, fileName, extraWarnings, fullMetrics) {
   cadOriginalMesh = active;
   cadRawMesh = active;
   cadCurrentFileName = fileName;
+  // Keep raw coordinates as mm by default; expose explicit Inches/Meters conversion banner when maxDim < 5 mm.
+  cadCurrentUnit = 'mm';
+  const unitSel = document.getElementById('cadSourceUnitSelect');
+  if (unitSel) unitSel.value = 'mm';
   const refBbox = (fullMetrics && fullMetrics.boundingBox) ? fullMetrics.boundingBox : active.boundingBox;
   const maxSpan = Math.max(...refBbox.size);
-  // Prevent false 25.4x inch auto-scaling on small sub-10 mm precision Ti-6Al-4V parts; expose explicit Convert Inches -> mm button instead.
-  cadCurrentUnit = (maxSpan > 0 && maxSpan < 0.25) ? 'm' : 'mm';
-  const unitSel = document.getElementById('cadSourceUnitSelect');
-  if (unitSel) unitSel.value = cadCurrentUnit;
   const convBtn = document.getElementById('btnCadConvertInchMm');
   if (convBtn) convBtn.style.display = (maxSpan > 0 && maxSpan < 15.0) ? 'inline-flex' : 'none';
-  if (cadCurrentUnit !== 'mm') {
-    warnings.push(`Max span is ${maxSpan.toFixed(3)} units (< 0.25) — auto-selected meters ('m'). Verify source units below.`);
-  } else if (maxSpan > 0 && maxSpan < 10.0) {
-    warnings.push(`Sub-10 mm precision span (${maxSpan.toFixed(2)}): kept millimeters ('mm') by default to prevent false 25.4× inflation. Click "Convert Inches → mm" if exported in inches.`);
-  }
   const unitRow = document.getElementById('cadUnitRow');
   if (unitRow) unitRow.style.display = 'flex';
   if (warnings.length > 0) _showCadGuardrail('warn', warnings.join('<br>'));
   else _showCadGuardrail('ok', `Loaded <strong>${safeFile}</strong> cleanly in local browser RAM.`);
 
-  changeCadSourceUnit(cadCurrentUnit);
+  cadViewerState.cameraFitMode = 'part';
+  if (isCadDecimatedProxy(active)) cadViewerState.wireframe = false;
+  changeCadSourceUnit('mm');
   resetCadCamera();
 }
 
@@ -17923,6 +17988,13 @@ function convertCadInchesToMm() {
   changeCadSourceUnit('inch');
 }
 window.convertCadInchesToMm = convertCadInchesToMm;
+
+function convertCadMetersToMm() {
+  const unitSel = document.getElementById('cadSourceUnitSelect');
+  if (unitSel) unitSel.value = 'm';
+  changeCadSourceUnit('m');
+}
+window.convertCadMetersToMm = convertCadMetersToMm;
 
 function changeCadSourceUnit(unit) {
   cadCurrentUnit = unit;
@@ -17934,6 +18006,7 @@ function changeCadSourceUnit(unit) {
     for (let i = 0; i < pos.length; i++) pos[i] = cadRawMesh.positions[i] * factor;
     cadActiveMesh = Object.assign({}, cadRawMesh, { positions: pos, boundingBox: _cadBbox(pos) });
   }
+  _syncCadUiGuards();
   _updateCadMeshSummaryUi();
   if (typeof runCadGeometryAnalysis === 'function') runCadGeometryAnalysis();
   renderCadViewer();
@@ -18011,7 +18084,7 @@ async function processCadFile(file) {
   }
 
   if (mb > CAD_GUARDRAIL_RULES.softWarningMb) {
-    warnings.push(`Large CAD file (${mb.toFixed(1)} MB > 50 MB). Streaming 16 MB worker chunks with ≤60,000-triangle viewport proxy.`);
+    warnings.push(`Large CAD file (${mb.toFixed(1)} MB > 50 MB). Streaming 16 MB worker chunks with ≤100,000-triangle viewport proxy.`);
   }
 
   const devMem = typeof navigator !== 'undefined' ? navigator.deviceMemory : undefined;
@@ -18038,7 +18111,7 @@ async function processCadFile(file) {
       setTimeout(() => _setCadProgressUi(false, 0, ''), 900);
 
       if (res.metrics.fastVoxelActive) {
-        warnings.push('Fast voxel estimation active (&gt;250k tris): O(N) full-resolution metrics computed in worker; 60,000-triangle proxy active in 3D viewer.');
+        warnings.push('Fast voxel estimation active (&gt;250k tris): O(N) full-resolution metrics computed in worker; 100,000-triangle proxy active in 3D viewer.');
       }
 
       const proxyMesh = {
@@ -18109,6 +18182,7 @@ function clearLoadedCadPart() {
   const guideCard = document.getElementById('cadNativeGuideCard'); if (guideCard) guideCard.style.display = 'none';
   const st = document.getElementById('cadStatusBadge');
   if (st) { st.innerText = 'Waiting for CAD file'; st.style.color = '#94a3b8'; }
+  _syncCadUiGuards();
   _updateCadMeshSummaryUi();
   _renderCadGeometryUi();
   _renderCadPrintabilityAndOriUi();
@@ -18315,13 +18389,26 @@ function analyzeCadGeometryUi(mesh, overhangDeg, minWallLimitMm) {
   const f2 = factor * factor, f3 = factor * factor * factor;
   const fm = cadWorkerFullMetrics;
 
-  if (fm && !cadIsRotatedFromOriginal && fm.layerSlices && fm.layerSlices.length) {
-    layerSlices = fm.layerSlices.map(sl => ({
-      zMm: Number((sl.zMm * factor).toFixed(2)),
-      areaMm2: Number((sl.areaMm2 * f2).toFixed(1)),
-      heatSinkRatio: sl.heatSinkRatio
-    }));
-    abruptAreaJumpCount = fm.abruptAreaJumpCount;
+  if (fm && !cadIsRotatedFromOriginal && (fm.rawLayerSlices || fm.layerSlices) && (fm.rawLayerSlices || fm.layerSlices).length) {
+    if (fm.rawLayerSlices && fm.rawLayerSlices.length) {
+      let prevA = 0;
+      abruptAreaJumpCount = 0;
+      layerSlices = fm.rawLayerSlices.map((sl, sIdx) => {
+        const zScaled = Number((sl.rawZ * factor).toFixed(2));
+        const aScaled = Number((sl.rawArea * f2).toFixed(1));
+        const ratio = sIdx === 0 ? 1.0 : Number(Math.max(0.05, Math.min(20, prevA / Math.max(1e-2, aScaled))).toFixed(2));
+        if (sIdx > 0 && (ratio >= 2.0 || ratio <= 0.5)) abruptAreaJumpCount++;
+        prevA = aScaled;
+        return { zMm: zScaled, areaMm2: aScaled, heatSinkRatio: ratio };
+      });
+    } else {
+      layerSlices = fm.layerSlices.map(sl => ({
+        zMm: Number((sl.zMm * factor).toFixed(2)),
+        areaMm2: Number((sl.areaMm2 * f2).toFixed(1)),
+        heatSinkRatio: sl.heatSinkRatio
+      }));
+      abruptAreaJumpCount = fm.abruptAreaJumpCount;
+    }
   } else {
     const height = bb.size[2], numSlices = Math.max(8, Math.min(90, Math.round(height / 0.4)));
     layerSlices = []; let prevA = 0; abruptAreaJumpCount = 0;
@@ -18349,12 +18436,16 @@ function analyzeCadGeometryUi(mesh, overhangDeg, minWallLimitMm) {
     }
   }
 
-  const volumeCm3 = fm ? Number((fm.volumeCm3 * f3).toFixed(3)) : Number((Math.abs(signedVol6)/6000).toFixed(3));
-  const surfaceAreaCm2 = fm ? Number((fm.surfaceAreaCm2 * f2).toFixed(2)) : Number((areaSum/100).toFixed(2));
+  const volumeCm3 = fm
+    ? Number((((fm.rawVolumeUnits3 ?? (fm.volumeCm3 * 1000)) * f3) / 1000).toFixed(3))
+    : Number((Math.abs(signedVol6)/6000).toFixed(3));
+  const surfaceAreaCm2 = fm
+    ? Number((((fm.rawSurfaceAreaUnits2 ?? (fm.surfaceAreaCm2 * 100)) * f2) / 100).toFixed(2))
+    : Number((areaSum/100).toFixed(2));
   const windingSign = fm ? fm.windingSign : (signedVol6 < -1e-6 ? -1 : 1);
   const proxyOhPct = areaSum > 0 ? Math.min(100, (overhangAreaMm2/areaSum)*100) : 0;
   const overhangAreaCm2 = (fm && !cadIsRotatedFromOriginal)
-    ? Number((fm.overhangAreaCm2 * f2).toFixed(2))
+    ? Number((((fm.rawOverhangAreaUnits2 ?? (fm.overhangAreaCm2 * 100)) * f2) / 100).toFixed(2))
     : Number(((surfaceAreaCm2 * proxyOhPct) / 100).toFixed(2));
   const overhangFractionPct = (fm && !cadIsRotatedFromOriginal)
     ? fm.overhangFractionPct
@@ -18959,10 +19050,21 @@ function _renderCadGeometryUi() {
 }
 
 function toggleCadViewerOption(opt) {
+  if (opt === 'wireframe' && isCadDecimatedProxy(cadActiveMesh)) {
+    cadViewerState.wireframe = false;
+    _syncCadUiGuards();
+    return;
+  }
   cadViewerState[opt] = !cadViewerState[opt];
   const map = { wireframe: 'btnCadWireframe', envelope: 'btnCadEnvelope', arrow: 'btnCadArrow' };
   const btn = document.getElementById(map[opt]);
   if (btn) btn.classList.toggle('active', cadViewerState[opt]);
+  renderCadViewer();
+}
+function toggleCadFitMode() {
+  cadViewerState.cameraFitMode = cadViewerState.cameraFitMode === 'envelope' ? 'part' : 'envelope';
+  cadViewerState.zoom = 1.0;
+  _syncCadUiGuards();
   renderCadViewer();
 }
 function setCadSectionPct(v) {
@@ -18971,7 +19073,13 @@ function setCadSectionPct(v) {
   const el = document.getElementById('cadSectionVal'); if (el) el.innerText = cadViewerState.sectionPct + '%';
   renderCadViewer();
 }
-function resetCadCamera() { cadViewerState.yaw = -0.78; cadViewerState.pitch = 0.48; cadViewerState.zoom = 1.0; renderCadViewer(); }
+function resetCadCamera() {
+  cadViewerState.yaw = -0.78;
+  cadViewerState.pitch = 0.48;
+  cadViewerState.zoom = 1.0;
+  _syncCadUiGuards();
+  renderCadViewer();
+}
 function _scheduleCadViewerRender() {
   if (cadViewerRafPending) return;
   cadViewerRafPending = true;
@@ -18986,6 +19094,7 @@ function _scheduleCadViewerRender() {
   }
 }
 window.toggleCadViewerOption = toggleCadViewerOption;
+window.toggleCadFitMode = toggleCadFitMode;
 window.setCadSectionPct = setCadSectionPct;
 window.resetCadCamera = resetCadCamera;
 
@@ -18997,26 +19106,32 @@ function renderCadViewer() {
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
 
-  // Determine viewport scale cleanly around either active mesh or machine envelope
+  // Auto-frame camera to part bounding sphere (~65% viewport height) or full machine envelope
   const mac = getActiveCadMachine();
   const bb = cadActiveMesh ? cadActiveMesh.boundingBox : { min:[0,0,0], max:[mac.envelopeMm[0]*0.3, mac.envelopeMm[1]*0.3, mac.envelopeMm[2]*0.3], size:[60,40,35] };
   const cx = (bb.min[0] + bb.max[0]) * 0.5, cy = (bb.min[1] + bb.max[1]) * 0.5, czBase = bb.min[2];
-  const refSpan = Math.max(25, Math.max(bb.size[0], bb.size[1], bb.size[2]));
-  const pxScale = (Math.min(W, H) * 0.52 / refSpan) * cadViewerState.zoom;
+  const partRadius = Math.max(1e-6, Math.hypot(bb.size[0] * 0.5, bb.size[1] * 0.5, bb.size[2] * 0.5));
+  const envRadius = Math.max(1, Math.hypot(mac.envelopeMm[0] * 0.5, mac.envelopeMm[1] * 0.5, mac.envelopeMm[2] * 0.5));
+  const fitEnvelope = !cadActiveMesh || cadViewerState.cameraFitMode === 'envelope';
+  const frameRadius = fitEnvelope ? Math.max(partRadius, envRadius) : partRadius;
+  const pxScale = ((H * 0.65) / (frameRadius * 2.0)) * cadViewerState.zoom;
 
   const cyaw = Math.cos(cadViewerState.yaw), syaw = Math.sin(cadViewerState.yaw);
   const cpit = Math.cos(cadViewerState.pitch), spit = Math.sin(cadViewerState.pitch);
   const zMid = bb.size[2] * 0.5;
+  const perspDist = Math.max(1e-5, frameRadius * 4.5);
   const proj = (x, y, z) => {
     const dx = x - cx, dy = y - cy, dz = (z - czBase) - zMid;
     const x1 = dx * cyaw - dy * syaw, y1 = dx * syaw + dy * cyaw;
     const z2 = dz * cpit - y1 * spit, y2 = dz * spit + y1 * cpit;
-    const persp = 1.0 / (1.0 + y2 / (refSpan * 4.5));
+    const persp = 1.0 / (1.0 + y2 / perspDist);
     return [W * 0.5 + x1 * pxScale * persp, H * 0.52 - z2 * pxScale * persp, y2];
   };
 
-  // 1. Build plate grid on z = czBase
-  const gHalf = Math.max(refSpan * 0.85, Math.min(mac.envelopeMm[0], mac.envelopeMm[1]) * 0.5);
+  // 1. Build plate grid on z = czBase (local to part radius in Fit Part mode)
+  const gHalf = fitEnvelope
+    ? Math.max(mac.envelopeMm[0], mac.envelopeMm[1]) * 0.55
+    : partRadius * 1.15;
   ctx.strokeStyle = 'rgba(56, 189, 248, 0.14)'; ctx.lineWidth = 1;
   for (let i = -4; i <= 4; i++) {
     const d = (i / 4) * gHalf;
@@ -19026,8 +19141,8 @@ function renderCadViewer() {
     ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(dPt[0], dPt[1]); ctx.stroke();
   }
 
-  // 2. Machine build envelope wireframe box (if toggled)
-  if (cadViewerState.envelope) {
+  // 2. Machine build envelope wireframe box (drawn when in Fit Envelope mode or within 8x of part radius)
+  if (cadViewerState.envelope && (fitEnvelope || !cadActiveMesh || envRadius <= partRadius * 8.0)) {
     const ex = mac.envelopeMm[0] * 0.5, ey = mac.envelopeMm[1] * 0.5, ez = mac.envelopeMm[2];
     const pts = [
       proj(cx-ex,cy-ey,czBase), proj(cx+ex,cy-ey,czBase), proj(cx+ex,cy+ey,czBase), proj(cx-ex,cy+ey,czBase),
@@ -19040,70 +19155,89 @@ function renderCadViewer() {
     ctx.setLineDash([]);
   }
 
-  // 3. Render CAD triangles (up to 60,000 proxy tris when settled, 15,000 LOD during active orbit drag for locked 60 FPS)
+  // 3. Render CAD triangles (solid shaded up to 100,000 proxy tris when settled, 25,000 LOD during active orbit drag for locked 60 FPS)
   if (cadActiveMesh) {
     const pos = cadActiveMesh.positions, norm = cadActiveMesh.normals;
     const nTri = cadActiveMesh.triangleCount;
-    const zClip = czBase + bb.size[2] * (cadViewerState.sectionPct / 100);
-    const maxDrawTris = cadViewerState.dragging ? 15000 : CAD_STL_PROXY_MAX_TRIS;
+    const zMinMesh = bb.min[2], zSpanMesh = Math.max(1e-6, bb.size[2]);
+    const zClip = czBase + zSpanMesh * (cadViewerState.sectionPct / 100);
+    const maxDrawTris = cadViewerState.dragging ? 25000 : CAD_STL_PROXY_MAX_TRIS;
     const step = nTri > maxDrawTris ? Math.ceil(nTri / maxDrawTris) : 1;
     const drawList = [];
     const windingSign = (cadGeometryReport && cadGeometryReport.windingSign) || 1;
+    const isDecimatedProxy = isCadDecimatedProxy(cadActiveMesh);
     for (let t = 0; t < nTri; t += step) {
       const b = t * 9;
       const ax=pos[b], ay=pos[b+1], az=pos[b+2];
       const bx=pos[b+3], by=pos[b+4], bz=pos[b+5];
       const cxV=pos[b+6], cyV=pos[b+7], czV=pos[b+8];
-      if ((az + bz + czV) / 3 > zClip) continue;
+      const avgZ = (az + bz + czV) / 3;
+      if (avgZ > zClip) continue;
       const p0 = proj(ax,ay,az), p1 = proj(bx,by,bz), p2 = proj(cxV,cyV,czV);
       // Winding-aware backface culling (supports standard CCW and inverted-winding STLs)
       const area2 = (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p1[1] - p0[1]) * (p2[0] - p0[0]);
       if ((area2 * windingSign) >= 0) continue;
       const nx = norm[b], ny = norm[b+1], nz = norm[b+2];
-      const light = Math.max(0.28, 0.35 + Math.abs(nx * 0.45 + ny * 0.35 + nz * 0.82) * 0.65);
+      const light = Math.max(0.30, 0.36 + Math.abs(nx * 0.45 + ny * 0.35 + nz * 0.82) * 0.64);
       const isOverhang = cadGeometryReport && cadGeometryReport.perOverhang
         ? Boolean(cadGeometryReport.perOverhang[t])
-        : (nz < -0.707 && az > czBase + 0.2);
+        : (nz < -0.707 && avgZ > czBase + 0.01 * zSpanMesh);
       const thickMm = (cadGeometryReport && cadGeometryReport.perThick) ? cadGeometryReport.perThick[t] : 99;
       const stressVal = (cadSimReport && cadSimReport.perStress) ? cadSimReport.perStress[t] : 0.2;
       const thermVal = (cadSimReport && cadSimReport.perThermal) ? cadSimReport.perThermal[t] : 0.2;
-      drawList.push({ p0, p1, p2, depth: (p0[2] + p1[2] + p2[2]) / 3, light, isOverhang, thickMm, stressVal, thermVal });
+      const zFrac = Math.max(0, Math.min(1, (avgZ - zMinMesh) / zSpanMesh));
+      drawList.push({ p0, p1, p2, depth: (p0[2] + p1[2] + p2[2]) / 3, light, isOverhang, thickMm, stressVal, thermVal, zFrac });
     }
     drawList.sort((a, b) => b.depth - a.depth);
+    const drawWire = Boolean(cadViewerState.wireframe) && !isDecimatedProxy && drawList.length <= 12000;
     for (let i = 0; i < drawList.length; i++) {
       const f = drawList[i];
       ctx.beginPath(); ctx.moveTo(f.p0[0], f.p0[1]); ctx.lineTo(f.p1[0], f.p1[1]); ctx.lineTo(f.p2[0], f.p2[1]); ctx.closePath();
-      if (cadViewerState.overlayMode === 'thickness') {
+      let fillColor;
+      if (cadViewerState.overlayMode === 'solid') {
+        const gCol = Math.round(188 * f.light), bCol = Math.round(205 * f.light), rCol = Math.round(172 * f.light);
+        fillColor = `rgb(${rCol}, ${gCol}, ${bCol})`;
+      } else if (cadViewerState.overlayMode === 'zheight') {
+        const z = f.zFrac;
+        const r = Math.round((z < 0.5 ? 56 + z * 2 * 195 : 251 - (z - 0.5) * 2 * 24) * f.light);
+        const g = Math.round((z < 0.5 ? 189 + z * 2 * 2 : 191 - (z - 0.5) * 2 * 80) * f.light);
+        const bl = Math.round((z < 0.5 ? 248 - z * 2 * 212 : 36 + (z - 0.5) * 2 * 100) * f.light);
+        fillColor = `rgb(${r}, ${g}, ${bl})`;
+      } else if (cadViewerState.overlayMode === 'thickness') {
         const rgb = f.thickMm < 1.2 ? [239, 68, 68] : (f.thickMm < 3.5 ? [245, 158, 11] : (f.thickMm < 10.0 ? [52, 211, 153] : [56, 189, 248]));
-        ctx.fillStyle = `rgb(${Math.round(rgb[0]*f.light)}, ${Math.round(rgb[1]*f.light)}, ${Math.round(rgb[2]*f.light)})`;
+        fillColor = `rgb(${Math.round(rgb[0]*f.light)}, ${Math.round(rgb[1]*f.light)}, ${Math.round(rgb[2]*f.light)})`;
       } else if (cadViewerState.overlayMode === 'stress') {
         const v = f.stressVal;
         const r = Math.round((v < 0.5 ? 56 + (v * 2) * 195 : 251 - ((v - 0.5) * 2) * 12) * f.light);
         const g = Math.round((v < 0.5 ? 189 + (v * 2) * 2 : 191 - ((v - 0.5) * 2) * 123) * f.light);
         const bl = Math.round((v < 0.5 ? 248 - (v * 2) * 212 : 36 + ((v - 0.5) * 2) * 32) * f.light);
-        ctx.fillStyle = `rgb(${r}, ${g}, ${bl})`;
+        fillColor = `rgb(${r}, ${g}, ${bl})`;
       } else if (cadViewerState.overlayMode === 'thermal') {
         const v = f.thermVal;
         const r = Math.round((60 + v * 195) * f.light);
         const g = Math.round((190 - v * 115) * f.light);
         const bl = Math.round((245 - v * 210) * f.light);
-        ctx.fillStyle = `rgb(${r}, ${g}, ${bl})`;
+        fillColor = `rgb(${r}, ${g}, ${bl})`;
       } else if (f.isOverhang) {
-        ctx.fillStyle = `rgb(${Math.round(220*f.light)}, ${Math.round(80*f.light)}, ${Math.round(65*f.light)})`;
+        fillColor = `rgb(${Math.round(220*f.light)}, ${Math.round(80*f.light)}, ${Math.round(65*f.light)})`;
       } else {
-        ctx.fillStyle = `rgb(${Math.round(85*f.light)}, ${Math.round(175*f.light)}, ${Math.round(235*f.light)})`;
+        fillColor = `rgb(${Math.round(85*f.light)}, ${Math.round(175*f.light)}, ${Math.round(235*f.light)})`;
       }
+      ctx.fillStyle = fillColor;
       ctx.fill();
-      if (cadViewerState.wireframe && drawList.length <= 12000) {
+      if (drawWire) {
         ctx.strokeStyle = 'rgba(15, 23, 42, 0.35)'; ctx.lineWidth = 0.7; ctx.stroke();
+      } else {
+        // Sub-pixel/proxy overlap matching fill eliminates hairline seams & stipple gaps on strided meshes
+        ctx.strokeStyle = fillColor; ctx.lineWidth = isDecimatedProxy ? 1.45 : 0.6; ctx.stroke();
       }
     }
   }
 
-  // 4. Build Direction (+Z) Arrow
+  // 4. Build Direction (+Z) Arrow (scaled cleanly to active view frameRadius)
   if (cadViewerState.arrow) {
-    const ax0 = cx - refSpan * 0.72, ay0 = cy - refSpan * 0.55;
-    const pBase = proj(ax0, ay0, czBase), pTip = proj(ax0, ay0, czBase + refSpan * 0.55);
+    const ax0 = cx - frameRadius * 0.92, ay0 = cy - frameRadius * 0.72;
+    const pBase = proj(ax0, ay0, czBase), pTip = proj(ax0, ay0, czBase + frameRadius * 0.72);
     ctx.strokeStyle = '#34d399'; ctx.lineWidth = 2.4;
     ctx.beginPath(); ctx.moveTo(pBase[0], pBase[1]); ctx.lineTo(pTip[0], pTip[1]); ctx.stroke();
     ctx.fillStyle = '#34d399'; ctx.font = 'bold 11px JetBrains Mono, monospace';
@@ -19148,16 +19282,21 @@ function _updateCadHeatmapLegend() {
   const el = document.getElementById('cadHeatmapLegend');
   if (!el) return;
   const mode = cadViewerState.overlayMode || 'overhang';
-  const deg = parseFloat(document.getElementById('cadOverhangThreshInput')?.value) || 45;
+  const deg = parseFloat(document.getElementById('cadOverhangThreshInput')?.value ?? '45');
+  const safeDeg = Number.isFinite(deg) ? deg : 45;
   const sw = (col, txt) => `<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${col};vertical-align:middle;margin-right:4px;"></span>${txt}</span>`;
-  if (mode === 'thickness') {
+  if (mode === 'solid') {
+    el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#acc0cd', 'Uniform Metallic Shaded Ti-6Al-4V Surface');
+  } else if (mode === 'zheight') {
+    el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#38bdf8', 'Build Plate Base (Z=0)') + sw('#fbbf24', 'Mid Elevation (50%)') + sw('#e36f88', 'Top Layers (100% Z)');
+  } else if (mode === 'thickness') {
     el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#ef4444', 'Critical Thin (&lt;1.2 mm)') + sw('#f59e0b', 'Thin (1.2–3.5 mm)') + sw('#34d399', 'Optimal (3.5–10 mm)') + sw('#38bdf8', 'Bulk (&gt;10 mm)');
   } else if (mode === 'stress') {
     el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#38bdf8', 'Low Peel Stress') + sw('#fbbf24', 'Moderate Transition') + sw('#ef4444', 'High Peel / Warping Hotspot (Overhangs / Jumps)');
   } else if (mode === 'thermal') {
     el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#3cbef5', 'Fast Cool (High Sink)') + sw('#c89640', 'Moderate Heat Accum.') + sw('#ff4b23', 'Overheating / Low Heat-Sink Ratio');
   } else {
-    el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#55afea', `Self-Supporting (&le;${deg}°)`) + sw('#dc5041', `Overhang / Needs Support (&gt;${deg}°)`);
+    el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#55afea', `Self-Supporting (&le;${safeDeg}°)`) + sw('#dc5041', `Overhang / Needs Support (&gt;${safeDeg}°)`);
   }
 }
 window._updateCadHeatmapLegend = _updateCadHeatmapLegend;
