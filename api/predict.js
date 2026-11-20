@@ -7,11 +7,14 @@
  */
 
 import { setCorsHeaders, normalizeProcessName, validateProcessInputs } from './_shared.js';
-import { evaluateTi64PinnNode } from './_pinn.js';
+import { evaluateTi64PinnNode, getPinnCalibrationData } from './_pinn.js';
 import {
   THERMOPHYSICAL_BASELINE,
   LITERATURE_DATASET_META,
   ML_MODELS_REGISTRY,
+  CALIBRATION_SUMMARY,
+  VALIDATION_MATRIX,
+  applyCalibratedResidual,
   hvToHrcNumeric
 } from './_platform_constants.js';
 
@@ -315,9 +318,22 @@ export default function handler(req, res) {
     // Clamp within physically realistic bounds for the microstructural state
     finalHv = Math.max(state.hv_range[0] - 15, Math.min(state.hv_range[1] + 15, finalHv));
 
+    // Calibrated process/condition residual adjustment from data/pinn_ti64_weights.json
+    const liveBundle = getPinnCalibrationData();
+    const matrixSource = liveBundle.validation_matrix || VALIDATION_MATRIX;
+    const calHv = Math.round(applyCalibratedResidual({
+      processId: proc, prop: 'hardness_hv', priorVal: finalHv,
+      P: p, v, h, t, T0: preheatC, ved, postProcessing: stateKey, isEli
+    }));
+    finalHv = Math.max(state.hv_range[0] - 20, Math.min(state.hv_range[1] + 20, calHv));
+
+    const valCellKey = ['analytical', 'rf', 'xgboost', 'svm', 'gpr', 'ensemble'].includes(requestedModel) ? requestedModel : 'ensemble';
+    const procValidation = matrixSource?.[valCellKey]?.[proc] || null;
+    const hvCell = procValidation?.hardness_hv || null;
+
     // Calibrated 95% Prediction Interval (PI = ± 1.96 · σ_calibrated)
     // Never hidden; expands under out-of-distribution conditions
-    const sigmaBase = modelMeta.rmse_hv;
+    const sigmaBase = (hvCell && Number.isFinite(hvCell.rmse)) ? Math.max(modelMeta.rmse_hv, hvCell.rmse) : modelMeta.rmse_hv;
     const sigmaCalibrated = sigmaBase * (1.0 + oodDist * 0.95);
     const piHalfWidth = Math.round(1.96 * sigmaCalibrated);
     const pi95 = {
@@ -328,11 +344,23 @@ export default function handler(req, res) {
       empirical_coverage_pct: 95.2
     };
 
-    // Tabor Scaling (Section 3): UTS [MPa] ≈ 3.05 · HV (scaled 2.95 coarse to 3.15 martensite)
+    // Tabor Scaling + Calibrated Tensile & Elongation predictions
     const taborFactor = state.tabor_factor;
-    const predUts = Math.round(finalHv * taborFactor);
-    const predYs = Math.round(predUts * 0.91);
-    const predElong = parseFloat(state.elong_pct.toFixed(1));
+    const rawUts = Math.round(finalHv * taborFactor);
+    const predUts = Math.round(applyCalibratedResidual({
+      processId: proc, prop: 'uts_mpa', priorVal: rawUts,
+      P: p, v, h, t, T0: preheatC, ved, postProcessing: stateKey, isEli
+    }));
+    const rawYs = Math.round(predUts * 0.91);
+    const predYs = Math.round(applyCalibratedResidual({
+      processId: proc, prop: 'ys_mpa', priorVal: rawYs,
+      P: p, v, h, t, T0: preheatC, ved, postProcessing: stateKey, isEli
+    }));
+    const rawElong = applyCalibratedResidual({
+      processId: proc, prop: 'elongation_pct', priorVal: state.elong_pct,
+      P: p, v, h, t, T0: preheatC, ved, postProcessing: stateKey, isEli
+    });
+    const predElong = parseFloat(Math.max(1.5, Math.min(22.0, rawElong)).toFixed(1));
 
     // Rockwell C (HRC) conversion via ASTM E140 Table 1 piecewise-linear interpolation
     const approxHrc = hvToHrcNumeric(finalHv);
@@ -369,12 +397,16 @@ export default function handler(req, res) {
       model: modelMeta.name,
       model_key: requestedModel,
       metrics: {
-        loo_mae_hv: modelMeta.loo_mae_hv,
-        rmse_hv: modelMeta.rmse_hv,
-        r2_score: modelMeta.r2,
+        loo_mae_hv: (hvCell && Number.isFinite(hvCell.mae)) ? hvCell.mae : modelMeta.loo_mae_hv,
+        rmse_hv: (hvCell && Number.isFinite(hvCell.rmse)) ? hvCell.rmse : modelMeta.rmse_hv,
+        r2_score: (hvCell && hvCell.r2 !== null) ? hvCell.r2 : modelMeta.r2,
+        process_accuracy_pct: hvCell ? hvCell.accuracyPct : null,
+        process_validation_type: hvCell ? hvCell.validationType : 'lopo_cv',
         training_papers_count: BENCHMARK_STATS.n_papers,
-        training_variants_count: BENCHMARK_STATS.n_points
+        training_variants_count: BENCHMARK_STATS.n_points,
+        calibration_summary: liveBundle.calibration_summary || CALIBRATION_SUMMARY
       },
+      validation_matrix_summary: procValidation,
       inputs: {
         power_w: p,
         speed_mms: v,

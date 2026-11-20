@@ -340,6 +340,12 @@ export function hvToHrcNumeric(hv: number): number {
   return last[1];
 }
 
+export {
+  CALIBRATION_SUMMARY,
+  CALIBRATED_RESIDUALS,
+  VALIDATION_MATRIX
+} from './calibrated-models';
+
 // Helper to convert Vickers Hardness to approximate Rockwell C (HRC) via ASTM E140 piecewise-linear table
 export function hvToHrcStandard(hv: number): string {
   if (hv < 240) return "< 20 HRC";

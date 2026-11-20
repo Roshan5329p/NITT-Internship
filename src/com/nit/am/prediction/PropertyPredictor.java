@@ -1,6 +1,14 @@
 package com.nit.am.prediction;
 
 import com.nit.am.model.AmRecord;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Materials Informatics Prediction & ASTM Qualification Engine for Ti-6Al-4V AM.
@@ -9,8 +17,65 @@ import com.nit.am.model.AmRecord;
  * 2. ASTM F2924-14 (Standard Specification for Additive Manufacturing Ti-6Al-4V with PBF).
  * 3. ASTM F3001-14 (Standard Specification for Additive Manufacturing Ti-6Al-4V ELI with PBF).
  * 4. Murakami (2002) defect-tolerant fatigue threshold model with pore size / HIP closure effects.
+ * 5. Calibrated process/condition residual priors from data/pinn_ti64_weights.json.
  */
 public class PropertyPredictor {
+
+    // Synced fallback condition residual offsets (from scripts/train_ti64_models.mjs)
+    private static volatile Map<String, Double> cachedConditionOffsets = null;
+
+    private static synchronized Map<String, Double> getConditionOffsets() {
+        if (cachedConditionOffsets != null) {
+            return cachedConditionOffsets;
+        }
+        Map<String, Double> map = new HashMap<>();
+        // Graceful fallback defaults synced with data/pinn_ti64_weights.json condition_priors
+        map.put("lpbf|As-Built|hardness_hv", 15.156);
+        map.put("lpbf|As-Built|ys_mpa", 27.33);
+        map.put("lpbf|As-Built|uts_mpa", 53.389);
+        map.put("lpbf|As-Built|elongation_pct", 1.321);
+        map.put("lpbf|Stress-Relieved|hardness_hv", 13.472);
+        map.put("lpbf|Stress-Relieved|ys_mpa", 39.021);
+        map.put("lpbf|Annealed|hardness_hv", 23.899);
+        map.put("ded-laser|As-Built|hardness_hv", 15.548);
+        map.put("waam|HIP|ys_mpa", 69.945);
+        map.put("binder-jetting|HIP|hardness_hv", 0.036);
+
+        try {
+            Path p = Paths.get("data", "pinn_ti64_weights.json");
+            if (Files.exists(p)) {
+                String json = Files.readString(p, StandardCharsets.UTF_8);
+                int idx = json.indexOf("\"condition_priors\"");
+                if (idx >= 0) {
+                    String sub = json.substring(idx);
+                    for (String proc : new String[]{"lpbf", "ded-laser", "waam", "binder-jetting"}) {
+                        for (String cond : new String[]{"As-Built", "Stress-Relieved", "Annealed", "HIP", "Solution-Aged"}) {
+                            Pattern pat = Pattern.compile(
+                                "\"" + Pattern.quote(proc) + "\"\\s*:\\s*\\{[\\s\\S]*?\"" + Pattern.quote(cond) + "\"\\s*:\\s*\\{([^}]*)\\}"
+                            );
+                            Matcher m = pat.matcher(sub);
+                            if (m.find()) {
+                                String body = m.group(1);
+                                Matcher kv = Pattern.compile("\"([a-z_]+)\"\\s*:\\s*(-?[0-9]+(?:\\.[0-9]+)?)").matcher(body);
+                                while (kv.find()) {
+                                    map.put(proc + "|" + cond + "|" + kv.group(1), Double.parseDouble(kv.group(2)));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // Fall back silently to synced defaults when data/ is unavailable on classpath
+        }
+        cachedConditionOffsets = map;
+        return cachedConditionOffsets;
+    }
+
+    private static double boundedCalibratedDelta(String proc, String condKey, String prop, double cap) {
+        double raw = getConditionOffsets().getOrDefault(proc + "|" + condKey + "|" + prop, 0.0);
+        return cap * Math.tanh(raw / Math.max(1e-6, cap));
+    }
 
     // Ti-6Al-4V Hall-Petch parameters (Cao et al. 2021 Fig. 13a)
     public static final double SIGMA_0 = 710.0;           // Friction stress (MPa)
@@ -60,8 +125,18 @@ public class PropertyPredictor {
         double hallPetchBase = SIGMA_0 + (K_HALL_PETCH / Math.sqrt(lambdaM));
 
         String cond = (condition != null) ? condition.toLowerCase() : "none";
+        boolean isBj = proc.equals("binder-jetting");
+        String canonicalCond = (cond.contains("bi-modal") || cond.contains("cyclic") || cond.contains("sta")) ? "Solution-Aged"
+            : (cond.contains("hip") ? "HIP"
+            : (cond.contains("anneal") ? "Annealed"
+            : (cond.contains("stress") ? "Stress-Relieved" : "As-Built")));
 
-        if (cond.contains("as-built") || cond.contains("none")) {
+        if (isBj) {
+            boolean isHip = canonicalCond.equals("HIP");
+            out.predictedYieldStrengthMpa = isHip ? 860.0 : 728.0;
+            out.predictedElongationPct = isHip ? 12.3 : 7.5;
+            out.vickersHardnessHv = isHip ? 331.0 : 284.0;
+        } else if (cond.contains("as-built") || cond.contains("none")) {
             if (isWaam) {
                 // As-deposited WAAM Widmanstatten alpha+beta lamellae (lower residual stress, higher ductility)
                 out.predictedYieldStrengthMpa = Math.max(820.0, Math.min(935.0, hallPetchBase * 0.90));
@@ -98,6 +173,10 @@ public class PropertyPredictor {
             out.predictedElongationPct = 10.0;
             out.vickersHardnessHv = 345.0;
         }
+
+        // Apply gentle bounded calibrated prior adjustment from data/pinn_ti64_weights.json
+        out.vickersHardnessHv = Math.round(out.vickersHardnessHv + 0.35 * boundedCalibratedDelta(proc, canonicalCond, "hardness_hv", 18.0));
+        out.predictedYieldStrengthMpa = Math.round(out.predictedYieldStrengthMpa + 0.25 * boundedCalibratedDelta(proc, canonicalCond, "ys_mpa", 60.0));
 
         // Ultimate Tensile Strength (UTS ~ 1.10 - 1.15 * YS)
         out.predictedUtsMpa = Math.round(out.predictedYieldStrengthMpa * 1.12);

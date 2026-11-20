@@ -6,6 +6,7 @@
  */
 
 import { setCorsHeaders, normalizeProcessName, validateProcessInputs } from './_shared.js';
+import { CALIBRATION_SUMMARY, applyCalibratedResidual } from './_platform_constants.js';
 
 // Validated Thermophysical Baseline Constants (Ti-6Al-4V Grade 5 & Grade 23 ELI)
 const RHO = 4430.0;              // Density ρ (kg/m³)
@@ -235,10 +236,25 @@ export default function handler(req, res) {
         predElong = 14.8;
       }
 
-      // Tabor Scaling (Section 3): UTS ≈ 3.05 · HV (scaled 2.95 coarse to 3.15 martensite)
+      // Tabor Scaling + Calibrated process residual alignment
       taborFactor = isAsBuilt ? 3.15 : (isHip ? 2.95 : (isSta ? 3.08 : 3.05));
-      predUts = Math.round(predHv * taborFactor);
-      predYs = Math.round(predUts * 0.91);
+      const postNormEval = isHip ? 'HIP' : (isSta ? 'Solution-Aged' : (isAnneal ? 'Annealed' : (isSr ? 'Stress-Relieved' : 'As-Built')));
+      predHv = Math.round(applyCalibratedResidual({
+        processId: proc, prop: 'hardness_hv', priorVal: predHv,
+        P: p, v, h, t, T0: preheat, ved, postProcessing: postNormEval, isEli
+      }));
+      predUts = Math.round(applyCalibratedResidual({
+        processId: proc, prop: 'uts_mpa', priorVal: predHv * taborFactor,
+        P: p, v, h, t, T0: preheat, ved, postProcessing: postNormEval, isEli
+      }));
+      predYs = Math.round(applyCalibratedResidual({
+        processId: proc, prop: 'ys_mpa', priorVal: predUts * 0.91,
+        P: p, v, h, t, T0: preheat, ved, postProcessing: postNormEval, isEli
+      }));
+      predElong = parseFloat(Math.max(1.5, Math.min(isAsBuilt && !isWaam && !isDed ? 8.9 : 22.0, applyCalibratedResidual({
+        processId: proc, prop: 'elongation_pct', priorVal: predElong,
+        P: p, v, h, t, T0: preheat, ved, postProcessing: postNormEval, isEli
+      }))).toFixed(1));
     }
 
     // ASTM F2924 Compliance Guardrails (Section 5):
@@ -350,6 +366,11 @@ export default function handler(req, res) {
           min_relative_density_pct: minDensity
         },
         disclaimer: 'Qualification assessment strictly adheres to ASTM F2924-21 Section 9 tensile minimums, chemistry limits, and relative density criteria.'
+      },
+      calibration_metadata: {
+        version: CALIBRATION_SUMMARY.lopo_cv_cells ? 'ti64-calibrated-v2.0' : 'v1.0',
+        honest_partial_coverage: true,
+        summary: CALIBRATION_SUMMARY
       }
     });
   } catch (err) {

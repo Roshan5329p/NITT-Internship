@@ -291,6 +291,13 @@ export function hvToHrcNumeric(hv) {
   return last[1];
 }
 
+export {
+  CALIBRATION_SUMMARY,
+  CALIBRATED_RESIDUALS,
+  VALIDATION_MATRIX,
+  applyCalibratedResidual
+} from './_calibrated_models.js';
+
 export function hvToHrcStandard(hv) {
   if (hv < 240) return "< 20 HRC";
   if (hv > 600) return "> 55 HRC";

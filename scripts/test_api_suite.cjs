@@ -253,6 +253,25 @@ async function runTests() {
     assert(Number.isFinite(res.body.melt_pool.width_um));
   });
 
+  // 10. Calibrated Multi-Process Literature Alignment (LPBF, L-DED, WAAM, Binder Jetting)
+  await test('api/predict.js returns calibrated validation_matrix_summary and bounded predictions across all 4 processes', async () => {
+    const cases = [
+      { process: 'lpbf', power: '280', speed: '960', hatch: '110', layer: '40', condition: 'hip' },
+      { process: 'ded-laser', power: '1600', speed: '15', hatch: '1200', layer: '450', condition: 'as_built' },
+      { process: 'waam', power: '2400', speed: '8', hatch: '3500', layer: '1500', condition: 'hip' },
+      { process: 'binder-jetting', power: '120', speed: '300', hatch: '80', layer: '100', condition: 'hip' }
+    ];
+    for (const q of cases) {
+      const { req, res } = createMockReqRes('GET', q);
+      await predictHandler(req, res);
+      assert.strictEqual(res.statusCode, 200);
+      assert(Number.isFinite(res.body.predictions.vickers_hardness_hv));
+      assert(Number.isFinite(res.body.predictions.yield_strength_ys_mpa));
+      assert(res.body.validation_matrix_summary && res.body.validation_matrix_summary.hardness_hv);
+      assert(res.body.validation_matrix_summary.hardness_hv.accuracyPct > 90);
+    }
+  });
+
   const pct = total > 0 ? ((passed / total) * 100).toFixed(1) : '0.0';
   console.log(`\n📊 Verification Summary: ${passed} / ${total} tests passed (${pct}% success rate).\n`);
   if (total === 0 || passed !== total) {

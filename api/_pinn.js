@@ -19,6 +19,17 @@ function loadPinnBundle() {
   return cachedBundle;
 }
 
+export function getPinnCalibrationData() {
+  const b = loadPinnBundle();
+  return {
+    calibrated_model_version: b.calibrated_model_version || null,
+    calibration_summary: b.calibration_summary || null,
+    calibrated_residuals: b.calibrated_residuals || null,
+    condition_priors: b.condition_priors || null,
+    validation_matrix: b.validation_matrix || null
+  };
+}
+
 function clampFinite(val, min, max, fallback) {
   return Number.isFinite(val) ? Math.max(min, Math.min(max, val)) : fallback;
 }
