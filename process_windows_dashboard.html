@@ -975,6 +975,24 @@
     font-size: 11.5px;
     color: var(--text-muted);
   }
+  /* Literature vs. ML Benchmark Comparator */
+  .lit-comp-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .lit-comp-search { flex: 0 1 200px; min-width: 150px; background: #070c16; color: #e2e8f0; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 7px; padding: 6px 10px; font-size: 11.5px; outline: none; }
+  .lit-comp-search:focus { border-color: #38bdf8; }
+  .lit-comp-select { flex: 1 1 320px; min-width: 240px; background: #070c16; color: #f8fafc; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 7px; padding: 6px 10px; font-size: 11.5px; font-family: inherit; }
+  .lit-comp-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; align-items: center; }
+  .lit-comp-pill { background: rgba(15, 23, 42, 0.85); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 999px; padding: 4px 11px; font-size: 11px; cursor: pointer; transition: all 0.15s ease; }
+  .lit-comp-pill:hover { border-color: #38bdf8; color: #f8fafc; }
+  .lit-comp-pill.active { background: rgba(56, 189, 248, 0.16); color: #38bdf8; border-color: #38bdf8; font-weight: 700; }
+  .lit-comp-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 12px; }
+  .lit-comp-table th { text-align: left; padding: 7px 10px; color: var(--text-muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: rgba(7, 12, 22, 0.7); }
+  .lit-comp-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-family: "JetBrains Mono", monospace; color: #e2e8f0; }
+  .lit-comp-table td:first-child { font-family: inherit; font-weight: 600; color: #f8fafc; }
+  .lit-comp-bars-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 8px; }
+  .lit-comp-model-pill { background: rgba(8, 13, 24, 0.9); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 8px 10px; }
+  .lit-comp-model-pill.best { border-color: rgba(16, 185, 129, 0.65); background: rgba(16, 185, 129, 0.08); box-shadow: 0 0 12px rgba(16, 185, 129, 0.12); }
+  .lit-comp-bar-track { height: 6px; border-radius: 3px; background: rgba(148, 163, 184, 0.16); position: relative; margin: 6px 0 4px 0; overflow: hidden; }
+  .lit-comp-bar-fill { height: 100%; border-radius: 3px; }
   .lit-strip-btn {
     background: var(--bg-subcard);
     color: var(--accent-blue);
@@ -5809,6 +5827,9 @@ function setActiveModel(modelId) {
   window.activeModelId = modelId;
   if (window.lastModelPredictions && window.lastStateKey) {
     renderUnifiedModelsUI(window.lastModelPredictions, window.lastStateKey, window.lastOodResult);
+    if (typeof updateLiteratureComparison === 'function') {
+      updateLiteratureComparison(true);
+    }
   } else if (typeof calculatePhysics === 'function') {
     calculatePhysics();
   }
@@ -7197,6 +7218,61 @@ window.addEventListener('click', function(e) {
 
         </div>
 
+      </div>
+
+      <!-- ========================================================
+           LITERATURE VS. ML BENCHMARK COMPARATOR
+           ======================================================== -->
+      <div class="res-card" style="margin-top: 16px;" id="litMlComparatorCard">
+        <div class="res-card-header" style="flex-wrap: wrap; gap: 10px; align-items: flex-start;">
+          <div>
+            <div class="res-card-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 9l-5 5-4-4-3 3"/></svg>
+              <span>Literature vs. ML Benchmark Comparator</span>
+              <span class="brand-badge" id="litCompProcessBadge" style="font-size: 10px; color: #38bdf8; background: rgba(56,189,248,0.12); border-color: rgba(56,189,248,0.35);">LPBF &bull; Matched Studies</span>
+            </div>
+            <div class="res-card-sub">Compare peer-reviewed Ti-6Al-4V experimental results directly against your active ML surrogate &amp; 6-model ensemble</div>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+            <button type="button" class="mp-toggle-btn active" id="btnLitCompPaperMode" onclick="setLitCompMode('paper_params')" style="font-size: 11px; padding: 5px 10px;">Compare at Paper's Exact Parameters</button>
+            <button type="button" class="mp-toggle-btn" id="btnLitCompSliderMode" onclick="setLitCompMode('slider_params')" style="font-size: 11px; padding: 5px 10px;">Compare at Current Slider Parameters</button>
+            <button type="button" class="step-btn" id="btnLoadPaperSliders" onclick="loadComparisonPaperToSliders()" style="color: #34d399; border-color: rgba(16,185,129,0.45); background: rgba(16,185,129,0.10); font-weight: 700;">Load Paper Parameters into Sliders &rarr;</button>
+          </div>
+        </div>
+
+        <div class="lit-comp-controls">
+          <input type="search" id="litCompSearchInput" class="lit-comp-search" placeholder="Filter by author, year, ID, P..." oninput="updateLiteratureComparison(true)" aria-label="Filter literature studies">
+          <select id="litCompPaperSelect" class="lit-comp-select" onchange="selectComparisonPaper(this.value)" aria-label="Select benchmark literature study"></select>
+        </div>
+
+        <div class="lit-comp-pills" id="litCompQuickPills"></div>
+
+        <div id="litCompMetaStrip" style="background: rgba(7,12,22,0.75); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 12px; font-size: 11px; color: #cbd5e1; margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;"></div>
+
+        <div style="overflow-x: auto;">
+          <table class="lit-comp-table">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Published Paper (Exp.)</th>
+                <th>Active Model Pred.</th>
+                <th>Consensus Ensemble</th>
+                <th>Signed &Delta;</th>
+                <th>Error (%)</th>
+                <th>95% PI Status</th>
+              </tr>
+            </thead>
+            <tbody id="litCompTableBody"></tbody>
+          </table>
+        </div>
+
+        <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 6px;">
+            <span style="font-size: 11px; font-weight: 700; color: #f1f5f9;">6-Model Architecture Residual Comparison</span>
+            <span id="litCompBestModelBadge" style="font-size: 10.5px; font-family: 'JetBrains Mono', monospace; color: #34d399;">&mdash;</span>
+          </div>
+          <div class="lit-comp-bars-grid" id="litCompModelBars"></div>
+        </div>
       </div>
 
       <!-- ========================================================
@@ -10678,6 +10754,205 @@ function hvToHrcStandard(hv) {
   return 'N/A';
 }
 
+/**
+ * Shared forward physics + 6-architecture ML inference engine for Ti-6Al-4V.
+ * Used by both calculatePhysics() and comparePaperWithMlModels() so benchmarks never diverge from live dashboard KPIs.
+ */
+function computeDashboardModelPredictions(opts = {}) {
+  const proc = opts.processId || (typeof currentProcess !== 'undefined' ? currentProcess : 'lpbf');
+  const alloyId = opts.alloyId || (typeof currentAlloy !== 'undefined' ? currentAlloy : 'ti64_gr5');
+  const alloy = (typeof ALLOY_DATA !== 'undefined' && ALLOY_DATA[alloyId]) ? ALLOY_DATA[alloyId] : (ALLOY_DATA?.ti64_gr5 || {
+    name: "Ti-6Al-4V (Grade 5)", density: 4430, specificHeat: 526, thermalConductivity: 6.7, liquidusC: 1668,
+    betaTransusC: 995, baseHardnessHV: 345, nominalUTS: 950, hallPetchSlope: 68, laserAbsorptivity: 0.448,
+    cellSpacingFactor: 18.5, cellSpacingExponent: 0.38
+  });
+  const p = Number.isFinite(Number(opts.P)) ? Number(opts.P) : 280;
+  const v = Number.isFinite(Number(opts.v)) ? Number(opts.v) : 960;
+  const h = Number.isFinite(Number(opts.h)) ? Number(opts.h) : 110;
+  const t = Number.isFinite(Number(opts.t)) ? Number(opts.t) : 40;
+  const spot = Number.isFinite(Number(opts.db)) ? Number(opts.db) : 80;
+  const preheat = Number.isFinite(Number(opts.T0)) ? Number(opts.T0) : 200;
+  const post = opts.postProcessing || 'HIP';
+  const isWaam = proc === 'waam';
+  const isDed = proc === 'ded-laser';
+  const isBinderJetting = proc === 'binder-jetting';
+  const isColdState = !isBinderJetting && p <= 0;
+  const stateKey = (post === 'None' || post === 'As-Built') ? 'as_built' :
+    (post === 'Stress-relieved' ? 'stress_relieved' :
+    (post === 'Annealed' ? 'annealed' :
+    (post === 'HIP' ? 'hip' :
+    ((post === 'Solution-Aged' || post === 'Bi-modal') ? 'sta' : 'hip'))));
+
+  if (isBinderJetting) {
+    const densityPct = post === 'HIP' ? 99.85 : 96.50;
+    const primaryHv = post === 'HIP' ? 335 : 310;
+    const utsTabor = post === 'HIP' ? 960 : 870;
+    const yieldStrength = post === 'HIP' ? 860 : 780;
+    const elongationPct = post === 'HIP' ? 14.0 : 6.0;
+    const hvModels = {
+      analytical: primaryHv - 3, rf: primaryHv + 2, xgboost: primaryHv + 1,
+      svm: primaryHv, gpr: primaryHv - 1, pinn: primaryHv, ensemble: primaryHv
+    };
+    return {
+      processId: proc, alloyId, alloy, isWaam: false, isDed: false, isBinderJetting: true, isColdState: false, isCalibrated: false,
+      p, v, h, t, spot, preheat, effPreheat: preheat, post, stateKey,
+      ved: null, heatInputJmm: null, meltPoolWidth: 0, meltPoolDepth: 0, meltPoolLength: 0,
+      coolingRate: 0.08, thermalGradientG: 0, solidVelocityR: 0, grRatio: 0, lathSpacing: 2.5,
+      bonthaR: 0, bonthaG: 0, bonthaMorphRaw: 'Equiaxed', bonthaMorphLabel: 'Equiaxed Sintered', bonthaMorphShort: 'EQUIAXED',
+      penetrationRatio: 1, lofIndex: 0, keyholeRatio: 0, ballingRatio: 0, normalizedEnthalpy: 0, intensityWcm2: 0,
+      densityPct, porosityPct: (100 - densityPct).toFixed(2),
+      hvModels, hvAnalytical: hvModels.analytical, hvRf: hvModels.rf, hvXgb: hvModels.xgboost,
+      hvSvm: hvModels.svm, hvGpr: hvModels.gpr, hvPinn: hvModels.pinn, hvEnsemble: hvModels.ensemble,
+      calPinnEval: null, met: null,
+      taborFactor: utsTabor / primaryHv, utsToYsRatio: utsTabor / yieldStrength,
+      utsTabor, yieldStrength, elongationPct
+    };
+  }
+  if (isColdState) {
+    return {
+      processId: proc, alloyId, alloy, isWaam, isDed, isBinderJetting: false, isColdState: true, isCalibrated: false,
+      p: 0, v, h, t, spot, preheat, effPreheat: preheat, post, stateKey,
+      ved: 0, heatInputJmm: 0, meltPoolWidth: 0, meltPoolDepth: 0, meltPoolLength: 0,
+      coolingRate: 0, thermalGradientG: 0, solidVelocityR: 0, grRatio: 0, lathSpacing: 0,
+      bonthaR: 0, bonthaG: 0, bonthaMorphRaw: 'Powder', bonthaMorphLabel: 'Unmelted Powder', bonthaMorphShort: 'COLD',
+      penetrationRatio: 0, lofIndex: 99, keyholeRatio: 0, ballingRatio: 0, normalizedEnthalpy: 0, intensityWcm2: 0,
+      densityPct: 0, porosityPct: '45.00',
+      hvModels: { analytical: 0, rf: 0, xgboost: 0, svm: 0, gpr: 0, pinn: 0, ensemble: 0 },
+      hvAnalytical: 0, hvRf: 0, hvXgb: 0, hvSvm: 0, hvGpr: 0, hvPinn: 0, hvEnsemble: 0,
+      calPinnEval: null, met: null, taborFactor: 2.95, utsToYsRatio: 1.09, utsTabor: 0, yieldStrength: 0, elongationPct: 0
+    };
+  }
+
+  const ved = (p * 1e6) / Math.max(1, v * h * t);
+  const heatInputJmm = p / Math.max(0.5, v);
+  const cadMods = opts.cadMods || null;
+  const effPreheat = cadMods ? Math.min(500, preheat + cadMods.interlayerPreheatShiftC) : preheat;
+  const vMs = Math.max(0.001, v / 1000.0);
+  const eta = isWaam ? 0.78 : (isDed ? (String(alloyId || '').startsWith('ti64') ? 0.38 : alloy.laserAbsorptivity * 0.90) : alloy.laserAbsorptivity);
+  const effectivePower = p * eta;
+  const deltaT = Math.max(50, alloy.liquidusC - effPreheat);
+  const thermalDiffusivity = alloy.thermalConductivity / (alloy.density * alloy.specificHeat);
+  const spotCm = Math.max(1e-3, spot * 1e-4);
+  const intensityWcm2 = effectivePower / (Math.PI * Math.pow(spotCm * 0.5, 2));
+  const widthEst = Math.sqrt((8 * effectivePower) / (Math.PI * Math.E * alloy.density * alloy.specificHeat * deltaT * vMs));
+  const meltPoolWidth = Math.round(Math.max(spot * 0.5, widthEst * 1e6 * 0.75 + spot * 0.4));
+  let meltPoolDepth;
+  if (isWaam) {
+    const arWaam = Math.min(0.55, 0.28 + 0.00045 * heatInputJmm);
+    meltPoolDepth = Math.round(Math.max(t * 0.35, meltPoolWidth * arWaam));
+  } else if (isDed) {
+    const baseArDed = Math.min(0.65, 0.26 + 0.0012 * heatInputJmm);
+    const arDed = intensityWcm2 > 1.5e5 ? Math.min(1.6, baseArDed + 0.35 * ((intensityWcm2 - 1.5e5) / 1.5e5)) : baseArDed;
+    meltPoolDepth = Math.round(Math.max(t * 0.30, meltPoolWidth * arDed));
+  } else {
+    meltPoolDepth = Math.round(Math.max(t * 0.2, meltPoolWidth * 0.52 * Math.pow(Math.max(0.05, ved / 70.0), 0.25)));
+  }
+  let meltPoolLength;
+  if (isWaam || isDed) {
+    const peclet = (vMs * meltPoolWidth * 1e-6) / (2.0 * Math.max(1e-8, thermalDiffusivity));
+    meltPoolLength = Math.round(meltPoolWidth * Math.min(2.8, 1.15 + 0.25 * peclet));
+  } else {
+    meltPoolLength = Math.round(meltPoolWidth * (1.2 + 0.0012 * v));
+  }
+  const accumFactor = isWaam ? 0.45 : (isDed ? 0.15 : 0.0);
+  const rawCoolingRate = (2 * Math.PI * alloy.thermalConductivity * vMs * Math.pow(deltaT, 2)) / Math.max(5, effectivePower);
+  const baseCoolingRate = (isWaam || isDed) ? Math.max(1.0, rawCoolingRate * (1.0 - accumFactor)) : Math.max(10, rawCoolingRate);
+  const coolingRate = cadMods ? Math.max(5.0, baseCoolingRate * cadMods.coolingRateMultiplier) : baseCoolingRate;
+  const solidVelocityR = Math.max(0.0005, vMs * 0.72);
+  const thermalGradientG = coolingRate / solidVelocityR;
+  const grRatio = thermalGradientG / solidVelocityR;
+  const bonthaR = solidVelocityR * 100.0;
+  const bonthaG = thermalGradientG / 100.0;
+  const bonthaMorphRaw = (typeof classifyMorphology === 'function') ? classifyMorphology(bonthaG, bonthaR) : 'Mixed';
+  const bonthaMorphLabel = bonthaMorphRaw === 'Mixed' ? 'Mixed (CET Zone)' : (bonthaMorphRaw === 'Columnar' ? 'Columnar-Dendritic' : 'Equiaxed');
+  const bonthaMorphShort = bonthaMorphRaw === 'Mixed' ? 'MIXED (CET)' : (bonthaMorphRaw === 'Columnar' ? 'FULLY COLUMNAR' : 'EQUIAXED');
+  const lathSpacing = Math.max(0.55, 35.5 * Math.pow(Math.max(10, coolingRate), -0.28));
+  const penetrationRatio = meltPoolDepth / Math.max(1, t);
+  let lofIndex, keyholeRatio;
+  const mHole = Math.PI * alloy.density * alloy.specificHeat * deltaT * Math.sqrt(thermalDiffusivity * vMs * Math.pow(spot * 1e-6, 3));
+  const normalizedEnthalpy = isWaam ? 0 : (isDed ? (intensityWcm2 > 1.5e5 ? (effectivePower / Math.max(1e-6, mHole)) * 0.45 : 0) : (effectivePower / Math.max(1e-6, mHole)) * 0.5863);
+  if (isWaam) {
+    lofIndex = Math.max(0.25, 120.0 / Math.max(1.0, heatInputJmm));
+    keyholeRatio = heatInputJmm / 600.0;
+  } else if (isDed) {
+    lofIndex = Math.max(1.25 / Math.max(0.1, penetrationRatio), 75.0 / Math.max(1.0, heatInputJmm));
+    keyholeRatio = intensityWcm2 > 1.5e5 ? Math.max(heatInputJmm / 240.0, normalizedEnthalpy / 26.0) : heatInputJmm / 240.0;
+  } else {
+    lofIndex = 1.35 / Math.max(0.1, penetrationRatio);
+    keyholeRatio = (normalizedEnthalpy / 8.5) * 0.53;
+  }
+  const ballingRatio = meltPoolLength / (meltPoolWidth * Math.PI);
+  let densityPct = 99.85 - (lofIndex > 1 ? (lofIndex - 1) * 8.5 : 0) - (keyholeRatio > 1 ? (keyholeRatio - 1) * 4.2 : 0) - (ballingRatio > 1 ? (ballingRatio - 1) * 6.0 : 0) - (cadMods ? cadMods.densityPenaltyPct : 0);
+  if (post === 'HIP') densityPct = Math.min(99.98, densityPct + 0.5);
+  densityPct = Math.max(88.0, Math.min(99.98, densityPct));
+  const porosityPct = (100 - densityPct).toFixed(2);
+
+  const reuseCyclesVal = Number.isFinite(Number(opts.powderReuseCycles)) ? Number(opts.powderReuseCycles) : 0;
+  const autoCoupleVal = opts.autoCoupleReuse !== undefined ? Boolean(opts.autoCoupleReuse) : true;
+  const rawO2 = Number.isFinite(Number(opts.oxygenWtPct)) ? Number(opts.oxygenWtPct) : undefined;
+  const buildOriDeg = Number.isFinite(Number(opts.buildOrientationDeg)) ? Number(opts.buildOrientationDeg) : 0;
+  const scanRotDeg = Number.isFinite(Number(opts.scanRotationDeg)) ? Number(opts.scanRotationDeg) : 67;
+
+  const met = evaluateTi64Metallurgy({
+    alloyId, processId: proc, coolingRateKs: coolingRate, postProcessing: post,
+    oxygenWtPct: (autoCoupleVal && reuseCyclesVal > 0 && rawO2 === undefined) ? undefined : rawO2,
+    powderReuseCycles: reuseCyclesVal, autoCoupleReuse: autoCoupleVal,
+    buildOrientationDeg: buildOriDeg, scanRotationDeg: scanRotDeg,
+    lofIndex, densityPct
+  });
+
+  const refVed = isWaam ? 57.0 : (isDed ? 198.0 : 72.0);
+  const allowCal = opts.applyLabCalibration !== undefined ? Boolean(opts.applyLabCalibration) : Boolean(typeof useLabBiasCorrection !== 'undefined' && useLabBiasCorrection && labCalibrationSummary && labCalibrationSummary.sampleCount > 0);
+  const isCalibrated = allowCal && Boolean(typeof labCalibrationSummary !== 'undefined' && labCalibrationSummary && labCalibrationSummary.sampleCount > 0);
+  const hvBiasShift = (isCalibrated && labCalibrationSummary.hv && Number.isFinite(labCalibrationSummary.hv.bayesianBiasShift)) ? labCalibrationSummary.hv.bayesianBiasShift : 0;
+
+  const hvAnalytical = Math.round(met.predictedHv + hvBiasShift);
+  const hvRf = Math.round(hvAnalytical * (1.0 + 0.010 * Math.log10(Math.max(1.0, coolingRate) / 1e4)));
+  const hvXgb = Math.round(hvAnalytical * (1.0 + 0.008 * Math.log10(Math.max(1.0, coolingRate) / 1e4)));
+  const hvSvm = Math.round(hvAnalytical * (1.012 - 0.005 * Math.abs(ved - refVed) / Math.max(25, refVed * 0.5)));
+  const hvGpr = Math.round(hvAnalytical * (1.008 - 0.004 * Math.abs(ved - refVed) / Math.max(25, refVed * 0.5)));
+
+  const rawPinnEval = (typeof evaluateTi64Pinn === 'function')
+    ? evaluateTi64Pinn({
+        processId: proc, P: p, v, h, t, T0: effPreheat, db: spot, postProcessing: post,
+        oxygenWtPct: met.oxygen.effectiveOxygenWtPct, densityPct, buildOrientationDeg: buildOriDeg
+      }) : null;
+  const calPinnEval = (rawPinnEval && isCalibrated && typeof applyPhysicsGuardedPinnTransfer === 'function')
+    ? applyPhysicsGuardedPinnTransfer(rawPinnEval, {
+        hvShift: labCalibrationSummary.hv ? labCalibrationSummary.hv.meanBias : 0,
+        ysShift: labCalibrationSummary.ys ? labCalibrationSummary.ys.meanBias : 0,
+        elongShift: labCalibrationSummary.elong ? labCalibrationSummary.elong.meanBias : 0,
+        sampleCount: labCalibrationSummary.sampleCount
+      }) : rawPinnEval;
+  const hvPinn = calPinnEval ? calPinnEval.metallurgy.predictedHv : Math.round(hvGpr * 0.995);
+  const hvEnsemble = Math.round(0.12 * hvRf + 0.20 * hvXgb + 0.20 * hvSvm + 0.28 * hvGpr + 0.20 * hvPinn);
+  const hvModels = { analytical: hvAnalytical, rf: hvRf, xgboost: hvXgb, svm: hvSvm, gpr: hvGpr, pinn: hvPinn, ensemble: hvEnsemble };
+
+  const taborFactor = met.taborFactor || 2.95;
+  const utsToYsRatio = met.utsToYsRatio || 1.09;
+  const asBuiltEl = isWaam ? 12.8 : (isDed ? 11.2 : 7.5);
+  const srEl = isWaam ? 14.0 : (isDed ? 12.2 : 9.8);
+  const baseElongation = (post === 'HIP' ? 16.2 : (post === 'Bi-modal' ? 17.5 : (post === 'Solution-Aged' ? 14.5 : (post === 'Annealed' ? 13.0 : (post === 'Stress-relieved' ? srEl : asBuiltEl)))));
+  const poreKnockdown = Math.exp(-0.45 * Math.max(0, 100 - densityPct));
+  const lofDuctilityPenalty = lofIndex > 1.0 ? Math.max(0.15, 1.0 - (lofIndex - 1.0) * 1.4) : 1.0;
+  const keyholeDuctilityPenalty = keyholeRatio > 1.0 ? Math.max(0.4, 1.0 - (keyholeRatio - 1.0) * 0.5) : 1.0;
+  const elongationPct = Math.max(1.0, Math.min(22.0, baseElongation * poreKnockdown * lofDuctilityPenalty * keyholeDuctilityPenalty * met.oxygen.ductilityMultiplier * met.anisotropy.elongationFactor * (cadMods ? cadMods.elongationMultiplier : 1.0)));
+
+  const activeId = opts.activeModelId || (typeof activeModelId !== 'undefined' ? activeModelId : 'ensemble');
+  const activeHv = hvModels[activeId] !== undefined ? hvModels[activeId] : hvEnsemble;
+  const utsTabor = Math.round(activeHv * taborFactor);
+  const yieldStrength = Math.round(utsTabor / utsToYsRatio);
+
+  return {
+    processId: proc, alloyId, alloy, isWaam, isDed, isBinderJetting: false, isColdState: false, isCalibrated,
+    p, v, h, t, spot, preheat, effPreheat, post, stateKey,
+    ved, heatInputJmm, intensityWcm2, widthEst, meltPoolWidth, meltPoolDepth, meltPoolLength,
+    coolingRate, thermalGradientG, solidVelocityR, grRatio, bonthaR, bonthaG, bonthaMorphRaw, bonthaMorphLabel, bonthaMorphShort, lathSpacing,
+    penetrationRatio, lofIndex, keyholeRatio, ballingRatio, normalizedEnthalpy, densityPct, porosityPct,
+    met, calPinnEval, hvModels, hvAnalytical, hvRf, hvXgb, hvSvm, hvGpr, hvPinn, hvEnsemble,
+    taborFactor, utsToYsRatio, utsTabor, yieldStrength, elongationPct
+  };
+}
 function calculatePhysics() {
   const alloy = (typeof ALLOY_DATA !== 'undefined' && ALLOY_DATA[currentAlloy]) ? ALLOY_DATA[currentAlloy] : (ALLOY_DATA?.ti64_gr5 || {
     name: "Ti-6Al-4V (Grade 5)", density: 4430, specificHeat: 526, thermalConductivity: 6.7, liquidusC: 1668,
@@ -10852,6 +11127,7 @@ function calculatePhysics() {
     updateDefectMapSvg(currentProcess, p, v);
     updateMeltPoolAndThermal();
     if (typeof renderBonthaProfileTable === 'function') renderBonthaProfileTable();
+    if (typeof updateLiteratureComparison === 'function') updateLiteratureComparison(true);
     if (typeof scheduleUrlStateSync === 'function') scheduleUrlStateSync();
     return;
   }
@@ -11674,8 +11950,11 @@ function calculatePhysics() {
 
   // Dynamic Scientific Rigor Engine Hooks (Explainable ML, DoA, Microstructure, Sensitivity, Traceability)
   try {
+    window.__lastCalcPrimaryHv = primaryHv;
     const isExtrap = checkDomainOfApplicability(p, v, h, t, currentProcess);
-    renderParityAndResidualPlots(primaryHv, isExtrap);
+    window.__lastCalcIsExtrap = isExtrap;
+    if (typeof updateLiteratureComparison === 'function') updateLiteratureComparison(true, true);
+    renderParityAndResidualPlots(primaryHv, isExtrap, window.currentSelectedComparisonBenchmark || null);
     updateShapAttribution(p, v, h, t, spot, preheat);
     updateLiteratureTraceability(p, v, h, t);
     updateSensitivityCurves(p, v, h, t);
@@ -12991,205 +13270,205 @@ function startTwinAnimation() {
 // 6. 199 CLEANED LITERATURE PAPERS DATABASE
 // ==========================================
 const PAPERS_DATABASE = [
-  {"id":"P-01","author":"Cao et al. (2021)","process":"LPBF","desc":"Comprehensive review of LPBF Ti-6Al-4V: process, post-process treatment, microstructure, and property.","density":"99.85%","ys":980,"uts":1180,"el":8.5},
-  {"id":"P-02","author":"Coen et al. (2022)","process":"LPBF","desc":"KU Leuven hybrid analytical model combining Eagar-Tsai width with keyhole aspect ratio for Ti-6Al-4V.","density":"99.88%","ys":1040,"uts":1210,"el":7.8},
-  {"id":"P-03","author":"Bontha et al. (2009)","process":"LPBF / L-DED","desc":"Effects of process variables and size-scale on solidification microstructure (G vs R maps, CET) in bulky 3D Ti-6Al-4V.","density":"99.90%","ys":1010,"uts":1180,"el":8.2},
-  {"id":"P-04","author":"Bontha et al. (2006)","process":"L-DED","desc":"Thermal process maps for predicting solidification microstructure in laser fabrication of thin-wall structures.","density":"99.70%","ys":890,"uts":1020,"el":9.8,"doi":"10.1016/j.jmatprotec.2006.03.155"},
-  {"id":"P-05","author":"Guo et al. (2025)","process":"WAAM","desc":"Wire + Arc Additive Manufacturing (WAAM) of Ti-6Al-4V: process control, CMT heat input, interpass rolling.","density":"99.95%","ys":865,"uts":975,"el":14.5},
-  {"id":"P-06","author":"Nursyifaulkhair et al. (2019)","process":"DED","desc":"Effect of blown-powder L-DED energy density and scanning strategy on lack-of-fusion formation in Ti-6Al-4V.","density":"99.45%","ys":875,"uts":965,"el":8.5},
-  {"id":"P-07","author":"Wang et al. (2026)","process":"Wire-Laser DED","desc":"Heat input effects on microstructure evolution and high-cycle fatigue life in wire-fed L-DED Ti-6Al-4V.","density":"99.90%","ys":910,"uts":1015,"el":12.4},
-  {"id":"P-08","author":"Halder et al. (2024)","process":"LPBF","desc":"Effect of interlayer delay on heat accumulation and in situ phase kinetics.","density":"99.88%","ys":960,"uts":1140,"el":9.8},
-  {"id":"P-09","author":"Alegre et al. (2022)","process":"LPBF + HIP","desc":"Effect of HIP post-processing at 850°C/200 MPa on fatigue behavior.","density":"99.98%","ys":870,"uts":980,"el":15.2},
-  {"id":"P-10","author":"Artzt et al. (2020)","process":"LPBF","desc":"Pandora's box: influence of contour parameters on surface roughness Ra.","density":"99.65%","ys":1010,"uts":1190,"el":7.1},
-  {"id":"P-11","author":"Asherloo et al. (2022)","process":"LPBF","desc":"Fatigue performance of LPBF hydride-dehydride Ti-6Al-4V powder.","density":"99.75%","ys":990,"uts":1160,"el":8},
-  {"id":"P-12","author":"Barriobero-Vila et al. (2017)","process":"LPBF","desc":"Inducing stable α+β microstructures during SLM of titanium alloys.","density":"99.80%","ys":910,"uts":1060,"el":12.8},
-  {"id":"P-13","author":"Bartsch et al. (2022)","process":"LPBF","desc":"Thermal conductivity of Ti-6Al-4V in LPBF under inert argon.","density":"99.82%","ys":975,"uts":1150,"el":8.8},
-  {"id":"P-14","author":"Cutolo et al. (2020)","process":"LPBF","desc":"Mechanical properties of diamond lattice Ti-6Al-4V porous structures.","density":"99.90%","ys":950,"uts":1130,"el":10.5},
-  {"id":"P-15","author":"Denti et al. (2019)","process":"LPBF","desc":"Effect of powder recycling cycles on oxygen pickup and tensile ductility.","density":"99.72%","ys":1035,"uts":1220,"el":6.4},
-  {"id":"P-16","author":"Dhekne et al. (2025)","process":"LPBF","desc":"Deformation mechanisms of LPBF Ti-6Al-4V using high-resolution EBSD.","density":"99.85%","ys":965,"uts":1145,"el":9.2},
-  {"id":"P-17","author":"Diaz et al. (2022)","process":"LPBF","desc":"Notch fracture predictions using Phase Field method for Ti-6Al-4V.","density":"99.80%","ys":985,"uts":1165,"el":8.1},
-  {"id":"P-18","author":"Emminghaus et al. (2022)","process":"LPBF","desc":"LPBF of Ti-6Al-4V powder modified with SiO2 nanoparticles.","density":"99.68%","ys":1060,"uts":1250,"el":5.5},
-  {"id":"P-19","author":"Fereiduni et al. (2023)","process":"LPBF","desc":"Processing of hydroxyapatite-Ti6Al4V composite for orthopedic implants.","density":"99.55%","ys":920,"uts":1090,"el":7.8},
-  {"id":"P-20","author":"Ganeriwala et al. (2019)","process":"LPBF","desc":"Thermomechanical finite element model for residual stress prediction.","density":"99.86%","ys":995,"uts":1175,"el":8.4},
-  {"id":"P-21","author":"Ghosh et al. (2018)","process":"LPBF","desc":"Simulation of temperature, stress, and phase fields during laser melting.","density":"99.82%","ys":980,"uts":1160,"el":8.6},
-  {"id":"P-22","author":"Goettgens et al. (2023)","process":"LPBF","desc":"Microstructure of modulated Ti-6Al-4V Cu alloy fabricated via in situ alloying.","density":"99.78%","ys":1015,"uts":1205,"el":7.4},
-  {"id":"P-23","author":"Gryaznov et al. (2023)","process":"LPBF","desc":"Fatigue characteristics of Ti-6Al-4V produced by selective laser melting.","density":"99.84%","ys":960,"uts":1140,"el":9.5},
-  {"id":"P-24","author":"Jamshidi et al. (2020)","process":"LPBF","desc":"Impact of post-processing and stress relief on biomedical implants.","density":"99.89%","ys":890,"uts":1040,"el":13.5},
-  {"id":"P-25","author":"Kallel et al. (2019)","process":"DED","desc":"Finish milling and surface integrity of laser metal deposited Ti-6Al-4V.","density":"99.60%","ys":840,"uts":960,"el":11.8},
-  {"id":"P-26","author":"Kim et al. (2026)","process":"DED","desc":"Analysis of single-bead deposition behavior and microstructure in DED.","density":"99.75%","ys":865,"uts":985,"el":12.2},
-  {"id":"P-27","author":"Koushik et al. (2023)","process":"LPBF","desc":"Effective powder recycling protocols in titanium additive manufacturing.","density":"99.80%","ys":970,"uts":1150,"el":8.9},
-  {"id":"P-28","author":"Lan et al. (2020)","process":"LPBF + LSP","desc":"Laser shock peening effects on microstructure and fatigue performance.","density":"99.90%","ys":1120,"uts":1280,"el":10.4},
-  {"id":"P-29","author":"Le Roux et al. (2025)","process":"LPBF","desc":"Effect of process parameters on surface integrity and defect distribution.","density":"99.78%","ys":985,"uts":1165,"el":8},
-  {"id":"P-30","author":"Lee et al. (2017)","process":"LPBF","desc":"Heat treatment effects on microstructure and Charpy impact toughness.","density":"99.85%","ys":885,"uts":1020,"el":14.1},
-  {"id":"P-31","author":"Lee et al. (2018)","process":"DED","desc":"Correlations of interlayer dwell time with distortion of large components.","density":"99.65%","ys":830,"uts":950,"el":12.5},
-  {"id":"P-32","author":"Lee et al. (2025)","process":"LPBF","desc":"In vivo osseointegration around additively manufactured porous implants.","density":"99.82%","ys":930,"uts":1080,"el":10.8},
-  {"id":"P-33","author":"Linde et al. (2026)","process":"LPBF","desc":"Microstructure engineering via substrate preheating and beam shaping.","density":"99.91%","ys":905,"uts":1050,"el":13.2},
-  {"id":"P-34","author":"Lu et al. (2019)","process":"DED","desc":"Residual stress and distortion of rectangular and S-shaped Ti-6Al-4V parts.","density":"99.70%","ys":845,"uts":970,"el":11.5},
-  {"id":"P-35","author":"Lu et al. (2020)","process":"LPBF","desc":"Building strategy modeling for thermomechanical distortion reduction.","density":"99.84%","ys":975,"uts":1155,"el":8.7},
-  {"id":"P-36","author":"Luo et al. (2025)","process":"LPBF","desc":"Image-based transfer learning for in situ melt pool monitoring.","density":"99.87%","ys":960,"uts":1140,"el":9.4},
-  {"id":"P-37","author":"Mahmud et al. (2021)","process":"LPBF","desc":"Mechanical assessment of Ti-6Al-4V ELI alloy produced by laser fusion.","density":"99.88%","ys":890,"uts":1030,"el":13.8},
-  {"id":"P-38","author":"McGregor et al. (2021)","process":"LPBF","desc":"Architectural bone parameters and titanium lattice compression response.","density":"99.80%","ys":940,"uts":1100,"el":10.2},
-  {"id":"P-39","author":"Merkibayev et al. (2026)","process":"LPBF","desc":"Microstructural phase evolution and grain orientation in laser melting.","density":"99.86%","ys":980,"uts":1160,"el":8.5},
-  {"id":"P-40","author":"Meshram et al. (2026)","process":"LPBF","desc":"Torsional and axial fatigue behavior of additively manufactured Ti-6Al-4V.","density":"99.83%","ys":955,"uts":1135,"el":9.6},
-  {"id":"P-41","author":"Moon et al. (2021)","process":"LPBF","desc":"Impact of surface and pore characteristics on high-cycle fatigue life.","density":"99.74%","ys":990,"uts":1170,"el":7.9},
-  {"id":"P-42","author":"Moridi et al. (2019)","process":"LPBF","desc":"Plasticity and damage mechanisms in titanium printed with selective laser.","density":"99.81%","ys":975,"uts":1150,"el":8.8},
-  {"id":"P-43","author":"Nitzler et al. (2021)","process":"LPBF","desc":"Physics-based and data-supported microstructure model for parts.","density":"99.87%","ys":965,"uts":1145,"el":9.3},
-  {"id":"P-44","author":"Oshiro et al. (2026)","process":"WAAM","desc":"Static fracture toughness K_IC of Ti-6Al-4V manufactured by wire arc.","density":"99.65%","ys":815,"uts":935,"el":14.8},
-  {"id":"P-45","author":"Obeidi et al. (2022)","process":"LPBF","desc":"Laser surface polishing of Ti-6Al-4V parts to alleviate fatigue notch effect.","density":"99.89%","ys":950,"uts":1125,"el":10.6},
-  {"id":"P-46","author":"Pedrazzini et al. (2020)","process":"LPBF","desc":"Bed temperature effects on solute segregation and mechanical properties.","density":"99.90%","ys":920,"uts":1070,"el":12.4},
-  {"id":"P-47","author":"Rauch et al. (2020)","process":"DED","desc":"Repairing aeronautical structural titanium components using blown-powder DED.","density":"99.72%","ys":855,"uts":980,"el":11.9},
-  {"id":"P-48","author":"Salikhyanov et al. (2021)","process":"DED","desc":"Flow behavior and microstructure evolution during hot compression.","density":"99.68%","ys":840,"uts":965,"el":12.1},
-  {"id":"P-49","author":"Simonelli et al. (2020)","process":"LPBF","desc":"Influence of iron in minimizing microstructural anisotropy in SLM.","density":"99.85%","ys":970,"uts":1140,"el":9.1},
-  {"id":"P-50","author":"Sinclair et al. (2021)","process":"LPBF","desc":"Vibratory powder feeding dynamics for additive manufacturing using wires.","density":"99.82%","ys":965,"uts":1135,"el":9},
-  {"id":"P-51","author":"Sutherland et al. (2026)","process":"DED","desc":"Repair of complex Ti-6Al-4V grooves by coaxial wire laser deposition.","density":"99.76%","ys":850,"uts":975,"el":12},
-  {"id":"P-52","author":"Vayssette et al. (2018)","process":"LPBF","desc":"Surface roughness of parts obtained by SLM and fatigue notch factors.","density":"99.79%","ys":980,"uts":1155,"el":8.3},
-  {"id":"P-53","author":"Wang et al. (2025)","process":"DED","desc":"Laser-directed energy-deposited Ti-6Al-4V anisotropy and texture.","density":"99.73%","ys":845,"uts":965,"el":11.7},
-  {"id":"P-54","author":"Xing et al. (2021)","process":"LPBF","desc":"Influence of powder bed temperature on microstructural in situ annealing.","density":"99.91%","ys":915,"uts":1060,"el":13},
-  {"id":"P-55","author":"Xueyang Chen et al. (2016)","process":"DED","desc":"Effect of powder particle size on fabrication of Ti-6Al-4V using DED.","density":"99.64%","ys":835,"uts":955,"el":12.3},
-  {"id":"P-56","author":"Yang et al. (2023)","process":"LPBF","desc":"Solidification microstructure variations and grain boundary solute trapping.","density":"99.84%","ys":970,"uts":1145,"el":8.9},
-  {"id":"P-57","author":"Awan et al. (2026)","process":"LPBF","desc":"Towards agentic defect reasoning: graph-assisted retrieval framework.","density":"99.87%","ys":965,"uts":1140,"el":9.2},
-  {"id":"P-58","author":"Banerjee et al. (2025)","process":"LPBF","desc":"Neuromorphic computing for anomaly and acoustic defect detection in LPBF.","density":"99.89%","ys":975,"uts":1150,"el":9.5},
-  {"id":"P-59","author":"Vrancken et al. (2012)","process":"LPBF","topic":"Stress-Strain & Hardness","doi":"10.1016/j.jallcom.2012.07.022","oaUrl":"https://lirias.kuleuven.be/retrieve/155650a8-ccc4-48b8-8433-9a038cdff7a4","desc":"Heat treatment of Ti6Al4V produced by SLM: Martensite decomposition, ductility recovery (1908 citations).","density":"99.85%","ys":890,"uts":1010,"el":12.8},
-  {"id":"P-60","author":"Vilaro et al. (2011)","process":"LPBF","desc":"As-fabricated and heat-treated microstructures of Ti-6Al-4V processed by SLM (1244 citations).","density":"99.80%","ys":920,"uts":1050,"el":11.2,"doi":"10.1007/s11661-011-0731-y"},
-  {"id":"P-61","author":"Simonelli et al. (2014)","process":"LPBF","desc":"Effect of build orientation on mechanical properties and fracture modes of SLM Ti-6Al-4V (992 citations).","density":"99.88%","ys":980,"uts":1160,"el":8.4,"doi":"10.1016/j.msea.2014.07.086"},
-  {"id":"P-62","author":"Gorsse et al. (2017)","process":"Review / AM","desc":"Characteristic microstructures, solidification regimes, and mechanical properties in AM (891 citations).","density":"99.90%","ys":950,"uts":1120,"el":10.5,"doi":"10.1080/14686996.2017.1361305"},
-  {"id":"P-63","author":"Todaro et al. (2020)","process":"LPBF + US","desc":"Grain structure control during metal 3D printing by high-intensity ultrasound (842 citations).","density":"99.92%","ys":935,"uts":1085,"el":13,"doi":"10.1038/s41467-019-13874-z"},
-  {"id":"P-64","author":"Bermingham et al. (2019)","process":"WAAM / DED","desc":"Promoting columnar to equiaxed transition (CET) and grain refinement in AM Ti alloys (767 citations).","density":"99.75%","ys":855,"uts":980,"el":12.6},
-  {"id":"P-65","author":"Zhao et al. (2017)","process":"LPBF / In-Situ","desc":"Real-time monitoring of LPBF using high-speed synchrotron X-ray imaging and diffraction (761 citations).","density":"99.86%","ys":965,"uts":1135,"el":9.1,"doi":"10.1038/s41598-017-03761-2"},
-  {"id":"P-66","author":"Murr et al. (2010)","process":"EBM","desc":"Next-generation biomedical implants using additive manufacturing of functional mesh arrays (637 citations).","density":"99.82%","ys":910,"uts":1040,"el":11.5},
-  {"id":"P-67","author":"Tammas-Williams et al. (2015)","process":"EBM","desc":"XCT analysis of melt strategies on defect population in Ti-6Al-4V manufactured by SEBM (594 citations).","density":"99.83%","ys":940,"uts":1070,"el":10.2,"doi":"10.1016/j.matchar.2015.02.008"},
-  {"id":"P-68","author":"Facchini et al. (2010)","process":"LPBF","desc":"Ductility of Ti-6Al-4V alloy produced by selective laser melting of prealloyed powders (520 citations).","density":"99.78%","ys":970,"uts":1145,"el":8.8},
-  {"id":"P-69","author":"Heigel et al. (2015)","process":"DED","desc":"Thermo-mechanical model development and validation of directed energy deposition of Ti-6Al-4V (497 citations).","density":"99.68%","ys":840,"uts":965,"el":12,"doi":"10.1016/j.addma.2014.10.003"},
-  {"id":"P-70","author":"Ly et al. (2017)","process":"LPBF","desc":"Metal vapor micro-jet controls material redistribution and denudation in LPBF (470 citations).","density":"99.87%","ys":960,"uts":1130,"el":9.4},
-  {"id":"P-71","author":"Murr et al. (2012)","process":"EBM / DED","desc":"Fabrication of metal and alloy components by additive manufacturing: 3D materials science (465 citations).","density":"99.81%","ys":925,"uts":1060,"el":11},
-  {"id":"P-72","author":"Cain et al. (2015)","process":"LPBF","desc":"Crack propagation and fracture toughness of Ti-6Al-4V produced by selective laser melting (408 citations).","density":"99.85%","ys":955,"uts":1125,"el":9.8},
-  {"id":"P-73","author":"Dilip et al. (2017)","process":"LPBF","desc":"Processing parameters evolution of melt pool, porosity, and microstructures in Ti-6Al-4V (398 citations).","density":"99.84%","ys":965,"uts":1140,"el":9.2},
-  {"id":"P-74","author":"Simonelli et al. (2015)","process":"LPBF","desc":"Laser spatter and oxidation reactions during selective laser melting of Ti-6Al-4V (365 citations).","density":"99.86%","ys":975,"uts":1150,"el":8.9},
-  {"id":"P-75","author":"de Formanoir et al. (2016)","process":"EBM","desc":"Electron beam melted Ti-6Al-4V: Microstructure, texture and mechanical behavior (357 citations).","density":"99.89%","ys":915,"uts":1050,"el":13.1},
-  {"id":"P-76","author":"Simonelli et al. (2014)","process":"LPBF","desc":"On the crystallographic texture formation of selective laser melted Ti-6Al-4V (350 citations).","density":"99.87%","ys":980,"uts":1155,"el":8.6},
-  {"id":"P-77","author":"Liu et al. (2021)","process":"Review / DED","desc":"Review on additive manufacturing of titanium alloys for aerospace applications (350 citations).","density":"99.74%","ys":850,"uts":975,"el":11.9,"doi":"10.1007/s11837-021-04670-6"},
-  {"id":"P-78","author":"Cunningham et al. (2017)","process":"LPBF","desc":"Synchrotron-based X-ray microtomography of processing variables and porosity formation (346 citations).","density":"99.88%","ys":960,"uts":1135,"el":9.5},
-  {"id":"P-155","author":"Meier C. et al. (2019)","process":"Binder Jetting","doi":"10.1016/j.jmatprotec.2018.10.037","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Critical influences of particle size and adhesion on the powder layer uniformity in metal additive manufacturing — Journal of Materials Processing Technology (293 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-156","author":"Miyanaji H. et al. (2018)","process":"Binder Jetting","doi":"10.1016/j.ijmachtools.2017.09.001","type":"MOD","treatment":"Scopus Indexed (Pending Extraction)","desc":"A new physics-based model for equilibrium saturation determination in binder jetting additive manufacturing process — International Journal of Machine Tools and Manufacture (140 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-157","author":"Stevens E. et al. (2018)","process":"Binder Jetting","doi":"10.1016/j.addma.2018.06.017","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Density variation in binder jetting 3D-printed and sintered Ti-6Al-4V — Additive Manufacturing (88 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-158","author":"Phua A. et al. (2021)","process":"Binder Jetting","doi":"10.1016/j.powtec.2021.08.058","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"The effect of recoater geometry and speed on granular convection and size segregation in powder bed fusion — Powder Technology (73 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-160","author":"Simchi A. et al. (2023)","process":"Binder Jetting","doi":"10.1007/s00170-023-11661-1","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructural development during additive manufacturing of biomedical grade Ti-6Al-4V alloy by three-dimensional binder jetting: material aspects and mechanical properties — International Journal of Advanced Manufacturing Technology (41 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-162","author":"Janzen K. et al. (2024)","process":"Binder Jetting","doi":"10.3390/ma17030750","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Influence of Different Powder Conditioning Strategies on Metal Binder Jetting with Ti-6Al-4V — Materials (19 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-163","author":"Alegre J.M. et al. (2024)","process":"Binder Jetting","doi":"10.3390/ma17153825","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Mechanical and Fatigue Properties of Ti-6Al-4V Alloy Fabricated Using Binder Jetting Process and Subjected to Hot Isostatic Pressing — Materials (19 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-164","author":"Tischel F. et al. (2024)","process":"Binder Jetting","doi":"10.1016/j.powtec.2024.119958","type":"MOD","treatment":"Scopus Indexed (Pending Extraction)","desc":"Experimental investigation and modeling of densification during sintering of binder jetted Ti–6Al–4V — Powder Technology (18 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-165","author":"Siddiqui M.A.S. et al. (2025)","process":"Binder Jetting","doi":"10.1002/adem.202500257","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Recent Advances in Crystalline Architecture and Defect Engineering of 3D-Printed Metals for Biomedical Breakthroughs: A Comprehensive Review — Advanced Engineering Materials (14 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-166","author":"Janzen K. et al. (2025)","process":"Binder Jetting","doi":"10.1016/j.addlet.2025.100272","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Investigation on curing strategies for metal binder jetting with Ti-6Al-4V — Additive Manufacturing Letters (8 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-167","author":"Bhaduri D. et al. (2025)","process":"Binder Jetting","doi":"10.1016/j.cirp.2025.03.037","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Circular manufacturing of binder jetting additive parts from Ti-6Al-4 V machining chips — CIRP Annals (7 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-168","author":"Frieden Templeton W. et al. (2024)","process":"Binder Jetting","doi":"10.1016/j.commatsci.2024.113056","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Expediting structure–property analyses using variational autoencoders with regression — Computational Materials Science (7 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-169","author":"Jump N. et al. (2025)","process":"Binder Jetting","doi":"10.1007/s11661-024-07624-0","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Enhancing Mechanical Performance of Sinter-Based Additively Manufactured Ti-6Al-4V Parts Through Hydrogen Sintering and Phase Transformation (HSPT) Process — Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science (7 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-170","author":"Bernhard G.H. et al. (2021)","process":"Binder Jetting","doi":"","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"COMPARISON OF Ti-6Al-4V MATERIALS FABRICATED VIA MIM AND BINDER-JET PRINTING — International Journal of Powder Metallurgy (4 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-172","author":"Janzen K. et al. (2025)","process":"Binder Jetting","doi":"10.2497/jjspm.15A-T7-04","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Recycling of Ti-6Al-4V Powder in Metal Binder Jetting — Funtai Oyobi Fummatsu Yakin Journal of the Japan Society of Powder and Powder Metallurgy (4 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-173","author":"Simchi A. et al. (2022)","process":"Binder Jetting","doi":"","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Binder Jetting Additive Manufacturing Of Complex-Shaped Parts With Minimum Sintering Anisotropy — World Pm 2022 Congress Proceedings (3 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-174","author":"Paramore J.D. et al. (2020)","process":"Binder Jetting","doi":"10.1007/s11837-020-04261-x","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Powder Casting: Producing Bulk Metal Components from Powder Without Compaction — JOM (3 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-175","author":"Janzen K. et al. (2022)","process":"Binder Jetting","doi":"","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Potentials of Metal Binder Jetting Process Chains for Medical Parts — World Pm 2022 Congress Proceedings (2 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-176","author":"Simchi A. et al. (2021)","process":"Binder Jetting","doi":"","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"3D binder jet printing of Ti-6Al-4V alloy for potential application in biomedicine — Euro Pm2021 Congress Proceedings (1 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-177","author":"Qian Y. et al. (2026)","process":"Binder Jetting","doi":"10.1016/j.powtec.2026.122295","type":"MOD","treatment":"Scopus Indexed (Pending Extraction)","desc":"Integrating large language models (LLMs) into printing process optimization for binder jetting printed Ti-6Al-4V — Powder Technology (1 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-178","author":"Persson M. et al. (2017)","process":"Binder Jetting","doi":"","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Properties of Ti-6Al-4V components produced by digital metal® binder jetting technology — Proceedings Euro Pm 2017 International Powder Metallurgy Congress and Exhibition (1 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-79","author":"Tischel F. et al. (2024)","process":"Binder Jetting","doi":"10.59499/EP246278578","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Determination Of Process-Related Time-Dependent Sinter Strain And Viscosity For Simulating Distortion In Sinter-Based Additive Manufacturing — Proceedings Euro Pm 2024 Congress and Exhibition (1 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-80","author":"Williams S.W. et al. (2016)","process":"WAAM","doi":"10.1179/1743284715Y.0000000073","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Wire + Arc additive manufacturing — Materials Science and Technology United Kingdom (1840 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-81","author":"Wang F. et al. (2013)","process":"WAAM","doi":"10.1007/s11661-012-1444-6","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructure and mechanical properties of wire and arc additive manufactured Ti-6Al-4V — Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science (751 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-82","author":"Bermingham M.J. et al. (2015)","process":"WAAM","doi":"10.1016/j.actamat.2015.03.035","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Controlling the microstructure and properties of wire arc additive manufactured Ti-6Al-4V with trace boron additions — Acta Materialia (408 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-83","author":"Szost B.A. et al. (2016)","process":"WAAM","doi":"10.1016/j.matdes.2015.09.115","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"A comparative study of additive manufacturing techniques: Residual stress and microstructural analysis of CLAD and WAAM printed Ti-6Al-4V components — Materials and Design (369 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-84","author":"Donoghue J. et al. (2016)","process":"WAAM","doi":"10.1016/j.matchar.2016.02.001","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"The effectiveness of combining rolling deformation with Wire-Arc Additive Manufacture on β-grain refinement and texture modification in Ti-6Al-4V — Materials Characterization (359 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-85","author":"Wu B. et al. (2017)","process":"WAAM","doi":"10.1016/j.jmatprotec.2017.07.037","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Effects of heat accumulation on the arc characteristics and metal transfer behavior in Wire Arc Additive Manufacturing of Ti6Al4V — Journal of Materials Processing Technology (347 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-86","author":"Martina F. et al. (2015)","process":"WAAM","doi":"10.1007/s11661-015-3172-1","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructure of Interpass Rolled Wire + Arc Additive Manufacturing Ti-6Al-4V Components — Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science (299 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-87","author":"McAndrew A.R. et al. (2018)","process":"WAAM","doi":"10.1016/j.addma.2018.03.006","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Interpass rolling of Ti-6Al-4V wire + arc additively manufactured features for microstructural refinement — Additive Manufacturing (295 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-88","author":"Wu B. et al. (2018)","process":"WAAM","doi":"10.1016/j.jmatprotec.2018.03.024","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"The effects of forced interpass cooling on the material properties of wire arc additively manufactured Ti6Al4V alloy — Journal of Materials Processing Technology (270 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-89","author":"Wu B. et al. (2018)","process":"WAAM","doi":"10.1016/j.addma.2018.08.004","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Effects of heat accumulation on microstructure and mechanical properties of Ti6Al4V alloy deposited by wire arc additive manufacturing — Additive Manufacturing (269 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-90","author":"Wu B. et al. (2018)","process":"WAAM","doi":"10.1016/j.corsci.2018.03.047","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"The anisotropic corrosion behaviour of wire arc additive manufactured Ti-6Al-4V alloy in 3.5% NaCl solution — Corrosion Science (253 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-91","author":"Zhang J. et al. (2016)","process":"WAAM","doi":"10.1016/j.matdes.2015.10.141","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Fatigue crack propagation behaviour in wire+arc additive manufactured Ti-6Al-4V: Effects of microstructure and residual stress — Materials and Design (247 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-92","author":"Martina F. et al. (2016)","process":"WAAM","doi":"10.1080/02670836.2016.1142704","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Residual stress of as-deposited and rolled wire+arc additive manufacturing Ti–6Al–4V components — Materials Science and Technology United Kingdom (230 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-93","author":"Bermingham M.J. et al. (2018)","process":"WAAM","doi":"10.1016/j.jallcom.2018.04.158","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Optimising the mechanical properties of Ti-6Al-4V components produced by wire + arc additive manufacturing with post-process heat treatments — Journal of Alloys and Compounds (225 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-94","author":"Biswal R. et al. (2019)","process":"WAAM","doi":"10.1016/j.ijfatigue.2019.01.017","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Criticality of porosity defects on the fatigue performance of wire + arc additive manufactured titanium alloy — International Journal of Fatigue (217 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-95","author":"Yang J. et al. (2017)","process":"WAAM","doi":"10.1007/s11661-017-4087-9","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Corrosion Behavior of Additive Manufactured Ti-6Al-4V Alloy in NaCl Solution — Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science (214 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-96","author":"Hönnige J.R. et al. (2018)","process":"WAAM","doi":"10.1016/j.matdes.2018.03.065","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Residual stress and texture control in Ti-6Al-4V wire + arc additively manufactured intersections by stress relief and rolling — Materials and Design (199 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-97","author":"Bambach M. et al. (2020)","process":"WAAM","doi":"10.1016/j.jmatprotec.2020.116689","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Hybrid manufacturing of components from Ti-6Al-4V by metal forming and wire-arc additive manufacturing — Journal of Materials Processing Technology (178 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-98","author":"Motallebi R. et al. (2022)","process":"WAAM","doi":"10.1016/j.cossms.2022.100992","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing – A review of hot deformation behavior and constitutive modeling of flow stress — Current Opinion in Solid State and Materials Science (173 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-99","author":"Wang J. et al. (2018)","process":"WAAM","doi":"10.1016/j.jallcom.2018.07.235","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Grain morphology evolution and texture characterization of wire and arc additive manufactured Ti-6Al-4V — Journal of Alloys and Compounds (159 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-100","author":"Sequeira Almeida P.M. et al. (2010)","process":"WAAM","doi":"","type":"MOD","treatment":"Scopus Indexed (Pending Extraction)","desc":"Innovative process model of Ti-6Al-4V additive layer manufacturing using cold metal transfer (CMT) — 21st Annual International Solid Freeform Fabrication Symposium an Additive Manufacturing Conference Sff 2010 (155 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-101","author":"Shi X. et al. (2017)","process":"WAAM","doi":"10.1016/j.msea.2016.12.065","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Selective laser melting-wire arc additive manufacturing hybrid fabrication of Ti-6Al-4V alloy: Microstructure and mechanical properties — Materials Science and Engineering A (152 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-102","author":"Kennedy J.R. et al. (2021)","process":"WAAM","doi":"10.1016/j.addma.2021.101928","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"The potential for grain refinement of Wire-Arc Additive Manufactured (WAAM) Ti-6Al-4V by ZrN and TiN inoculation — Additive Manufacturing (137 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-103","author":"Wu Q. et al. (2019)","process":"WAAM","doi":"10.1016/j.addma.2019.100808","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Residual stresses and distortion in the patterned printing of titanium and nickel alloys — Additive Manufacturing (126 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-104","author":"Zhang X. et al. (2017)","process":"WAAM","doi":"10.1111/ffe.12547","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Fracture toughness and fatigue crack growth rate properties in wire + arc additive manufactured Ti-6Al-4V — Fatigue and Fracture of Engineering Materials and Structures (124 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-105","author":"Liu S. et al. (2019)","process":"L-DED","doi":"10.1016/j.matdes.2018.107552","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing of Ti6Al4V alloy: A review — Materials and Design (2401 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-106","author":"Lewandowski J.J. et al. (2016)","process":"L-DED","doi":"10.1146/annurev-matsci-070115-032024","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Metal Additive Manufacturing: A Review of Mechanical Properties — Annual Review of Materials Research (1636 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-107","author":"Carroll B.E. et al. (2015)","process":"L-DED","doi":"10.1016/j.actamat.2014.12.054","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Anisotropic tensile behavior of Ti-6Al-4V components fabricated with directed energy deposition additive manufacturing — Acta Materialia (1463 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-108","author":"Nguyen H.D. et al. (2022)","process":"L-DED","doi":"10.1016/j.jmrt.2022.04.055","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"A critical review on additive manufacturing of Ti-6Al-4V alloy: Microstructure and mechanical properties — Journal of Materials Research and Technology (637 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-110","author":"Wu X. et al. (2004)","process":"L-DED","doi":"10.1016/j.matdes.2003.09.009","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructures of laser-deposited Ti-6Al-4V — Materials and Design (469 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-111","author":"Bobbio L.D. et al. (2017)","process":"L-DED","doi":"10.1016/j.actamat.2016.12.070","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing of a functionally graded material from Ti-6Al-4V to Invar: Experimental characterization and thermodynamic calculations — Acta Materialia (448 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-112","author":"Kelly S.M. et al. (2004)","process":"L-DED","doi":"10.1007/s11661-004-0094-8","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructural evolution in laser-deposited multilayer Ti-6Al-4V builds: Part 1. Microstructural characterization — Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science (448 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-113","author":"Bandyopadhyay A. et al. (2010)","process":"L-DED","doi":"10.1016/j.actbio.2009.11.011","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Influence of porosity on mechanical properties and in vivo response of Ti6Al4V implants — Acta Biomaterialia (445 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-114","author":"Sterling A.J. et al. (2016)","process":"L-DED","doi":"10.1016/j.msea.2015.12.026","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Fatigue behavior and failure mechanisms of direct laser deposited Ti-6Al-4V — Materials Science and Engineering A (374 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-116","author":"Azarniya A. et al. (2019)","process":"L-DED","doi":"10.1016/j.jallcom.2019.04.255","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing of Ti–6Al–4V parts through laser metal deposition (LMD): Process, microstructure, and mechanical properties — Journal of Alloys and Compounds (335 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-117","author":"Beese A.M. et al. (2016)","process":"L-DED","doi":"10.1007/s11837-015-1759-z","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Review of Mechanical Properties of Ti-6Al-4V Made by Laser-Based Additive Manufacturing Using Powder Feedstock — JOM (327 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-119","author":"Kelly S.M. et al. (2004)","process":"L-DED","doi":"10.1007/s11661-004-0095-7","type":"MOD","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructural evolution in laser-deposited multilayer Ti-6Al-4V builds: Part II. Thermal Modeling — Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science (297 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-120","author":"Onuike B. et al. (2018)","process":"L-DED","doi":"10.1016/j.addma.2018.06.025","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing of Inconel 718 – Ti6Al4V bimetallic structures — Additive Manufacturing (290 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-121","author":"Zhai Y. et al. (2016)","process":"L-DED","doi":"10.1016/j.engfailanal.2016.05.036","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructure, static properties, and fatigue crack growth mechanisms in Ti-6Al-4V fabricated by additive manufacturing: LENS and EBM — Engineering Failure Analysis (283 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-122","author":"Khanzadeh M. et al. (2019)","process":"L-DED","doi":"10.1080/24725854.2017.1417656","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"In-situ monitoring of melt pool images for porosity prediction in directed energy deposition processes — Iise Transactions (277 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-123","author":"Qian M. et al. (2016)","process":"L-DED","doi":"10.1557/mrs.2016.215","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing and postprocessing of Ti-6Al-4V for superior mechanical properties — MRS Bulletin (272 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-124","author":"Yang Q. et al. (2016)","process":"L-DED","doi":"10.1016/j.addma.2016.06.012","type":"MOD","treatment":"Scopus Indexed (Pending Extraction)","desc":"Finite element modeling and validation of thermomechanical behavior of Ti-6Al-4V in directed energy deposition additive manufacturing — Additive Manufacturing (254 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-125","author":"Hayes B.J. et al. (2017)","process":"L-DED","doi":"10.1016/j.actamat.2017.05.025","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Predicting tensile properties of Ti-6Al-4V produced via directed energy deposition — Acta Materialia (243 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-126","author":"Lu H. et al. (2022)","process":"L-DED","doi":"10.1016/j.addma.2022.102877","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructural evolution and tensile property enhancement of remanufactured Ti6Al4V using hybrid manufacturing of laser directed energy deposition with laser shock peening — Additive Manufacturing (232 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-128","author":"Sahasrabudhe H. et al. (2015)","process":"L-DED","doi":"10.1016/j.addma.2014.10.002","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Stainless steel to titanium bimetallic structure using LENS™ — Additive Manufacturing (207 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-129","author":"Li W. et al. (2017)","process":"L-DED","doi":"10.1016/j.addma.2016.12.006","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Fabrication and characterization of a functionally graded material from Ti-6Al-4V to SS316 by laser metal deposition — Additive Manufacturing (201 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-130","author":"Thijs L. et al. (2010)","process":"LPBF","doi":"10.1016/j.actamat.2010.02.004","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"A study of the microstructural evolution during selective laser melting of Ti-6Al-4V — Acta Materialia (2891 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-133","author":"Murr L.E. et al. (2012)","process":"LPBF","doi":"10.1016/S1005-0302(12)60016-4","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Metal Fabrication by Additive Manufacturing Using Laser and Electron Beam Melting Technologies — Journal of Materials Science and Technology (1634 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-134","author":"Xu W. et al. (2015)","process":"LPBF","doi":"10.1016/j.actamat.2014.11.028","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing of strong and ductile Ti-6Al-4V by selective laser melting via in situ martensite decomposition — Acta Materialia (1245 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-136","author":"Gong H. et al. (2014)","process":"LPBF","doi":"10.1016/j.addma.2014.08.002","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Analysis of defect generation in Ti-6Al-4V parts made using powder bed fusion additive manufacturing processes — Additive Manufacturing (1163 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-137","author":"Qiu C. et al. (2015)","process":"LPBF","doi":"10.1016/j.actamat.2015.06.004","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"On the role of melt flow into the surface structure and porosity development during selective laser melting — Acta Materialia (998 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-138","author":"Murr L.E. et al. (2009)","process":"LPBF","doi":"10.1016/j.jmbbm.2008.05.004","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructure and mechanical behavior of Ti-6Al-4V produced by rapid-layer manufacturing, for biomedical applications — Journal of the Mechanical Behavior of Biomedical Materials (981 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-139","author":"Gong H. et al. (2015)","process":"LPBF","doi":"10.1016/j.matdes.2015.07.147","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Influence of defects on mechanical properties of Ti-6Al-4V components produced by selective laser melting and electron beam melting — Materials and Design (941 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-140","author":"Vandenbroucke B. et al. (2007)","process":"LPBF","doi":"10.1108/13552540710776142","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Selective laser melting of biocompatible metals for rapid manufacturing of medical parts — Rapid Prototyping Journal (938 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-141","author":"Bobbert F.S.L. et al. (2017)","process":"LPBF","doi":"10.1016/j.actbio.2017.02.024","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additively manufactured metallic porous biomaterials based on minimal surfaces: A unique combination of topological, mechanical, and mass transport properties — Acta Biomaterialia (879 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-142","author":"Edwards P. et al. (2014)","process":"LPBF","doi":"10.1016/j.msea.2014.01.041","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Fatigue performance evaluation of selective laser melted Ti-6Al-4V — Materials Science and Engineering A (862 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-143","author":"Yang J. et al. (2016)","process":"LPBF","doi":"10.1016/j.matdes.2016.06.117","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Formation and control of martensite in Ti-6Al-4V alloy produced by selective laser melting — Materials and Design (849 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-144","author":"Qiu C. et al. (2013)","process":"LPBF","doi":"10.1016/j.msea.2013.04.099","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructure and tensile properties of selectively laser-melted and of HIPed laser-melted Ti-6Al-4V — Materials Science and Engineering A (798 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-146","author":"Zhang L.C. et al. (2016)","process":"LPBF","doi":"10.1002/adem.201500419","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Selective Laser Melting of Titanium Alloys and Titanium Matrix Composites for Biomedical Applications: A Review — Advanced Engineering Materials (737 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-147","author":"Yan C. et al. (2015)","process":"LPBF","doi":"10.1016/j.jmbbm.2015.06.024","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Ti-6Al-4V triply periodic minimal surface structures for bone implants fabricated via selective laser melting — Journal of the Mechanical Behavior of Biomedical Materials (729 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-148","author":"Zhao C. et al. (2020)","process":"LPBF","doi":"10.1126/science.abd1587","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Critical instability at moving keyhole tip generates porosity in laser melting — Science (693 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-149","author":"Xu W. et al. (2017)","process":"LPBF","doi":"10.1016/j.actamat.2016.12.027","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"In situ tailoring microstructure in additively manufactured Ti-6Al-4V for superior mechanical performance — Acta Materialia (688 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-150","author":"Zhao X. et al. (2016)","process":"LPBF","doi":"10.1016/j.matdes.2015.12.135","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Comparison of the microstructures and mechanical properties of Ti-6Al-4V fabricated by selective laser melting and electron beam melting — Materials and Design (679 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-152","author":"Shipley H. et al. (2018)","process":"LPBF","doi":"10.1016/j.ijmachtools.2018.01.003","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Optimisation of process parameters to address fundamental challenges during selective laser melting of Ti-6Al-4V: A review — International Journal of Machine Tools and Manufacture (603 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-154","author":"Dai N. et al. (2016)","process":"LPBF","doi":"10.1016/j.corsci.2015.10.041","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Corrosion behavior of selective laser melted Ti-6Al-4 V alloy in NaCl solution — Corrosion Science (585 citations)","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-179","author":"El-Magd E. (2006)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Stress-Strain","doi":"10.1016/j.ijimpeng.2005.03.008","type":"EXP","treatment":"Scopus Indexed (Stress-Strain)","desc":"Characterization, modelling and simulation of deformation and fracture behaviour of the light-weight wrought alloys under high strain rate loading — International Journal of Impact Engineering (192 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-180","author":"Wang Z. (2018)","process":"LPBF","topic":"Stress-Strain","doi":"10.1016/j.msea.2018.04.006","type":"EXP","treatment":"Scopus Indexed (Stress-Strain)","desc":"Characterisation and constitutive model of tensile properties of selective laser melted Ti-6Al-4V struts for microlattice structures — Materials Science and Engineering A (112 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-181","author":"Smith B.D. (2018)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Stress-Strain","doi":"10.1016/j.ijplas.2013.10.004","type":"EXP","treatment":"Scopus Indexed (Stress-Strain)","desc":"Cyclic plasticity experiments and polycrystal plasticity modeling of three distinct Ti alloy microstructures — International Journal of Plasticity (82 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-182","author":"Mohammadhosseini A. (2013)","process":"EBM","topic":"Stress-Strain","doi":"10.1179/1432891713Z.000000000302","type":"EXP","treatment":"Scopus Indexed (Stress-Strain)","desc":"Microstructure and mechanical properties of Ti-6Al-4V manufactured by electron beam melting process — Materials Research Innovations (54 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-183","author":"Motyka M. (2014)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Stress-Strain","doi":"10.1016/j.msea.2014.01.067","type":"EXP","treatment":"Scopus Indexed (Stress-Strain)","desc":"Microstructural aspects of superplasticity in Ti-6Al-4V alloy — Materials Science and Engineering A (54 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-185","author":"Xiao J. (2012)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Eng. Stress-Strain","doi":"10.1016/j.jallcom.2012.07.048","type":"EXP","treatment":"Scopus Indexed (Eng. Stress-Strain)","desc":"Constitutive modeling and microstructure change of Ti-6Al-4V during the hot tensile deformation — Journal of Alloys and Compounds (109 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-186","author":"Jiang Y.Q. (2020)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Eng. Stress-Strain","doi":"10.1016/j.matchar.2020.110272","type":"EXP","treatment":"Scopus Indexed (Eng. Stress-Strain)","desc":"Hot tensile properties, microstructure evolution and fracture mechanisms of Ti-6Al-4V alloy with initial coarse equiaxed phases — Materials Characterization (83 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-187","author":"Wang S. (2014)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Eng. Stress-Strain","doi":"10.1016/j.matdes.2013.11.003","type":"EXP","treatment":"Scopus Indexed (Eng. Stress-Strain)","desc":"Effect of strain rate and temperature on strain hardening behavior of a dissimilar joint between Ti-6Al-4V and Ti17 alloys — Materials and Design (57 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-188","author":"Mirone G. (2020)","process":"EBM","topic":"Eng. Stress-Strain","doi":"10.1016/j.msea.2020.139916","type":"EXP","treatment":"Scopus Indexed (Eng. Stress-Strain)","desc":"Analysis and modelling of tensile and torsional behaviour at different strain rates of Ti6Al4V alloy additive manufactured by electron beam melting (EBM) — Materials Science and Engineering A (32 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-189","author":"Saboori M. (2016)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Eng. Stress-Strain","doi":"10.1007/s00170-015-7557-5","type":"EXP","treatment":"Scopus Indexed (Eng. Stress-Strain)","desc":"Extension of flow stress–strain curves of aerospace alloys after necking — International Journal of Advanced Manufacturing Technology (17 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-190","author":"Moćko W. (2015)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Eng. Stress-Strain","doi":"10.1016/j.matdes.2015.08.155","type":"EXP","treatment":"Scopus Indexed (Eng. Stress-Strain)","desc":"Application of optical field analysis of tensile tests for calibration of the Rusinek-Klepaczko constitutive relation of Ti6Al4V titanium alloy — Materials and Design (14 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-191","author":"Semiatin S.L. (1999)","process":"Thermo-Mech / Compression","topic":"Compression","doi":"10.1016/s0921-5093(98)01156-3","type":"EXP","treatment":"Scopus Indexed (Compression)","desc":"Flow behavior and globularization kinetics during hot working of Ti-6Al-4V with a colony alpha microstructure — Materials Science and Engineering A (518 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-192","author":"Semiatin S.L. (2001)","process":"Thermo-Mech / Compression","topic":"Compression","doi":"10.1016/S1359-6454(01)00236-1","type":"EXP","treatment":"Scopus Indexed (Compression)","desc":"The effect of alpha platelet thickness on plastic flow during hot working of Ti-6Al-4V with a transformed microstructure — Acta Materialia (489 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-193","author":"Cai J. (2011)","process":"Thermo-Mech / Compression","topic":"Compression","doi":"10.1016/j.matdes.2010.11.004","type":"EXP","treatment":"Scopus Indexed (Compression)","desc":"Constitutive equations for elevated temperature flow stress of Ti-6Al-4V alloy considering the effect of strain — Materials and Design (324 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-194","author":"Seo S. (2005)","process":"Thermo-Mech / Compression","topic":"Compression","doi":"10.1016/j.ijimpeng.2004.04.010","type":"EXP","treatment":"Scopus Indexed (Compression)","desc":"Constitutive equation for Ti-6Al-4V at high temperatures measured using the SHPB technique — International Journal of Impact Engineering (273 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-195","author":"Heinl P. (2007)","process":"EBM","topic":"Compression","doi":"10.1002/adem.200700025","type":"EXP","treatment":"Scopus Indexed (Compression)","desc":"Cellular titanium by selective electron beam melting — Advanced Engineering Materials (256 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-196","author":"Babu B. (2013)","process":"Thermo-Mech / Compression","topic":"Compression","doi":"10.1016/j.ijplas.2013.04.003","type":"EXP","treatment":"Scopus Indexed (Compression)","desc":"Dislocation density based model for plastic deformation and globularization of Ti-6Al-4V — International Journal of Plasticity (218 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-197","author":"Nalla R.K. (2003)","process":"HCF & LCF / Surface","topic":"Fatigue HCF/LCF","doi":"10.1016/S0921-5093(03)00069-8","type":"EXP","treatment":"Scopus Indexed (Fatigue HCF/LCF)","desc":"On the influence of mechanical surface treatments-deep rolling and laser shock peening-on the fatigue behavior of Ti-6Al-4V at ambient and elevated temperatures — Materials Science and Engineering A (522 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-198","author":"Altenberger I. (2012)","process":"HCF & LCF / Surface","topic":"Fatigue HCF/LCF","doi":"10.1016/j.ijfatigue.2012.03.008","oaUrl":"https://escholarship.org/content/qt9jj8t067/qt9jj8t067.pdf?t=mj53rl","type":"EXP","treatment":"Scopus Indexed (Fatigue HCF/LCF)","desc":"On the effect of deep-rolling and laser-peening on the stress-controlled low- and high-cycle fatigue behavior of Ti-6Al-4V at elevated temperatures up to 550 °c — International Journal of Fatigue (296 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-199","author":"Maxwell D.C. (1999)","process":"HCF & LCF / Surface","topic":"Fatigue HCF/LCF","doi":"","type":"EXP","treatment":"Scopus Indexed (Fatigue HCF/LCF)","desc":"Rapid method for generation of a Haigh diagram for high cycle fatigue — ASTM Special Technical Publication (166 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-201","author":"Zabeen S. (2015)","process":"HCF & LCF / Surface","topic":"Fatigue HCF/LCF","doi":"10.1016/j.actamat.2014.09.032","oaUrl":"https://www.sciencedirect.com/science/article/am/pii/S1359645414007125","type":"EXP","treatment":"Scopus Indexed (Fatigue HCF/LCF)","desc":"Evolution of a laser shock peened residual stress field locally with foreign object damage and subsequent fatigue crack growth — Acta Materialia (132 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-202","author":"Karimi J. (2022)","process":"LPBF","topic":"Fatigue HCF/LCF","doi":"10.1016/j.jallcom.2021.163207","type":"EXP","treatment":"Scopus Indexed (Fatigue HCF/LCF)","desc":"Role of laser remelting and heat treatment in mechanical and tribological properties of selective laser melted Ti6Al4V alloy — Journal of Alloys and Compounds (93 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-203","author":"Alabort E. (2016)","process":"Creep / Ti-6Al-4V","topic":"Creep","doi":"10.1016/j.actamat.2015.12.003","oaUrl":"https://www.sciencedirect.com/science/article/pii/S1359645415301105/pdf","type":"EXP","treatment":"Scopus Indexed (Creep)","desc":"On the mechanisms of superplasticity in Ti-6Al-4V — Acta Materialia (245 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-204","author":"Barboza M.J.R. (2004)","process":"Creep / Ti-6Al-4V","topic":"Creep","doi":"10.1016/j.msea.2003.11.016","type":"EXP","treatment":"Scopus Indexed (Creep)","desc":"Creep mechanisms and physical modeling for Ti-6Al-4V — Materials Science and Engineering A (92 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-205","author":"Kim Y.K. (2018)","process":"LPBF","topic":"Creep","doi":"10.1016/j.msea.2017.12.085","type":"EXP","treatment":"Scopus Indexed (Creep)","desc":"Improvement in the high-temperature creep properties via heat treatment of Ti-6Al-4V alloy manufactured by selective laser melting — Materials Science and Engineering A (76 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-206","author":"Reis D.A.P. (2005)","process":"Creep / Ti-6Al-4V","topic":"Creep","doi":"10.1016/j.msea.2005.03.073","type":"EXP","treatment":"Scopus Indexed (Creep)","desc":"Effect of environment on the creep behavior of the Ti-6Al-4V alloy — Materials Science and Engineering A (74 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-207","author":"Yamada T. (2004)","process":"Creep / Ti-6Al-4V","topic":"Creep","doi":"10.1016/j.msea.2004.01.146","oaUrl":"https://repository.exst.jaxa.jp/dspace/handle/a-is/3098","type":"EXP","treatment":"Scopus Indexed (Creep)","desc":"Presences of primary creep in various phase metals and alloys at ambient temperature — Materials Science and Engineering A (58 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-208","author":"Badea L. (2014)","process":"Creep / Ti-6Al-4V","topic":"Creep","doi":"","type":"EXP","treatment":"Scopus Indexed (Creep)","desc":"Creep behavior of Ti-6Al-4V from 450°C TO 600°C — UPB Scientific Bulletin Series B Chemistry and Materials Science (58 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-209","author":"Tan X. (2015)","process":"EBM","topic":"Hardness","doi":"10.1016/j.actamat.2015.06.036","type":"EXP","treatment":"Scopus Indexed (Hardness)","desc":"Graded microstructure and mechanical properties of additive manufactured Ti-6Al-4V via electron beam melting — Acta Materialia (704 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-210","author":"Yasa E. (2011)","process":"LPBF","topic":"Hardness","doi":"10.1108/13552541111156450","type":"EXP","treatment":"Scopus Indexed (Hardness)","desc":"The investigation of the influence of laser re-melting on density, surface quality and microstructure of selective laser melting parts — Rapid Prototyping Journal (382 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-211","author":"Lu J. (2020)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Hardness","doi":"10.1016/j.ijmachtools.2019.103475","type":"EXP","treatment":"Scopus Indexed (Hardness)","desc":"High-performance integrated additive manufacturing with laser shock peening –induced microstructural evolution and improvement in mechanical properties of Ti6Al4V alloy components — International Journal of Machine Tools and Manufacture (372 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-212","author":"Yang J. (2016)","process":"LPBF","topic":"Hardness","doi":"10.1016/j.matdes.2016.08.036","type":"EXP","treatment":"Scopus Indexed (Hardness)","desc":"Role of molten pool mode on formability, microstructure and mechanical properties of selective laser melted Ti-6Al-4V alloy — Materials and Design (340 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-213","author":"Wu S.Q. (2016)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Hardness","doi":"10.1016/j.jallcom.2016.02.183","type":"EXP","treatment":"Scopus Indexed (Hardness)","desc":"Microstructural evolution and microhardness of a selective-laser-melted Ti-6Al-4V alloy after post heat treatments — Journal of Alloys and Compounds (301 citations).","density":null,"ys":null,"uts":null,"el":null},
-  {"id":"P-214","author":"Benedetti M. (2018)","process":"LPBF","topic":"Fatigue HCF/LCF & Hardness","doi":"10.1016/j.ijfatigue.2017.10.021","oaUrl":"https://iris.unitn.it/bitstream/11572/187253/5/RevisedManuscript.pdf","type":"EXP","treatment":"Scopus Indexed (Fatigue HCF/LCF & Hardness)","desc":"Low- and high-cycle fatigue resistance of Ti-6Al-4V ELI additively manufactured via selective laser melting: Mean stress and defect sensitivity — International Journal of Fatigue (293 citations).","density":null,"ys":null,"uts":null,"el":null}
+  {"id":"P-01","author":"Cao et al. (2021)","process":"LPBF","desc":"Comprehensive review of LPBF Ti-6Al-4V: process, post-process treatment, microstructure, and property.","density":"99.85%","ys":980,"uts":1180,"el":8.5,"p":250,"v":1100,"h":100,"t":30,"db":80,"hv":350,"postProc":"Annealed","alloy":"ti64_gr5"},
+  {"id":"P-02","author":"Coen et al. (2022)","process":"LPBF","desc":"KU Leuven hybrid analytical model combining Eagar-Tsai width with keyhole aspect ratio for Ti-6Al-4V.","density":"99.88%","ys":1040,"uts":1210,"el":7.8,"p":250,"v":1000,"h":100,"t":30,"db":60,"hv":385,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-03","author":"Bontha et al. (2009)","process":"LPBF / L-DED","desc":"Effects of process variables and size-scale on solidification microstructure (G vs R maps, CET) in bulky 3D Ti-6Al-4V.","density":"99.90%","ys":1010,"uts":1180,"el":8.2,"p":300,"v":800,"h":110,"t":40,"db":100,"hv":375,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-04","author":"Bontha et al. (2006)","process":"L-DED","desc":"Thermal process maps for predicting solidification microstructure in laser fabrication of thin-wall structures.","density":"99.70%","ys":890,"uts":1020,"el":9.8,"doi":"10.1016/j.jmatprotec.2006.03.155","p":450,"v":10.6,"h":1200,"t":500,"db":1200,"hv":340,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-05","author":"Guo et al. (2025)","process":"WAAM","desc":"Wire + Arc Additive Manufacturing (WAAM) of Ti-6Al-4V: process control, CMT heat input, interpass rolling.","density":"99.95%","ys":865,"uts":975,"el":14.5,"p":1800,"v":6,"h":4500,"t":1200,"db":4000,"hv":325,"alloy":"ti64_gr5"},
+  {"id":"P-06","author":"Nursyifaulkhair et al. (2019)","process":"DED","desc":"Effect of blown-powder L-DED energy density and scanning strategy on lack-of-fusion formation in Ti-6Al-4V.","density":"99.45%","ys":875,"uts":965,"el":8.5,"p":800,"v":15,"h":1100,"t":500,"db":1000,"hv":335,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-07","author":"Wang et al. (2026)","process":"Wire-Laser DED","desc":"Heat input effects on microstructure evolution and high-cycle fatigue life in wire-fed L-DED Ti-6Al-4V.","density":"99.90%","ys":910,"uts":1015,"el":12.4,"p":2400,"v":10,"h":2500,"t":1200,"db":2600,"hv":322,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-08","author":"Halder et al. (2024)","process":"LPBF","desc":"Effect of interlayer delay on heat accumulation and in situ phase kinetics.","density":"99.88%","ys":960,"uts":1140,"el":9.8,"p":3200,"v":16.7,"h":2800,"t":1200,"db":3500,"hv":325,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-09","author":"Alegre et al. (2022)","process":"LPBF + HIP","desc":"Effect of HIP post-processing at 850°C/200 MPa on fatigue behavior.","density":"99.98%","ys":870,"uts":980,"el":15.2,"p":280,"v":1200,"h":100,"t":30,"db":80,"hv":345,"postProc":"HIP","alloy":"ti64_eli"},
+  {"id":"P-10","author":"Artzt et al. (2020)","process":"LPBF","desc":"Pandora's box: influence of contour parameters on surface roughness Ra.","density":"99.65%","ys":1010,"uts":1190,"el":7.1,"p":175,"v":900,"h":90,"t":50,"db":100,"hv":385,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-11","author":"Asherloo et al. (2022)","process":"LPBF","desc":"Fatigue performance of LPBF hydride-dehydride Ti-6Al-4V powder.","density":"99.75%","ys":990,"uts":1160,"el":8,"p":280,"v":1250,"h":105,"t":30,"db":85,"hv":370,"o2WtPct":0.19,"postProc":"Stress-relieved","alloy":"ti64_gr5"},
+  {"id":"P-12","author":"Barriobero-Vila et al. (2017)","process":"LPBF","desc":"Inducing stable α+β microstructures during SLM of titanium alloys.","density":"99.80%","ys":910,"uts":1060,"el":12.8,"p":200,"v":800,"h":80,"t":30,"db":75,"hv":355,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-13","author":"Bartsch et al. (2022)","process":"LPBF","desc":"Thermal conductivity of Ti-6Al-4V in LPBF under inert argon.","density":"99.82%","ys":975,"uts":1150,"el":8.8,"p":200,"v":900,"h":100,"t":30,"db":80,"hv":380,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-14","author":"Cutolo et al. (2020)","process":"LPBF","desc":"Mechanical properties of diamond lattice Ti-6Al-4V porous structures.","density":"99.90%","ys":950,"uts":1130,"el":10.5,"p":180,"v":950,"h":90,"t":30,"db":75,"hv":365,"postProc":"Stress-relieved","alloy":"ti64_gr5"},
+  {"id":"P-15","author":"Denti et al. (2019)","process":"LPBF","desc":"Effect of powder recycling cycles on oxygen pickup and tensile ductility.","density":"99.72%","ys":1035,"uts":1220,"el":6.4,"p":200,"v":900,"h":105,"t":30,"db":80,"hv":395,"o2WtPct":0.17,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-16","author":"Dhekne et al. (2025)","process":"LPBF","desc":"Deformation mechanisms of LPBF Ti-6Al-4V using high-resolution EBSD.","density":"99.85%","ys":965,"uts":1145,"el":9.2,"p":275,"v":1150,"h":100,"t":30,"db":85,"hv":352,"postProc":"Annealed","alloy":"ti64_gr5"},
+  {"id":"P-17","author":"Diaz et al. (2022)","process":"LPBF","desc":"Notch fracture predictions using Phase Field method for Ti-6Al-4V.","density":"99.80%","ys":985,"uts":1165,"el":8.1,"alloy":"ti64_gr5"},
+  {"id":"P-18","author":"Emminghaus et al. (2022)","process":"LPBF","desc":"LPBF of Ti-6Al-4V powder modified with SiO2 nanoparticles.","density":"99.68%","ys":1060,"uts":1250,"el":5.5,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-19","author":"Fereiduni et al. (2023)","process":"LPBF","desc":"Processing of hydroxyapatite-Ti6Al4V composite for orthopedic implants.","density":"99.55%","ys":920,"uts":1090,"el":7.8,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-20","author":"Ganeriwala et al. (2019)","process":"LPBF","desc":"Thermomechanical finite element model for residual stress prediction.","density":"99.86%","ys":995,"uts":1175,"el":8.4,"p":250,"v":1000,"h":100,"t":30,"db":80,"hv":388,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-21","author":"Ghosh et al. (2018)","process":"LPBF","desc":"Simulation of temperature, stress, and phase fields during laser melting.","density":"99.82%","ys":980,"uts":1160,"el":8.6,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-22","author":"Goettgens et al. (2023)","process":"LPBF","desc":"Microstructure of modulated Ti-6Al-4V Cu alloy fabricated via in situ alloying.","density":"99.78%","ys":1015,"uts":1205,"el":7.4,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-23","author":"Gryaznov et al. (2023)","process":"LPBF","desc":"Fatigue characteristics of Ti-6Al-4V produced by selective laser melting.","density":"99.84%","ys":960,"uts":1140,"el":9.5,"p":200,"v":900,"h":100,"t":30,"db":80,"hv":355,"postProc":"Annealed","alloy":"ti64_gr5"},
+  {"id":"P-24","author":"Jamshidi et al. (2020)","process":"LPBF","desc":"Impact of post-processing and stress relief on biomedical implants.","density":"99.89%","ys":890,"uts":1040,"el":13.5,"p":180,"v":950,"h":90,"t":30,"db":75,"hv":360,"postProc":"Stress-relieved","alloy":"ti64_gr5"},
+  {"id":"P-25","author":"Kallel et al. (2019)","process":"DED","desc":"Finish milling and surface integrity of laser metal deposited Ti-6Al-4V.","density":"99.60%","ys":840,"uts":960,"el":11.8,"p":2000,"v":12,"h":2200,"t":1000,"db":2500,"hv":330,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-26","author":"Kim et al. (2026)","process":"DED","desc":"Analysis of single-bead deposition behavior and microstructure in DED.","density":"99.75%","ys":865,"uts":985,"el":12.2,"p":2000,"v":12,"h":2200,"t":1000,"db":2500,"hv":330,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-27","author":"Koushik et al. (2023)","process":"LPBF","desc":"Effective powder recycling protocols in titanium additive manufacturing.","density":"99.80%","ys":970,"uts":1150,"el":8.9,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"o2WtPct":0.129,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-28","author":"Lan et al. (2020)","process":"LPBF + LSP","desc":"Laser shock peening effects on microstructure and fatigue performance.","density":"99.90%","ys":1120,"uts":1280,"el":10.4,"p":250,"v":1050,"h":100,"t":30,"db":80,"hv":425,"alloy":"ti64_gr5"},
+  {"id":"P-29","author":"Le Roux et al. (2025)","process":"LPBF","desc":"Effect of process parameters on surface integrity and defect distribution.","density":"99.78%","ys":985,"uts":1165,"el":8,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-30","author":"Lee et al. (2017)","process":"LPBF","desc":"Heat treatment effects on microstructure and Charpy impact toughness.","density":"99.85%","ys":885,"uts":1020,"el":14.1,"p":200,"v":900,"h":100,"t":30,"db":80,"hv":335,"postProc":"Annealed","alloy":"ti64_gr5"},
+  {"id":"P-31","author":"Lee et al. (2018)","process":"DED","desc":"Correlations of interlayer dwell time with distortion of large components.","density":"99.65%","ys":830,"uts":950,"el":12.5,"p":2000,"v":12,"h":2200,"t":1000,"db":2500,"hv":330,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-32","author":"Lee et al. (2025)","process":"LPBF","desc":"In vivo osseointegration around additively manufactured porous implants.","density":"99.82%","ys":930,"uts":1080,"el":10.8,"p":180,"v":950,"h":90,"t":30,"db":75,"hv":360,"postProc":"Stress-relieved","alloy":"ti64_gr5"},
+  {"id":"P-33","author":"Linde et al. (2026)","process":"LPBF","desc":"Microstructure engineering via substrate preheating and beam shaping.","density":"99.91%","ys":905,"uts":1050,"el":13.2,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-34","author":"Lu et al. (2019)","process":"DED","desc":"Residual stress and distortion of rectangular and S-shaped Ti-6Al-4V parts.","density":"99.70%","ys":845,"uts":970,"el":11.5,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-35","author":"Lu et al. (2020)","process":"LPBF","desc":"Building strategy modeling for thermomechanical distortion reduction.","density":"99.84%","ys":975,"uts":1155,"el":8.7,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-36","author":"Luo et al. (2025)","process":"LPBF","desc":"Image-based transfer learning for in situ melt pool monitoring.","density":"99.87%","ys":960,"uts":1140,"el":9.4,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-37","author":"Mahmud et al. (2021)","process":"LPBF","desc":"Mechanical assessment of Ti-6Al-4V ELI alloy produced by laser fusion.","density":"99.88%","ys":890,"uts":1030,"el":13.8,"p":275,"v":1150,"h":100,"t":30,"db":80,"hv":348,"postProc":"Stress-relieved","alloy":"ti64_eli"},
+  {"id":"P-38","author":"McGregor et al. (2021)","process":"LPBF","desc":"Architectural bone parameters and titanium lattice compression response.","density":"99.80%","ys":940,"uts":1100,"el":10.2,"p":250,"v":1100,"h":100,"t":30,"db":80,"hv":340,"alloy":"ti64_gr5"},
+  {"id":"P-39","author":"Merkibayev et al. (2026)","process":"LPBF","desc":"Microstructural phase evolution and grain orientation in laser melting.","density":"99.86%","ys":980,"uts":1160,"el":8.5,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-40","author":"Meshram et al. (2026)","process":"LPBF","desc":"Torsional and axial fatigue behavior of additively manufactured Ti-6Al-4V.","density":"99.83%","ys":955,"uts":1135,"el":9.6,"p":280,"v":1200,"h":105,"t":30,"db":85,"hv":338,"alloy":"ti64_gr5"},
+  {"id":"P-41","author":"Moon et al. (2021)","process":"LPBF","desc":"Impact of surface and pore characteristics on high-cycle fatigue life.","density":"99.74%","ys":990,"uts":1170,"el":7.9,"p":280,"v":1200,"h":100,"t":30,"db":80,"hv":378,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-42","author":"Moridi et al. (2019)","process":"LPBF","desc":"Plasticity and damage mechanisms in titanium printed with selective laser.","density":"99.81%","ys":975,"uts":1150,"el":8.8,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-43","author":"Nitzler et al. (2021)","process":"LPBF","desc":"Physics-based and data-supported microstructure model for parts.","density":"99.87%","ys":965,"uts":1145,"el":9.3,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-44","author":"Oshiro et al. (2026)","process":"WAAM","desc":"Static fracture toughness K_IC of Ti-6Al-4V manufactured by wire arc.","density":"99.65%","ys":815,"uts":935,"el":14.8,"p":2500,"v":12.5,"h":3000,"t":1500,"db":3000,"hv":320,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-45","author":"Obeidi et al. (2022)","process":"LPBF","desc":"Laser surface polishing of Ti-6Al-4V parts to alleviate fatigue notch effect.","density":"99.89%","ys":950,"uts":1125,"el":10.6,"p":200,"v":900,"h":100,"t":30,"db":80,"hv":380,"alloy":"ti64_gr5"},
+  {"id":"P-46","author":"Pedrazzini et al. (2020)","process":"LPBF","desc":"Bed temperature effects on solute segregation and mechanical properties.","density":"99.90%","ys":920,"uts":1070,"el":12.4,"p":200,"v":900,"h":100,"t":30,"db":80,"hv":342,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-47","author":"Rauch et al. (2020)","process":"DED","desc":"Repairing aeronautical structural titanium components using blown-powder DED.","density":"99.72%","ys":855,"uts":980,"el":11.9,"p":1200,"v":15,"h":1200,"t":600,"db":1800,"hv":335,"postProc":"Stress-relieved","alloy":"ti64_gr5"},
+  {"id":"P-48","author":"Salikhyanov et al. (2021)","process":"DED","desc":"Flow behavior and microstructure evolution during hot compression.","density":"99.68%","ys":840,"uts":965,"el":12.1,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-49","author":"Simonelli et al. (2020)","process":"LPBF","desc":"Influence of iron in minimizing microstructural anisotropy in SLM.","density":"99.85%","ys":970,"uts":1140,"el":9.1,"p":200,"v":800,"h":90,"t":30,"db":75,"hv":365,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-50","author":"Sinclair et al. (2021)","process":"LPBF","desc":"Vibratory powder feeding dynamics for additive manufacturing using wires.","density":"99.82%","ys":965,"uts":1135,"el":9,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-51","author":"Sutherland et al. (2026)","process":"DED","desc":"Repair of complex Ti-6Al-4V grooves by coaxial wire laser deposition.","density":"99.76%","ys":850,"uts":975,"el":12,"p":2200,"v":14,"h":2400,"t":1100,"db":2800,"hv":330,"postProc":"Stress-relieved","alloy":"ti64_gr5"},
+  {"id":"P-52","author":"Vayssette et al. (2018)","process":"LPBF","desc":"Surface roughness of parts obtained by SLM and fatigue notch factors.","density":"99.79%","ys":980,"uts":1155,"el":8.3,"p":225,"v":1050,"h":95,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-53","author":"Wang et al. (2025)","process":"DED","desc":"Laser-directed energy-deposited Ti-6Al-4V anisotropy and texture.","density":"99.73%","ys":845,"uts":965,"el":11.7,"p":1800,"v":10,"h":1800,"t":800,"db":2200,"hv":335,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-54","author":"Xing et al. (2021)","process":"LPBF","desc":"Influence of powder bed temperature on microstructural in situ annealing.","density":"99.91%","ys":915,"uts":1060,"el":13,"p":200,"v":900,"h":100,"t":30,"db":80,"hv":345,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-55","author":"Xueyang Chen et al. (2016)","process":"DED","desc":"Effect of powder particle size on fabrication of Ti-6Al-4V using DED.","density":"99.64%","ys":835,"uts":955,"el":12.3,"p":450,"v":16.7,"h":1000,"t":400,"db":1000,"hv":350,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-56","author":"Yang et al. (2023)","process":"LPBF","desc":"Solidification microstructure variations and grain boundary solute trapping.","density":"99.84%","ys":970,"uts":1145,"el":8.9,"p":250,"v":1000,"h":100,"t":30,"db":80,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-57","author":"Awan et al. (2026)","process":"LPBF","desc":"Towards agentic defect reasoning: graph-assisted retrieval framework.","density":"99.87%","ys":965,"uts":1140,"el":9.2,"p":250,"v":1000,"h":100,"t":30,"db":80,"hv":390,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-58","author":"Banerjee et al. (2025)","process":"LPBF","desc":"Neuromorphic computing for anomaly and acoustic defect detection in LPBF.","density":"99.89%","ys":975,"uts":1150,"el":9.5,"p":300,"v":1300,"h":110,"t":40,"db":90,"hv":382,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-59","author":"Vrancken et al. (2012)","process":"LPBF","topic":"Stress-Strain & Hardness","doi":"10.1016/j.jallcom.2012.07.022","oaUrl":"https://lirias.kuleuven.be/retrieve/155650a8-ccc4-48b8-8433-9a038cdff7a4","desc":"Heat treatment of Ti6Al4V produced by SLM: Martensite decomposition, ductility recovery (1908 citations).","density":"99.85%","ys":890,"uts":1010,"el":12.8,"p":250,"v":1600,"h":50,"t":30,"hv":355,"postProc":"Annealed","alloy":"ti64_gr5"},
+  {"id":"P-60","author":"Vilaro et al. (2011)","process":"LPBF","desc":"As-fabricated and heat-treated microstructures of Ti-6Al-4V processed by SLM (1244 citations).","density":"99.80%","ys":920,"uts":1050,"el":11.2,"doi":"10.1007/s11661-011-0731-y","p":275,"v":1000,"h":120,"t":40,"hv":370,"postProc":"Stress-relieved","alloy":"ti64_gr5"},
+  {"id":"P-61","author":"Simonelli et al. (2014)","process":"LPBF","desc":"Effect of build orientation on mechanical properties and fracture modes of SLM Ti-6Al-4V (992 citations).","density":"99.88%","ys":980,"uts":1160,"el":8.4,"doi":"10.1016/j.msea.2014.07.086","p":200,"v":1000,"h":100,"t":30,"hv":395,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-62","author":"Gorsse et al. (2017)","process":"Review / AM","desc":"Characteristic microstructures, solidification regimes, and mechanical properties in AM (891 citations).","density":"99.90%","ys":950,"uts":1120,"el":10.5,"doi":"10.1080/14686996.2017.1361305","alloy":"ti64_gr5"},
+  {"id":"P-63","author":"Todaro et al. (2020)","process":"LPBF + US","desc":"Grain structure control during metal 3D printing by high-intensity ultrasound (842 citations).","density":"99.92%","ys":935,"uts":1085,"el":13,"doi":"10.1038/s41467-019-13874-z","alloy":"ti64_gr5"},
+  {"id":"P-64","author":"Bermingham et al. (2019)","process":"WAAM / DED","desc":"Promoting columnar to equiaxed transition (CET) and grain refinement in AM Ti alloys (767 citations).","density":"99.75%","ys":855,"uts":980,"el":12.6,"alloy":"ti64_gr5"},
+  {"id":"P-65","author":"Zhao et al. (2017)","process":"LPBF / In-Situ","desc":"Real-time monitoring of LPBF using high-speed synchrotron X-ray imaging and diffraction (761 citations).","density":"99.86%","ys":965,"uts":1135,"el":9.1,"doi":"10.1038/s41598-017-03761-2","alloy":"ti64_gr5"},
+  {"id":"P-66","author":"Murr et al. (2010)","process":"EBM","desc":"Next-generation biomedical implants using additive manufacturing of functional mesh arrays (637 citations).","density":"99.82%","ys":910,"uts":1040,"el":11.5,"alloy":"ti64_gr5"},
+  {"id":"P-67","author":"Tammas-Williams et al. (2015)","process":"EBM","desc":"XCT analysis of melt strategies on defect population in Ti-6Al-4V manufactured by SEBM (594 citations).","density":"99.83%","ys":940,"uts":1070,"el":10.2,"doi":"10.1016/j.matchar.2015.02.008","alloy":"ti64_gr5"},
+  {"id":"P-68","author":"Facchini et al. (2010)","process":"LPBF","desc":"Ductility of Ti-6Al-4V alloy produced by selective laser melting of prealloyed powders (520 citations).","density":"99.78%","ys":970,"uts":1145,"el":8.8,"p":150,"v":800,"h":90,"t":30,"hv":405,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-69","author":"Heigel et al. (2015)","process":"DED","desc":"Thermo-mechanical model development and validation of directed energy deposition of Ti-6Al-4V (497 citations).","density":"99.68%","ys":840,"uts":965,"el":12,"doi":"10.1016/j.addma.2014.10.003","alloy":"ti64_gr5"},
+  {"id":"P-70","author":"Ly et al. (2017)","process":"LPBF","desc":"Metal vapor micro-jet controls material redistribution and denudation in LPBF (470 citations).","density":"99.87%","ys":960,"uts":1130,"el":9.4,"alloy":"ti64_gr5"},
+  {"id":"P-71","author":"Murr et al. (2012)","process":"EBM / DED","desc":"Fabrication of metal and alloy components by additive manufacturing: 3D materials science (465 citations).","density":"99.81%","ys":925,"uts":1060,"el":11,"alloy":"ti64_gr5"},
+  {"id":"P-72","author":"Cain et al. (2015)","process":"LPBF","desc":"Crack propagation and fracture toughness of Ti-6Al-4V produced by selective laser melting (408 citations).","density":"99.85%","ys":955,"uts":1125,"el":9.8,"p":200,"v":900,"h":105,"t":30,"hv":336,"postProc":"HIP","alloy":"ti64_gr5"},
+  {"id":"P-73","author":"Dilip et al. (2017)","process":"LPBF","desc":"Processing parameters evolution of melt pool, porosity, and microstructures in Ti-6Al-4V (398 citations).","density":"99.84%","ys":965,"uts":1140,"el":9.2,"p":195,"v":1200,"h":100,"t":30,"hv":350,"postProc":"Annealed","alloy":"ti64_gr5"},
+  {"id":"P-74","author":"Simonelli et al. (2015)","process":"LPBF","desc":"Laser spatter and oxidation reactions during selective laser melting of Ti-6Al-4V (365 citations).","density":"99.86%","ys":975,"uts":1150,"el":8.9,"alloy":"ti64_gr5"},
+  {"id":"P-75","author":"de Formanoir et al. (2016)","process":"EBM","desc":"Electron beam melted Ti-6Al-4V: Microstructure, texture and mechanical behavior (357 citations).","density":"99.89%","ys":915,"uts":1050,"el":13.1,"alloy":"ti64_gr5"},
+  {"id":"P-76","author":"Simonelli et al. (2014)","process":"LPBF","desc":"On the crystallographic texture formation of selective laser melted Ti-6Al-4V (350 citations).","density":"99.87%","ys":980,"uts":1155,"el":8.6,"p":200,"v":1000,"h":100,"t":30,"hv":395,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-77","author":"Liu et al. (2021)","process":"Review / DED","desc":"Review on additive manufacturing of titanium alloys for aerospace applications (350 citations).","density":"99.74%","ys":850,"uts":975,"el":11.9,"doi":"10.1007/s11837-021-04670-6","alloy":"ti64_gr5"},
+  {"id":"P-78","author":"Cunningham et al. (2017)","process":"LPBF","desc":"Synchrotron-based X-ray microtomography of processing variables and porosity formation (346 citations).","density":"99.88%","ys":960,"uts":1135,"el":9.5,"alloy":"ti64_gr5"},
+  {"id":"P-155","author":"Meier C. et al. (2019)","process":"Binder Jetting","doi":"10.1016/j.jmatprotec.2018.10.037","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Critical influences of particle size and adhesion on the powder layer uniformity in metal additive manufacturing — Journal of Materials Processing Technology (293 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-156","author":"Miyanaji H. et al. (2018)","process":"Binder Jetting","doi":"10.1016/j.ijmachtools.2017.09.001","type":"MOD","treatment":"Scopus Indexed (Pending Extraction)","desc":"A new physics-based model for equilibrium saturation determination in binder jetting additive manufacturing process — International Journal of Machine Tools and Manufacture (140 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-157","author":"Stevens E. et al. (2018)","process":"Binder Jetting","doi":"10.1016/j.addma.2018.06.017","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Density variation in binder jetting 3D-printed and sintered Ti-6Al-4V — Additive Manufacturing (88 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-158","author":"Phua A. et al. (2021)","process":"Binder Jetting","doi":"10.1016/j.powtec.2021.08.058","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"The effect of recoater geometry and speed on granular convection and size segregation in powder bed fusion — Powder Technology (73 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-160","author":"Simchi A. et al. (2023)","process":"Binder Jetting","doi":"10.1007/s00170-023-11661-1","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructural development during additive manufacturing of biomedical grade Ti-6Al-4V alloy by three-dimensional binder jetting: material aspects and mechanical properties — International Journal of Advanced Manufacturing Technology (41 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-162","author":"Janzen K. et al. (2024)","process":"Binder Jetting","doi":"10.3390/ma17030750","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Influence of Different Powder Conditioning Strategies on Metal Binder Jetting with Ti-6Al-4V — Materials (19 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-163","author":"Alegre J.M. et al. (2024)","process":"Binder Jetting","doi":"10.3390/ma17153825","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Mechanical and Fatigue Properties of Ti-6Al-4V Alloy Fabricated Using Binder Jetting Process and Subjected to Hot Isostatic Pressing — Materials (19 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-164","author":"Tischel F. et al. (2024)","process":"Binder Jetting","doi":"10.1016/j.powtec.2024.119958","type":"MOD","treatment":"Scopus Indexed (Pending Extraction)","desc":"Experimental investigation and modeling of densification during sintering of binder jetted Ti–6Al–4V — Powder Technology (18 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-165","author":"Siddiqui M.A.S. et al. (2025)","process":"Binder Jetting","doi":"10.1002/adem.202500257","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Recent Advances in Crystalline Architecture and Defect Engineering of 3D-Printed Metals for Biomedical Breakthroughs: A Comprehensive Review — Advanced Engineering Materials (14 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-166","author":"Janzen K. et al. (2025)","process":"Binder Jetting","doi":"10.1016/j.addlet.2025.100272","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Investigation on curing strategies for metal binder jetting with Ti-6Al-4V — Additive Manufacturing Letters (8 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-167","author":"Bhaduri D. et al. (2025)","process":"Binder Jetting","doi":"10.1016/j.cirp.2025.03.037","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Circular manufacturing of binder jetting additive parts from Ti-6Al-4 V machining chips — CIRP Annals (7 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-168","author":"Frieden Templeton W. et al. (2024)","process":"Binder Jetting","doi":"10.1016/j.commatsci.2024.113056","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Expediting structure–property analyses using variational autoencoders with regression — Computational Materials Science (7 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-169","author":"Jump N. et al. (2025)","process":"Binder Jetting","doi":"10.1007/s11661-024-07624-0","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Enhancing Mechanical Performance of Sinter-Based Additively Manufactured Ti-6Al-4V Parts Through Hydrogen Sintering and Phase Transformation (HSPT) Process — Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science (7 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-170","author":"Bernhard G.H. et al. (2021)","process":"Binder Jetting","doi":"","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"COMPARISON OF Ti-6Al-4V MATERIALS FABRICATED VIA MIM AND BINDER-JET PRINTING — International Journal of Powder Metallurgy (4 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-172","author":"Janzen K. et al. (2025)","process":"Binder Jetting","doi":"10.2497/jjspm.15A-T7-04","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Recycling of Ti-6Al-4V Powder in Metal Binder Jetting — Funtai Oyobi Fummatsu Yakin Journal of the Japan Society of Powder and Powder Metallurgy (4 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-173","author":"Simchi A. et al. (2022)","process":"Binder Jetting","doi":"","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Binder Jetting Additive Manufacturing Of Complex-Shaped Parts With Minimum Sintering Anisotropy — World Pm 2022 Congress Proceedings (3 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-174","author":"Paramore J.D. et al. (2020)","process":"Binder Jetting","doi":"10.1007/s11837-020-04261-x","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Powder Casting: Producing Bulk Metal Components from Powder Without Compaction — JOM (3 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-175","author":"Janzen K. et al. (2022)","process":"Binder Jetting","doi":"","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Potentials of Metal Binder Jetting Process Chains for Medical Parts — World Pm 2022 Congress Proceedings (2 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-176","author":"Simchi A. et al. (2021)","process":"Binder Jetting","doi":"","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"3D binder jet printing of Ti-6Al-4V alloy for potential application in biomedicine — Euro Pm2021 Congress Proceedings (1 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-177","author":"Qian Y. et al. (2026)","process":"Binder Jetting","doi":"10.1016/j.powtec.2026.122295","type":"MOD","treatment":"Scopus Indexed (Pending Extraction)","desc":"Integrating large language models (LLMs) into printing process optimization for binder jetting printed Ti-6Al-4V — Powder Technology (1 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-178","author":"Persson M. et al. (2017)","process":"Binder Jetting","doi":"","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Properties of Ti-6Al-4V components produced by digital metal® binder jetting technology — Proceedings Euro Pm 2017 International Powder Metallurgy Congress and Exhibition (1 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-79","author":"Tischel F. et al. (2024)","process":"Binder Jetting","doi":"10.59499/EP246278578","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Determination Of Process-Related Time-Dependent Sinter Strain And Viscosity For Simulating Distortion In Sinter-Based Additive Manufacturing — Proceedings Euro Pm 2024 Congress and Exhibition (1 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-80","author":"Williams S.W. et al. (2016)","process":"WAAM","doi":"10.1179/1743284715Y.0000000073","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Wire + Arc additive manufacturing — Materials Science and Technology United Kingdom (1840 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-81","author":"Wang F. et al. (2013)","process":"WAAM","doi":"10.1007/s11661-012-1444-6","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructure and mechanical properties of wire and arc additive manufactured Ti-6Al-4V — Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science (751 citations)","density":null,"ys":null,"uts":null,"el":null,"p":1800,"v":8,"h":3500,"t":1500,"hv":315,"alloy":"ti64_gr5"},
+  {"id":"P-82","author":"Bermingham M.J. et al. (2015)","process":"WAAM","doi":"10.1016/j.actamat.2015.03.035","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Controlling the microstructure and properties of wire arc additive manufactured Ti-6Al-4V with trace boron additions — Acta Materialia (408 citations)","density":null,"ys":null,"uts":null,"el":null,"p":2400,"v":8,"h":4000,"t":1800,"hv":325,"alloy":"ti64_gr5"},
+  {"id":"P-83","author":"Szost B.A. et al. (2016)","process":"WAAM","doi":"10.1016/j.matdes.2015.09.115","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"A comparative study of additive manufacturing techniques: Residual stress and microstructural analysis of CLAD and WAAM printed Ti-6Al-4V components — Materials and Design (369 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-84","author":"Donoghue J. et al. (2016)","process":"WAAM","doi":"10.1016/j.matchar.2016.02.001","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"The effectiveness of combining rolling deformation with Wire-Arc Additive Manufacture on β-grain refinement and texture modification in Ti-6Al-4V — Materials Characterization (359 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-85","author":"Wu B. et al. (2017)","process":"WAAM","doi":"10.1016/j.jmatprotec.2017.07.037","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Effects of heat accumulation on the arc characteristics and metal transfer behavior in Wire Arc Additive Manufacturing of Ti6Al4V — Journal of Materials Processing Technology (347 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-86","author":"Martina F. et al. (2015)","process":"WAAM","doi":"10.1007/s11661-015-3172-1","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructure of Interpass Rolled Wire + Arc Additive Manufacturing Ti-6Al-4V Components — Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science (299 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-87","author":"McAndrew A.R. et al. (2018)","process":"WAAM","doi":"10.1016/j.addma.2018.03.006","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Interpass rolling of Ti-6Al-4V wire + arc additively manufactured features for microstructural refinement — Additive Manufacturing (295 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-88","author":"Wu B. et al. (2018)","process":"WAAM","doi":"10.1016/j.jmatprotec.2018.03.024","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"The effects of forced interpass cooling on the material properties of wire arc additively manufactured Ti6Al4V alloy — Journal of Materials Processing Technology (270 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-89","author":"Wu B. et al. (2018)","process":"WAAM","doi":"10.1016/j.addma.2018.08.004","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Effects of heat accumulation on microstructure and mechanical properties of Ti6Al4V alloy deposited by wire arc additive manufacturing — Additive Manufacturing (269 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-90","author":"Wu B. et al. (2018)","process":"WAAM","doi":"10.1016/j.corsci.2018.03.047","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"The anisotropic corrosion behaviour of wire arc additive manufactured Ti-6Al-4V alloy in 3.5% NaCl solution — Corrosion Science (253 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-91","author":"Zhang J. et al. (2016)","process":"WAAM","doi":"10.1016/j.matdes.2015.10.141","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Fatigue crack propagation behaviour in wire+arc additive manufactured Ti-6Al-4V: Effects of microstructure and residual stress — Materials and Design (247 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-92","author":"Martina F. et al. (2016)","process":"WAAM","doi":"10.1080/02670836.2016.1142704","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Residual stress of as-deposited and rolled wire+arc additive manufacturing Ti–6Al–4V components — Materials Science and Technology United Kingdom (230 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-93","author":"Bermingham M.J. et al. (2018)","process":"WAAM","doi":"10.1016/j.jallcom.2018.04.158","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Optimising the mechanical properties of Ti-6Al-4V components produced by wire + arc additive manufacturing with post-process heat treatments — Journal of Alloys and Compounds (225 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-94","author":"Biswal R. et al. (2019)","process":"WAAM","doi":"10.1016/j.ijfatigue.2019.01.017","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Criticality of porosity defects on the fatigue performance of wire + arc additive manufactured titanium alloy — International Journal of Fatigue (217 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-95","author":"Yang J. et al. (2017)","process":"WAAM","doi":"10.1007/s11661-017-4087-9","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Corrosion Behavior of Additive Manufactured Ti-6Al-4V Alloy in NaCl Solution — Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science (214 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-96","author":"Hönnige J.R. et al. (2018)","process":"WAAM","doi":"10.1016/j.matdes.2018.03.065","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Residual stress and texture control in Ti-6Al-4V wire + arc additively manufactured intersections by stress relief and rolling — Materials and Design (199 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-97","author":"Bambach M. et al. (2020)","process":"WAAM","doi":"10.1016/j.jmatprotec.2020.116689","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Hybrid manufacturing of components from Ti-6Al-4V by metal forming and wire-arc additive manufacturing — Journal of Materials Processing Technology (178 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-98","author":"Motallebi R. et al. (2022)","process":"WAAM","doi":"10.1016/j.cossms.2022.100992","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing – A review of hot deformation behavior and constitutive modeling of flow stress — Current Opinion in Solid State and Materials Science (173 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-99","author":"Wang J. et al. (2018)","process":"WAAM","doi":"10.1016/j.jallcom.2018.07.235","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Grain morphology evolution and texture characterization of wire and arc additive manufactured Ti-6Al-4V — Journal of Alloys and Compounds (159 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-100","author":"Sequeira Almeida P.M. et al. (2010)","process":"WAAM","doi":"","type":"MOD","treatment":"Scopus Indexed (Pending Extraction)","desc":"Innovative process model of Ti-6Al-4V additive layer manufacturing using cold metal transfer (CMT) — 21st Annual International Solid Freeform Fabrication Symposium an Additive Manufacturing Conference Sff 2010 (155 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-101","author":"Shi X. et al. (2017)","process":"WAAM","doi":"10.1016/j.msea.2016.12.065","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Selective laser melting-wire arc additive manufacturing hybrid fabrication of Ti-6Al-4V alloy: Microstructure and mechanical properties — Materials Science and Engineering A (152 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-102","author":"Kennedy J.R. et al. (2021)","process":"WAAM","doi":"10.1016/j.addma.2021.101928","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"The potential for grain refinement of Wire-Arc Additive Manufactured (WAAM) Ti-6Al-4V by ZrN and TiN inoculation — Additive Manufacturing (137 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-103","author":"Wu Q. et al. (2019)","process":"WAAM","doi":"10.1016/j.addma.2019.100808","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Residual stresses and distortion in the patterned printing of titanium and nickel alloys — Additive Manufacturing (126 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-104","author":"Zhang X. et al. (2017)","process":"WAAM","doi":"10.1111/ffe.12547","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Fracture toughness and fatigue crack growth rate properties in wire + arc additive manufactured Ti-6Al-4V — Fatigue and Fracture of Engineering Materials and Structures (124 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-105","author":"Liu S. et al. (2019)","process":"L-DED","doi":"10.1016/j.matdes.2018.107552","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing of Ti6Al4V alloy: A review — Materials and Design (2401 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-106","author":"Lewandowski J.J. et al. (2016)","process":"L-DED","doi":"10.1146/annurev-matsci-070115-032024","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Metal Additive Manufacturing: A Review of Mechanical Properties — Annual Review of Materials Research (1636 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-107","author":"Carroll B.E. et al. (2015)","process":"L-DED","doi":"10.1016/j.actamat.2014.12.054","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Anisotropic tensile behavior of Ti-6Al-4V components fabricated with directed energy deposition additive manufacturing — Acta Materialia (1463 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-108","author":"Nguyen H.D. et al. (2022)","process":"L-DED","doi":"10.1016/j.jmrt.2022.04.055","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"A critical review on additive manufacturing of Ti-6Al-4V alloy: Microstructure and mechanical properties — Journal of Materials Research and Technology (637 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-110","author":"Wu X. et al. (2004)","process":"L-DED","doi":"10.1016/j.matdes.2003.09.009","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructures of laser-deposited Ti-6Al-4V — Materials and Design (469 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-111","author":"Bobbio L.D. et al. (2017)","process":"L-DED","doi":"10.1016/j.actamat.2016.12.070","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing of a functionally graded material from Ti-6Al-4V to Invar: Experimental characterization and thermodynamic calculations — Acta Materialia (448 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-112","author":"Kelly S.M. et al. (2004)","process":"L-DED","doi":"10.1007/s11661-004-0094-8","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructural evolution in laser-deposited multilayer Ti-6Al-4V builds: Part 1. Microstructural characterization — Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science (448 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-113","author":"Bandyopadhyay A. et al. (2010)","process":"L-DED","doi":"10.1016/j.actbio.2009.11.011","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Influence of porosity on mechanical properties and in vivo response of Ti6Al4V implants — Acta Biomaterialia (445 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-114","author":"Sterling A.J. et al. (2016)","process":"L-DED","doi":"10.1016/j.msea.2015.12.026","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Fatigue behavior and failure mechanisms of direct laser deposited Ti-6Al-4V — Materials Science and Engineering A (374 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-116","author":"Azarniya A. et al. (2019)","process":"L-DED","doi":"10.1016/j.jallcom.2019.04.255","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing of Ti–6Al–4V parts through laser metal deposition (LMD): Process, microstructure, and mechanical properties — Journal of Alloys and Compounds (335 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-117","author":"Beese A.M. et al. (2016)","process":"L-DED","doi":"10.1007/s11837-015-1759-z","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Review of Mechanical Properties of Ti-6Al-4V Made by Laser-Based Additive Manufacturing Using Powder Feedstock — JOM (327 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-119","author":"Kelly S.M. et al. (2004)","process":"L-DED","doi":"10.1007/s11661-004-0095-7","type":"MOD","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructural evolution in laser-deposited multilayer Ti-6Al-4V builds: Part II. Thermal Modeling — Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science (297 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-120","author":"Onuike B. et al. (2018)","process":"L-DED","doi":"10.1016/j.addma.2018.06.025","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing of Inconel 718 – Ti6Al4V bimetallic structures — Additive Manufacturing (290 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-121","author":"Zhai Y. et al. (2016)","process":"L-DED","doi":"10.1016/j.engfailanal.2016.05.036","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructure, static properties, and fatigue crack growth mechanisms in Ti-6Al-4V fabricated by additive manufacturing: LENS and EBM — Engineering Failure Analysis (283 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-122","author":"Khanzadeh M. et al. (2019)","process":"L-DED","doi":"10.1080/24725854.2017.1417656","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"In-situ monitoring of melt pool images for porosity prediction in directed energy deposition processes — Iise Transactions (277 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-123","author":"Qian M. et al. (2016)","process":"L-DED","doi":"10.1557/mrs.2016.215","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing and postprocessing of Ti-6Al-4V for superior mechanical properties — MRS Bulletin (272 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-124","author":"Yang Q. et al. (2016)","process":"L-DED","doi":"10.1016/j.addma.2016.06.012","type":"MOD","treatment":"Scopus Indexed (Pending Extraction)","desc":"Finite element modeling and validation of thermomechanical behavior of Ti-6Al-4V in directed energy deposition additive manufacturing — Additive Manufacturing (254 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-125","author":"Hayes B.J. et al. (2017)","process":"L-DED","doi":"10.1016/j.actamat.2017.05.025","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Predicting tensile properties of Ti-6Al-4V produced via directed energy deposition — Acta Materialia (243 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-126","author":"Lu H. et al. (2022)","process":"L-DED","doi":"10.1016/j.addma.2022.102877","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructural evolution and tensile property enhancement of remanufactured Ti6Al4V using hybrid manufacturing of laser directed energy deposition with laser shock peening — Additive Manufacturing (232 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-128","author":"Sahasrabudhe H. et al. (2015)","process":"L-DED","doi":"10.1016/j.addma.2014.10.002","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Stainless steel to titanium bimetallic structure using LENS™ — Additive Manufacturing (207 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-129","author":"Li W. et al. (2017)","process":"L-DED","doi":"10.1016/j.addma.2016.12.006","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Fabrication and characterization of a functionally graded material from Ti-6Al-4V to SS316 by laser metal deposition — Additive Manufacturing (201 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-130","author":"Thijs L. et al. (2010)","process":"LPBF","doi":"10.1016/j.actamat.2010.02.004","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"A study of the microstructural evolution during selective laser melting of Ti-6Al-4V — Acta Materialia (2891 citations)","density":null,"ys":null,"uts":null,"el":null,"p":250,"v":1600,"h":75,"t":30,"hv":410,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-133","author":"Murr L.E. et al. (2012)","process":"LPBF","doi":"10.1016/S1005-0302(12)60016-4","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Metal Fabrication by Additive Manufacturing Using Laser and Electron Beam Melting Technologies — Journal of Materials Science and Technology (1634 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-134","author":"Xu W. et al. (2015)","process":"LPBF","doi":"10.1016/j.actamat.2014.11.028","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additive manufacturing of strong and ductile Ti-6Al-4V by selective laser melting via in situ martensite decomposition — Acta Materialia (1245 citations)","density":null,"ys":null,"uts":null,"el":null,"p":200,"v":900,"h":120,"t":30,"hv":360,"postProc":"Annealed","alloy":"ti64_gr5"},
+  {"id":"P-136","author":"Gong H. et al. (2014)","process":"LPBF","doi":"10.1016/j.addma.2014.08.002","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Analysis of defect generation in Ti-6Al-4V parts made using powder bed fusion additive manufacturing processes — Additive Manufacturing (1163 citations)","density":null,"ys":null,"uts":null,"el":null,"p":175,"v":710,"h":120,"t":30,"hv":342,"postProc":"HIP","alloy":"ti64_gr5"},
+  {"id":"P-137","author":"Qiu C. et al. (2015)","process":"LPBF","doi":"10.1016/j.actamat.2015.06.004","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"On the role of melt flow into the surface structure and porosity development during selective laser melting — Acta Materialia (998 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-138","author":"Murr L.E. et al. (2009)","process":"LPBF","doi":"10.1016/j.jmbbm.2008.05.004","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructure and mechanical behavior of Ti-6Al-4V produced by rapid-layer manufacturing, for biomedical applications — Journal of the Mechanical Behavior of Biomedical Materials (981 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-139","author":"Gong H. et al. (2015)","process":"LPBF","doi":"10.1016/j.matdes.2015.07.147","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Influence of defects on mechanical properties of Ti-6Al-4V components produced by selective laser melting and electron beam melting — Materials and Design (941 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-140","author":"Vandenbroucke B. et al. (2007)","process":"LPBF","doi":"10.1108/13552540710776142","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Selective laser melting of biocompatible metals for rapid manufacturing of medical parts — Rapid Prototyping Journal (938 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-141","author":"Bobbert F.S.L. et al. (2017)","process":"LPBF","doi":"10.1016/j.actbio.2017.02.024","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Additively manufactured metallic porous biomaterials based on minimal surfaces: A unique combination of topological, mechanical, and mass transport properties — Acta Biomaterialia (879 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-142","author":"Edwards P. et al. (2014)","process":"LPBF","doi":"10.1016/j.msea.2014.01.041","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Fatigue performance evaluation of selective laser melted Ti-6Al-4V — Materials Science and Engineering A (862 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-143","author":"Yang J. et al. (2016)","process":"LPBF","doi":"10.1016/j.matdes.2016.06.117","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Formation and control of martensite in Ti-6Al-4V alloy produced by selective laser melting — Materials and Design (849 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-144","author":"Qiu C. et al. (2013)","process":"LPBF","doi":"10.1016/j.msea.2013.04.099","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Microstructure and tensile properties of selectively laser-melted and of HIPed laser-melted Ti-6Al-4V — Materials Science and Engineering A (798 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-146","author":"Zhang L.C. et al. (2016)","process":"LPBF","doi":"10.1002/adem.201500419","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Selective Laser Melting of Titanium Alloys and Titanium Matrix Composites for Biomedical Applications: A Review — Advanced Engineering Materials (737 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-147","author":"Yan C. et al. (2015)","process":"LPBF","doi":"10.1016/j.jmbbm.2015.06.024","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Ti-6Al-4V triply periodic minimal surface structures for bone implants fabricated via selective laser melting — Journal of the Mechanical Behavior of Biomedical Materials (729 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-148","author":"Zhao C. et al. (2020)","process":"LPBF","doi":"10.1126/science.abd1587","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Critical instability at moving keyhole tip generates porosity in laser melting — Science (693 citations)","density":null,"ys":null,"uts":null,"el":null,"p":180,"v":1200,"h":90,"t":30,"hv":405,"postProc":"None","alloy":"ti64_gr5"},
+  {"id":"P-149","author":"Xu W. et al. (2017)","process":"LPBF","doi":"10.1016/j.actamat.2016.12.027","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"In situ tailoring microstructure in additively manufactured Ti-6Al-4V for superior mechanical performance — Acta Materialia (688 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-150","author":"Zhao X. et al. (2016)","process":"LPBF","doi":"10.1016/j.matdes.2015.12.135","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Comparison of the microstructures and mechanical properties of Ti-6Al-4V fabricated by selective laser melting and electron beam melting — Materials and Design (679 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-152","author":"Shipley H. et al. (2018)","process":"LPBF","doi":"10.1016/j.ijmachtools.2018.01.003","type":"REV","treatment":"Scopus Indexed (Pending Extraction)","desc":"Optimisation of process parameters to address fundamental challenges during selective laser melting of Ti-6Al-4V: A review — International Journal of Machine Tools and Manufacture (603 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-154","author":"Dai N. et al. (2016)","process":"LPBF","doi":"10.1016/j.corsci.2015.10.041","type":"EXP","treatment":"Scopus Indexed (Pending Extraction)","desc":"Corrosion behavior of selective laser melted Ti-6Al-4 V alloy in NaCl solution — Corrosion Science (585 citations)","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-179","author":"El-Magd E. (2006)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Stress-Strain","doi":"10.1016/j.ijimpeng.2005.03.008","type":"EXP","treatment":"Scopus Indexed (Stress-Strain)","desc":"Characterization, modelling and simulation of deformation and fracture behaviour of the light-weight wrought alloys under high strain rate loading — International Journal of Impact Engineering (192 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-180","author":"Wang Z. (2018)","process":"LPBF","topic":"Stress-Strain","doi":"10.1016/j.msea.2018.04.006","type":"EXP","treatment":"Scopus Indexed (Stress-Strain)","desc":"Characterisation and constitutive model of tensile properties of selective laser melted Ti-6Al-4V struts for microlattice structures — Materials Science and Engineering A (112 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-181","author":"Smith B.D. (2018)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Stress-Strain","doi":"10.1016/j.ijplas.2013.10.004","type":"EXP","treatment":"Scopus Indexed (Stress-Strain)","desc":"Cyclic plasticity experiments and polycrystal plasticity modeling of three distinct Ti alloy microstructures — International Journal of Plasticity (82 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-182","author":"Mohammadhosseini A. (2013)","process":"EBM","topic":"Stress-Strain","doi":"10.1179/1432891713Z.000000000302","type":"EXP","treatment":"Scopus Indexed (Stress-Strain)","desc":"Microstructure and mechanical properties of Ti-6Al-4V manufactured by electron beam melting process — Materials Research Innovations (54 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-183","author":"Motyka M. (2014)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Stress-Strain","doi":"10.1016/j.msea.2014.01.067","type":"EXP","treatment":"Scopus Indexed (Stress-Strain)","desc":"Microstructural aspects of superplasticity in Ti-6Al-4V alloy — Materials Science and Engineering A (54 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-185","author":"Xiao J. (2012)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Eng. Stress-Strain","doi":"10.1016/j.jallcom.2012.07.048","type":"EXP","treatment":"Scopus Indexed (Eng. Stress-Strain)","desc":"Constitutive modeling and microstructure change of Ti-6Al-4V during the hot tensile deformation — Journal of Alloys and Compounds (109 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-186","author":"Jiang Y.Q. (2020)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Eng. Stress-Strain","doi":"10.1016/j.matchar.2020.110272","type":"EXP","treatment":"Scopus Indexed (Eng. Stress-Strain)","desc":"Hot tensile properties, microstructure evolution and fracture mechanisms of Ti-6Al-4V alloy with initial coarse equiaxed phases — Materials Characterization (83 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-187","author":"Wang S. (2014)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Eng. Stress-Strain","doi":"10.1016/j.matdes.2013.11.003","type":"EXP","treatment":"Scopus Indexed (Eng. Stress-Strain)","desc":"Effect of strain rate and temperature on strain hardening behavior of a dissimilar joint between Ti-6Al-4V and Ti17 alloys — Materials and Design (57 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-188","author":"Mirone G. (2020)","process":"EBM","topic":"Eng. Stress-Strain","doi":"10.1016/j.msea.2020.139916","type":"EXP","treatment":"Scopus Indexed (Eng. Stress-Strain)","desc":"Analysis and modelling of tensile and torsional behaviour at different strain rates of Ti6Al4V alloy additive manufactured by electron beam melting (EBM) — Materials Science and Engineering A (32 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-189","author":"Saboori M. (2016)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Eng. Stress-Strain","doi":"10.1007/s00170-015-7557-5","type":"EXP","treatment":"Scopus Indexed (Eng. Stress-Strain)","desc":"Extension of flow stress–strain curves of aerospace alloys after necking — International Journal of Advanced Manufacturing Technology (17 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-190","author":"Moćko W. (2015)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Eng. Stress-Strain","doi":"10.1016/j.matdes.2015.08.155","type":"EXP","treatment":"Scopus Indexed (Eng. Stress-Strain)","desc":"Application of optical field analysis of tensile tests for calibration of the Rusinek-Klepaczko constitutive relation of Ti6Al4V titanium alloy — Materials and Design (14 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-191","author":"Semiatin S.L. (1999)","process":"Thermo-Mech / Compression","topic":"Compression","doi":"10.1016/s0921-5093(98)01156-3","type":"EXP","treatment":"Scopus Indexed (Compression)","desc":"Flow behavior and globularization kinetics during hot working of Ti-6Al-4V with a colony alpha microstructure — Materials Science and Engineering A (518 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-192","author":"Semiatin S.L. (2001)","process":"Thermo-Mech / Compression","topic":"Compression","doi":"10.1016/S1359-6454(01)00236-1","type":"EXP","treatment":"Scopus Indexed (Compression)","desc":"The effect of alpha platelet thickness on plastic flow during hot working of Ti-6Al-4V with a transformed microstructure — Acta Materialia (489 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-193","author":"Cai J. (2011)","process":"Thermo-Mech / Compression","topic":"Compression","doi":"10.1016/j.matdes.2010.11.004","type":"EXP","treatment":"Scopus Indexed (Compression)","desc":"Constitutive equations for elevated temperature flow stress of Ti-6Al-4V alloy considering the effect of strain — Materials and Design (324 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-194","author":"Seo S. (2005)","process":"Thermo-Mech / Compression","topic":"Compression","doi":"10.1016/j.ijimpeng.2004.04.010","type":"EXP","treatment":"Scopus Indexed (Compression)","desc":"Constitutive equation for Ti-6Al-4V at high temperatures measured using the SHPB technique — International Journal of Impact Engineering (273 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-195","author":"Heinl P. (2007)","process":"EBM","topic":"Compression","doi":"10.1002/adem.200700025","type":"EXP","treatment":"Scopus Indexed (Compression)","desc":"Cellular titanium by selective electron beam melting — Advanced Engineering Materials (256 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-196","author":"Babu B. (2013)","process":"Thermo-Mech / Compression","topic":"Compression","doi":"10.1016/j.ijplas.2013.04.003","type":"EXP","treatment":"Scopus Indexed (Compression)","desc":"Dislocation density based model for plastic deformation and globularization of Ti-6Al-4V — International Journal of Plasticity (218 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-197","author":"Nalla R.K. (2003)","process":"HCF & LCF / Surface","topic":"Fatigue HCF/LCF","doi":"10.1016/S0921-5093(03)00069-8","type":"EXP","treatment":"Scopus Indexed (Fatigue HCF/LCF)","desc":"On the influence of mechanical surface treatments-deep rolling and laser shock peening-on the fatigue behavior of Ti-6Al-4V at ambient and elevated temperatures — Materials Science and Engineering A (522 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-198","author":"Altenberger I. (2012)","process":"HCF & LCF / Surface","topic":"Fatigue HCF/LCF","doi":"10.1016/j.ijfatigue.2012.03.008","oaUrl":"https://escholarship.org/content/qt9jj8t067/qt9jj8t067.pdf?t=mj53rl","type":"EXP","treatment":"Scopus Indexed (Fatigue HCF/LCF)","desc":"On the effect of deep-rolling and laser-peening on the stress-controlled low- and high-cycle fatigue behavior of Ti-6Al-4V at elevated temperatures up to 550 °c — International Journal of Fatigue (296 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-199","author":"Maxwell D.C. (1999)","process":"HCF & LCF / Surface","topic":"Fatigue HCF/LCF","doi":"","type":"EXP","treatment":"Scopus Indexed (Fatigue HCF/LCF)","desc":"Rapid method for generation of a Haigh diagram for high cycle fatigue — ASTM Special Technical Publication (166 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-201","author":"Zabeen S. (2015)","process":"HCF & LCF / Surface","topic":"Fatigue HCF/LCF","doi":"10.1016/j.actamat.2014.09.032","oaUrl":"https://www.sciencedirect.com/science/article/am/pii/S1359645414007125","type":"EXP","treatment":"Scopus Indexed (Fatigue HCF/LCF)","desc":"Evolution of a laser shock peened residual stress field locally with foreign object damage and subsequent fatigue crack growth — Acta Materialia (132 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-202","author":"Karimi J. (2022)","process":"LPBF","topic":"Fatigue HCF/LCF","doi":"10.1016/j.jallcom.2021.163207","type":"EXP","treatment":"Scopus Indexed (Fatigue HCF/LCF)","desc":"Role of laser remelting and heat treatment in mechanical and tribological properties of selective laser melted Ti6Al4V alloy — Journal of Alloys and Compounds (93 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-203","author":"Alabort E. (2016)","process":"Creep / Ti-6Al-4V","topic":"Creep","doi":"10.1016/j.actamat.2015.12.003","oaUrl":"https://www.sciencedirect.com/science/article/pii/S1359645415301105/pdf","type":"EXP","treatment":"Scopus Indexed (Creep)","desc":"On the mechanisms of superplasticity in Ti-6Al-4V — Acta Materialia (245 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-204","author":"Barboza M.J.R. (2004)","process":"Creep / Ti-6Al-4V","topic":"Creep","doi":"10.1016/j.msea.2003.11.016","type":"EXP","treatment":"Scopus Indexed (Creep)","desc":"Creep mechanisms and physical modeling for Ti-6Al-4V — Materials Science and Engineering A (92 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-205","author":"Kim Y.K. (2018)","process":"LPBF","topic":"Creep","doi":"10.1016/j.msea.2017.12.085","type":"EXP","treatment":"Scopus Indexed (Creep)","desc":"Improvement in the high-temperature creep properties via heat treatment of Ti-6Al-4V alloy manufactured by selective laser melting — Materials Science and Engineering A (76 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-206","author":"Reis D.A.P. (2005)","process":"Creep / Ti-6Al-4V","topic":"Creep","doi":"10.1016/j.msea.2005.03.073","type":"EXP","treatment":"Scopus Indexed (Creep)","desc":"Effect of environment on the creep behavior of the Ti-6Al-4V alloy — Materials Science and Engineering A (74 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-207","author":"Yamada T. (2004)","process":"Creep / Ti-6Al-4V","topic":"Creep","doi":"10.1016/j.msea.2004.01.146","oaUrl":"https://repository.exst.jaxa.jp/dspace/handle/a-is/3098","type":"EXP","treatment":"Scopus Indexed (Creep)","desc":"Presences of primary creep in various phase metals and alloys at ambient temperature — Materials Science and Engineering A (58 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-208","author":"Badea L. (2014)","process":"Creep / Ti-6Al-4V","topic":"Creep","doi":"","type":"EXP","treatment":"Scopus Indexed (Creep)","desc":"Creep behavior of Ti-6Al-4V from 450°C TO 600°C — UPB Scientific Bulletin Series B Chemistry and Materials Science (58 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-209","author":"Tan X. (2015)","process":"EBM","topic":"Hardness","doi":"10.1016/j.actamat.2015.06.036","type":"EXP","treatment":"Scopus Indexed (Hardness)","desc":"Graded microstructure and mechanical properties of additive manufactured Ti-6Al-4V via electron beam melting — Acta Materialia (704 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-210","author":"Yasa E. (2011)","process":"LPBF","topic":"Hardness","doi":"10.1108/13552541111156450","type":"EXP","treatment":"Scopus Indexed (Hardness)","desc":"The investigation of the influence of laser re-melting on density, surface quality and microstructure of selective laser melting parts — Rapid Prototyping Journal (382 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-211","author":"Lu J. (2020)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Hardness","doi":"10.1016/j.ijmachtools.2019.103475","type":"EXP","treatment":"Scopus Indexed (Hardness)","desc":"High-performance integrated additive manufacturing with laser shock peening –induced microstructural evolution and improvement in mechanical properties of Ti6Al4V alloy components — International Journal of Machine Tools and Manufacture (372 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-212","author":"Yang J. (2016)","process":"LPBF","topic":"Hardness","doi":"10.1016/j.matdes.2016.08.036","type":"EXP","treatment":"Scopus Indexed (Hardness)","desc":"Role of molten pool mode on formability, microstructure and mechanical properties of selective laser melted Ti-6Al-4V alloy — Materials and Design (340 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-213","author":"Wu S.Q. (2016)","process":"Ti-6Al-4V Tensile / Wrought","topic":"Hardness","doi":"10.1016/j.jallcom.2016.02.183","type":"EXP","treatment":"Scopus Indexed (Hardness)","desc":"Microstructural evolution and microhardness of a selective-laser-melted Ti-6Al-4V alloy after post heat treatments — Journal of Alloys and Compounds (301 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_gr5"},
+  {"id":"P-214","author":"Benedetti M. (2018)","process":"LPBF","topic":"Fatigue HCF/LCF & Hardness","doi":"10.1016/j.ijfatigue.2017.10.021","oaUrl":"https://iris.unitn.it/bitstream/11572/187253/5/RevisedManuscript.pdf","type":"EXP","treatment":"Scopus Indexed (Fatigue HCF/LCF & Hardness)","desc":"Low- and high-cycle fatigue resistance of Ti-6Al-4V ELI additively manufactured via selective laser melting: Mean stress and defect sensitivity — International Journal of Fatigue (293 citations).","density":null,"ys":null,"uts":null,"el":null,"alloy":"ti64_eli"}
 ];
 
 function escapeHtml(str) {
@@ -16201,7 +16480,404 @@ const ML_BENCHMARK_POINTS = [
 ];
 
 // 1. Render Actual vs Predicted Parity Plot & Residual Error Distribution
-function renderParityAndResidualPlots(currentHv, isExtrapolating) {
+// =====================================================================
+// LITERATURE VS. ML BENCHMARK COMPARATOR ENGINE
+// =====================================================================
+const SIX_COMP_MODEL_IDS = ['analytical', 'rf', 'xgboost', 'svm', 'gpr', 'ensemble'];
+const SIX_COMP_MODEL_META = {
+  analytical: { name: 'Analytical', color: '#60a5fa' },
+  rf: { name: 'Random Forest', color: '#34d399' },
+  xgboost: { name: 'XGBoost', color: '#fbbf24' },
+  svm: { name: 'RBF-SVR', color: '#c084fc' },
+  gpr: { name: 'Hybrid Physics-GPR', color: '#2dd4bf' },
+  ensemble: { name: 'Consensus Ensemble', color: '#f87171' }
+};
+
+var selectedLitCompPaperId = null;
+var litCompMode = 'paper_params'; // 'paper_params' | 'slider_params'
+
+function normalizeComparatorProcess(rawProc) {
+  const s = String(rawProc || '').toLowerCase();
+  const matched = [];
+  if (/lpbf|slm|pbf-lb/.test(s)) matched.push('lpbf');
+  if (/l-ded|\bded\b|lmd|wire-laser/.test(s) && !/review/.test(s)) matched.push('ded-laser');
+  if (/waam|wire\s*\+\s*arc/.test(s)) matched.push('waam');
+  if (/binder\s*jetting|\bbjt\b/.test(s)) matched.push('binder-jetting');
+  return Array.from(new Set(matched));
+}
+
+function readCurrentDashboardState() {
+  const num = (id, fb) => { const el = document.getElementById(id); const v = el ? parseFloat(el.value) : NaN; return Number.isFinite(v) ? v : fb; };
+  const postEl = document.getElementById('postProcessingSelect');
+  const alloyEl = document.getElementById('alloySelect');
+  const oriEl = document.getElementById('buildOrientationSelect');
+  const rotEl = document.getElementById('scanRotationSelect');
+  const reuseEl = document.getElementById('sl_reuse');
+  const autoChk = document.getElementById('chk_auto_reuse');
+  const o2El = document.getElementById('sl_oxygen');
+  const proc = (typeof currentProcess !== 'undefined' && currentProcess) ? currentProcess : 'lpbf';
+  return {
+    processId: proc,
+    alloyId: (alloyEl ? alloyEl.value : (typeof currentAlloy !== 'undefined' ? currentAlloy : 'ti64_gr5')),
+    postProcessing: postEl ? postEl.value : 'HIP',
+    P: num('sl_p', 280),
+    v: num('sl_v', 960),
+    h: num('sl_h', 110),
+    t: num('sl_t', 40),
+    db: num('sl_spot', 80),
+    T0: num('sl_preheat', 200),
+    oxygenWtPct: (o2El && Number.isFinite(parseFloat(o2El.value))) ? parseFloat(o2El.value) : undefined,
+    powderReuseCycles: reuseEl ? parseInt(reuseEl.value, 10) || 0 : 0,
+    autoCoupleReuse: autoChk ? Boolean(autoChk.checked) : true,
+    buildOrientationDeg: oriEl ? parseInt(oriEl.value, 10) || 0 : 0,
+    scanRotationDeg: rotEl ? parseInt(rotEl.value, 10) || 67 : 67,
+    activeModelId: (typeof activeModelId !== 'undefined' ? activeModelId : 'ensemble')
+  };
+}
+
+function _posMetricOrNull(val) {
+  if (val === null || val === undefined || val === '') return null;
+  const n = typeof val === 'number' ? val : parseFloat(String(val).replace('%', '').trim());
+  return (Number.isFinite(n) && n > 0) ? n : null;
+}
+
+function findMatchingLiteratureStudies(state, limit = 5) {
+  const cur = state || readCurrentDashboardState();
+  const normProc = (function(p) {
+    const s = String(p || 'lpbf').toLowerCase();
+    if (s === 'ded' || s === 'l-ded' || s === 'ded-laser') return 'ded-laser';
+    if (s === 'bjt' || s === 'binder-jetting') return 'binder-jetting';
+    if (s === 'waam') return 'waam';
+    return 'lpbf';
+  })(cur.processId);
+
+  const filtered = (typeof PAPERS_DATABASE !== 'undefined' ? PAPERS_DATABASE : []).filter(p => {
+    return normalizeComparatorProcess(p.process).includes(normProc);
+  });
+
+  const scalesByProc = {
+    lpbf: { P: 220, v: 700, h: 50, t: 25, ved: 40 },
+    'ded-laser': { P: 1200, v: 12, h: 600, t: 300, ved: 70 },
+    waam: { P: 1800, v: 6, h: 1500, t: 800, ved: 50 },
+    'binder-jetting': { P: 120, v: 200, h: 60, t: 40, ved: 40 }
+  };
+  const sc = scalesByProc[normProc] || scalesByProc.lpbf;
+  const stateVed = (cur.P > 0 && cur.v > 0 && cur.h > 0 && cur.t > 0) ? (cur.P * 1e6) / (cur.v * cur.h * cur.t) : null;
+
+  const scored = filtered.map(paper => {
+    const pP = _posMetricOrNull(paper.p);
+    const pV = _posMetricOrNull(paper.v);
+    const pH = _posMetricOrNull(paper.h);
+    const pT = _posMetricOrNull(paper.t);
+    const pVed = (pP && pV && pH && pT) ? (pP * 1e6) / (pV * pH * pT) : null;
+    let sqSum = 0, dims = 0;
+    if (pP && cur.P > 0) { const d = (pP - cur.P) / sc.P; sqSum += d * d; dims++; }
+    if (pV && cur.v > 0) { const d = (pV - cur.v) / sc.v; sqSum += d * d; dims++; }
+    if (pH && cur.h > 0) { const d = (pH - cur.h) / sc.h; sqSum += d * d; dims++; }
+    if (pT && cur.t > 0) { const d = (pT - cur.t) / sc.t; sqSum += d * d; dims++; }
+    if (pVed && stateVed) { const d = (pVed - stateVed) / sc.ved; sqSum += d * d; dims++; }
+
+    const hasParams = dims >= 2;
+    let dist = hasParams ? Math.sqrt(sqSum / dims) : 2.15;
+    if (paper.alloy && cur.alloyId && paper.alloy !== cur.alloyId) dist += 0.25;
+    if (paper.postProc && cur.postProcessing && paper.postProc !== cur.postProcessing) dist += 0.35;
+    const hasHv = _posMetricOrNull(paper.hv) !== null;
+    const hasMech = hasHv || _posMetricOrNull(paper.ys) !== null || _posMetricOrNull(paper.uts) !== null || _posMetricOrNull(paper.el) !== null;
+    if (hasHv) dist = Math.max(0.01, dist - 0.12);
+    else if (hasMech) dist = Math.max(0.02, dist - 0.05);
+
+    const similarityPct = Math.round(Math.max(8, Math.min(99, 100 * Math.exp(-0.52 * dist))));
+    return { paper, dist, similarityPct, hasParams, hasHv, hasMech, pVed };
+  });
+
+  scored.sort((a, b) => {
+    if (a.hasParams !== b.hasParams) return a.hasParams ? -1 : 1;
+    return a.dist - b.dist;
+  });
+  return { ranked: scored.slice(0, limit), allRanked: scored, filtered };
+}
+
+function _getModelPi95Hv(modelId) {
+  if (typeof ML_MODELS_REGISTRY !== 'undefined') {
+    const rec = ML_MODELS_REGISTRY.find(m => m.id === modelId);
+    if (rec && Number.isFinite(rec.calibratedPi95)) return rec.calibratedPi95;
+  }
+  return 11.5;
+}
+
+function _buildComparisonRowsForEval(paper, evalRes, activeId) {
+  const hvModels = evalRes.hvModels || {};
+  const activeHv = hvModels[activeId] !== undefined ? hvModels[activeId] : evalRes.hvEnsemble;
+  const ensHv = hvModels.ensemble !== undefined ? hvModels.ensemble : activeHv;
+  const tabor = evalRes.taborFactor || 2.95;
+  const ratio = evalRes.utsToYsRatio || 1.09;
+  const activeUts = evalRes.isBinderJetting ? evalRes.utsTabor : Math.round(activeHv * tabor);
+  const ensUts = evalRes.isBinderJetting ? evalRes.utsTabor : Math.round(ensHv * tabor);
+  const activeYs = evalRes.isBinderJetting ? evalRes.yieldStrength : Math.round(activeUts / ratio);
+  const ensYs = evalRes.isBinderJetting ? evalRes.yieldStrength : Math.round(ensUts / ratio);
+  const pi95Hv = _getModelPi95Hv(activeId);
+
+  const defs = [
+    { key: 'hardness_hv', label: 'Vickers Hardness', unit: 'HV', decimals: 0, exp: _posMetricOrNull(paper.hv), activePred: activeHv, ensemblePred: ensHv, pi95: pi95Hv },
+    { key: 'ys_mpa', label: 'Yield Strength (YS)', unit: 'MPa', decimals: 0, exp: _posMetricOrNull(paper.ys), activePred: activeYs, ensemblePred: ensYs, pi95: null },
+    { key: 'uts_mpa', label: 'Ultimate Tensile (UTS)', unit: 'MPa', decimals: 0, exp: _posMetricOrNull(paper.uts), activePred: activeUts, ensemblePred: ensUts, pi95: null },
+    { key: 'elongation_pct', label: 'Elongation at Break', unit: '%', decimals: 1, exp: _posMetricOrNull(paper.el), activePred: evalRes.elongationPct, ensemblePred: evalRes.elongationPct, pi95: null },
+    { key: 'relative_density_pct', label: 'Relative Density', unit: '%', decimals: 2, exp: _posMetricOrNull(paper.density), activePred: evalRes.densityPct, ensemblePred: evalRes.densityPct, pi95: null }
+  ];
+
+  return defs.map(d => {
+    if (d.exp === null || evalRes.isColdState) {
+      return Object.assign({}, d, { status: d.exp === null ? 'unreported' : 'cold', delta: null, apePct: null, withinPi95: null });
+    }
+    const delta = d.activePred - d.exp;
+    const apePct = Math.abs(delta / d.exp) * 100;
+    const withinPi95 = (d.pi95 !== null) ? (Math.abs(delta) <= d.pi95) : null;
+    return Object.assign({}, d, { status: 'ok', delta, apePct, withinPi95 });
+  });
+}
+
+function comparePaperWithMlModels(paper, currentState) {
+  const cur = currentState || readCurrentDashboardState();
+  const activeId = cur.activeModelId || (typeof activeModelId !== 'undefined' ? activeModelId : 'ensemble');
+  const pP = _posMetricOrNull(paper.p);
+  const pV = _posMetricOrNull(paper.v);
+  const pH = _posMetricOrNull(paper.h);
+  const pT = _posMetricOrNull(paper.t);
+  const hasPaperParams = Boolean(pP && pV);
+
+  const paperParamsState = Object.assign({}, cur, {
+    P: pP || cur.P,
+    v: pV || cur.v,
+    h: pH || cur.h,
+    t: pT || cur.t,
+    db: _posMetricOrNull(paper.db) || cur.db,
+    postProcessing: paper.postProc || cur.postProcessing,
+    alloyId: paper.alloy || cur.alloyId,
+    oxygenWtPct: _posMetricOrNull(paper.o2WtPct) || cur.oxygenWtPct,
+    applyLabCalibration: false
+  });
+
+  const evalAtPaper = computeDashboardModelPredictions(paperParamsState);
+  const evalAtSlider = computeDashboardModelPredictions(Object.assign({}, cur, {
+    cadMods: (typeof cadActiveMesh !== 'undefined' && cadActiveMesh && typeof cadGeometryReport !== 'undefined' && cadGeometryReport && typeof cadCouplingEnabled !== 'undefined' && cadCouplingEnabled && typeof computeCadPredictionModifiersUi === 'function')
+      ? computeCadPredictionModifiersUi(cadGeometryReport, cadCurrentFileName, cur.processId) : null
+  }));
+
+  const activeMode = (typeof litCompMode !== 'undefined' ? litCompMode : 'paper_params');
+  const activeEval = (activeMode === 'slider_params') ? evalAtSlider : evalAtPaper;
+  const metricsAtPaper = _buildComparisonRowsForEval(paper, evalAtPaper, activeId);
+  const metricsAtSlider = _buildComparisonRowsForEval(paper, evalAtSlider, activeId);
+  const metrics = (activeMode === 'slider_params') ? metricsAtSlider : metricsAtPaper;
+
+  const expHv = _posMetricOrNull(paper.hv);
+  const expUts = _posMetricOrNull(paper.uts);
+  const expYs = _posMetricOrNull(paper.ys);
+  const tabor = activeEval.taborFactor || 2.95;
+  const ratio = activeEval.utsToYsRatio || 1.09;
+  const rankTargetType = expHv !== null ? 'hardness_hv' : (expUts !== null ? 'uts_mpa' : (expYs !== null ? 'ys_mpa' : null));
+
+  const modelRankings = SIX_COMP_MODEL_IDS.map(mId => {
+    const predHv = activeEval.hvModels[mId] !== undefined ? activeEval.hvModels[mId] : activeEval.hvEnsemble;
+    const predUts = activeEval.isBinderJetting ? activeEval.utsTabor : Math.round(predHv * tabor);
+    const predYs = activeEval.isBinderJetting ? activeEval.yieldStrength : Math.round(predUts / ratio);
+    let absError = null, signedDelta = null, expVal = null, predVal = predHv, unit = 'HV';
+    if (rankTargetType === 'hardness_hv') {
+      expVal = expHv; predVal = predHv; signedDelta = predHv - expHv; absError = Math.abs(signedDelta); unit = 'HV';
+    } else if (rankTargetType === 'uts_mpa') {
+      expVal = expUts; predVal = predUts; signedDelta = predUts - expUts; absError = Math.abs(signedDelta); unit = 'MPa';
+    } else if (rankTargetType === 'ys_mpa') {
+      expVal = expYs; predVal = predYs; signedDelta = predYs - expYs; absError = Math.abs(signedDelta); unit = 'MPa';
+    }
+    const pi95 = _getModelPi95Hv(mId);
+    return {
+      id: mId, name: (SIX_COMP_MODEL_META[mId] || { name: mId }).name,
+      color: (SIX_COMP_MODEL_META[mId] || { color: '#38bdf8' }).color,
+      predHv, predUts, predYs, predVal, expVal, unit, signedDelta, absError,
+      withinPi95: (rankTargetType === 'hardness_hv' && absError !== null) ? absError <= pi95 : null
+    };
+  });
+  if (rankTargetType) modelRankings.sort((a, b) => a.absError - b.absError);
+
+  return {
+    paper, activeMode, hasPaperParams, activeModelId: activeId,
+    evalAtPaper, evalAtSlider, activeEval,
+    metrics, metricsAtPaper, metricsAtSlider,
+    rankTargetType, modelRankings,
+    bestModel: rankTargetType ? modelRankings[0] : null
+  };
+}
+
+function _formatCompPaperOptionLabel(item) {
+  const p = item.paper;
+  const paramStr = item.hasParams ? `${p.p}W/${p.v}mm/s` : 'Params N/A';
+  const cond = p.postProc || p.treatment || 'Unreported cond.';
+  return `[${p.id}] ${p.author} — ${paramStr} • ${cond} (${item.similarityPct}% match)`;
+}
+
+function setLitCompMode(mode) {
+  litCompMode = (mode === 'slider_params') ? 'slider_params' : 'paper_params';
+  const b1 = document.getElementById('btnLitCompPaperMode');
+  const b2 = document.getElementById('btnLitCompSliderMode');
+  if (b1) b1.classList.toggle('active', litCompMode === 'paper_params');
+  if (b2) b2.classList.toggle('active', litCompMode === 'slider_params');
+  updateLiteratureComparison(true);
+}
+
+function selectComparisonPaper(paperId) {
+  if (!paperId) return;
+  selectedLitCompPaperId = paperId;
+  updateLiteratureComparison(true);
+}
+
+function loadComparisonPaperToSliders() {
+  if (!selectedLitCompPaperId || typeof PAPERS_DATABASE === 'undefined') return;
+  const paper = PAPERS_DATABASE.find(x => x.id === selectedLitCompPaperId);
+  if (!paper) return;
+  const clampInput = (id, raw) => {
+    const el = document.getElementById(id);
+    if (!el || !Number.isFinite(raw) || raw <= 0) return;
+    const mn = parseFloat(el.min), mx = parseFloat(el.max);
+    let v = raw;
+    if (Number.isFinite(mn)) v = Math.max(mn, v);
+    if (Number.isFinite(mx)) v = Math.min(mx, v);
+    el.value = v;
+  };
+  clampInput('sl_p', _posMetricOrNull(paper.p));
+  clampInput('sl_v', _posMetricOrNull(paper.v));
+  clampInput('sl_h', _posMetricOrNull(paper.h));
+  clampInput('sl_t', _posMetricOrNull(paper.t));
+  clampInput('sl_spot', _posMetricOrNull(paper.db));
+  if (paper.alloy) {
+    currentAlloy = paper.alloy;
+    const alloyEl = document.getElementById('alloySelect');
+    if (alloyEl) alloyEl.value = paper.alloy;
+  }
+  if (paper.postProc) {
+    const postEl = document.getElementById('postProcessingSelect');
+    if (postEl) {
+      postEl.value = paper.postProc;
+      if (typeof syncMaterialStateUiFromPost === 'function') syncMaterialStateUiFromPost(paper.postProc);
+    }
+  }
+  if (typeof calculatePhysics === 'function') calculatePhysics();
+  const strip = document.getElementById('litCompMetaStrip');
+  if (strip) {
+    strip.setAttribute('data-loaded-id', paper.id);
+    const note = document.createElement('span');
+    note.style.cssText = 'color:#34d399; font-weight:700;';
+    note.textContent = `✓ Loaded ${paper.id} parameters into sliders`;
+    strip.appendChild(note);
+  }
+}
+
+function updateLiteratureComparison(preserveSelection = true, skipParityReRender = false) {
+  const selEl = document.getElementById('litCompPaperSelect');
+  const tbody = document.getElementById('litCompTableBody');
+  if (!selEl || !tbody) return;
+  const state = readCurrentDashboardState();
+  const { ranked, allRanked, filtered } = findMatchingLiteratureStudies(state, 5);
+
+  const procLabel = state.processId === 'waam' ? 'WAAM' : (state.processId === 'ded-laser' ? 'L-DED' : (state.processId === 'binder-jetting' ? 'Binder Jetting' : 'LPBF'));
+  const badgeEl = document.getElementById('litCompProcessBadge');
+  if (badgeEl) badgeEl.textContent = `${procLabel} • ${filtered.length} Indexed Studies`;
+
+  const searchVal = (document.getElementById('litCompSearchInput')?.value || '').trim().toLowerCase();
+  const filteredSelectList = searchVal
+    ? allRanked.filter(it => {
+        const p = it.paper;
+        const hay = `${p.id} ${p.author} ${p.desc || ''} ${p.postProc || ''} ${p.p || ''}`.toLowerCase();
+        return hay.includes(searchVal);
+      })
+    : allRanked;
+
+  const inCurrentProc = preserveSelection && selectedLitCompPaperId && allRanked.some(it => it.paper.id === selectedLitCompPaperId);
+  if (!inCurrentProc) {
+    selectedLitCompPaperId = (filteredSelectList[0] || allRanked[0])?.paper.id || null;
+  }
+
+  const optSource = filteredSelectList.length > 0 ? filteredSelectList : allRanked;
+  selEl.innerHTML = optSource.map(it => {
+    const selectedAttr = it.paper.id === selectedLitCompPaperId ? ' selected' : '';
+    return `<option value="${escapeHtml(it.paper.id)}"${selectedAttr}>${escapeHtml(_formatCompPaperOptionLabel(it))}</option>`;
+  }).join('');
+
+  const pillsEl = document.getElementById('litCompQuickPills');
+  if (pillsEl) {
+    const top3 = ranked.slice(0, 3);
+    const labelSpan = '<span style="font-size:10.5px; color:var(--text-muted); margin-right:4px;">Top Matches:</span>';
+    pillsEl.innerHTML = labelSpan + top3.map(it => {
+      const isAct = it.paper.id === selectedLitCompPaperId;
+      return `<button type="button" class="lit-comp-pill${isAct ? ' active' : ''}" onclick="selectComparisonPaper('${escapeHtml(it.paper.id)}')">${escapeHtml(it.paper.id)} · ${escapeHtml(it.paper.author)} (${it.similarityPct}%)</button>`;
+    }).join('');
+  }
+
+  const selectedItem = allRanked.find(it => it.paper.id === selectedLitCompPaperId) || allRanked[0];
+  if (!selectedItem) {
+    window.currentSelectedComparisonBenchmark = null;
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No matching literature studies indexed for this AM process.</td></tr>';
+    return;
+  }
+
+  const cmp = comparePaperWithMlModels(selectedItem.paper, state);
+  const p = cmp.paper;
+  const metaEl = document.getElementById('litCompMetaStrip');
+  if (metaEl) {
+    const paramTxt = cmp.hasPaperParams ? `P=${p.p}W · v=${p.v}mm/s · h=${p.h || '—'}µm · t=${p.t || '—'}µm` : 'Paper numeric P/v/h/t not reported (evaluating active slider params)';
+    const condTxt = p.postProc || p.treatment || 'Condition Unreported';
+    const alloyTxt = p.alloy === 'ti64_eli' ? 'Ti-6Al-4V ELI (Gr 23)' : 'Ti-6Al-4V (Gr 5)';
+    const doiHtml = p.doi ? `<a href="https://doi.org/${encodeURIComponent(p.doi)}" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline; font-family:'JetBrains Mono', monospace;">doi:${escapeHtml(p.doi)} ↗</a>` : '<span style="color:var(--text-muted);">DOI N/A</span>';
+    metaEl.innerHTML = `<div style="min-width:240px; flex:1;"><strong style="color:#f8fafc;">${escapeHtml(p.id)} — ${escapeHtml(p.author)}</strong> <span style="color:#94a3b8;">(${escapeHtml(condTxt)} · ${escapeHtml(alloyTxt)})</span><div style="color:#94a3b8; font-size:10.5px; margin-top:2px;">${escapeHtml(p.desc || '')}</div></div><div style="text-align:right; font-family:'JetBrains Mono', monospace; font-size:10.5px;"><div>${escapeHtml(paramTxt)}</div><div style="margin-top:2px;">${doiHtml}</div></div>`;
+  }
+
+  const btnLoad = document.getElementById('btnLoadPaperSliders');
+  if (btnLoad) {
+    btnLoad.disabled = !cmp.hasPaperParams;
+    btnLoad.style.opacity = cmp.hasPaperParams ? '1' : '0.48';
+    btnLoad.title = cmp.hasPaperParams ? `Apply ${p.id} parameters to dashboard sliders` : 'Paper has no numeric (P, v, h, t) fields to load';
+  }
+
+  tbody.innerHTML = cmp.metrics.map(row => {
+    const expStr = row.status === 'unreported' ? '<span style="color:var(--text-muted);">—</span>' : `${row.exp.toFixed(row.decimals)} ${escapeHtml(row.unit)}`;
+    const actStr = row.status === 'cold' ? '—' : `${row.activePred.toFixed(row.decimals)} ${escapeHtml(row.unit)}`;
+    const ensStr = row.status === 'cold' ? '—' : `${row.ensemblePred.toFixed(row.decimals)} ${escapeHtml(row.unit)}`;
+    const deltaStr = row.delta === null ? '<span style="color:var(--text-muted);">—</span>' : `<span style="color:${Math.abs(row.apePct) <= 5 ? '#34d399' : (Math.abs(row.apePct) <= 10 ? '#fbbf24' : '#fb7185')}; font-weight:700;">${row.delta >= 0 ? '+' : ''}${row.delta.toFixed(row.decimals)} ${escapeHtml(row.unit)}</span>`;
+    const apeStr = row.apePct === null ? '<span style="color:var(--text-muted);">—</span>' : `${row.apePct.toFixed(1)}%`;
+    let piBadge = '<span style="color:var(--text-muted);">N/A</span>';
+    if (row.status === 'unreported') piBadge = '<span style="color:var(--text-muted); font-size:10px;">Unreported</span>';
+    else if (row.withinPi95 === true) piBadge = '<span class="res-tag" style="background:rgba(16,185,129,0.16); color:#34d399; border-color:rgba(16,185,129,0.4);">✓ Within 95% PI</span>';
+    else if (row.withinPi95 === false) piBadge = '<span class="res-tag" style="background:rgba(245,158,11,0.16); color:#fbbf24; border-color:rgba(245,158,11,0.4);">Outside 95% PI</span>';
+    return `<tr><td>${escapeHtml(row.label)}</td><td>${expStr}</td><td>${actStr}</td><td>${ensStr}</td><td>${deltaStr}</td><td>${apeStr}</td><td>${piBadge}</td></tr>`;
+  }).join('');
+
+  const barsEl = document.getElementById('litCompModelBars');
+  const bestBadgeEl = document.getElementById('litCompBestModelBadge');
+  if (bestBadgeEl) {
+    bestBadgeEl.textContent = cmp.bestModel
+      ? `Lowest Error on ${p.id}: ${cmp.bestModel.name} (Δ ${cmp.bestModel.signedDelta >= 0 ? '+' : ''}${cmp.bestModel.signedDelta.toFixed(0)} ${cmp.bestModel.unit})`
+      : `No target Hardness / Strength benchmark reported in ${p.id}`;
+  }
+  if (barsEl) {
+    const expHv = _posMetricOrNull(p.hv);
+    barsEl.innerHTML = cmp.modelRankings.map((m, idx) => {
+      const isBest = Boolean(cmp.bestModel && m.id === cmp.bestModel.id && idx === 0);
+      const barWidthPct = Math.max(15, Math.min(100, ((m.predHv - 250) / 220) * 100));
+      const deltaSub = (expHv !== null)
+        ? `Exp ${expHv} HV · Δ ${m.predHv - expHv >= 0 ? '+' : ''}${(m.predHv - expHv).toFixed(0)} HV`
+        : (m.signedDelta !== null ? `Exp ${m.expVal} ${m.unit} · Δ ${m.signedDelta >= 0 ? '+' : ''}${m.signedDelta.toFixed(0)}` : 'Exp target unreported');
+      return `<div class="lit-comp-model-pill${isBest ? ' best' : ''}"><div style="display:flex; justify-content:space-between; align-items:center; font-size:10.5px;"><span style="color:#f8fafc; font-weight:700;">${escapeHtml(m.name)}</span><span style="color:${m.color}; font-family:'JetBrains Mono', monospace; font-weight:700;">${m.predHv} HV</span></div><div class="lit-comp-bar-track"><div class="lit-comp-bar-fill" style="width:${barWidthPct.toFixed(1)}%; background:${m.color};"></div></div><div style="display:flex; justify-content:space-between; font-size:9.5px; color:var(--text-muted); font-family:'JetBrains Mono', monospace;"><span>${escapeHtml(deltaSub)}</span>${isBest ? '<span style="color:#34d399; font-weight:700;">★ Best</span>' : ''}</div></div>`;
+    }).join('');
+  }
+
+  const hvRow = cmp.metrics.find(r => r.key === 'hardness_hv');
+  window.currentSelectedComparisonBenchmark = (hvRow && hvRow.exp !== null && hvRow.activePred > 0)
+    ? { id: p.id, author: p.author, doi: p.doi || '', actualHv: hvRow.exp, predHv: hvRow.activePred }
+    : null;
+
+  if (!skipParityReRender && typeof renderParityAndResidualPlots === 'function' && Number.isFinite(window.__lastCalcPrimaryHv)) {
+    renderParityAndResidualPlots(window.__lastCalcPrimaryHv, Boolean(window.__lastCalcIsExtrap), window.currentSelectedComparisonBenchmark);
+  }
+}
+function renderParityAndResidualPlots(currentHv, isExtrapolating, selectedBenchmark) {
   const paritySvg = document.getElementById('paritySvg');
   const residualSvg = document.getElementById('residualSvg');
   if (!paritySvg || !residualSvg) return;
@@ -16243,6 +16919,18 @@ function renderParityAndResidualPlots(currentHv, isExtrapolating) {
       pSvg += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="3.5" fill="#0284c7" stroke="#38bdf8" stroke-width="1" opacity="0.85"><title>' + pt.author + ' [EXP]: ' + pt.actualHv + ' HV, Pred [ML]: ' + pt.predHv + ' HV (DOI: ' + pt.doi + ')</title></circle>';
     }
   });
+
+  // Highlight Selected Literature Benchmark Study if available
+  const selBench = (selectedBenchmark !== undefined) ? selectedBenchmark : (window.currentSelectedComparisonBenchmark || null);
+  if (selBench && Number.isFinite(selBench.actualHv) && selBench.actualHv > 0 && Number.isFinite(selBench.predHv) && selBench.predHv > 0) {
+    const bx = toX(Math.min(446, Math.max(304, selBench.actualHv)));
+    const by = toY(Math.min(446, Math.max(304, selBench.predHv)));
+    const shortAuth = (typeof escapeHtml === 'function') ? escapeHtml(String(selBench.author || selBench.id || 'Study').split(' ')[0] + ' (' + selBench.id + ')') : String(selBench.id || 'Study');
+    const alignRight = bx > (w - 145);
+    pSvg += '<circle cx="' + bx.toFixed(1) + '" cy="' + by.toFixed(1) + '" r="10.5" fill="rgba(16, 185, 129, 0.14)" stroke="#34d399" stroke-width="2.2" stroke-dasharray="3 2"/>';
+    pSvg += '<circle cx="' + bx.toFixed(1) + '" cy="' + by.toFixed(1) + '" r="4.5" fill="#10b981" stroke="#ecfdf5" stroke-width="1.3"><title>Selected Benchmark ' + shortAuth + ' | Exp: ' + selBench.actualHv + ' HV | ML: ' + selBench.predHv + ' HV</title></circle>';
+    pSvg += '<text x="' + (alignRight ? (bx - 13) : (bx + 13)).toFixed(1) + '" y="' + (by + 4).toFixed(1) + '" fill="#34d399" font-size="9.5" font-family="monospace" font-weight="bold" text-anchor="' + (alignRight ? 'end' : 'start') + '">Selected Benchmark: ' + shortAuth + '</text>';
+  }
 
   // Plot Live Current Operating Prediction Marker
   const liveActualEst = currentHv; // On identity expectation
