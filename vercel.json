@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "outputDirectory": ".",
   "functions": {
     "api/predict.js": {
       "includeFiles": "data/pinn_ti64_weights.json"
@@ -10,11 +11,11 @@
   },
   "rewrites": [
     {
-      "source": "/api/(stats|predict|evaluate|meltpool|bontha|materials|papers|scopus)/?",
-      "destination": "/api/$1.js"
+      "source": "/api/:endpoint(stats|predict|evaluate|meltpool|bontha|materials|papers|scopus)",
+      "destination": "/api/:endpoint.js"
     },
     {
-      "source": "/dashboard/?",
+      "source": "/dashboard",
       "destination": "/process_windows_dashboard.html"
     },
     {
