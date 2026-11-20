@@ -10182,116 +10182,111 @@ window.addEventListener('click', function(e) {
                 <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#55afea;vertical-align:middle;margin-right:4px;"></span>Self-Supporting (&le;45°)</span>
                 <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#dc5041;vertical-align:middle;margin-right:4px;"></span>Overhang / Needs Support (&gt;45°)</span>
               </div>
-              <canvas id="cadViewerCanvas" width="760" height="420" style="width: 100%; height: 420px; display: block; cursor: grab;"></canvas>
+              <canvas id="cadViewerCanvas" width="760" height="400" style="width: 100%; height: 400px; display: block; cursor: grab;"></canvas>
               <div id="cadViewerEmptyHint" style="position: absolute; inset: 72px 0 0 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; color: #64748b; text-align: center; padding: 20px;">
                 <div style="font-size: 14px; font-weight: 700; color: #94a3b8;">No CAD Mesh Loaded Yet</div>
                 <div style="font-size: 11px; margin-top: 4px;">Drop a .stl / .step / .iges file on the left, or click <strong>Load Demo Ti-6Al-4V Bracket</strong>.</div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- Mesh Readout Strip -->
-            <div class="metric-score-row" style="margin-top: 0;">
-              <div class="metric-score-card"><div class="metric-score-val" id="cadStatFormat" style="color: #38bdf8;">—</div><div class="metric-score-lbl">Parsed Format</div></div>
-              <div class="metric-score-card"><div class="metric-score-val" id="cadStatTris" style="color: #34d399;">—</div><div class="metric-score-lbl">Triangles</div></div>
-              <div class="metric-score-card"><div class="metric-score-val" id="cadStatBbox" style="color: #fbbf24;">—</div><div class="metric-score-lbl">Bounding Box (mm)</div></div>
-              <div class="metric-score-card"><div class="metric-score-val" id="cadStatFit" style="color: #c084fc;">—</div><div class="metric-score-lbl">Envelope Fit</div></div>
-            </div>
+        <!-- Full-Width Part Telemetry, A(z) Slicing & Multi-Panel Analysis (Utilizes 100% Width) -->
+        <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px;">
+          <!-- Unified 12-Metric Strip (6x2 on Desktop, auto-fits cleanly on smaller viewports) -->
+          <div class="metric-score-row" style="margin-top: 0; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));">
+            <div class="metric-score-card"><div class="metric-score-val" id="cadStatFormat" style="color: #38bdf8;">—</div><div class="metric-score-lbl">Parsed Format</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="cadStatTris" style="color: #34d399;">—</div><div class="metric-score-lbl">Triangles</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="cadStatBbox" style="color: #fbbf24;">—</div><div class="metric-score-lbl">Bounding Box (mm)</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="cadStatFit" style="color: #c084fc;">—</div><div class="metric-score-lbl">Envelope Fit</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="cadGeoVol" style="color: #38bdf8;">—</div><div class="metric-score-lbl">Volume / Ti-64 Mass</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="cadGeoArea" style="color: #34d399;">—</div><div class="metric-score-lbl">Surface Area</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="cadGeoOverhang" style="color: #fb7185;">—</div><div class="metric-score-lbl">Overhang (&gt;θ)</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="cadGeoWall" style="color: #fbbf24;">—</div><div class="metric-score-lbl">Min / Med Wall (mm)</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="cadGeoWatertight" style="color: #34d399;">—</div><div class="metric-score-lbl">Mesh Topology</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="cadGeoCorners" style="color: #fbbf24;">—</div><div class="metric-score-lbl">Sharp Concave Edges</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="cadGeoCavities" style="color: #c084fc;">—</div><div class="metric-score-lbl">Enclosed Cavities</div></div>
+            <div class="metric-score-card"><div class="metric-score-val" id="cadGeoSlicesMeta" style="color: #38bdf8;">—</div><div class="metric-score-lbl">A(z) Jump Count</div></div>
+          </div>
 
-            <!-- Phase 2: Geometry Analysis Cards & Slice Profile -->
-            <div class="metric-score-row" style="margin-top: 0;">
-              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoVol" style="color: #38bdf8;">—</div><div class="metric-score-lbl">Volume / Ti-64 Mass</div></div>
-              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoArea" style="color: #34d399;">—</div><div class="metric-score-lbl">Surface Area</div></div>
-              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoOverhang" style="color: #fb7185;">—</div><div class="metric-score-lbl">Overhang (&gt;θ)</div></div>
-              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoWall" style="color: #fbbf24;">—</div><div class="metric-score-lbl">Min / Med Wall (mm)</div></div>
+          <!-- Full-Width Layer Cross-Section Profile + Scrubber -->
+          <div style="border-radius: 10px; padding: 12px 14px; background: rgba(7,12,20,0.78); border: 1px solid rgba(56,189,248,0.14);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+              <strong style="font-size: 12px; color: #f1f5f9;">Layer Cross-Section Area A(z) &amp; Thermal Heat-Sink Profile</strong>
+              <span id="cadGeoTimingBadge" style="font-size: 10.5px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted);">Load a part to slice</span>
             </div>
-            <div class="metric-score-row" style="margin-top: 0;">
-              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoWatertight" style="color: #34d399;">—</div><div class="metric-score-lbl">Mesh Topology</div></div>
-              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoCorners" style="color: #fbbf24;">—</div><div class="metric-score-lbl">Sharp Concave Edges</div></div>
-              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoCavities" style="color: #c084fc;">—</div><div class="metric-score-lbl">Enclosed Cavities</div></div>
-              <div class="metric-score-card"><div class="metric-score-val" id="cadGeoSlicesMeta" style="color: #38bdf8;">—</div><div class="metric-score-lbl">A(z) Jump Count</div></div>
+            <canvas id="cadLayerAreaCanvas" style="width: 100%; height: 170px; display: block;"></canvas>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #38bdf8; font-weight: 600;">
+                <span>Z Layer Scrubber:</span>
+                <input type="range" id="cadLayerScrubber" min="0" max="15" value="0" oninput="scrubCadLayer(this.value)" style="width: 160px; accent-color: #38bdf8;">
+              </label>
+              <label style="display: flex; align-items: center; gap: 4px; font-size: 10.5px; color: #94a3b8; cursor: pointer;">
+                <input type="checkbox" id="chkCadScrubSync3d" onchange="if(this.checked) scrubCadLayer(document.getElementById('cadLayerScrubber')?.value || 0);">
+                Sync 3D Z-Cut
+              </label>
+              <span id="cadLayerScrubberReadout" style="font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #cbd5e1; margin-left: auto;">Load a part to inspect layer-by-layer properties</span>
             </div>
+          </div>
 
-            <div style="border-radius: 10px; padding: 10px 12px; background: rgba(7,12,20,0.75); border: 1px solid rgba(255,255,255,0.08);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <strong style="font-size: 11.5px; color: #f1f5f9;">Layer Cross-Section Area A(z) &amp; Thermal Heat-Sink Profile</strong>
-                <span id="cadGeoTimingBadge" style="font-size: 10px; font-family: monospace; color: var(--text-muted);">Load a part to slice</span>
+          <!-- Full-Width 2x2 Grid: Printability, 26-Orientation, Part Properties, Build Time & Cost -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(410px, 1fr)); gap: 14px;">
+            <div style="border-radius: 10px; padding: 14px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
+                <strong style="font-size: 12.5px; color: #f1f5f9;">Printability &amp; Support Estimate</strong>
+                <span class="brand-badge" id="cadPrintabilityBadge" style="font-size: 9.5px; color: #94a3b8; border-color: rgba(148,163,184,0.35);">Pending CAD</span>
               </div>
-              <canvas id="cadLayerAreaCanvas" width="740" height="135" style="width: 100%; height: 135px; display: block;"></canvas>
-              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #38bdf8; font-weight: 600;">
-                  <span>Z Layer Scrubber:</span>
-                  <input type="range" id="cadLayerScrubber" min="0" max="15" value="0" oninput="scrubCadLayer(this.value)" style="width: 130px; accent-color: #38bdf8;">
+              <div id="cadSupportSummary" style="font-size: 11px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 8px;">Load a CAD mesh to evaluate envelope fit, thin walls, support volume, and trapped powder risks.</div>
+              <ul id="cadPrintabilityNotes" style="margin: 0 0 10px 16px; padding: 0; font-size: 10.5px; color: #fde68a; line-height: 1.45;"></ul>
+              <table class="custom-table" style="font-size: 10.5px;">
+                <thead><tr><th>Process</th><th>Score</th><th>Verdict</th><th>Action</th></tr></thead>
+                <tbody id="cadProcessRankingBody"><tr><td colspan="4" style="color:var(--text-muted); text-align:center;">—</td></tr></tbody>
+              </table>
+            </div>
+
+            <div style="border-radius: 10px; padding: 14px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
+                <strong style="font-size: 12.5px; color: #f1f5f9;">26-Orientation Build Optimizer</strong>
+                <span class="brand-badge" id="cadOrientationBadge" style="font-size: 9.5px; color: #38bdf8; border-color: rgba(56,189,248,0.35);">Top 3 Choices</span>
+              </div>
+              <div id="cadCurrentOriSummary" style="font-size: 10.5px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 8px;">Current orientation score will appear after CAD parse.</div>
+              <table class="custom-table" style="font-size: 10.5px;">
+                <thead><tr><th>Orientation</th><th>Z Height / Support</th><th>Score</th><th>Rotate</th></tr></thead>
+                <tbody id="cadOrientationBody"><tr><td colspan="4" style="color:var(--text-muted); text-align:center;">—</td></tr></tbody>
+              </table>
+            </div>
+
+            <div style="border-radius: 10px; padding: 14px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
+                <strong style="font-size: 12.5px; color: #f1f5f9;">Part Properties &amp; Distortion Screening</strong>
+                <span class="brand-badge" id="cadSimAstmBadge" style="font-size: 9.5px; color: #94a3b8; border-color: rgba(148,163,184,0.35);">ASTM Check Pending</span>
+              </div>
+              <div class="metric-score-row" style="margin-top: 0; margin-bottom: 8px;">
+                <div class="metric-score-card"><div class="metric-score-val" id="cadSimYsUts" style="color: #34d399; font-size: 13px;">—</div><div class="metric-score-lbl">Weakest YS / UTS</div></div>
+                <div class="metric-score-card"><div class="metric-score-val" id="cadSimElong" style="color: #38bdf8; font-size: 13px;">—</div><div class="metric-score-lbl">Min Elongation</div></div>
+                <div class="metric-score-card"><div class="metric-score-val" id="cadStressMpa" style="color: #fb7185; font-size: 13px;">—</div><div class="metric-score-lbl">Residual Stress</div></div>
+                <div class="metric-score-card"><div class="metric-score-val" id="cadWarpDeflect" style="color: #fbbf24; font-size: 13px;">—</div><div class="metric-score-lbl">Warp Risk / Defl.</div></div>
+              </div>
+              <div id="cadSimSummary" style="font-size: 10.5px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 6px;">Screening estimate from geometry &amp; thermal gradients (not full thermo-mechanical FEA).</div>
+              <ul id="cadStressNotes" style="margin: 0 0 0 16px; padding: 0; font-size: 10.5px; color: #bae6fd; line-height: 1.45;"></ul>
+            </div>
+
+            <div style="border-radius: 10px; padding: 14px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
+                <strong style="font-size: 12.5px; color: #f1f5f9;">Build Time, Material &amp; Cost Estimate</strong>
+                <label style="font-size: 10.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px;">
+                  Batch Qty:
+                  <input type="number" id="cadBatchSizeInput" min="1" max="24" value="1" onchange="runCadPhase4Simulation()" style="width: 44px; background: #070c14; color: #fff; border: 1px solid rgba(56,189,248,0.4); border-radius: 4px; padding: 2px 5px; font-size: 10.5px;">
                 </label>
-                <label style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: #94a3b8; cursor: pointer;">
-                  <input type="checkbox" id="chkCadScrubSync3d" onchange="if(this.checked) scrubCadLayer(document.getElementById('cadLayerScrubber')?.value || 0);">
-                  Sync 3D Z-Cut
-                </label>
-                <span id="cadLayerScrubberReadout" style="font-size: 10.5px; font-family: 'JetBrains Mono', monospace; color: #cbd5e1; margin-left: auto;">Load a part to inspect layer-by-layer properties</span>
               </div>
-            </div>
-
-            <!-- Phase 3: Printability, Supports, Process Ranking & 26-Orientation Optimizer -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px;">
-              <div style="border-radius: 10px; padding: 12px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
-                  <strong style="font-size: 12px; color: #f1f5f9;">Printability &amp; Support Estimate</strong>
-                  <span class="brand-badge" id="cadPrintabilityBadge" style="font-size: 9.5px; color: #94a3b8; border-color: rgba(148,163,184,0.35);">Pending CAD</span>
-                </div>
-                <div id="cadSupportSummary" style="font-size: 11px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 8px;">Load a CAD mesh to evaluate envelope fit, thin walls, support volume, and trapped powder risks.</div>
-                <ul id="cadPrintabilityNotes" style="margin: 0 0 10px 16px; padding: 0; font-size: 10.5px; color: #fde68a; line-height: 1.45;"></ul>
-                <table class="custom-table" style="font-size: 10.5px;">
-                  <thead><tr><th>Process</th><th>Score</th><th>Verdict</th><th>Action</th></tr></thead>
-                  <tbody id="cadProcessRankingBody"><tr><td colspan="4" style="color:var(--text-muted); text-align:center;">—</td></tr></tbody>
-                </table>
+              <div class="metric-score-row" style="margin-top: 0; margin-bottom: 8px;">
+                <div class="metric-score-card"><div class="metric-score-val" id="cadCostHours" style="color: #38bdf8; font-size: 13px;">—</div><div class="metric-score-lbl">Total Build Time</div></div>
+                <div class="metric-score-card"><div class="metric-score-val" id="cadCostMass" style="color: #fbbf24; font-size: 13px;">—</div><div class="metric-score-lbl">Ti-64 Feedstock</div></div>
+                <div class="metric-score-card"><div class="metric-score-val" id="cadCostPerPart" style="color: #34d399; font-size: 13px;">—</div><div class="metric-score-lbl">Est. Cost / Part</div></div>
+                <div class="metric-score-card"><div class="metric-score-val" id="cadCostPlateCap" style="color: #c084fc; font-size: 13px;">—</div><div class="metric-score-lbl">Max Plate Nest</div></div>
               </div>
-
-              <div style="border-radius: 10px; padding: 12px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
-                  <strong style="font-size: 12px; color: #f1f5f9;">26-Orientation Build Optimizer</strong>
-                  <span class="brand-badge" id="cadOrientationBadge" style="font-size: 9.5px; color: #38bdf8; border-color: rgba(56,189,248,0.35);">Top 3 Choices</span>
-                </div>
-                <div id="cadCurrentOriSummary" style="font-size: 10.5px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 8px;">Current orientation score will appear after CAD parse.</div>
-                <table class="custom-table" style="font-size: 10.5px;">
-                  <thead><tr><th>Orientation</th><th>Z Height / Support</th><th>Score</th><th>Rotate</th></tr></thead>
-                  <tbody id="cadOrientationBody"><tr><td colspan="4" style="color:var(--text-muted); text-align:center;">—</td></tr></tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Phase 4: Part-Level PINN Properties, Distortion & Residual Stress + Time & Cost -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px;">
-              <div style="border-radius: 10px; padding: 12px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
-                  <strong style="font-size: 12px; color: #f1f5f9;">Part Properties &amp; Distortion Screening</strong>
-                  <span class="brand-badge" id="cadSimAstmBadge" style="font-size: 9.5px; color: #94a3b8; border-color: rgba(148,163,184,0.35);">ASTM Check Pending</span>
-                </div>
-                <div class="metric-score-row" style="margin-top: 0; margin-bottom: 8px;">
-                  <div class="metric-score-card"><div class="metric-score-val" id="cadSimYsUts" style="color: #34d399; font-size: 13px;">—</div><div class="metric-score-lbl">Weakest YS / UTS</div></div>
-                  <div class="metric-score-card"><div class="metric-score-val" id="cadSimElong" style="color: #38bdf8; font-size: 13px;">—</div><div class="metric-score-lbl">Min Elongation</div></div>
-                  <div class="metric-score-card"><div class="metric-score-val" id="cadStressMpa" style="color: #fb7185; font-size: 13px;">—</div><div class="metric-score-lbl">Residual Stress</div></div>
-                  <div class="metric-score-card"><div class="metric-score-val" id="cadWarpDeflect" style="color: #fbbf24; font-size: 13px;">—</div><div class="metric-score-lbl">Warp Risk / Defl.</div></div>
-                </div>
-                <div id="cadSimSummary" style="font-size: 10.5px; color: var(--text-secondary); line-height: 1.45; margin-bottom: 6px;">Screening estimate from geometry &amp; thermal gradients (not full thermo-mechanical FEA).</div>
-                <ul id="cadStressNotes" style="margin: 0 0 0 16px; padding: 0; font-size: 10.5px; color: #bae6fd; line-height: 1.45;"></ul>
-              </div>
-
-              <div style="border-radius: 10px; padding: 12px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
-                  <strong style="font-size: 12px; color: #f1f5f9;">Build Time, Material &amp; Cost Estimate</strong>
-                  <label style="font-size: 10.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px;">
-                    Batch Qty:
-                    <input type="number" id="cadBatchSizeInput" min="1" max="24" value="1" onchange="runCadPhase4Simulation()" style="width: 44px; background: #070c14; color: #fff; border: 1px solid rgba(56,189,248,0.4); border-radius: 4px; padding: 2px 5px; font-size: 10.5px;">
-                  </label>
-                </div>
-                <div class="metric-score-row" style="margin-top: 0; margin-bottom: 8px;">
-                  <div class="metric-score-card"><div class="metric-score-val" id="cadCostHours" style="color: #38bdf8; font-size: 13px;">—</div><div class="metric-score-lbl">Total Build Time</div></div>
-                  <div class="metric-score-card"><div class="metric-score-val" id="cadCostMass" style="color: #fbbf24; font-size: 13px;">—</div><div class="metric-score-lbl">Ti-64 Feedstock</div></div>
-                  <div class="metric-score-card"><div class="metric-score-val" id="cadCostPerPart" style="color: #34d399; font-size: 13px;">—</div><div class="metric-score-lbl">Est. Cost / Part</div></div>
-                  <div class="metric-score-card"><div class="metric-score-val" id="cadCostPlateCap" style="color: #c084fc; font-size: 13px;">—</div><div class="metric-score-lbl">Max Plate Nest</div></div>
-                </div>
-                <div id="cadCostMeta" style="font-size: 10.5px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; line-height: 1.55;">
-                  Placeholder machine &amp; powder rates (customize in Machine Preset panel).
-                </div>
+              <div id="cadCostMeta" style="font-size: 10.5px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; line-height: 1.55;">
+                Placeholder machine &amp; powder rates (customize in Machine Preset panel).
               </div>
             </div>
           </div>
@@ -15774,6 +15769,7 @@ window.addEventListener('resize', () => {
   _crispResizeTimer = setTimeout(() => {
     if (document.getElementById('view_predictions')?.classList.contains('active')) renderPredMechCurves(window.latestPhysicsState);
     if (document.getElementById('view_literature')?.classList.contains('active')) drawLitTopicGraph();
+    if (document.getElementById('view_cad-analyzer')?.classList.contains('active') && cadGeometryReport) _renderCadGeometryUi();
   }, 120);
 });
 
@@ -18004,35 +18000,61 @@ function _renderCadGeometryUi() {
 
   const canvas = document.getElementById('cadLayerAreaCanvas');
   if (!canvas || !g.layerSlices.length) return;
-  const ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height;
+  const rect = canvas.getBoundingClientRect();
+  const W = Math.max(460, Math.round((rect && rect.width) ? rect.width : 880)), H = 170;
+  const dpr = Math.min(2.5, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
+  canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ctx.clearRect(0, 0, W, H);
-  const pad = { l: 44, r: 14, t: 12, b: 22 }, pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+  const pad = { l: 58, r: 18, t: 14, b: 26 }, pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
   const maxA = Math.max(10, Math.max(...g.layerSlices.map(s => s.areaMm2)));
-  ctx.strokeStyle = 'rgba(148,163,184,0.18)'; ctx.lineWidth = 1;
-  ctx.strokeRect(pad.l, pad.t, pw, ph);
-  ctx.fillStyle = '#94a3b8'; ctx.font = '10px JetBrains Mono, monospace';
-  ctx.fillText(Math.round(maxA) + ' mm²', 4, pad.t + 10);
-  ctx.fillText('0', 28, pad.t + ph);
-  ctx.fillText(`Z = 0 → ${g.layerSlices[g.layerSlices.length-1].zMm} mm`, pad.l, H - 5);
-
-  ctx.beginPath();
-  g.layerSlices.forEach((s, idx) => {
-    const x = pad.l + (idx / Math.max(1, g.layerSlices.length - 1)) * pw;
-    const y = pad.t + ph - (s.areaMm2 / maxA) * ph;
-    if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  ctx.save();
+  ctx.setLineDash([3, 4]); ctx.strokeStyle = 'rgba(148,163,184,0.10)'; ctx.lineWidth = 1;
+  [0.25, 0.5, 0.75, 1.0].forEach(f => {
+    const gy = pad.t + ph * (1 - f);
+    ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(pad.l + pw, gy); ctx.stroke();
   });
-  ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(148,163,184,0.35)'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + ph); ctx.lineTo(pad.l + pw, pad.t + ph); ctx.stroke();
+  ctx.fillStyle = '#94a3b8'; ctx.font = '10px "JetBrains Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText(Math.round(maxA) + ' mm²', pad.l - 6, pad.t + 10);
+  ctx.fillText(Math.round(maxA * 0.5) + ' mm²', pad.l - 6, pad.t + ph * 0.5 + 3);
+  ctx.fillText('0', pad.l - 6, pad.t + ph);
+  ctx.textAlign = 'left';
+  ctx.fillText(`Z = 0 → ${g.layerSlices[g.layerSlices.length-1].zMm} mm`, pad.l, H - 6);
+
+  const pts = g.layerSlices.map((s, idx) => [
+    pad.l + (idx / Math.max(1, g.layerSlices.length - 1)) * pw,
+    pad.t + ph - (s.areaMm2 / maxA) * ph
+  ]);
+  if (pts.length) {
+    const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + ph);
+    grad.addColorStop(0, 'rgba(56, 189, 248, 0.24)');
+    grad.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+    ctx.lineTo(pts[pts.length - 1][0], pad.t + ph);
+    ctx.lineTo(pts[0][0], pad.t + ph);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.beginPath();
+  pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+  ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2.4; ctx.stroke();
   g.layerSlices.forEach((s, idx) => {
     if (idx > 0 && (s.heatSinkRatio >= 2.0 || s.heatSinkRatio <= 0.5)) {
-      const x = pad.l + (idx / Math.max(1, g.layerSlices.length - 1)) * pw;
-      const y = pad.t + ph - (s.areaMm2 / maxA) * ph;
+      const [x, y] = pts[idx];
       ctx.fillStyle = '#fb7185'; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
     }
   });
   // Phase 5 active Z-layer scrubber marker
   const sIdx = Math.max(0, Math.min(g.layerSlices.length - 1, Number(window.cadActiveScrubIdx) || 0));
-  const sx = pad.l + (sIdx / Math.max(1, g.layerSlices.length - 1)) * pw;
-  const sy = pad.t + ph - (g.layerSlices[sIdx].areaMm2 / maxA) * ph;
+  const [sx, sy] = pts[sIdx];
   ctx.save();
   ctx.strokeStyle = '#34d399';
   ctx.lineWidth = 1.6;
@@ -18044,8 +18066,9 @@ function _renderCadGeometryUi() {
   ctx.setLineDash([]);
   ctx.fillStyle = '#34d399';
   ctx.beginPath();
-  ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
+  ctx.arc(sx, sy, 4.8, 0, Math.PI * 2);
   ctx.fill();
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2; ctx.stroke();
   ctx.restore();
 }
 
