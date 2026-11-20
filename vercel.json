@@ -1,6 +1,7 @@
 {
   "version": 2,
-  "outputDirectory": ".",
+  "buildCommand": "npm run build && node scripts/stage_vercel_public.mjs",
+  "outputDirectory": "public",
   "functions": {
     "api/predict.js": {
       "includeFiles": "data/pinn_ti64_weights.json"
