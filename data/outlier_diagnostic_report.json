@@ -1,0 +1,3564 @@
+{
+  "generated_at": "2026-11-22T09:53:43.022Z",
+  "weights_loaded": true,
+  "weights_version": "ti64-calibrated-v2.0",
+  "corpus_summary": {
+    "total_papers": 199,
+    "total_joined_records": 199,
+    "fully_extracted_with_params_and_mech": 58,
+    "incomplete_or_unextracted_records": 141,
+    "evaluated_records_with_any_metric": 78,
+    "clean_cohort_records_after_hygiene_filter": 35,
+    "flag_counts": {
+      "MISSING_OXYGEN_OR_ORIENTATION": 196,
+      "UNMODELED_HEAT_TREATMENT": 8,
+      "CATALOG_HYGIENE_FLAG": 26,
+      "PLACEHOLDER_MECH_VALUES": 55,
+      "EXTREME_ENERGY_OOD": 4,
+      "UNEXTRACTED_OR_ZERO_PARAMS": 141
+    }
+  },
+  "cohort_mape_comparison": {
+    "before_filtering": {
+      "recordCount": 78,
+      "metricEvaluations": 312,
+      "overallMapePct": 17.43,
+      "byProperty": {
+        "hardness_hv": {
+          "n": 58,
+          "mapePct": 1.35
+        },
+        "ys_mpa": {
+          "n": 78,
+          "mapePct": 29.18
+        },
+        "uts_mpa": {
+          "n": 78,
+          "mapePct": 25.55
+        },
+        "elongation_pct": {
+          "n": 78,
+          "mapePct": 13.98
+        },
+        "relative_density_pct": {
+          "n": 20,
+          "mapePct": 0.04
+        }
+      }
+    },
+    "after_excluding_hygiene_placeholder_unextracted": {
+      "recordCount": 35,
+      "metricEvaluations": 140,
+      "overallMapePct": 5.12,
+      "byProperty": {
+        "hardness_hv": {
+          "n": 35,
+          "mapePct": 1.98
+        },
+        "ys_mpa": {
+          "n": 35,
+          "mapePct": 1.92
+        },
+        "uts_mpa": {
+          "n": 35,
+          "mapePct": 2.54
+        },
+        "elongation_pct": {
+          "n": 35,
+          "mapePct": 14.04
+        },
+        "relative_density_pct": {
+          "n": 0,
+          "mapePct": null
+        }
+      }
+    }
+  },
+  "top_10_outliers": [
+    {
+      "rank": 1,
+      "paperId": "P-09",
+      "numericPaperId": "9",
+      "authorsYear": "Cutolo et al. (2020)",
+      "process": "lpbf",
+      "rawProcess": "LPBF",
+      "condition": "stress-relieved",
+      "worstProperty": "ys_mpa",
+      "expValue": 125,
+      "predValue": 1012.3,
+      "delta": 887.3,
+      "apePct": 709.84,
+      "meanApePct": 342.8,
+      "rootCauseTags": [
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "allMetricErrors": {
+        "hardness_hv": {
+          "exp": 365,
+          "pred": 362.2,
+          "delta": -2.8,
+          "apePct": 0.77
+        },
+        "ys_mpa": {
+          "exp": 125,
+          "pred": 1012.3,
+          "delta": 887.3,
+          "apePct": 709.84
+        },
+        "uts_mpa": {
+          "exp": 165,
+          "pred": 1163.6,
+          "delta": 998.6,
+          "apePct": 605.21
+        },
+        "elongation_pct": {
+          "exp": 18,
+          "pred": 8.03,
+          "delta": -9.97,
+          "apePct": 55.39
+        }
+      }
+    },
+    {
+      "rank": 2,
+      "paperId": "P-20",
+      "numericPaperId": "20",
+      "authorsYear": "Jamshidi et al. (2020)",
+      "process": "lpbf",
+      "rawProcess": "SLM",
+      "condition": "stress-relieved",
+      "worstProperty": "ys_mpa",
+      "expValue": 140,
+      "predValue": 1005.3,
+      "delta": 865.3,
+      "apePct": 618.07,
+      "meanApePct": 298.16,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "allMetricErrors": {
+        "hardness_hv": {
+          "exp": 360,
+          "pred": 359.6,
+          "delta": -0.4,
+          "apePct": 0.11
+        },
+        "ys_mpa": {
+          "exp": 140,
+          "pred": 1005.3,
+          "delta": 865.3,
+          "apePct": 618.07
+        },
+        "uts_mpa": {
+          "exp": 185,
+          "pred": 1155.6,
+          "delta": 970.6,
+          "apePct": 524.65
+        },
+        "elongation_pct": {
+          "exp": 16,
+          "pred": 8.03,
+          "delta": -7.97,
+          "apePct": 49.81
+        }
+      }
+    },
+    {
+      "rank": 3,
+      "paperId": "P-28",
+      "numericPaperId": "28",
+      "authorsYear": "Lee et al. (2025)",
+      "process": "lpbf",
+      "rawProcess": "LPBF / Biomedical",
+      "condition": "stress-relieved",
+      "worstProperty": "ys_mpa",
+      "expValue": 140,
+      "predValue": 1005.3,
+      "delta": 865.3,
+      "apePct": 618.07,
+      "meanApePct": 298.16,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "allMetricErrors": {
+        "hardness_hv": {
+          "exp": 360,
+          "pred": 359.6,
+          "delta": -0.4,
+          "apePct": 0.11
+        },
+        "ys_mpa": {
+          "exp": 140,
+          "pred": 1005.3,
+          "delta": 865.3,
+          "apePct": 618.07
+        },
+        "uts_mpa": {
+          "exp": 185,
+          "pred": 1155.6,
+          "delta": 970.6,
+          "apePct": 524.65
+        },
+        "elongation_pct": {
+          "exp": 16,
+          "pred": 8.03,
+          "delta": -7.97,
+          "apePct": 49.81
+        }
+      }
+    },
+    {
+      "rank": 4,
+      "paperId": "P-36",
+      "numericPaperId": "36",
+      "authorsYear": "Meshram et al. (2026)",
+      "process": "lpbf",
+      "rawProcess": "LPBF / Fatigue",
+      "condition": "HIPed",
+      "worstProperty": "elongation_pct",
+      "expValue": 15,
+      "predValue": 8.52,
+      "delta": -6.48,
+      "apePct": 43.2,
+      "meanApePct": 15.04,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "allMetricErrors": {
+        "hardness_hv": {
+          "exp": 338,
+          "pred": 338.8,
+          "delta": 0.8,
+          "apePct": 0.24
+        },
+        "ys_mpa": {
+          "exp": 855,
+          "pred": 917.4,
+          "delta": 62.4,
+          "apePct": 7.3
+        },
+        "uts_mpa": {
+          "exp": 965,
+          "pred": 1055.9,
+          "delta": 90.9,
+          "apePct": 9.42
+        },
+        "elongation_pct": {
+          "exp": 15,
+          "pred": 8.52,
+          "delta": -6.48,
+          "apePct": 43.2
+        }
+      }
+    },
+    {
+      "rank": 5,
+      "paperId": "P-34",
+      "numericPaperId": "34",
+      "authorsYear": "McGregor et al. (2021)",
+      "process": "lpbf",
+      "rawProcess": "LPBF / EBM",
+      "condition": "HIPed",
+      "worstProperty": "elongation_pct",
+      "expValue": 14.5,
+      "predValue": 8.55,
+      "delta": -5.95,
+      "apePct": 41.03,
+      "meanApePct": 14.1,
+      "rootCauseTags": [
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "allMetricErrors": {
+        "hardness_hv": {
+          "exp": 340,
+          "pred": 341,
+          "delta": 1,
+          "apePct": 0.29
+        },
+        "ys_mpa": {
+          "exp": 875,
+          "pred": 928.4,
+          "delta": 53.4,
+          "apePct": 6.1
+        },
+        "uts_mpa": {
+          "exp": 980,
+          "pred": 1068.1,
+          "delta": 88.1,
+          "apePct": 8.99
+        },
+        "elongation_pct": {
+          "exp": 14.5,
+          "pred": 8.55,
+          "delta": -5.95,
+          "apePct": 41.03
+        }
+      }
+    },
+    {
+      "rank": 6,
+      "paperId": "P-52",
+      "numericPaperId": "52",
+      "authorsYear": "Xing et al. (2021)",
+      "process": "lpbf",
+      "rawProcess": "LPBF",
+      "condition": "as-built (400°C preheat)",
+      "worstProperty": "elongation_pct",
+      "expValue": 14.8,
+      "predValue": 9.03,
+      "delta": -5.77,
+      "apePct": 38.99,
+      "meanApePct": 12.45,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "UNMODELED_HEAT_TREATMENT"
+      ],
+      "allMetricErrors": {
+        "hardness_hv": {
+          "exp": 345,
+          "pred": 351.1,
+          "delta": 6.1,
+          "apePct": 1.77
+        },
+        "ys_mpa": {
+          "exp": 925,
+          "pred": 958,
+          "delta": 33,
+          "apePct": 3.57
+        },
+        "uts_mpa": {
+          "exp": 1040,
+          "pred": 1096.8,
+          "delta": 56.8,
+          "apePct": 5.46
+        },
+        "elongation_pct": {
+          "exp": 14.8,
+          "pred": 9.03,
+          "delta": -5.77,
+          "apePct": 38.99
+        }
+      }
+    },
+    {
+      "rank": 7,
+      "paperId": "P-43",
+      "numericPaperId": "43",
+      "authorsYear": "Pedrazzini et al. (2020)",
+      "process": "lpbf",
+      "rawProcess": "LPBF",
+      "condition": "as-built (500°C bed preheat)",
+      "worstProperty": "elongation_pct",
+      "expValue": 13.8,
+      "predValue": 9.03,
+      "delta": -4.77,
+      "apePct": 34.57,
+      "meanApePct": 12.11,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "UNMODELED_HEAT_TREATMENT"
+      ],
+      "allMetricErrors": {
+        "hardness_hv": {
+          "exp": 342,
+          "pred": 349.9,
+          "delta": 7.9,
+          "apePct": 2.31
+        },
+        "ys_mpa": {
+          "exp": 910,
+          "pred": 954.7,
+          "delta": 44.7,
+          "apePct": 4.91
+        },
+        "uts_mpa": {
+          "exp": 1025,
+          "pred": 1093,
+          "delta": 68,
+          "apePct": 6.63
+        },
+        "elongation_pct": {
+          "exp": 13.8,
+          "pred": 9.03,
+          "delta": -4.77,
+          "apePct": 34.57
+        }
+      }
+    },
+    {
+      "rank": 8,
+      "paperId": "P-10",
+      "numericPaperId": "10",
+      "authorsYear": "Denti et al. (2019)",
+      "process": "lpbf",
+      "rawProcess": "LPBF",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "expValue": 6.8,
+      "predValue": 9.13,
+      "delta": 2.33,
+      "apePct": 34.26,
+      "meanApePct": 11.82,
+      "rootCauseTags": [],
+      "allMetricErrors": {
+        "hardness_hv": {
+          "exp": 395,
+          "pred": 380.6,
+          "delta": -14.4,
+          "apePct": 3.65
+        },
+        "ys_mpa": {
+          "exp": 1085,
+          "pred": 1034.6,
+          "delta": -50.4,
+          "apePct": 4.65
+        },
+        "uts_mpa": {
+          "exp": 1240,
+          "pred": 1181.5,
+          "delta": -58.5,
+          "apePct": 4.72
+        },
+        "elongation_pct": {
+          "exp": 6.8,
+          "pred": 9.13,
+          "delta": 2.33,
+          "apePct": 34.26
+        }
+      }
+    },
+    {
+      "rank": 9,
+      "paperId": "P-01",
+      "numericPaperId": "1",
+      "authorsYear": "Alegre et al. (2022)",
+      "process": "lpbf",
+      "rawProcess": "LPBF (PBF-LB)",
+      "condition": "HIPed (850°C / 200 MPa)",
+      "worstProperty": "elongation_pct",
+      "expValue": 14.5,
+      "predValue": 9.94,
+      "delta": -4.56,
+      "apePct": 31.45,
+      "meanApePct": 9.54,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "UNMODELED_HEAT_TREATMENT"
+      ],
+      "allMetricErrors": {
+        "hardness_hv": {
+          "exp": 345,
+          "pred": 325.3,
+          "delta": -19.7,
+          "apePct": 5.71
+        },
+        "ys_mpa": {
+          "exp": 885,
+          "pred": 888.6,
+          "delta": 3.6,
+          "apePct": 0.41
+        },
+        "uts_mpa": {
+          "exp": 995,
+          "pred": 1000.7,
+          "delta": 5.7,
+          "apePct": 0.57
+        },
+        "elongation_pct": {
+          "exp": 14.5,
+          "pred": 9.94,
+          "delta": -4.56,
+          "apePct": 31.45
+        }
+      }
+    },
+    {
+      "rank": 10,
+      "paperId": "P-15",
+      "numericPaperId": "15",
+      "authorsYear": "Ganeriwala et al. (2019)",
+      "process": "lpbf",
+      "rawProcess": "LPBF / Simulation",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "expValue": 7,
+      "predValue": 9.15,
+      "delta": 2.15,
+      "apePct": 30.71,
+      "meanApePct": 9.01,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "allMetricErrors": {
+        "hardness_hv": {
+          "exp": 388,
+          "pred": 386.4,
+          "delta": -1.6,
+          "apePct": 0.41
+        },
+        "ys_mpa": {
+          "exp": 1070,
+          "pred": 1051.7,
+          "delta": -18.3,
+          "apePct": 1.71
+        },
+        "uts_mpa": {
+          "exp": 1240,
+          "pred": 1200.5,
+          "delta": -39.5,
+          "apePct": 3.19
+        },
+        "elongation_pct": {
+          "exp": 7,
+          "pred": 9.15,
+          "delta": 2.15,
+          "apePct": 30.71
+        }
+      }
+    }
+  ],
+  "all_ranked_evaluated": [
+    {
+      "paperId": "P-09",
+      "authorsYear": "Cutolo et al. (2020)",
+      "process": "lpbf",
+      "condition": "stress-relieved",
+      "worstProperty": "ys_mpa",
+      "worstApePct": 709.84,
+      "meanApePct": 342.8,
+      "rootCauseTags": [
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 365,
+          "pred": 362.2,
+          "delta": -2.8,
+          "apePct": 0.77
+        },
+        "ys_mpa": {
+          "exp": 125,
+          "pred": 1012.3,
+          "delta": 887.3,
+          "apePct": 709.84
+        },
+        "uts_mpa": {
+          "exp": 165,
+          "pred": 1163.6,
+          "delta": 998.6,
+          "apePct": 605.21
+        },
+        "elongation_pct": {
+          "exp": 18,
+          "pred": 8.03,
+          "delta": -9.97,
+          "apePct": 55.39
+        }
+      }
+    },
+    {
+      "paperId": "P-20",
+      "authorsYear": "Jamshidi et al. (2020)",
+      "process": "lpbf",
+      "condition": "stress-relieved",
+      "worstProperty": "ys_mpa",
+      "worstApePct": 618.07,
+      "meanApePct": 298.16,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 360,
+          "pred": 359.6,
+          "delta": -0.4,
+          "apePct": 0.11
+        },
+        "ys_mpa": {
+          "exp": 140,
+          "pred": 1005.3,
+          "delta": 865.3,
+          "apePct": 618.07
+        },
+        "uts_mpa": {
+          "exp": 185,
+          "pred": 1155.6,
+          "delta": 970.6,
+          "apePct": 524.65
+        },
+        "elongation_pct": {
+          "exp": 16,
+          "pred": 8.03,
+          "delta": -7.97,
+          "apePct": 49.81
+        }
+      }
+    },
+    {
+      "paperId": "P-28",
+      "authorsYear": "Lee et al. (2025)",
+      "process": "lpbf",
+      "condition": "stress-relieved",
+      "worstProperty": "ys_mpa",
+      "worstApePct": 618.07,
+      "meanApePct": 298.16,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 360,
+          "pred": 359.6,
+          "delta": -0.4,
+          "apePct": 0.11
+        },
+        "ys_mpa": {
+          "exp": 140,
+          "pred": 1005.3,
+          "delta": 865.3,
+          "apePct": 618.07
+        },
+        "uts_mpa": {
+          "exp": 185,
+          "pred": 1155.6,
+          "delta": 970.6,
+          "apePct": 524.65
+        },
+        "elongation_pct": {
+          "exp": 16,
+          "pred": 8.03,
+          "delta": -7.97,
+          "apePct": 49.81
+        }
+      }
+    },
+    {
+      "paperId": "P-36",
+      "authorsYear": "Meshram et al. (2026)",
+      "process": "lpbf",
+      "condition": "HIPed",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 43.2,
+      "meanApePct": 15.04,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 338,
+          "pred": 338.8,
+          "delta": 0.8,
+          "apePct": 0.24
+        },
+        "ys_mpa": {
+          "exp": 855,
+          "pred": 917.4,
+          "delta": 62.4,
+          "apePct": 7.3
+        },
+        "uts_mpa": {
+          "exp": 965,
+          "pred": 1055.9,
+          "delta": 90.9,
+          "apePct": 9.42
+        },
+        "elongation_pct": {
+          "exp": 15,
+          "pred": 8.52,
+          "delta": -6.48,
+          "apePct": 43.2
+        }
+      }
+    },
+    {
+      "paperId": "P-34",
+      "authorsYear": "McGregor et al. (2021)",
+      "process": "lpbf",
+      "condition": "HIPed",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 41.03,
+      "meanApePct": 14.1,
+      "rootCauseTags": [
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 340,
+          "pred": 341,
+          "delta": 1,
+          "apePct": 0.29
+        },
+        "ys_mpa": {
+          "exp": 875,
+          "pred": 928.4,
+          "delta": 53.4,
+          "apePct": 6.1
+        },
+        "uts_mpa": {
+          "exp": 980,
+          "pred": 1068.1,
+          "delta": 88.1,
+          "apePct": 8.99
+        },
+        "elongation_pct": {
+          "exp": 14.5,
+          "pred": 8.55,
+          "delta": -5.95,
+          "apePct": 41.03
+        }
+      }
+    },
+    {
+      "paperId": "P-52",
+      "authorsYear": "Xing et al. (2021)",
+      "process": "lpbf",
+      "condition": "as-built (400°C preheat)",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 38.99,
+      "meanApePct": 12.45,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "UNMODELED_HEAT_TREATMENT"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 345,
+          "pred": 351.1,
+          "delta": 6.1,
+          "apePct": 1.77
+        },
+        "ys_mpa": {
+          "exp": 925,
+          "pred": 958,
+          "delta": 33,
+          "apePct": 3.57
+        },
+        "uts_mpa": {
+          "exp": 1040,
+          "pred": 1096.8,
+          "delta": 56.8,
+          "apePct": 5.46
+        },
+        "elongation_pct": {
+          "exp": 14.8,
+          "pred": 9.03,
+          "delta": -5.77,
+          "apePct": 38.99
+        }
+      }
+    },
+    {
+      "paperId": "P-43",
+      "authorsYear": "Pedrazzini et al. (2020)",
+      "process": "lpbf",
+      "condition": "as-built (500°C bed preheat)",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 34.57,
+      "meanApePct": 12.11,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "UNMODELED_HEAT_TREATMENT"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 342,
+          "pred": 349.9,
+          "delta": 7.9,
+          "apePct": 2.31
+        },
+        "ys_mpa": {
+          "exp": 910,
+          "pred": 954.7,
+          "delta": 44.7,
+          "apePct": 4.91
+        },
+        "uts_mpa": {
+          "exp": 1025,
+          "pred": 1093,
+          "delta": 68,
+          "apePct": 6.63
+        },
+        "elongation_pct": {
+          "exp": 13.8,
+          "pred": 9.03,
+          "delta": -4.77,
+          "apePct": 34.57
+        }
+      }
+    },
+    {
+      "paperId": "P-10",
+      "authorsYear": "Denti et al. (2019)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 34.26,
+      "meanApePct": 11.82,
+      "rootCauseTags": [],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 395,
+          "pred": 380.6,
+          "delta": -14.4,
+          "apePct": 3.65
+        },
+        "ys_mpa": {
+          "exp": 1085,
+          "pred": 1034.6,
+          "delta": -50.4,
+          "apePct": 4.65
+        },
+        "uts_mpa": {
+          "exp": 1240,
+          "pred": 1181.5,
+          "delta": -58.5,
+          "apePct": 4.72
+        },
+        "elongation_pct": {
+          "exp": 6.8,
+          "pred": 9.13,
+          "delta": 2.33,
+          "apePct": 34.26
+        }
+      }
+    },
+    {
+      "paperId": "P-01",
+      "authorsYear": "Alegre et al. (2022)",
+      "process": "lpbf",
+      "condition": "HIPed (850°C / 200 MPa)",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 31.45,
+      "meanApePct": 9.54,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "UNMODELED_HEAT_TREATMENT"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 345,
+          "pred": 325.3,
+          "delta": -19.7,
+          "apePct": 5.71
+        },
+        "ys_mpa": {
+          "exp": 885,
+          "pred": 888.6,
+          "delta": 3.6,
+          "apePct": 0.41
+        },
+        "uts_mpa": {
+          "exp": 995,
+          "pred": 1000.7,
+          "delta": 5.7,
+          "apePct": 0.57
+        },
+        "elongation_pct": {
+          "exp": 14.5,
+          "pred": 9.94,
+          "delta": -4.56,
+          "apePct": 31.45
+        }
+      }
+    },
+    {
+      "paperId": "P-15",
+      "authorsYear": "Ganeriwala et al. (2019)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 30.71,
+      "meanApePct": 9.01,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 388,
+          "pred": 386.4,
+          "delta": -1.6,
+          "apePct": 0.41
+        },
+        "ys_mpa": {
+          "exp": 1070,
+          "pred": 1051.7,
+          "delta": -18.3,
+          "apePct": 1.71
+        },
+        "uts_mpa": {
+          "exp": 1240,
+          "pred": 1200.5,
+          "delta": -39.5,
+          "apePct": 3.19
+        },
+        "elongation_pct": {
+          "exp": 7,
+          "pred": 9.15,
+          "delta": 2.15,
+          "apePct": 30.71
+        }
+      }
+    },
+    {
+      "paperId": "P-75",
+      "authorsYear": "de Formanoir et al. (2016)",
+      "process": "other",
+      "condition": "Unreported",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 30.15,
+      "meanApePct": 15.69,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 915,
+          "pred": 1066.9,
+          "delta": 151.9,
+          "apePct": 16.6
+        },
+        "uts_mpa": {
+          "exp": 1050,
+          "pred": 1217.7,
+          "delta": 167.7,
+          "apePct": 15.97
+        },
+        "elongation_pct": {
+          "exp": 13.1,
+          "pred": 9.15,
+          "delta": -3.95,
+          "apePct": 30.15
+        },
+        "relative_density_pct": {
+          "exp": 99.89,
+          "pred": 99.86,
+          "delta": -0.03,
+          "apePct": 0.03
+        }
+      }
+    },
+    {
+      "paperId": "P-63",
+      "authorsYear": "Todaro et al. (2020)",
+      "process": "lpbf",
+      "condition": "Unreported",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 29.62,
+      "meanApePct": 14.01,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 935,
+          "pred": 1066.9,
+          "delta": 131.9,
+          "apePct": 14.11
+        },
+        "uts_mpa": {
+          "exp": 1085,
+          "pred": 1217.7,
+          "delta": 132.7,
+          "apePct": 12.23
+        },
+        "elongation_pct": {
+          "exp": 13,
+          "pred": 9.15,
+          "delta": -3.85,
+          "apePct": 29.62
+        },
+        "relative_density_pct": {
+          "exp": 99.92,
+          "pred": 99.86,
+          "delta": -0.06,
+          "apePct": 0.06
+        }
+      }
+    },
+    {
+      "paperId": "P-59",
+      "authorsYear": "Vrancken et al. (2012)",
+      "process": "lpbf",
+      "condition": "Unreported",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 28.52,
+      "meanApePct": 17.24,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 890,
+          "pred": 1066.9,
+          "delta": 176.9,
+          "apePct": 19.88
+        },
+        "uts_mpa": {
+          "exp": 1010,
+          "pred": 1217.7,
+          "delta": 207.7,
+          "apePct": 20.56
+        },
+        "elongation_pct": {
+          "exp": 12.8,
+          "pred": 9.15,
+          "delta": -3.65,
+          "apePct": 28.52
+        },
+        "relative_density_pct": {
+          "exp": 99.85,
+          "pred": 99.86,
+          "delta": 0.01,
+          "apePct": 0.01
+        }
+      }
+    },
+    {
+      "paperId": "P-40",
+      "authorsYear": "Nursyifaulkhair et al. (2019)",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 28.24,
+      "meanApePct": 8.37,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "EXTREME_ENERGY_OOD"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 335,
+          "pred": 338.8,
+          "delta": 3.8,
+          "apePct": 1.13
+        },
+        "ys_mpa": {
+          "exp": 875,
+          "pred": 886.6,
+          "delta": 11.6,
+          "apePct": 1.33
+        },
+        "uts_mpa": {
+          "exp": 965,
+          "pred": 991.6,
+          "delta": 26.6,
+          "apePct": 2.76
+        },
+        "elongation_pct": {
+          "exp": 8.5,
+          "pred": 10.9,
+          "delta": 2.4,
+          "apePct": 28.24
+        }
+      }
+    },
+    {
+      "paperId": "P-77",
+      "authorsYear": "Liu et al. (2021)",
+      "process": "other",
+      "condition": "Unreported",
+      "worstProperty": "ys_mpa",
+      "worstApePct": 25.52,
+      "meanApePct": 18.41,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 850,
+          "pred": 1066.9,
+          "delta": 216.9,
+          "apePct": 25.52
+        },
+        "uts_mpa": {
+          "exp": 975,
+          "pred": 1217.7,
+          "delta": 242.7,
+          "apePct": 24.89
+        },
+        "elongation_pct": {
+          "exp": 11.9,
+          "pred": 9.15,
+          "delta": -2.75,
+          "apePct": 23.11
+        },
+        "relative_density_pct": {
+          "exp": 99.74,
+          "pred": 99.86,
+          "delta": 0.12,
+          "apePct": 0.12
+        }
+      }
+    },
+    {
+      "paperId": "P-46",
+      "authorsYear": "Simonelli et al. (2020)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 22.95,
+      "meanApePct": 6.43,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 365,
+          "pred": 358.9,
+          "delta": -6.1,
+          "apePct": 1.67
+        },
+        "ys_mpa": {
+          "exp": 995,
+          "pred": 986.6,
+          "delta": -8.4,
+          "apePct": 0.84
+        },
+        "uts_mpa": {
+          "exp": 1120,
+          "pred": 1122.9,
+          "delta": 2.9,
+          "apePct": 0.26
+        },
+        "elongation_pct": {
+          "exp": 12.2,
+          "pred": 9.4,
+          "delta": -2.8,
+          "apePct": 22.95
+        }
+      }
+    },
+    {
+      "paperId": "P-07",
+      "authorsYear": "Bartsch et al. (2022)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 22.03,
+      "meanApePct": 6.68,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 380,
+          "pred": 378.5,
+          "delta": -1.5,
+          "apePct": 0.39
+        },
+        "ys_mpa": {
+          "exp": 1055,
+          "pred": 1033.7,
+          "delta": -21.3,
+          "apePct": 2.02
+        },
+        "uts_mpa": {
+          "exp": 1210,
+          "pred": 1182.3,
+          "delta": -27.7,
+          "apePct": 2.29
+        },
+        "elongation_pct": {
+          "exp": 7.4,
+          "pred": 9.03,
+          "delta": 1.63,
+          "apePct": 22.03
+        }
+      }
+    },
+    {
+      "paperId": "P-66",
+      "authorsYear": "Murr et al. (2010)",
+      "process": "other",
+      "condition": "Unreported",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 20.43,
+      "meanApePct": 13.7,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 910,
+          "pred": 1066.9,
+          "delta": 156.9,
+          "apePct": 17.24
+        },
+        "uts_mpa": {
+          "exp": 1040,
+          "pred": 1217.7,
+          "delta": 177.7,
+          "apePct": 17.09
+        },
+        "elongation_pct": {
+          "exp": 11.5,
+          "pred": 9.15,
+          "delta": -2.35,
+          "apePct": 20.43
+        },
+        "relative_density_pct": {
+          "exp": 99.82,
+          "pred": 99.86,
+          "delta": 0.04,
+          "apePct": 0.04
+        }
+      }
+    },
+    {
+      "paperId": "P-06",
+      "authorsYear": "Barriobero-Vila et al. (2017)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 19.91,
+      "meanApePct": 6.33,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 355,
+          "pred": 359.1,
+          "delta": 4.1,
+          "apePct": 1.15
+        },
+        "ys_mpa": {
+          "exp": 980,
+          "pred": 997.4,
+          "delta": 17.4,
+          "apePct": 1.78
+        },
+        "uts_mpa": {
+          "exp": 1110,
+          "pred": 1137.6,
+          "delta": 27.6,
+          "apePct": 2.49
+        },
+        "elongation_pct": {
+          "exp": 11.5,
+          "pred": 9.21,
+          "delta": -2.29,
+          "apePct": 19.91
+        }
+      }
+    },
+    {
+      "paperId": "P-60",
+      "authorsYear": "Vilaro et al. (2011)",
+      "process": "lpbf",
+      "condition": "Unreported",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 18.3,
+      "meanApePct": 12.58,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 920,
+          "pred": 1066.9,
+          "delta": 146.9,
+          "apePct": 15.97
+        },
+        "uts_mpa": {
+          "exp": 1050,
+          "pred": 1217.7,
+          "delta": 167.7,
+          "apePct": 15.97
+        },
+        "elongation_pct": {
+          "exp": 11.2,
+          "pred": 9.15,
+          "delta": -2.05,
+          "apePct": 18.3
+        },
+        "relative_density_pct": {
+          "exp": 99.8,
+          "pred": 99.86,
+          "delta": 0.06,
+          "apePct": 0.06
+        }
+      }
+    },
+    {
+      "paperId": "P-55",
+      "authorsYear": "Coen et al. (2022)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 17.31,
+      "meanApePct": 5.35,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 385,
+          "pred": 380.3,
+          "delta": -4.7,
+          "apePct": 1.22
+        },
+        "ys_mpa": {
+          "exp": 1040,
+          "pred": 1034.7,
+          "delta": -5.3,
+          "apePct": 0.51
+        },
+        "uts_mpa": {
+          "exp": 1210,
+          "pred": 1181.3,
+          "delta": -28.7,
+          "apePct": 2.37
+        },
+        "elongation_pct": {
+          "exp": 7.8,
+          "pred": 9.15,
+          "delta": 1.35,
+          "apePct": 17.31
+        }
+      }
+    },
+    {
+      "paperId": "P-71",
+      "authorsYear": "Murr et al. (2012)",
+      "process": "other",
+      "condition": "Unreported",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 16.82,
+      "meanApePct": 11.77,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 925,
+          "pred": 1066.9,
+          "delta": 141.9,
+          "apePct": 15.34
+        },
+        "uts_mpa": {
+          "exp": 1060,
+          "pred": 1217.7,
+          "delta": 157.7,
+          "apePct": 14.88
+        },
+        "elongation_pct": {
+          "exp": 11,
+          "pred": 9.15,
+          "delta": -1.85,
+          "apePct": 16.82
+        },
+        "relative_density_pct": {
+          "exp": 99.81,
+          "pred": 99.86,
+          "delta": 0.05,
+          "apePct": 0.05
+        }
+      }
+    },
+    {
+      "paperId": "P-18",
+      "authorsYear": "Gryaznov et al. (2023)",
+      "process": "lpbf",
+      "condition": "annealed (750°C 2h)",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 14.83,
+      "meanApePct": 5.43,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 355,
+          "pred": 346.1,
+          "delta": -8.9,
+          "apePct": 2.51
+        },
+        "ys_mpa": {
+          "exp": 950,
+          "pred": 928.8,
+          "delta": -21.2,
+          "apePct": 2.23
+        },
+        "uts_mpa": {
+          "exp": 1045,
+          "pred": 1022.6,
+          "delta": -22.4,
+          "apePct": 2.14
+        },
+        "elongation_pct": {
+          "exp": 12,
+          "pred": 13.78,
+          "delta": 1.78,
+          "apePct": 14.83
+        }
+      }
+    },
+    {
+      "paperId": "P-58",
+      "authorsYear": "Guo et al. (2025)",
+      "process": "waam",
+      "condition": "interpass-rolled",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 14.55,
+      "meanApePct": 7.02,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "UNMODELED_HEAT_TREATMENT"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 325,
+          "pred": 311.1,
+          "delta": -13.9,
+          "apePct": 4.28
+        },
+        "ys_mpa": {
+          "exp": 865,
+          "pred": 834.6,
+          "delta": -30.4,
+          "apePct": 3.51
+        },
+        "uts_mpa": {
+          "exp": 975,
+          "pred": 919.2,
+          "delta": -55.8,
+          "apePct": 5.72
+        },
+        "elongation_pct": {
+          "exp": 14.5,
+          "pred": 12.39,
+          "delta": -2.11,
+          "apePct": 14.55
+        }
+      }
+    },
+    {
+      "paperId": "P-54",
+      "authorsYear": "Yang et al. (2023)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 14.37,
+      "meanApePct": 5.2,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 377.5,
+          "delta": -4.5,
+          "apePct": 1.18
+        },
+        "ys_mpa": {
+          "exp": 1045,
+          "pred": 1026.9,
+          "delta": -18.1,
+          "apePct": 1.73
+        },
+        "uts_mpa": {
+          "exp": 1215,
+          "pred": 1172.5,
+          "delta": -42.5,
+          "apePct": 3.5
+        },
+        "elongation_pct": {
+          "exp": 8,
+          "pred": 9.15,
+          "delta": 1.15,
+          "apePct": 14.37
+        }
+      }
+    },
+    {
+      "paperId": "P-67",
+      "authorsYear": "Tammas-Williams et al. (2015)",
+      "process": "other",
+      "condition": "Unreported",
+      "worstProperty": "uts_mpa",
+      "worstApePct": 13.8,
+      "meanApePct": 9.41,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 940,
+          "pred": 1066.9,
+          "delta": 126.9,
+          "apePct": 13.5
+        },
+        "uts_mpa": {
+          "exp": 1070,
+          "pred": 1217.7,
+          "delta": 147.7,
+          "apePct": 13.8
+        },
+        "elongation_pct": {
+          "exp": 10.2,
+          "pred": 9.15,
+          "delta": -1.05,
+          "apePct": 10.29
+        },
+        "relative_density_pct": {
+          "exp": 99.83,
+          "pred": 99.86,
+          "delta": 0.03,
+          "apePct": 0.03
+        }
+      }
+    },
+    {
+      "paperId": "P-56",
+      "authorsYear": "Bontha et al. (2009)",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 13.29,
+      "meanApePct": 4.61,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "EXTREME_ENERGY_OOD"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 375,
+          "pred": 370.8,
+          "delta": -4.2,
+          "apePct": 1.12
+        },
+        "ys_mpa": {
+          "exp": 1010,
+          "pred": 1003.5,
+          "delta": -6.5,
+          "apePct": 0.64
+        },
+        "uts_mpa": {
+          "exp": 1180,
+          "pred": 1140.1,
+          "delta": -39.9,
+          "apePct": 3.38
+        },
+        "elongation_pct": {
+          "exp": 8.2,
+          "pred": 9.29,
+          "delta": 1.09,
+          "apePct": 13.29
+        }
+      }
+    },
+    {
+      "paperId": "P-62",
+      "authorsYear": "Gorsse et al. (2017)",
+      "process": "other",
+      "condition": "Unreported",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 12.86,
+      "meanApePct": 8.48,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 950,
+          "pred": 1066.9,
+          "delta": 116.9,
+          "apePct": 12.31
+        },
+        "uts_mpa": {
+          "exp": 1120,
+          "pred": 1217.7,
+          "delta": 97.7,
+          "apePct": 8.72
+        },
+        "elongation_pct": {
+          "exp": 10.5,
+          "pred": 9.15,
+          "delta": -1.35,
+          "apePct": 12.86
+        },
+        "relative_density_pct": {
+          "exp": 99.9,
+          "pred": 99.86,
+          "delta": -0.04,
+          "apePct": 0.04
+        }
+      }
+    },
+    {
+      "paperId": "P-50",
+      "authorsYear": "Wang et al. (2025)",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 11.93,
+      "meanApePct": 3.49,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 335,
+          "pred": 330.7,
+          "delta": -4.3,
+          "apePct": 1.28
+        },
+        "ys_mpa": {
+          "exp": 860,
+          "pred": 855.7,
+          "delta": -4.3,
+          "apePct": 0.5
+        },
+        "uts_mpa": {
+          "exp": 950,
+          "pred": 947.5,
+          "delta": -2.5,
+          "apePct": 0.26
+        },
+        "elongation_pct": {
+          "exp": 13.5,
+          "pred": 11.89,
+          "delta": -1.61,
+          "apePct": 11.93
+        }
+      }
+    },
+    {
+      "paperId": "P-37",
+      "authorsYear": "Moon et al. (2021)",
+      "process": "lpbf",
+      "condition": "as-built vs polished",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 11.73,
+      "meanApePct": 3.75,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "UNMODELED_HEAT_TREATMENT"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 378,
+          "pred": 381.7,
+          "delta": 3.7,
+          "apePct": 0.98
+        },
+        "ys_mpa": {
+          "exp": 1030,
+          "pred": 1040.3,
+          "delta": 10.3,
+          "apePct": 1
+        },
+        "uts_mpa": {
+          "exp": 1180,
+          "pred": 1195.2,
+          "delta": 15.2,
+          "apePct": 1.29
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.38,
+          "delta": 0.88,
+          "apePct": 11.73
+        }
+      }
+    },
+    {
+      "paperId": "P-72",
+      "authorsYear": "Cain et al. (2015)",
+      "process": "lpbf",
+      "condition": "Unreported",
+      "worstProperty": "ys_mpa",
+      "worstApePct": 11.72,
+      "meanApePct": 6.65,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 955,
+          "pred": 1066.9,
+          "delta": 111.9,
+          "apePct": 11.72
+        },
+        "uts_mpa": {
+          "exp": 1125,
+          "pred": 1217.7,
+          "delta": 92.7,
+          "apePct": 8.24
+        },
+        "elongation_pct": {
+          "exp": 9.8,
+          "pred": 9.15,
+          "delta": -0.65,
+          "apePct": 6.63
+        },
+        "relative_density_pct": {
+          "exp": 99.85,
+          "pred": 99.86,
+          "delta": 0.01,
+          "apePct": 0.01
+        }
+      }
+    },
+    {
+      "paperId": "P-04",
+      "authorsYear": "Awan et al. (2026)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 11.59,
+      "meanApePct": 4.37,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 390,
+          "pred": 384.1,
+          "delta": -5.9,
+          "apePct": 1.51
+        },
+        "ys_mpa": {
+          "exp": 1060,
+          "pred": 1045.3,
+          "delta": -14.7,
+          "apePct": 1.39
+        },
+        "uts_mpa": {
+          "exp": 1230,
+          "pred": 1193.3,
+          "delta": -36.7,
+          "apePct": 2.98
+        },
+        "elongation_pct": {
+          "exp": 8.2,
+          "pred": 9.15,
+          "delta": 0.95,
+          "apePct": 11.59
+        }
+      }
+    },
+    {
+      "paperId": "P-70",
+      "authorsYear": "Ly et al. (2017)",
+      "process": "lpbf",
+      "condition": "Unreported",
+      "worstProperty": "ys_mpa",
+      "worstApePct": 11.14,
+      "meanApePct": 5.39,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 960,
+          "pred": 1066.9,
+          "delta": 106.9,
+          "apePct": 11.14
+        },
+        "uts_mpa": {
+          "exp": 1130,
+          "pred": 1217.7,
+          "delta": 87.7,
+          "apePct": 7.76
+        },
+        "elongation_pct": {
+          "exp": 9.4,
+          "pred": 9.15,
+          "delta": -0.25,
+          "apePct": 2.66
+        },
+        "relative_density_pct": {
+          "exp": 99.87,
+          "pred": 99.86,
+          "delta": -0.01,
+          "apePct": 0.01
+        }
+      }
+    },
+    {
+      "paperId": "P-78",
+      "authorsYear": "Cunningham et al. (2017)",
+      "process": "lpbf",
+      "condition": "Unreported",
+      "worstProperty": "ys_mpa",
+      "worstApePct": 11.14,
+      "meanApePct": 5.53,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 960,
+          "pred": 1066.9,
+          "delta": 106.9,
+          "apePct": 11.14
+        },
+        "uts_mpa": {
+          "exp": 1135,
+          "pred": 1217.7,
+          "delta": 82.7,
+          "apePct": 7.29
+        },
+        "elongation_pct": {
+          "exp": 9.5,
+          "pred": 9.15,
+          "delta": -0.35,
+          "apePct": 3.68
+        },
+        "relative_density_pct": {
+          "exp": 99.88,
+          "pred": 99.86,
+          "delta": -0.02,
+          "apePct": 0.02
+        }
+      }
+    },
+    {
+      "paperId": "P-65",
+      "authorsYear": "Zhao et al. (2017)",
+      "process": "lpbf",
+      "condition": "Unreported",
+      "worstProperty": "ys_mpa",
+      "worstApePct": 10.56,
+      "meanApePct": 4.6,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 965,
+          "pred": 1066.9,
+          "delta": 101.9,
+          "apePct": 10.56
+        },
+        "uts_mpa": {
+          "exp": 1135,
+          "pred": 1217.7,
+          "delta": 82.7,
+          "apePct": 7.29
+        },
+        "elongation_pct": {
+          "exp": 9.1,
+          "pred": 9.15,
+          "delta": 0.05,
+          "apePct": 0.55
+        },
+        "relative_density_pct": {
+          "exp": 99.86,
+          "pred": 99.86,
+          "delta": 0,
+          "apePct": 0
+        }
+      }
+    },
+    {
+      "paperId": "P-73",
+      "authorsYear": "Dilip et al. (2017)",
+      "process": "lpbf",
+      "condition": "Unreported",
+      "worstProperty": "ys_mpa",
+      "worstApePct": 10.56,
+      "meanApePct": 4.49,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 965,
+          "pred": 1066.9,
+          "delta": 101.9,
+          "apePct": 10.56
+        },
+        "uts_mpa": {
+          "exp": 1140,
+          "pred": 1217.7,
+          "delta": 77.7,
+          "apePct": 6.82
+        },
+        "elongation_pct": {
+          "exp": 9.2,
+          "pred": 9.15,
+          "delta": -0.05,
+          "apePct": 0.54
+        },
+        "relative_density_pct": {
+          "exp": 99.84,
+          "pred": 99.86,
+          "delta": 0.02,
+          "apePct": 0.02
+        }
+      }
+    },
+    {
+      "paperId": "P-13",
+      "authorsYear": "Emminghaus et al. (2022)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-14",
+      "authorsYear": "Fereiduni et al. (2023)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-16",
+      "authorsYear": "Ghosh & Choi (2018)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-17",
+      "authorsYear": "Goettgens et al. (2023)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-23",
+      "authorsYear": "Koushik et al. (2023)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-25",
+      "authorsYear": "Le Roux et al. (2025)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-29",
+      "authorsYear": "Linde et al. (2026)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-30",
+      "authorsYear": "Lu et al. (2019)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-31",
+      "authorsYear": "Lu et al. (2020)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-32",
+      "authorsYear": "Luo et al. (2025)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-35",
+      "authorsYear": "Merkibayev et al. (2026)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-38",
+      "authorsYear": "Moridi et al. (2019)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-39",
+      "authorsYear": "Nitzler et al. (2021)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-45",
+      "authorsYear": "Salikhyanov et al. (2021)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-47",
+      "authorsYear": "Sinclair et al. (2021)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-49",
+      "authorsYear": "Vayssette et al. (2018)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 10.4,
+      "meanApePct": 3.3,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 380.2,
+          "delta": -1.8,
+          "apePct": 0.47
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1043.2,
+          "delta": -6.8,
+          "apePct": 0.65
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1199.6,
+          "delta": -20.4,
+          "apePct": 1.67
+        },
+        "elongation_pct": {
+          "exp": 7.5,
+          "pred": 8.28,
+          "delta": 0.78,
+          "apePct": 10.4
+        }
+      }
+    },
+    {
+      "paperId": "P-68",
+      "authorsYear": "Facchini et al. (2010)",
+      "process": "lpbf",
+      "condition": "Unreported",
+      "worstProperty": "ys_mpa",
+      "worstApePct": 9.99,
+      "meanApePct": 5.1,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 970,
+          "pred": 1066.9,
+          "delta": 96.9,
+          "apePct": 9.99
+        },
+        "uts_mpa": {
+          "exp": 1145,
+          "pred": 1217.7,
+          "delta": 72.7,
+          "apePct": 6.35
+        },
+        "elongation_pct": {
+          "exp": 8.8,
+          "pred": 9.15,
+          "delta": 0.35,
+          "apePct": 3.98
+        },
+        "relative_density_pct": {
+          "exp": 99.78,
+          "pred": 99.86,
+          "delta": 0.08,
+          "apePct": 0.08
+        }
+      }
+    },
+    {
+      "paperId": "P-74",
+      "authorsYear": "Simonelli et al. (2015)",
+      "process": "lpbf",
+      "condition": "Unreported",
+      "worstProperty": "ys_mpa",
+      "worstApePct": 9.43,
+      "meanApePct": 4.53,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 975,
+          "pred": 1066.9,
+          "delta": 91.9,
+          "apePct": 9.43
+        },
+        "uts_mpa": {
+          "exp": 1150,
+          "pred": 1217.7,
+          "delta": 67.7,
+          "apePct": 5.89
+        },
+        "elongation_pct": {
+          "exp": 8.9,
+          "pred": 9.15,
+          "delta": 0.25,
+          "apePct": 2.81
+        },
+        "relative_density_pct": {
+          "exp": 99.86,
+          "pred": 99.86,
+          "delta": 0,
+          "apePct": 0
+        }
+      }
+    },
+    {
+      "paperId": "P-26",
+      "authorsYear": "Lee et al. (2017)",
+      "process": "lpbf",
+      "condition": "annealed (950°C 2h)",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 9.34,
+      "meanApePct": 3.42,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "UNMODELED_HEAT_TREATMENT"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 335,
+          "pred": 327,
+          "delta": -8,
+          "apePct": 2.39
+        },
+        "ys_mpa": {
+          "exp": 865,
+          "pred": 877.1,
+          "delta": 12.1,
+          "apePct": 1.4
+        },
+        "uts_mpa": {
+          "exp": 960,
+          "pred": 965.3,
+          "delta": 5.3,
+          "apePct": 0.55
+        },
+        "elongation_pct": {
+          "exp": 15.2,
+          "pred": 13.78,
+          "delta": -1.42,
+          "apePct": 9.34
+        }
+      }
+    },
+    {
+      "paperId": "P-61",
+      "authorsYear": "Simonelli et al. (2014)",
+      "process": "lpbf",
+      "condition": "Unreported",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 8.93,
+      "meanApePct": 5.7,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 980,
+          "pred": 1066.9,
+          "delta": 86.9,
+          "apePct": 8.87
+        },
+        "uts_mpa": {
+          "exp": 1160,
+          "pred": 1217.7,
+          "delta": 57.7,
+          "apePct": 4.97
+        },
+        "elongation_pct": {
+          "exp": 8.4,
+          "pred": 9.15,
+          "delta": 0.75,
+          "apePct": 8.93
+        },
+        "relative_density_pct": {
+          "exp": 99.88,
+          "pred": 99.86,
+          "delta": -0.02,
+          "apePct": 0.02
+        }
+      }
+    },
+    {
+      "paperId": "P-76",
+      "authorsYear": "Simonelli et al. (2014)",
+      "process": "lpbf",
+      "condition": "Unreported",
+      "worstProperty": "ys_mpa",
+      "worstApePct": 8.87,
+      "meanApePct": 5.18,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 980,
+          "pred": 1066.9,
+          "delta": 86.9,
+          "apePct": 8.87
+        },
+        "uts_mpa": {
+          "exp": 1155,
+          "pred": 1217.7,
+          "delta": 62.7,
+          "apePct": 5.43
+        },
+        "elongation_pct": {
+          "exp": 8.6,
+          "pred": 9.15,
+          "delta": 0.55,
+          "apePct": 6.4
+        },
+        "relative_density_pct": {
+          "exp": 99.87,
+          "pred": 99.86,
+          "delta": -0.01,
+          "apePct": 0.01
+        }
+      }
+    },
+    {
+      "paperId": "P-03",
+      "authorsYear": "Asherloo et al. (2022)",
+      "process": "lpbf",
+      "condition": "stress-relieved",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 8.16,
+      "meanApePct": 3.31,
+      "rootCauseTags": [],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 370,
+          "pred": 366.2,
+          "delta": -3.8,
+          "apePct": 1.03
+        },
+        "ys_mpa": {
+          "exp": 1010,
+          "pred": 995.9,
+          "delta": -14.1,
+          "apePct": 1.4
+        },
+        "uts_mpa": {
+          "exp": 1175,
+          "pred": 1143.8,
+          "delta": -31.2,
+          "apePct": 2.66
+        },
+        "elongation_pct": {
+          "exp": 7.6,
+          "pred": 8.22,
+          "delta": 0.62,
+          "apePct": 8.16
+        }
+      }
+    },
+    {
+      "paperId": "P-33",
+      "authorsYear": "Mahmud et al. (2021)",
+      "process": "lpbf",
+      "condition": "stress-relieved",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 6.64,
+      "meanApePct": 3.21,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 348,
+          "pred": 341.8,
+          "delta": -6.2,
+          "apePct": 1.78
+        },
+        "ys_mpa": {
+          "exp": 945,
+          "pred": 923.4,
+          "delta": -21.6,
+          "apePct": 2.29
+        },
+        "uts_mpa": {
+          "exp": 1060,
+          "pred": 1037.5,
+          "delta": -22.5,
+          "apePct": 2.12
+        },
+        "elongation_pct": {
+          "exp": 12.8,
+          "pred": 11.95,
+          "delta": -0.85,
+          "apePct": 6.64
+        }
+      }
+    },
+    {
+      "paperId": "P-53",
+      "authorsYear": "Chen et al. (2016)",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 6.64,
+      "meanApePct": 3.71,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "EXTREME_ENERGY_OOD"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 350,
+          "pred": 345.8,
+          "delta": -4.2,
+          "apePct": 1.2
+        },
+        "ys_mpa": {
+          "exp": 890,
+          "pred": 911.7,
+          "delta": 21.7,
+          "apePct": 2.44
+        },
+        "uts_mpa": {
+          "exp": 980,
+          "pred": 1024.6,
+          "delta": 44.6,
+          "apePct": 4.55
+        },
+        "elongation_pct": {
+          "exp": 11,
+          "pred": 10.27,
+          "delta": -0.73,
+          "apePct": 6.64
+        }
+      }
+    },
+    {
+      "paperId": "P-57",
+      "authorsYear": "Bontha et al. (2006)",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "worstProperty": "uts_mpa",
+      "worstApePct": 6.64,
+      "meanApePct": 5.58,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "EXTREME_ENERGY_OOD"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 340,
+          "pred": 324.1,
+          "delta": -15.9,
+          "apePct": 4.68
+        },
+        "ys_mpa": {
+          "exp": 890,
+          "pred": 850.1,
+          "delta": -39.9,
+          "apePct": 4.48
+        },
+        "uts_mpa": {
+          "exp": 1020,
+          "pred": 952.3,
+          "delta": -67.7,
+          "apePct": 6.64
+        },
+        "elongation_pct": {
+          "exp": 9.8,
+          "pred": 10.44,
+          "delta": 0.64,
+          "apePct": 6.53
+        }
+      }
+    },
+    {
+      "paperId": "P-24",
+      "authorsYear": "Lan et al. (2020)",
+      "process": "lpbf",
+      "condition": "Laser Shock Peened",
+      "worstProperty": "hardness_hv",
+      "worstApePct": 6.47,
+      "meanApePct": 3.03,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "UNMODELED_HEAT_TREATMENT"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 425,
+          "pred": 397.5,
+          "delta": -27.5,
+          "apePct": 6.47
+        },
+        "ys_mpa": {
+          "exp": 1120,
+          "pred": 1083.4,
+          "delta": -36.6,
+          "apePct": 3.27
+        },
+        "uts_mpa": {
+          "exp": 1260,
+          "pred": 1240,
+          "delta": -20,
+          "apePct": 1.59
+        },
+        "elongation_pct": {
+          "exp": 8.8,
+          "pred": 8.87,
+          "delta": 0.07,
+          "apePct": 0.8
+        }
+      }
+    },
+    {
+      "paperId": "P-42",
+      "authorsYear": "Obeidi et al. (2022)",
+      "process": "lpbf",
+      "condition": "Laser Polished",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 6.24,
+      "meanApePct": 4.29,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION",
+        "UNMODELED_HEAT_TREATMENT"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 380,
+          "pred": 400.2,
+          "delta": 20.2,
+          "apePct": 5.32
+        },
+        "ys_mpa": {
+          "exp": 1060,
+          "pred": 1093.5,
+          "delta": 33.5,
+          "apePct": 3.16
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1249.8,
+          "delta": 29.8,
+          "apePct": 2.44
+        },
+        "elongation_pct": {
+          "exp": 8.5,
+          "pred": 9.03,
+          "delta": 0.53,
+          "apePct": 6.24
+        }
+      }
+    },
+    {
+      "paperId": "P-12",
+      "authorsYear": "Díaz et al. (2022)",
+      "process": "lpbf",
+      "condition": "stress-relieved",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 6.12,
+      "meanApePct": 2.82,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 365,
+          "pred": 367.8,
+          "delta": 2.8,
+          "apePct": 0.77
+        },
+        "ys_mpa": {
+          "exp": 990,
+          "pred": 1011.3,
+          "delta": 21.3,
+          "apePct": 2.15
+        },
+        "uts_mpa": {
+          "exp": 1130,
+          "pred": 1155.1,
+          "delta": 25.1,
+          "apePct": 2.22
+        },
+        "elongation_pct": {
+          "exp": 8.5,
+          "pred": 9.02,
+          "delta": 0.52,
+          "apePct": 6.12
+        }
+      }
+    },
+    {
+      "paperId": "P-64",
+      "authorsYear": "Bermingham et al. (2019)",
+      "process": "waam",
+      "condition": "Unreported",
+      "worstProperty": "uts_mpa",
+      "worstApePct": 5.66,
+      "meanApePct": 2.29,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 855,
+          "pred": 839.4,
+          "delta": -15.6,
+          "apePct": 1.82
+        },
+        "uts_mpa": {
+          "exp": 980,
+          "pred": 924.5,
+          "delta": -55.5,
+          "apePct": 5.66
+        },
+        "elongation_pct": {
+          "exp": 12.6,
+          "pred": 12.39,
+          "delta": -0.21,
+          "apePct": 1.67
+        },
+        "relative_density_pct": {
+          "exp": 99.75,
+          "pred": 99.77,
+          "delta": 0.02,
+          "apePct": 0.02
+        }
+      }
+    },
+    {
+      "paperId": "P-05",
+      "authorsYear": "Banerjee et al. (2025)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 4.79,
+      "meanApePct": 1.59,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 382,
+          "pred": 382.4,
+          "delta": 0.4,
+          "apePct": 0.1
+        },
+        "ys_mpa": {
+          "exp": 1040,
+          "pred": 1035.9,
+          "delta": -4.1,
+          "apePct": 0.39
+        },
+        "uts_mpa": {
+          "exp": 1205,
+          "pred": 1191.9,
+          "delta": -13.1,
+          "apePct": 1.09
+        },
+        "elongation_pct": {
+          "exp": 7.1,
+          "pred": 7.44,
+          "delta": 0.34,
+          "apePct": 4.79
+        }
+      }
+    },
+    {
+      "paperId": "P-19",
+      "authorsYear": "Halder et al. (2024)",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 4.72,
+      "meanApePct": 2.02,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 325,
+          "pred": 321.2,
+          "delta": -3.8,
+          "apePct": 1.17
+        },
+        "ys_mpa": {
+          "exp": 840,
+          "pred": 830.7,
+          "delta": -9.3,
+          "apePct": 1.11
+        },
+        "uts_mpa": {
+          "exp": 935,
+          "pred": 925.1,
+          "delta": -9.9,
+          "apePct": 1.06
+        },
+        "elongation_pct": {
+          "exp": 12.5,
+          "pred": 11.91,
+          "delta": -0.59,
+          "apePct": 4.72
+        }
+      }
+    },
+    {
+      "paperId": "P-41",
+      "authorsYear": "Oshiro et al. (2026)",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 4.55,
+      "meanApePct": 2.2,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 320,
+          "pred": 324.1,
+          "delta": 4.1,
+          "apePct": 1.28
+        },
+        "ys_mpa": {
+          "exp": 825,
+          "pred": 837.8,
+          "delta": 12.8,
+          "apePct": 1.55
+        },
+        "uts_mpa": {
+          "exp": 920,
+          "pred": 933,
+          "delta": 13,
+          "apePct": 1.41
+        },
+        "elongation_pct": {
+          "exp": 11.2,
+          "pred": 11.71,
+          "delta": 0.51,
+          "apePct": 4.55
+        }
+      }
+    },
+    {
+      "paperId": "P-11",
+      "authorsYear": "Dhekne et al. (2025)",
+      "process": "lpbf",
+      "condition": "annealed (800°C 2h)",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 3.44,
+      "meanApePct": 1.55,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 352,
+          "pred": 345.3,
+          "delta": -6.7,
+          "apePct": 1.9
+        },
+        "ys_mpa": {
+          "exp": 935,
+          "pred": 928.6,
+          "delta": -6.4,
+          "apePct": 0.68
+        },
+        "uts_mpa": {
+          "exp": 1030,
+          "pred": 1028.1,
+          "delta": -1.9,
+          "apePct": 0.18
+        },
+        "elongation_pct": {
+          "exp": 12.8,
+          "pred": 13.24,
+          "delta": 0.44,
+          "apePct": 3.44
+        }
+      }
+    },
+    {
+      "paperId": "P-08",
+      "authorsYear": "Cao et al. (2021)",
+      "process": "lpbf",
+      "condition": "annealed (840°C 2h)",
+      "worstProperty": "hardness_hv",
+      "worstApePct": 3.14,
+      "meanApePct": 1.69,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 350,
+          "pred": 339,
+          "delta": -11,
+          "apePct": 3.14
+        },
+        "ys_mpa": {
+          "exp": 920,
+          "pred": 911.3,
+          "delta": -8.7,
+          "apePct": 0.95
+        },
+        "uts_mpa": {
+          "exp": 1010,
+          "pred": 1009.3,
+          "delta": -0.7,
+          "apePct": 0.07
+        },
+        "elongation_pct": {
+          "exp": 13.5,
+          "pred": 13.15,
+          "delta": -0.35,
+          "apePct": 2.59
+        }
+      }
+    },
+    {
+      "paperId": "P-69",
+      "authorsYear": "Heigel et al. (2015)",
+      "process": "ded-laser",
+      "condition": "Unreported",
+      "worstProperty": "uts_mpa",
+      "worstApePct": 3.14,
+      "meanApePct": 1.41,
+      "rootCauseTags": [
+        "UNEXTRACTED_OR_ZERO_PARAMS",
+        "CATALOG_HYGIENE_FLAG",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "ys_mpa": {
+          "exp": 840,
+          "pred": 842,
+          "delta": 2,
+          "apePct": 0.24
+        },
+        "uts_mpa": {
+          "exp": 965,
+          "pred": 934.7,
+          "delta": -30.3,
+          "apePct": 3.14
+        },
+        "elongation_pct": {
+          "exp": 12,
+          "pred": 11.74,
+          "delta": -0.26,
+          "apePct": 2.17
+        },
+        "relative_density_pct": {
+          "exp": 99.68,
+          "pred": 99.78,
+          "delta": 0.1,
+          "apePct": 0.1
+        }
+      }
+    },
+    {
+      "paperId": "P-02",
+      "authorsYear": "Artzt et al. (2020)",
+      "process": "lpbf",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 3.09,
+      "meanApePct": 1.49,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 385,
+          "pred": 379.1,
+          "delta": -5.9,
+          "apePct": 1.53
+        },
+        "ys_mpa": {
+          "exp": 1050,
+          "pred": 1048.2,
+          "delta": -1.8,
+          "apePct": 0.17
+        },
+        "uts_mpa": {
+          "exp": 1220,
+          "pred": 1205.5,
+          "delta": -14.5,
+          "apePct": 1.19
+        },
+        "elongation_pct": {
+          "exp": 6.8,
+          "pred": 6.59,
+          "delta": -0.21,
+          "apePct": 3.09
+        }
+      }
+    },
+    {
+      "paperId": "P-21",
+      "authorsYear": "Kallel et al. (2019)",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 2.25,
+      "meanApePct": 0.8,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 330,
+          "pred": 329.8,
+          "delta": -0.2,
+          "apePct": 0.06
+        },
+        "ys_mpa": {
+          "exp": 850,
+          "pred": 853.9,
+          "delta": 3.9,
+          "apePct": 0.46
+        },
+        "uts_mpa": {
+          "exp": 945,
+          "pred": 949.1,
+          "delta": 4.1,
+          "apePct": 0.43
+        },
+        "elongation_pct": {
+          "exp": 12,
+          "pred": 11.73,
+          "delta": -0.27,
+          "apePct": 2.25
+        }
+      }
+    },
+    {
+      "paperId": "P-22",
+      "authorsYear": "Kim et al. (2026)",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 2.25,
+      "meanApePct": 0.8,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 330,
+          "pred": 329.8,
+          "delta": -0.2,
+          "apePct": 0.06
+        },
+        "ys_mpa": {
+          "exp": 850,
+          "pred": 853.9,
+          "delta": 3.9,
+          "apePct": 0.46
+        },
+        "uts_mpa": {
+          "exp": 945,
+          "pred": 949.1,
+          "delta": 4.1,
+          "apePct": 0.43
+        },
+        "elongation_pct": {
+          "exp": 12,
+          "pred": 11.73,
+          "delta": -0.27,
+          "apePct": 2.25
+        }
+      }
+    },
+    {
+      "paperId": "P-27",
+      "authorsYear": "Lee et al. (2018)",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "worstProperty": "elongation_pct",
+      "worstApePct": 2.25,
+      "meanApePct": 0.8,
+      "rootCauseTags": [
+        "PLACEHOLDER_MECH_VALUES",
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 330,
+          "pred": 329.8,
+          "delta": -0.2,
+          "apePct": 0.06
+        },
+        "ys_mpa": {
+          "exp": 850,
+          "pred": 853.9,
+          "delta": 3.9,
+          "apePct": 0.46
+        },
+        "uts_mpa": {
+          "exp": 945,
+          "pred": 949.1,
+          "delta": 4.1,
+          "apePct": 0.43
+        },
+        "elongation_pct": {
+          "exp": 12,
+          "pred": 11.73,
+          "delta": -0.27,
+          "apePct": 2.25
+        }
+      }
+    },
+    {
+      "paperId": "P-44",
+      "authorsYear": "Rauch et al. (2020)",
+      "process": "ded-laser",
+      "condition": "stress-relieved",
+      "worstProperty": "hardness_hv",
+      "worstApePct": 2.03,
+      "meanApePct": 0.84,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 335,
+          "pred": 328.2,
+          "delta": -6.8,
+          "apePct": 2.03
+        },
+        "ys_mpa": {
+          "exp": 850,
+          "pred": 855.8,
+          "delta": 5.8,
+          "apePct": 0.68
+        },
+        "uts_mpa": {
+          "exp": 955,
+          "pred": 958.9,
+          "delta": 3.9,
+          "apePct": 0.41
+        },
+        "elongation_pct": {
+          "exp": 11.8,
+          "pred": 11.83,
+          "delta": 0.03,
+          "apePct": 0.25
+        }
+      }
+    },
+    {
+      "paperId": "P-48",
+      "authorsYear": "Sutherland et al. (2026)",
+      "process": "ded-laser",
+      "condition": "stress-relieved",
+      "worstProperty": "hardness_hv",
+      "worstApePct": 1.79,
+      "meanApePct": 1.24,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 330,
+          "pred": 324.1,
+          "delta": -5.9,
+          "apePct": 1.79
+        },
+        "ys_mpa": {
+          "exp": 845,
+          "pred": 837.5,
+          "delta": -7.5,
+          "apePct": 0.89
+        },
+        "uts_mpa": {
+          "exp": 945,
+          "pred": 937.6,
+          "delta": -7.4,
+          "apePct": 0.78
+        },
+        "elongation_pct": {
+          "exp": 12,
+          "pred": 12.18,
+          "delta": 0.18,
+          "apePct": 1.5
+        }
+      }
+    },
+    {
+      "paperId": "P-51",
+      "authorsYear": "Wang et al. (2026)",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "worstProperty": "uts_mpa",
+      "worstApePct": 0.42,
+      "meanApePct": 0.21,
+      "rootCauseTags": [
+        "MISSING_OXYGEN_OR_ORIENTATION"
+      ],
+      "metricErrors": {
+        "hardness_hv": {
+          "exp": 322,
+          "pred": 322.3,
+          "delta": 0.3,
+          "apePct": 0.09
+        },
+        "ys_mpa": {
+          "exp": 830,
+          "pred": 831.3,
+          "delta": 1.3,
+          "apePct": 0.16
+        },
+        "uts_mpa": {
+          "exp": 925,
+          "pred": 921.1,
+          "delta": -3.9,
+          "apePct": 0.42
+        },
+        "elongation_pct": {
+          "exp": 12,
+          "pred": 11.98,
+          "delta": -0.02,
+          "apePct": 0.17
+        }
+      }
+    }
+  ]
+}
