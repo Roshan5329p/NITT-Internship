@@ -1,7 +1,7 @@
 id,paper_number,test_direction,condition,yield_strength_mpa,ultimate_tensile_strength_mpa,elongation_pct,vickers_hardness_hv,fracture_toughness_kic_mpa_m05,charpy_impact_energy_j,fatigue_limit_mpa,astm_f2924_compliant,astm_f3001_compliant,notes,build_orientation_deg,oxygen_wt_pct,max_defect_size_um,defect_type,relative_density_pct
 1,1,horizontal (XY),HIPed (850°C / 200 MPa),885.0,995.0,14.5,345.0,,,540.0,1,1,High-cycle fatigue endurance limit increased from 260 MPa (as-built) to 540 MPa,0,,,none,
 2,2,vertical (Z),as-built,1050.0,1220.0,6.8,385.0,,,210.0,0,0,High as-built roughness (Ra 14.2 µm) severely degrades fatigue,90,,,none,
-3,3,horizontal (XY),stress-relieved,1010.0,1175.0,7.6,370.0,,,360.0,0,0,HDH fatigue limit was ~85% of gas-atomized GA powder,0,0.19,,lof,
+3,3,horizontal (XY),stress-relieved,1010.0,1175.0,7.6,370.0,,,360.0,0,0,HDH fatigue limit was ~85% of gas-atomized GA powder,0,0.19,,lof,99.5
 4,4,horizontal (XY),as-built,1060.0,1230.0,8.2,390.0,,,410.0,0,0,"As-built strength high, ductility below ASTM F2924 (min 10%)",0,,,none,
 5,5,vertical (Z),as-built,1040.0,1205.0,7.1,382.0,,,290.0,0,0,Laser energy drops created micro-defects reducing fatigue,90,,,none,
 6,6,horizontal (XY),as-built,980.0,1110.0,11.5,355.0,,,480.0,1,1,Passes ASTM F2924 in as-built state without post-furnace treatment,0,,,none,
@@ -27,7 +27,7 @@ id,paper_number,test_direction,condition,yield_strength_mpa,ultimate_tensile_str
 26,48,across repair joint,stress-relieved,845.0,945.0,12.0,330.0,,25.0,,1,1,Joint repair efficiency 98.2% of forged Ti-6Al-4V specification,,,,none,
 27,50,horizontal (XY) vs vertical (Z),as-built,860.0,950.0,13.5,335.0,,,,1,1,Anisotropy observed: Horizontal YS 860 MPa vs Vertical YS 790 MPa; Elongation horizontal 13.5% vs vertical 9.5%,,,,none,
 28,51,horizontal (XY),as-built,830.0,925.0,12.0,322.0,,,460.0,1,0,Fatigue limit is 460 MPa at 175 J/mm but drops to 360 MPa at 350 J/mm due to grain coarsening,0,,,none,
-29,52,horizontal (XY),as-built (400°C preheat),925.0,1040.0,14.8,345.0,,,,1,1,Elongation improved from 7.2% (room temp bed) to 14.8% (400°C bed),0,,,none,
+29,52,horizontal (XY),as-built (400°C preheat),925.0,1040.0,14.8,345.0,,,,1,1,Elongation improved from 7.2% (room temp bed) to 14.8% (400°C bed),0,,,none,99.4
 30,54,horizontal (XY),as-built,1045.0,1215.0,8.0,382.0,,,,0,0,High yield strength from high dislocation density and refined laths,0,,,none,
 31,13,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
 32,14,horizontal (XY),as-built,1050.0,1220.0,7.5,382.0,,,310.0,0,0,As-built tensile properties,0,,,none,
@@ -59,7 +59,7 @@ id,paper_number,test_direction,condition,yield_strength_mpa,ultimate_tensile_str
 58,58,longitudinal,interpass-rolled,865.0,975.0,14.5,325.0,,,280.0,1,1,Refined equiaxed prior-beta grains compliant with ASTM F2924,0,,,none,
 59,64,,,855,980,12.6,,,,,,,Verified dashboard summary (Bermingham et al. (2019)): Promoting columnar to equiaxed transition (CET) and grain refinement in AM Ti alloys (767 citations).,,,,,99.75
 60,80,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Williams S.W. et al. 2016) | Materials Science and Technology United Kingdom | DOI: 10.1179/1743284715Y.0000000073 | Pending quantitative experimental extraction,,,,,
-61,81,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wang F. et al. 2013) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-012-1444-6 | Pending quantitative experimental extraction,,,,,
+61,81,,As-Built,849.7,953.9,12.3,,,,,,,Horizontal; fill P_W & v_mm_s from Table 1,,,,,
 62,82,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Bermingham M.J. et al. 2015) | Acta Materialia | DOI: 10.1016/j.actamat.2015.03.035 | Pending quantitative experimental extraction,,,,,
 63,83,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Szost B.A. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2015.09.115 | Pending quantitative experimental extraction,,,,,
 64,84,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Donoghue J. et al. 2016) | Materials Characterization | DOI: 10.1016/j.matchar.2016.02.001 | Pending quantitative experimental extraction,,,,,
@@ -71,7 +71,7 @@ id,paper_number,test_direction,condition,yield_strength_mpa,ultimate_tensile_str
 70,90,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Wu B. et al. 2018) | Corrosion Science | DOI: 10.1016/j.corsci.2018.03.047 | Pending quantitative experimental extraction,,,,,
 71,91,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Zhang J. et al. 2016) | Materials and Design | DOI: 10.1016/j.matdes.2015.10.141 | Pending quantitative experimental extraction,,,,,
 72,92,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Martina F. et al. 2016) | Materials Science and Technology United Kingdom | DOI: 10.1080/02670836.2016.1142704 | Pending quantitative experimental extraction,,,,,
-73,93,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Bermingham M.J. et al. 2018) | Journal of Alloys and Compounds | DOI: 10.1016/j.jallcom.2018.04.158 | Pending quantitative experimental extraction,,,,,
+73,93,,As-Built,710,820,7.18,,,,,,,Fill P_W & v_mm_s from Sec. 2,,,,,
 74,94,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Biswal R. et al. 2019) | International Journal of Fatigue | DOI: 10.1016/j.ijfatigue.2019.01.017 | Pending quantitative experimental extraction,,,,,
 75,95,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Yang J. et al. 2017) | Metallurgical and Materials Transactions A Physical Metallurgy and Materials Science | DOI: 10.1007/s11661-017-4087-9 | Pending quantitative experimental extraction,,,,,
 76,96,,,,,,,,,,,,Indexed Ti-6Al-4V study (WAAM; Hönnige J.R. et al. 2018) | Materials and Design | DOI: 10.1016/j.matdes.2018.03.065 | Pending quantitative experimental extraction,,,,,
@@ -112,13 +112,13 @@ id,paper_number,test_direction,condition,yield_strength_mpa,ultimate_tensile_str
 115,156,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Miyanaji H. et al. 2018) | Pending quantitative experimental extraction,,,,,
 116,157,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Stevens E. et al. 2018) | Pending quantitative experimental extraction,,,,,
 117,158,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Phua A. et al. 2021) | Pending quantitative experimental extraction,,,,,
-119,160,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Simchi A. et al. 2023) | Pending quantitative experimental extraction,,,,,
-121,162,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2024) | Pending quantitative experimental extraction,,,,,
-122,163,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Alegre J.M. et al. 2024) | Pending quantitative experimental extraction,,,,,
-123,164,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Tischel F. et al. 2024) | Pending quantitative experimental extraction,,,,,
+119,160,,As-Sintered,,,,,,,,,,Verified BJ 1250C density,,,,,97.0
+121,162,,As-Sintered,,,,,,,,,,Table 6 Digital Metal C20 Ink; fill sinter_temp_c & density/mech if reported,,,,,
+122,163,,As-Sintered,790,912,9.35,,,,,,,Fill sinter_temp_c from Sec. 2,,,,,96.0
+123,164,,As-Sintered,,,,,,,,,,Densification curve 1300C,,,,,85.0
 124,165,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Siddiqui M.A.S. et al. 2025) | Pending quantitative experimental extraction,,,,,
 125,166,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2025) | Pending quantitative experimental extraction,,,,,
-126,167,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Bhaduri D. et al. 2025) | Pending quantitative experimental extraction,,,,,
+126,167,,As-Sintered,,,,,,,,,,GA Ti64 93-94% density; compressive YS excluded from tensile ys_mpa,,,,,93.5
 127,168,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Frieden Templeton W. et al. 2024) | Pending quantitative experimental extraction,,,,,
 128,169,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Jump N. et al. 2025) | Pending quantitative experimental extraction,,,,,
 129,170,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Bernhard G.H. et al. 2021) | Pending quantitative experimental extraction,,,,,
@@ -128,7 +128,7 @@ id,paper_number,test_direction,condition,yield_strength_mpa,ultimate_tensile_str
 134,175,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Janzen K. et al. 2022) | Pending quantitative experimental extraction,,,,,
 135,176,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Simchi A. et al. 2021) | Pending quantitative experimental extraction,,,,,
 136,177,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Qian Y. et al. 2026) | Pending quantitative experimental extraction,,,,,
-137,178,,,,,,,,,,,,Indexed Ti-6Al-4V study (Binder Jetting; Persson M. et al. 2017) | Pending quantitative experimental extraction,,,,,
+137,178,,As-Sintered,842,,,,,,,,,Fill sinter_temp_c from full text,,,,,96.5
 138,59,,,890,1010,12.8,,,,,,,"Verified dashboard summary (Vrancken et al. (2012)): Heat treatment of Ti6Al4V produced by SLM: Martensite decomposition, ductility recovery (1908 citations).",,,,,99.85
 139,60,,,920,1050,11.2,,,,,,,Verified dashboard summary (Vilaro et al. (2011)): As-fabricated and heat-treated microstructures of Ti-6Al-4V processed by SLM (1244 citations).,,,,,99.80
 140,61,,,980,1160,8.4,,,,,,,Verified dashboard summary (Simonelli et al. (2014)): Effect of build orientation on mechanical properties and fracture modes of SLM Ti-6Al-4V (992 citations).,,,,,99.88
@@ -198,3 +198,6 @@ id,paper_number,test_direction,condition,yield_strength_mpa,ultimate_tensile_str
 212,209,,,,,,,,,,,,Indexed Ti-6Al-4V study (EBM; Tan X. et al. 2015) | Pending quantitative experimental extraction,,,,,
 213,211,,,,,,,,,,,,Indexed Ti-6Al-4V study (Ti-6Al-4V Tensile / Wrought; Lu J. et al. 2020) | Pending quantitative experimental extraction,,,,,
 214,213,,,,,,,,,,,,Indexed Ti-6Al-4V study (Ti-6Al-4V Tensile / Wrought; Wu S.Q. et al. 2016) | Pending quantitative experimental extraction,,,,,
+215,163,horizontal (XY),HIP,894,,10.5,,,,,,,HIP-HPLT 850C/200MPa/2h,0,,,,
+216,164,horizontal (XY),As-Sintered,,,,,,,,,,Densification curve 1370C,0,,,,96.4
+217,93,horizontal (XY),Stress-Relieved,766,872,10.9,,,,,,,480C/2h; fill P_W & v_mm_s from Sec. 2,0,,,,

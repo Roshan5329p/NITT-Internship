@@ -4388,16 +4388,16 @@
     }
   },
   "calibrated_model_version": "ti64-calibrated-v3.0",
-  "calibrated_at": "2026-11-22T10:26:11.069Z",
+  "calibrated_at": "2026-11-22T10:48:06.191Z",
   "calibration_summary": {
     "calibrated_model_version": "ti64-calibrated-v3.0",
-    "verified_bulk_papers": 35,
-    "excluded_papers_total": 164,
+    "verified_bulk_papers": 39,
+    "excluded_papers_total": 163,
     "excluded_breakdown": {
       "lattice": 5,
       "modified_alloy": 4,
       "placeholder_recipe": 16,
-      "pending_extraction": 104,
+      "pending_extraction": 103,
       "non_target_process": 34,
       "duplicate": 1
     },
@@ -7824,7 +7824,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 2,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -7832,7 +7832,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=2 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       },
       "ded-laser": {
@@ -8018,7 +8018,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 4,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -8026,7 +8026,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=4 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       }
     },
@@ -8090,7 +8090,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 2,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -8098,7 +8098,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=2 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       },
       "ded-laser": {
@@ -8284,7 +8284,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 4,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -8292,7 +8292,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=4 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       }
     },
@@ -8356,7 +8356,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 2,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -8364,7 +8364,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=2 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       },
       "ded-laser": {
@@ -8550,7 +8550,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 4,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -8558,7 +8558,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=4 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       }
     },
@@ -8622,7 +8622,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 2,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -8630,7 +8630,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=2 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       },
       "ded-laser": {
@@ -8816,7 +8816,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 4,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -8824,7 +8824,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=4 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       }
     },
@@ -8888,7 +8888,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 2,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -8896,7 +8896,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=2 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       },
       "ded-laser": {
@@ -9082,7 +9082,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 4,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -9090,7 +9090,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=4 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       }
     },
@@ -9154,7 +9154,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 2,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -9162,7 +9162,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=2 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       },
       "ded-laser": {
@@ -9348,7 +9348,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 4,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -9356,7 +9356,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=4 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       }
     }
@@ -9422,7 +9422,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 2,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -9430,7 +9430,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=2 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       },
       "ded-laser": {
@@ -9616,7 +9616,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 4,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -9624,7 +9624,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=4 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       }
     },
@@ -9688,7 +9688,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 2,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -9696,7 +9696,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=2 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       },
       "ded-laser": {
@@ -9882,7 +9882,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 4,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -9890,7 +9890,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=4 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       }
     },
@@ -9954,7 +9954,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 2,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -9962,7 +9962,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=2 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       },
       "ded-laser": {
@@ -10148,7 +10148,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 4,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -10156,7 +10156,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=4 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       }
     },
@@ -10220,7 +10220,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 2,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -10228,7 +10228,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=2 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       },
       "ded-laser": {
@@ -10414,7 +10414,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 4,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -10422,7 +10422,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=4 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       }
     },
@@ -10486,7 +10486,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 2,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -10494,7 +10494,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=2 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       },
       "ded-laser": {
@@ -10680,7 +10680,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 4,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -10688,7 +10688,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=4 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       }
     },
@@ -10752,7 +10752,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 2,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -10760,7 +10760,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=2 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       },
       "ded-laser": {
@@ -10946,7 +10946,7 @@
         },
         "relative_density_pct": {
           "validationType": "physics_prior_only",
-          "nSamples": 0,
+          "nSamples": 4,
           "mae": null,
           "rmse": null,
           "mapePct": null,
@@ -10954,7 +10954,7 @@
           "r2": null,
           "pi95HalfWidth": null,
           "pi95CoveragePct": null,
-          "note": "N=0 — Pending CSV Extraction (Physics-Prior Mode)"
+          "note": "N=4 (<5) — Sparse Corpus (Physics-Prior Mode)"
         }
       }
     }

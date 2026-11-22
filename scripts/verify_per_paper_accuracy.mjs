@@ -47,7 +47,7 @@ const PHYSICAL_BOUNDS = {
   ys_mpa: [500, 1300],
   uts_mpa: [550, 1450],
   elongation_pct: [2, 25],
-  relative_density_pct: [90, 100]
+  relative_density_pct: [70, 100]
 };
 
 const SPARSE_NOMINAL_RECIPES = {
@@ -56,8 +56,9 @@ const SPARSE_NOMINAL_RECIPES = {
     { process: 'waam', condition: 'HIP', rawCondition: 'HIP 920°C', P: 2200, v: 8, h: 3400, t: 1400, T0: 120, htTempC: 920 }
   ],
   'binder-jetting': [
-    { process: 'binder-jetting', condition: 'As-Built', rawCondition: 'As-Sintered', P: 120, v: 300, h: 100, t: 50, T0: 25 },
-    { process: 'binder-jetting', condition: 'HIP', rawCondition: 'HIP 920°C', P: 120, v: 300, h: 100, t: 50, T0: 25, htTempC: 920 }
+    { process: 'binder-jetting', condition: 'As-Built', rawCondition: 'As-Sintered', t: 42, sinterTempC: 1300, sinterHoldMin: 120, T0: 25 },
+    { process: 'binder-jetting', condition: 'As-Built', rawCondition: 'As-Sintered', t: 42, sinterTempC: 1370, sinterHoldMin: 120, T0: 25 },
+    { process: 'binder-jetting', condition: 'HIP', rawCondition: 'HIP 920°C', t: 42, sinterTempC: 1350, sinterHoldMin: 120, T0: 25, htTempC: 920 }
   ],
   lpbf: [
     { process: 'lpbf', condition: 'As-Built', rawCondition: 'As-Built', P: 280, v: 1200, h: 100, t: 30, T0: 200 },
@@ -129,8 +130,10 @@ function main() {
   const perPaperAudit = new Map();
 
   for (const r of eligibleRows) {
-    perPaperAudit.set(r.paperNumber, {
+    const recKey = r.variantId || r.paperNumber;
+    perPaperAudit.set(recKey, {
       paperNumber: r.paperNumber,
+      variantId: recKey,
       authors: r.authors,
       year: r.year,
       process: r.process,
@@ -140,6 +143,7 @@ function main() {
       v: r.v,
       h: r.h,
       t: r.t,
+      sinterTempC: r.sinterTempC || null,
       T0: r.prior.T0,
       htTempC: r.prior.htTempC,
       metrics: {}
@@ -204,9 +208,9 @@ function main() {
           failures.push(`${proc}/${prop}: physics_prior_only bound/tag check failed`);
         }
 
-        // Log N=1 WAAM experimental comparison transparently without ML assertions
+        // Log N < 5 experimental comparison transparently without ML assertions
         for (const r of cohort) {
-          const entry = perPaperAudit.get(r.paperNumber);
+          const entry = perPaperAudit.get(r.variantId || r.paperNumber);
           const priorVal = r.prior[prop];
           const apePct = (Math.abs(priorVal - r[prop]) / Math.max(1e-6, r[prop])) * 100;
           entry.metrics[prop] = {
@@ -235,7 +239,8 @@ function main() {
       const runtimeCalib = [];
 
       for (let i = 0; i < cohort.length; i++) {
-        const trainFold = cohort.filter((_, idx) => idx !== i);
+        const holdPid = cohort[i].paperNumber;
+        const trainFold = cohort.filter((r) => r.paperNumber !== holdPid);
         const foldFit = fitAllSixOnFold(trainFold, prop, proc, gprHp, svmHp);
         const foldPred = foldFit.predict(cohort[i]);
         const row = cohort[i];
@@ -253,6 +258,8 @@ function main() {
           ved: prior.ved,
           hi: prior.hi,
           htTempC: prior.htTempC,
+          sinterTempC: prior.sinterTempC,
+          sinterHoldMin: prior.sinterHoldMin,
           postProcessing: prior.post,
           oxygenWtPct: prior.oxygenWtPct,
           buildOrientationDeg: row.buildOrientationDeg ?? 0,
@@ -268,7 +275,7 @@ function main() {
         const lopoApe = (Math.abs(foldPred.ensemble - row[prop]) / Math.max(1e-6, row[prop])) * 100;
         const calApe = (Math.abs(runtimePred - row[prop]) / Math.max(1e-6, row[prop])) * 100;
 
-        perPaperAudit.get(row.paperNumber).metrics[prop] = {
+        perPaperAudit.get(row.variantId || row.paperNumber).metrics[prop] = {
           mode: 'lopo_cv',
           exp: row[prop],
           physicsPriorPred: Number(prior[prop].toFixed(2)),

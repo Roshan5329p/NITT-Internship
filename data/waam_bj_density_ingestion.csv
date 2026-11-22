@@ -1,0 +1,87 @@
+paper_id,process,authors,year,doi,condition,P_W,v_mm_s,h_um,t_um,T0_C,sinter_temp_c,sinter_hold_min,oxygen_wt_pct,hardness_hv,ys_mpa,uts_mpa,elongation_pct,relative_density_pct,source_table_note
+P-160,binder-jetting,Simchi A. et al.,2023,10.1007/s00170-023-11661-1,As-Sintered,,,,,,1250,,,,,,,97.0,Verified BJ 1250C density
+P-162,binder-jetting,Janzen K. et al.,2024,10.3390/ma17030750,As-Sintered,,,,42,,,,,,,,,,Table 6 Digital Metal C20 Ink; fill sinter_temp_c & density/mech if reported
+P-163,binder-jetting,Alegre J.M. et al.,2024,10.3390/ma17153825,As-Sintered,,,,,,,,,,790,912,9.35,96.0,Fill sinter_temp_c from Sec. 2
+P-163,binder-jetting,Alegre J.M. et al.,2024,10.3390/ma17153825,HIP,,,,,,,,,,894,,10.5,,HIP-HPLT 850C/200MPa/2h
+P-164,binder-jetting,Tischel F. et al.,2024,10.1016/j.powtec.2024.119958,As-Sintered,,,,,,1300,,,,,,,85.0,Densification curve 1300C
+P-164,binder-jetting,Tischel F. et al.,2024,10.1016/j.powtec.2024.119958,As-Sintered,,,,,,1370,,,,,,,96.4,Densification curve 1370C
+P-167,binder-jetting,Bhaduri D. et al.,2025,10.1016/j.cirp.2025.03.037,As-Sintered,,,,,,1490,120,,,,,,93.5,GA Ti64 93-94% density; compressive YS excluded from tensile ys_mpa
+P-178,binder-jetting,Persson M. et al.,2017,,As-Sintered,,,,,,,,,,842,,,96.5,Fill sinter_temp_c from full text
+P-81,waam,Wang F. et al.,2013,10.1007/s11661-012-1444-6,As-Built,,,,,,,,,,849.7,953.9,12.3,,Horizontal; fill P_W & v_mm_s from Table 1
+P-93,waam,Bermingham M.J. et al.,2018,10.1016/j.jallcom.2018.04.158,As-Built,,,,,,,,,,710,820,7.18,,Fill P_W & v_mm_s from Sec. 2
+P-93,waam,Bermingham M.J. et al.,2018,10.1016/j.jallcom.2018.04.158,Stress-Relieved,,,,,,,,,,766,872,10.9,,480C/2h; fill P_W & v_mm_s from Sec. 2
+P-3,lpbf,Asherloo et al.,2022,,,,,,,,,,,,,,,99.5,Relative density extraction
+P-52,lpbf,Xing et al.,2021,,,,,,,,,,,,,,,99.4,Relative density extraction
+P-58,waam,Guo et al.,2025,,,,,,,,,,,,,,,,Missing: relative_density_pct
+P-64,waam,Bermingham et al.,2019,,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv
+P-80,waam,Williams S.W. et al.,2016,10.1179/1743284715Y.0000000073,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-82,waam,Bermingham M.J. et al.,2015,10.1016/j.actamat.2015.03.035,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-83,waam,Szost B.A. et al.,2016,10.1016/j.matdes.2015.09.115,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-84,waam,Donoghue J. et al.,2016,10.1016/j.matchar.2016.02.001,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-85,waam,Wu B. et al.,2017,10.1016/j.jmatprotec.2017.07.037,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-86,waam,Martina F. et al.,2015,10.1007/s11661-015-3172-1,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-87,waam,McAndrew A.R. et al.,2018,10.1016/j.addma.2018.03.006,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-88,waam,Wu B. et al.,2018,10.1016/j.jmatprotec.2018.03.024,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-89,waam,Wu B. et al.,2018,10.1016/j.addma.2018.08.004,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-90,waam,Wu B. et al.,2018,10.1016/j.corsci.2018.03.047,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-91,waam,Zhang J. et al.,2016,10.1016/j.matdes.2015.10.141,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-92,waam,Martina F. et al.,2016,10.1080/02670836.2016.1142704,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-94,waam,Biswal R. et al.,2019,10.1016/j.ijfatigue.2019.01.017,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-95,waam,Yang J. et al.,2017,10.1007/s11661-017-4087-9,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-96,waam,Hönnige J.R. et al.,2018,10.1016/j.matdes.2018.03.065,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-97,waam,Bambach M. et al.,2020,10.1016/j.jmatprotec.2020.116689,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-98,waam,Motallebi R. et al.,2022,10.1016/j.cossms.2022.100992,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-99,waam,Wang J. et al.,2018,10.1016/j.jallcom.2018.07.235,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-100,waam,Sequeira Almeida P.M. et al.,2010,,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-101,waam,Shi X. et al.,2017,10.1016/j.msea.2016.12.065,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-102,waam,Kennedy J.R. et al.,2021,10.1016/j.addma.2021.101928,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-103,waam,Wu Q. et al.,2019,10.1016/j.addma.2019.100808,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-104,waam,Zhang X. et al.,2017,10.1111/ffe.12547,,,,,,,,,,,,,,,Missing: v; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-155,binder-jetting,Meier C. et al.,2019,10.1016/j.jmatprotec.2018.10.037,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-156,binder-jetting,Miyanaji H. et al.,2018,10.1016/j.ijmachtools.2017.09.001,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-157,binder-jetting,Stevens E. et al.,2018,10.1016/j.addma.2018.06.017,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-158,binder-jetting,Phua A. et al.,2021,10.1016/j.powtec.2021.08.058,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-165,binder-jetting,Siddiqui M.A.S. et al.,2025,10.1002/adem.202500257,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-166,binder-jetting,Janzen K. et al.,2025,10.1016/j.addlet.2025.100272,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-168,binder-jetting,Frieden Templeton W. et al.,2024,10.1016/j.commatsci.2024.113056,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-169,binder-jetting,Jump N. et al.,2025,10.1007/s11661-024-07624-0,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-170,binder-jetting,Bernhard G.H. et al.,2021,,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-172,binder-jetting,Janzen K. et al.,2025,10.2497/jjspm.15A-T7-04,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-173,binder-jetting,Simchi A. et al.,2022,,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-174,binder-jetting,Paramore J.D. et al.,2020,10.1007/s11837-020-04261-x,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-175,binder-jetting,Janzen K. et al.,2022,,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-176,binder-jetting,Simchi A. et al.,2021,,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-177,binder-jetting,Qian Y. et al.,2026,10.1016/j.powtec.2026.122295,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-79,binder-jetting,Tischel F. et al.,2024,10.59499/EP246278578,,,,,,,,,,,,,,,Missing: layer_thickness_um; sinter_temp_c; sinter_hold_min; condition; hardness_hv; ys_mpa; uts_mpa; elongation_pct; relative_density_pct
+P-1,lpbf,Alegre et al.,2022,,,,,,,,,,,,,,,,Fill relative_density_pct (HIPed (850°C / 200 MPa))
+P-2,lpbf,Artzt et al.,2020,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-4,lpbf,Awan et al.,2026,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-5,lpbf,Banerjee et al.,2025,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-6,lpbf,Barriobero-Vila et al.,2017,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-7,lpbf,Bartsch et al.,2022,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-8,lpbf,Cao et al.,2021,,,,,,,,,,,,,,,,Fill relative_density_pct (annealed (840°C 2h))
+P-10,lpbf,Denti et al.,2019,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-11,lpbf,Dhekne et al.,2025,,,,,,,,,,,,,,,,Fill relative_density_pct (annealed (800°C 2h))
+P-12,lpbf,Díaz et al.,2022,,,,,,,,,,,,,,,,Fill relative_density_pct (stress-relieved)
+P-15,lpbf,Ganeriwala et al.,2019,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-18,lpbf,Gryaznov et al.,2023,,,,,,,,,,,,,,,,Fill relative_density_pct (annealed (750°C 2h))
+P-19,ded-laser,Halder et al.,2024,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-24,lpbf,Lan et al.,2020,,,,,,,,,,,,,,,,Fill relative_density_pct (Laser Shock Peened)
+P-26,lpbf,Lee et al.,2017,,,,,,,,,,,,,,,,Fill relative_density_pct (annealed (950°C 2h))
+P-33,lpbf,Mahmud et al.,2021,,,,,,,,,,,,,,,,Fill relative_density_pct (stress-relieved)
+P-34,lpbf,McGregor et al.,2021,,,,,,,,,,,,,,,,Fill relative_density_pct (HIPed)
+P-36,lpbf,Meshram et al.,2026,,,,,,,,,,,,,,,,Fill relative_density_pct (HIPed)
+P-37,lpbf,Moon et al.,2021,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built vs polished)
+P-40,ded-laser,Nursyifaulkhair et al.,2019,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-41,ded-laser,Oshiro et al.,2026,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-42,lpbf,Obeidi et al.,2022,,,,,,,,,,,,,,,,Fill relative_density_pct (Laser Polished)
+P-43,lpbf,Pedrazzini et al.,2020,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built (500°C bed preheat))
+P-44,ded-laser,Rauch et al.,2020,,,,,,,,,,,,,,,,Fill relative_density_pct (stress-relieved)
+P-48,ded-laser,Sutherland et al.,2026,,,,,,,,,,,,,,,,Fill relative_density_pct (stress-relieved)
+P-50,ded-laser,Wang et al.,2025,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-51,ded-laser,Wang et al.,2026,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-53,ded-laser,Chen et al.,2016,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-54,lpbf,Yang et al.,2023,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-55,lpbf,Coen et al.,2022,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-56,ded-laser,Bontha et al.,2009,,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)
+P-57,ded-laser,Bontha et al.,2006,10.1016/j.jmatprotec.2006.03.155,,,,,,,,,,,,,,,Fill relative_density_pct (as-built)

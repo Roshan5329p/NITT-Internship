@@ -144,10 +144,20 @@ function main() {
   const micro = parseCsvRfc4180(fs.readFileSync(path.join(DATA_DIR, 'ti64_microstructure.csv'), 'utf8'));
   const mech = parseCsvRfc4180(fs.readFileSync(path.join(DATA_DIR, 'ti64_mechanical_properties.csv'), 'utf8'));
 
-  const paramMap = new Map(params.map((r) => [r.paper_number, r]));
-  const thermMap = new Map(thermal.map((r) => [r.paper_number, r]));
-  const microMap = new Map(micro.map((r) => [r.paper_number, r]));
-  const mechMap = new Map(mech.map((r) => [r.paper_number, r]));
+  const groupByPid = (rows) => {
+    const m = new Map();
+    for (const r of rows) {
+      const k = String(r.paper_number || '').trim();
+      if (!k) continue;
+      if (!m.has(k)) m.set(k, []);
+      m.get(k).push(r);
+    }
+    return m;
+  };
+  const paramListMap = groupByPid(params);
+  const mechListMap = groupByPid(mech);
+  const thermMap = new Map(thermal.map((r) => [String(r.paper_number || '').trim(), r]));
+  const microMap = new Map(micro.map((r) => [String(r.paper_number || '').trim(), r]));
 
   // Detect guessed/placeholder repeated parameter recipes and repeated tensile signatures
   const recipeCounts = new Map();
@@ -167,6 +177,7 @@ function main() {
   const records = [];
   const summary = {
     total_csv_papers: papers.length,
+    total_variant_rows: 0,
     benchmark_eligible: 0,
     excluded_by_reason: {}
   };
@@ -178,120 +189,151 @@ function main() {
   for (const p of papers) {
     const pid = String(p.paper_number || '').trim();
     const pidNum = Number.parseInt(pid, 10);
-    const pr = paramMap.get(pid) || {};
+    const prList = paramListMap.get(pid) || [{}];
+    const mcList = mechListMap.get(pid) || [{}];
     const th = thermMap.get(pid) || {};
     const mi = microMap.get(pid) || {};
-    const mc = mechMap.get(pid) || {};
-
-    const P = posNum(pr.laser_power_w);
-    const v = posNum(pr.scan_speed_mms);
-    const h = posNum(pr.hatch_spacing_um);
-    const t = posNum(pr.layer_thickness_um);
-    const db = posNum(pr.beam_spot_diameter_um);
-
-    const hv = posNum(mc.vickers_hardness_hv);
-    const ys = posNum(mc.yield_strength_mpa);
-    const uts = posNum(mc.ultimate_tensile_strength_mpa);
-    const el = posNum(mc.elongation_pct);
-    const den = posNum(mc.relative_density_pct);
-
-    const normProc = normalizeProcess(p.am_process, P, v);
-    const condInfo = normalizeCondition(mc.condition || mi.condition || '', '');
-    const isEli = /\beli\b|grade\s*23|f3001/i.test(`${p.material} ${p.title}`);
-    const buildOriDeg = mc.build_orientation_deg !== '' && mc.build_orientation_deg !== undefined
-      ? Number.parseFloat(mc.build_orientation_deg)
-      : 0;
-    const oxygenWtPct = posNum(pr.oxygen_wt_pct) || posNum(mc.oxygen_wt_pct) || posNum(mi.oxygen_wt_pct) || (isEli ? 0.11 : 0.16);
-
-    const recipeKey = (pr.laser_power_w && pr.scan_speed_mms)
-      ? `${pr.laser_power_w}|${pr.scan_speed_mms}|${pr.hatch_spacing_um}|${pr.layer_thickness_um}`
-      : '';
-    const mechSigKey = (mc.yield_strength_mpa && mc.ultimate_tensile_strength_mpa)
-      ? `${mc.yield_strength_mpa}|${mc.ultimate_tensile_strength_mpa}|${mc.elongation_pct}|${mc.vickers_hardness_hv}`
-      : '';
 
     const dedupKey = `${String(p.authors).toLowerCase().trim()}|${p.year}|${String(p.title).toLowerCase().slice(0, 40)}`;
     const isDupEntry = CATALOG_DUP_IDS.has(pidNum) || seenAuthorYearTitle.has(dedupKey);
     seenAuthorYearTitle.add(dedupKey);
 
-    const isExplicitLatticeAuthor = (pidNum === 9 && /cutolo/i.test(p.authors)) ||
-      (pidNum === 20 && /jamshidi/i.test(p.authors)) ||
-      (pidNum === 28 && /lee/i.test(p.authors));
-    const isLattice = isExplicitLatticeAuthor ||
-      (ys !== null && ys < 450) ||
-      ((ys === null || ys < 550) && /lattice|porous|scaffold|bone growth|osseointegration|tpms/i.test(`${p.title} ${mc.notes || ''}`));
-    const isModifiedAlloy = NON_TI64_IDS.has(pidNum) ||
-      /iron|copper|\bcu\b|\bfe\b|hydroxyapatite|sio2|nanocomposite|in situ alloying/i.test(`${p.title} ${p.am_process}`) ||
-      (pidNum === 46 && /simonelli/i.test(p.authors));
+    const nVariants = Math.max(prList.length, mcList.length);
+    for (let vi = 0; vi < nVariants; vi++) {
+      summary.total_variant_rows++;
+      const mc = mcList[Math.min(vi, mcList.length - 1)] || {};
+      // Match parameter row by index or fallback to first populated row
+      const pr = prList[vi] || prList[0] || {};
 
-    const isPlaceholderRecipe = (recipeKey === '225.0|1050.0|95.0|30.0' || recipeKey === '2000.0|12.0|2200.0|1000.0') ||
-      ((mechSigCounts.get(mechSigKey) || 0) >= 3 && (recipeCounts.get(recipeKey) || 0) >= 3);
+      const arcI = posNum(pr.arc_current_a);
+      const arcV = posNum(pr.arc_voltage_v);
+      const P = posNum(pr.laser_power_w) || (arcI && arcV ? Number((arcI * arcV).toFixed(1)) : null);
+      const v = posNum(pr.scan_speed_mms);
+      const h = posNum(pr.hatch_spacing_um);
+      const t = posNum(pr.layer_thickness_um);
+      const db = posNum(pr.beam_spot_diameter_um);
+      const sinterTempC = posNum(pr.sinter_temp_c);
+      const sinterHoldMin = posNum(pr.sinter_hold_min);
 
-    const hasParams = Boolean(P && v && h && t);
-    const hasMech = [hv, ys, uts, el].some((x) => x !== null);
+      const hv = posNum(mc.vickers_hardness_hv);
+      const ys = posNum(mc.yield_strength_mpa);
+      const uts = posNum(mc.ultimate_tensile_strength_mpa);
+      const el = posNum(mc.elongation_pct);
+      const den = posNum(mc.relative_density_pct);
 
-    let specimenType = 'bulk_coupon';
-    let benchmarkEligible = true;
-    let exclusionReason = null;
+      const normProc = normalizeProcess(p.am_process, P, v);
+      const condInfo = normalizeCondition(mc.condition || mi.condition || '', '');
+      const isEli = /\beli\b|grade\s*23|f3001/i.test(`${p.material} ${p.title}`);
+      const buildOriDeg = mc.build_orientation_deg !== '' && mc.build_orientation_deg !== undefined
+        ? Number.parseFloat(mc.build_orientation_deg)
+        : 0;
+      const oxygenWtPct = posNum(pr.oxygen_wt_pct) || posNum(mc.oxygen_wt_pct) || posNum(mi.oxygen_wt_pct) || (isEli ? 0.11 : 0.16);
 
-    if (!['lpbf', 'ded-laser', 'waam', 'binder-jetting'].includes(normProc)) {
-      specimenType = 'non_target_process';
-      benchmarkEligible = false;
-      exclusionReason = `Process ${p.am_process} outside 4 target AM cohorts`;
-    } else if (isModifiedAlloy) {
-      specimenType = 'modified_alloy';
-      benchmarkEligible = false;
-      exclusionReason = 'Modified alloy / composite (outside standard Ti-6Al-4V Gr5/23 ELI)';
-    } else if (isLattice) {
-      specimenType = 'lattice';
-      benchmarkEligible = false;
-      exclusionReason = 'Porous / lattice scaffold geometry (non-bulk coupon)';
-    } else if (isDupEntry) {
-      specimenType = 'duplicate';
-      benchmarkEligible = false;
-      exclusionReason = 'Duplicate catalog entry';
-    } else if (!hasParams || !hasMech) {
-      specimenType = 'pending_extraction';
-      benchmarkEligible = false;
-      exclusionReason = !hasParams ? 'Pending parameter extraction (missing P/v/h/t)' : 'No mechanical targets reported';
-    } else if (isPlaceholderRecipe) {
-      specimenType = 'placeholder_recipe';
-      benchmarkEligible = false;
-      exclusionReason = 'Repeated placeholder process/tensile recipe in raw CSV';
+      const recipeKey = (pr.laser_power_w && pr.scan_speed_mms)
+        ? `${pr.laser_power_w}|${pr.scan_speed_mms}|${pr.hatch_spacing_um}|${pr.layer_thickness_um}`
+        : '';
+      const mechSigKey = (mc.yield_strength_mpa && mc.ultimate_tensile_strength_mpa)
+        ? `${mc.yield_strength_mpa}|${mc.ultimate_tensile_strength_mpa}|${mc.elongation_pct}|${mc.vickers_hardness_hv}`
+        : '';
+
+      const isExplicitLatticeAuthor = (pidNum === 9 && /cutolo/i.test(p.authors)) ||
+        (pidNum === 20 && /jamshidi/i.test(p.authors)) ||
+        (pidNum === 28 && /lee/i.test(p.authors));
+      const isLattice = isExplicitLatticeAuthor ||
+        (ys !== null && ys < 450) ||
+        ((ys === null || ys < 550) && /lattice|porous|scaffold|bone growth|osseointegration|tpms/i.test(`${p.title} ${mc.notes || ''}`));
+      const isModifiedAlloy = NON_TI64_IDS.has(pidNum) ||
+        /iron|copper|\bcu\b|\bfe\b|hydroxyapatite|sio2|nanocomposite|in situ alloying/i.test(`${p.title} ${p.am_process}`) ||
+        (pidNum === 46 && /simonelli/i.test(p.authors));
+
+      const isPlaceholderRecipe = (recipeKey === '225.0|1050.0|95.0|30.0' || recipeKey === '2000.0|12.0|2200.0|1000.0') ||
+        ((mechSigCounts.get(mechSigKey) || 0) >= 3 && (recipeCounts.get(recipeKey) || 0) >= 3);
+
+      // Process-native parameter eligibility (Step 1)
+      let hasParams = false;
+      if (normProc === 'waam') {
+        hasParams = Boolean(P && v); // h_um and t_um optional for WAAM
+      } else if (normProc === 'binder-jetting') {
+        hasParams = Boolean(sinterTempC && sinterTempC > 0); // P and v optional for solid-state Binder Jetting
+      } else {
+        hasParams = Boolean(P && v && h && t);
+      }
+
+      const hasMech = [hv, ys, uts, el, den].some((x) => x !== null);
+
+      let specimenType = 'bulk_coupon';
+      let benchmarkEligible = true;
+      let exclusionReason = null;
+
+      if (!['lpbf', 'ded-laser', 'waam', 'binder-jetting'].includes(normProc)) {
+        specimenType = 'non_target_process';
+        benchmarkEligible = false;
+        exclusionReason = `Process ${p.am_process} outside 4 target AM cohorts`;
+      } else if (isModifiedAlloy) {
+        specimenType = 'modified_alloy';
+        benchmarkEligible = false;
+        exclusionReason = 'Modified alloy / composite (outside standard Ti-6Al-4V Gr5/23 ELI)';
+      } else if (isLattice) {
+        specimenType = 'lattice';
+        benchmarkEligible = false;
+        exclusionReason = 'Porous / lattice scaffold geometry (non-bulk coupon)';
+      } else if (isDupEntry) {
+        specimenType = 'duplicate';
+        benchmarkEligible = false;
+        exclusionReason = 'Duplicate catalog entry';
+      } else if (!hasParams || !hasMech) {
+        specimenType = 'pending_extraction';
+        benchmarkEligible = false;
+        if (!hasParams) {
+          exclusionReason = normProc === 'binder-jetting'
+            ? 'Pending sintering extraction (missing sinter_temp_c)'
+            : (normProc === 'waam' ? 'Pending WAAM parameter extraction (missing P/v)' : 'Pending parameter extraction (missing P/v/h/t)');
+        } else {
+          exclusionReason = 'No mechanical/density targets reported';
+        }
+      } else if (isPlaceholderRecipe) {
+        specimenType = 'placeholder_recipe';
+        benchmarkEligible = false;
+        exclusionReason = 'Repeated placeholder process/tensile recipe in raw CSV';
+      }
+
+      if (benchmarkEligible) summary.benchmark_eligible++;
+      else bumpExcl(specimenType);
+
+      records.push({
+        paperNumber: pid,
+        variantId: nVariants > 1 ? `${pid}#${vi + 1}` : pid,
+        authors: p.authors,
+        year: p.year,
+        title: p.title,
+        rawProcess: p.am_process,
+        process: normProc,
+        material: p.material,
+        isEli,
+        condition: condInfo.condition,
+        rawCondition: mc.condition || mi.condition || (normProc === 'binder-jetting' ? 'As-Sintered' : 'As-Built'),
+        T0: condInfo.T0 ?? 200,
+        htTempC: condInfo.htTempC,
+        surfaceTreatment: condInfo.surfaceTreatment || null,
+        P, v, h, t, db,
+        sinterTempC,
+        sinterHoldMin,
+        hi: (normProc === 'waam' || normProc === 'ded-laser') && P && v ? Number((P / v).toFixed(2)) : null,
+        coolingRateKs: posNum(th.cooling_rate_k_s),
+        alphaLathWidthUm: posNum(mi.alpha_lath_width_um) || posNum(mi.alpha_lath_thickness_um),
+        oxygenWtPct,
+        buildOrientationDeg: Number.isFinite(buildOriDeg) ? buildOriDeg : 0,
+        testDirection: mc.test_direction || 'horizontal (XY)',
+        hardness_hv: hv,
+        ys_mpa: ys,
+        uts_mpa: uts,
+        elongation_pct: el,
+        relative_density_pct: den,
+        specimen_type: specimenType,
+        benchmark_eligible: benchmarkEligible,
+        exclusion_reason: exclusionReason
+      });
     }
-
-    if (benchmarkEligible) summary.benchmark_eligible++;
-    else bumpExcl(specimenType);
-
-    records.push({
-      paperNumber: pid,
-      authors: p.authors,
-      year: p.year,
-      title: p.title,
-      rawProcess: p.am_process,
-      process: normProc,
-      material: p.material,
-      isEli,
-      condition: condInfo.condition,
-      rawCondition: mc.condition || mi.condition || 'As-Built',
-      T0: condInfo.T0 ?? 200,
-      htTempC: condInfo.htTempC,
-      surfaceTreatment: condInfo.surfaceTreatment || null,
-      P, v, h, t, db,
-      coolingRateKs: posNum(th.cooling_rate_k_s),
-      alphaLathWidthUm: posNum(mi.alpha_lath_width_um) || posNum(mi.alpha_lath_thickness_um),
-      oxygenWtPct,
-      buildOrientationDeg: Number.isFinite(buildOriDeg) ? buildOriDeg : 0,
-      testDirection: mc.test_direction || 'horizontal (XY)',
-      hardness_hv: hv,
-      ys_mpa: ys,
-      uts_mpa: uts,
-      elongation_pct: el,
-      relative_density_pct: den,
-      specimen_type: specimenType,
-      benchmark_eligible: benchmarkEligible,
-      exclusion_reason: exclusionReason
-    });
   }
 
   fs.writeFileSync(
@@ -323,14 +365,17 @@ function main() {
     const yr = (entry.author.match(/\b(19|20)\d{2}\b/) || [])[0];
 
     let matchedRec = null;
-    const direct = recByNum.get(numStr);
-    if (direct && direct.year === yr && authorMatches(direct.authors, entry.author)) {
-      matchedRec = direct;
+    const directList = records.filter((r) => r.paperNumber === numStr && r.year === yr && authorMatches(r.authors, entry.author));
+    if (directList.length > 0) {
+      matchedRec = directList.find((r) => r.benchmark_eligible) || directList[0];
     } else {
       const cands = records.filter((r) => r.year === yr && authorMatches(r.authors, entry.author));
       if (cands.length === 1) matchedRec = cands[0];
       else if (cands.length > 1) {
-        matchedRec = cands.find((c) => c.ys_mpa && copy.ys && Math.abs(c.ys_mpa - copy.ys) < 5) || cands[0];
+        matchedRec = cands.find((c) => c.benchmark_eligible && c.ys_mpa && copy.ys && Math.abs(c.ys_mpa - copy.ys) < 5)
+          || cands.find((c) => c.benchmark_eligible)
+          || cands.find((c) => c.ys_mpa && copy.ys && Math.abs(c.ys_mpa - copy.ys) < 5)
+          || cands[0];
       }
     }
 
@@ -351,15 +396,18 @@ function main() {
         copy.process = procDisplay[matchedRec.process];
       }
       if (matchedRec.benchmark_eligible) {
-        copy.p = matchedRec.P;
-        copy.v = matchedRec.v;
-        copy.h = matchedRec.h;
-        copy.t = matchedRec.t;
+        if (matchedRec.P !== null) copy.p = matchedRec.P;
+        if (matchedRec.v !== null) copy.v = matchedRec.v;
+        if (matchedRec.h !== null) copy.h = matchedRec.h;
+        if (matchedRec.t !== null) copy.t = matchedRec.t;
+        if (matchedRec.sinterTempC) copy.sinterTempC = matchedRec.sinterTempC;
+        if (matchedRec.sinterHoldMin) copy.sinterHoldMin = matchedRec.sinterHoldMin;
         if (matchedRec.db) copy.db = matchedRec.db;
         if (matchedRec.hardness_hv !== null) copy.hv = matchedRec.hardness_hv;
         if (matchedRec.ys_mpa !== null) copy.ys = matchedRec.ys_mpa;
         if (matchedRec.uts_mpa !== null) copy.uts = matchedRec.uts_mpa;
         if (matchedRec.elongation_pct !== null) copy.el = matchedRec.elongation_pct;
+        if (matchedRec.relative_density_pct !== null) copy.density = `${matchedRec.relative_density_pct.toFixed(2)}%`;
         copy.postProc = matchedRec.condition === 'As-Built' ? 'None' : matchedRec.condition;
         copy.treatment = matchedRec.rawCondition || matchedRec.condition;
         if (matchedRec.T0 && matchedRec.T0 !== 200) copy.t0 = matchedRec.T0;

@@ -215,10 +215,16 @@ export function computePhysicsPrior(row) {
   }
   elPrior = clampFinite(elPrior - ((oxygenWtPct - 0.16) / 0.05) * 1.4, 2.0, 22.0, 10.0);
 
-  const denPrior = isBj ? (post === 'HIP' ? 99.75 : 96.0) : (post === 'HIP' ? 99.92 : 99.80);
+  const sinterTempC = clampFinite(Number(row.sinterTempC ?? (isBj && Number(row.htTempC) >= 900 ? row.htTempC : NaN)), 900, 1550, 1350);
+  const sinterHoldMin = clampFinite(Number(row.sinterHoldMin), 15, 480, 120);
+  const denPrior = isBj
+    ? (post === 'HIP'
+        ? 99.75
+        : clampFinite(82.0 + 14.5 / (1.0 + Math.exp(-(sinterTempC - 1315.0) / 28.0)) + 0.008 * (sinterHoldMin - 120.0), 75.0, 99.2, 95.5))
+    : (post === 'HIP' ? 99.92 : 99.80);
 
   return {
-    P, v, h, t, T0, htTempC, ved, hi, energyMetric, coolingRateKs, lathUm,
+    P, v, h, t, T0, htTempC, sinterTempC, sinterHoldMin, ved, hi, energyMetric, coolingRateKs, lathUm,
     oxygenWtPct, oriCos, post, surfTreat, isEli: Boolean(row.isEli),
     hardness_hv: hvPrior,
     ys_mpa: ysPrior,
@@ -230,6 +236,7 @@ export function computePhysicsPrior(row) {
 
 function buildStandardizedFeatureRaw(prior, proc) {
   const isDedOrWaam = proc === 'ded-laser' || proc === 'waam';
+  const isBj = proc === 'binder-jetting';
   return [
     prior.post === 'Stress-Relieved' ? 1 : 0,
     prior.post === 'Annealed' ? 1 : 0,
@@ -241,9 +248,9 @@ function buildStandardizedFeatureRaw(prior, proc) {
     Math.log10(Math.max(1, prior.v)),
     Math.log10(Math.max(10, prior.h)),
     Math.log10(Math.max(10, prior.t)),
-    prior.T0 / 200.0,
-    Math.log10(Math.max(1, isDedOrWaam ? prior.hi : prior.ved)),
-    prior.htTempC / 500.0,
+    isBj ? ((prior.sinterHoldMin || 120) / 120.0) : (prior.T0 / 200.0),
+    Math.log10(Math.max(1, isDedOrWaam ? prior.hi : (isBj ? 60 : prior.ved))),
+    (isBj ? (prior.sinterTempC || 1350) : prior.htTempC) / 500.0,
     prior.oxygenWtPct / 0.16,
     prior.oriCos,
     prior.isEli ? 1 : 0
@@ -554,20 +561,22 @@ function main() {
       const gprHp = tuneGprHyperparamsLopo(ZAll, rAll);
       const svmHp = { gamma: gprHp.gamma * 0.75, reg: Math.max(0.18, gprHp.reg * 1.4) };
 
-      // 1. Strict Out-of-Sample LOPO-CV
+      // 1. Strict Out-of-Sample LOPO-CV (hold out entire paperNumber across variants)
       const trues = [];
       const oof = Object.fromEntries(MODEL_IDS.map((m) => [m, []]));
       for (let i = 0; i < cohort.length; i++) {
-        const trainFold = cohort.filter((_, idx) => idx !== i);
+        const holdPid = cohort[i].paperNumber;
+        const trainFold = cohort.filter((r) => r.paperNumber !== holdPid);
         const foldFit = fitAllSixOnFold(trainFold, prop, proc, gprHp, svmHp);
         const pred = foldFit.predict(cohort[i]);
         trues.push(cohort[i][prop]);
         for (const m of MODEL_IDS) oof[m].push(pred[m]);
 
-        const pid = cohort[i].paperNumber;
-        if (!perPaperRecords[pid]) {
-          perPaperRecords[pid] = {
-            paperNumber: pid,
+        const recKey = cohort[i].variantId || cohort[i].paperNumber;
+        if (!perPaperRecords[recKey]) {
+          perPaperRecords[recKey] = {
+            paperNumber: cohort[i].paperNumber,
+            variantId: recKey,
             authors: cohort[i].authors,
             year: cohort[i].year,
             process: proc,
@@ -578,7 +587,7 @@ function main() {
             metrics: {}
           };
         }
-        perPaperRecords[pid].metrics[prop] = {
+        perPaperRecords[recKey].metrics[prop] = {
           exp: cohort[i][prop],
           prior: Number(cohort[i].prior[prop].toFixed(2)),
           lopoPredEnsemble: Number(pred.ensemble.toFixed(2)),
@@ -599,11 +608,11 @@ function main() {
       for (let i = 0; i < cohort.length; i++) {
         const p = fullFit.predict(cohort[i]);
         for (const m of MODEL_IDS) calPreds[m].push(p[m]);
-        const pid = cohort[i].paperNumber;
-        perPaperRecords[pid].metrics[prop].calibratedPredEnsemble = Number(p.ensemble.toFixed(2));
-        perPaperRecords[pid].metrics[prop].calibratedPredGpr = Number(p.gpr.toFixed(2));
-        perPaperRecords[pid].metrics[prop].calibratedApeEnsemblePct = Number(((Math.abs(p.ensemble - cohort[i][prop]) / Math.max(1e-6, cohort[i][prop])) * 100).toFixed(2));
-        perPaperRecords[pid].metrics[prop].calibratedApeGprPct = Number(((Math.abs(p.gpr - cohort[i][prop]) / Math.max(1e-6, cohort[i][prop])) * 100).toFixed(2));
+        const recKey = cohort[i].variantId || cohort[i].paperNumber;
+        perPaperRecords[recKey].metrics[prop].calibratedPredEnsemble = Number(p.ensemble.toFixed(2));
+        perPaperRecords[recKey].metrics[prop].calibratedPredGpr = Number(p.gpr.toFixed(2));
+        perPaperRecords[recKey].metrics[prop].calibratedApeEnsemblePct = Number(((Math.abs(p.ensemble - cohort[i][prop]) / Math.max(1e-6, cohort[i][prop])) * 100).toFixed(2));
+        perPaperRecords[recKey].metrics[prop].calibratedApeGprPct = Number(((Math.abs(p.gpr - cohort[i][prop]) / Math.max(1e-6, cohort[i][prop])) * 100).toFixed(2));
       }
 
       for (const m of MODEL_IDS) {
@@ -634,13 +643,22 @@ function main() {
     ? JSON.parse(fs.readFileSync(WEIGHTS_JSON_PATH, 'utf8'))
     : {};
 
+  let lopoCellsCount = 0;
+  let priorOnlyCellsCount = 0;
+  for (const proc of PROCESSES) {
+    for (const prop of PROPERTIES) {
+      if (validationMatrix.ensemble[proc][prop]?.validationType === 'lopo_cv') lopoCellsCount++;
+      else priorOnlyCellsCount++;
+    }
+  }
+
   const calibrationSummary = {
     calibrated_model_version: 'ti64-calibrated-v3.0',
     verified_bulk_papers: eligibleRows.length,
     excluded_papers_total: corpus.records.length - eligibleRows.length,
     excluded_breakdown: corpus.summary.excluded_by_reason,
-    lopo_evaluated_cells: 8,
-    physics_prior_only_cells: 12
+    lopo_evaluated_cells: lopoCellsCount,
+    physics_prior_only_cells: priorOnlyCellsCount
   };
 
   const bundle = {
@@ -693,6 +711,8 @@ export function applyCalibratedResidual({
   ved = 66.3,
   hi = 0.29,
   htTempC = 25,
+  sinterTempC = 1350,
+  sinterHoldMin = 120,
   postProcessing = 'HIP',
   oxygenWtPct = 0.16,
   buildOrientationDeg = 0,
@@ -713,6 +733,7 @@ export function applyCalibratedResidual({
   const surf = surfaceTreatment || condParsed.surfaceTreatment;
   const oriCos = Math.cos(((Number(buildOrientationDeg) || 0) * Math.PI) / 180);
   const isDedOrWaam = normProc === 'ded-laser' || normProc === 'waam';
+  const isBj = normProc === 'binder-jetting';
 
   const rawX = [
     post === 'Stress-Relieved' ? 1 : 0,
@@ -725,9 +746,9 @@ export function applyCalibratedResidual({
     Math.log10(Math.max(1, Number(v) || 1000)),
     Math.log10(Math.max(10, Number(h) || 100)),
     Math.log10(Math.max(10, Number(t) || 30)),
-    effT0 / 200.0,
-    Math.log10(Math.max(1, isDedOrWaam ? (Number(hi) || 100) : (Number(ved) || 60))),
-    effHt / 500.0,
+    isBj ? ((Number(sinterHoldMin) || 120) / 120.0) : (effT0 / 200.0),
+    Math.log10(Math.max(1, isDedOrWaam ? (Number(hi) || 100) : (isBj ? 60 : (Number(ved) || 60)))),
+    (isBj ? (Number(sinterTempC) || 1350) : effHt) / 500.0,
     (Number(oxygenWtPct) || (isEli ? 0.11 : 0.16)) / 0.16,
     oriCos,
     isEli ? 1 : 0
