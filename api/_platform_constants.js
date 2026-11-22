@@ -293,8 +293,11 @@ export function hvToHrcNumeric(hv) {
 
 export {
   CALIBRATION_SUMMARY,
-  CALIBRATED_RESIDUALS,
+  CALIBRATED_MODELS,
+  CALIBRATED_MODELS as CALIBRATED_RESIDUALS,
+  CALIBRATED_MATRIX,
   VALIDATION_MATRIX,
+  normalizeCondition,
   applyCalibratedResidual
 } from './_calibrated_models.js';
 

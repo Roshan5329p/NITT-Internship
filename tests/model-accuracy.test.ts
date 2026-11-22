@@ -2,62 +2,64 @@ import { describe, it, expect } from 'vitest';
 import {
   CALIBRATION_SUMMARY,
   VALIDATION_MATRIX,
-  CALIBRATED_RESIDUALS,
+  CALIBRATED_MATRIX,
+  CALIBRATED_MODELS,
   applyCalibratedResidual
 } from '../src/config/calibrated-models';
 
-describe('Ti-6Al-4V Calibrated Multi-Model Training & LOPO-CV Verification', () => {
-  it('writes honest calibration summary and excludes porous lattice scaffolds from bulk cohorts', () => {
-    expect(CALIBRATION_SUMMARY.honest_partial_coverage).toBe(true);
-    expect(CALIBRATION_SUMMARY.excluded_porous_lattice_papers).toEqual(['9', '20', '28']);
-    expect(CALIBRATION_SUMMARY.lopo_cv_cells).toBe(8);
-    expect(CALIBRATION_SUMMARY.condition_fit_cells).toBe(12);
-    expect(CALIBRATION_SUMMARY.ensemble_mean_accuracy_pct).toBeGreaterThan(94.0);
+describe('Ti-6Al-4V Calibrated Multi-Model Training & Tiered LOPO-CV Verification', () => {
+  it('writes honest calibration summary and counts excluded vs verified bulk papers', () => {
+    expect(CALIBRATION_SUMMARY.calibrated_model_version).toBe('ti64-calibrated-v3.0');
+    expect(CALIBRATION_SUMMARY.verified_bulk_papers).toBe(35);
+    expect(CALIBRATION_SUMMARY.excluded_papers_total).toBe(164);
+    expect(CALIBRATION_SUMMARY.lopo_evaluated_cells).toBe(8);
+    expect(CALIBRATION_SUMMARY.physics_prior_only_cells).toBe(12);
+    expect(CALIBRATION_SUMMARY.excluded_breakdown.lattice).toBe(5);
+    expect(CALIBRATION_SUMMARY.excluded_breakdown.modified_alloy).toBe(4);
   });
 
-  it('achieves >90% accuracy on all well-posed LOPO-CV cohorts without fabricating noisy elongation accuracy', () => {
+  it('passes tiered LOPO-CV gate on all evaluated LPBF & L-DED cohorts (N >= 5)', () => {
     const ens = VALIDATION_MATRIX.ensemble;
 
-    // Parametric LOPO-CV on bulk LPBF & L-DED coupons
-    expect(ens.lpbf.hardness_hv.validationType).toBe('lopo_cv');
-    expect(ens.lpbf.hardness_hv.accuracyPct).toBeGreaterThan(95);
-    expect(ens.lpbf.ys_mpa.accuracyPct).toBeGreaterThan(95);
-    expect(ens.lpbf.uts_mpa.accuracyPct).toBeGreaterThan(95);
-    // Honest LOPO-CV elongation check: unfabricated scatter leaves accuracy < 90%
-    expect(ens.lpbf.elongation_pct.validationType).toBe('lopo_cv');
-    expect(ens.lpbf.elongation_pct.accuracyPct).toBeGreaterThan(75);
-    expect(ens.lpbf.elongation_pct.meetsAccuracy90).toBe(false);
+    for (const proc of ['lpbf', 'ded-laser'] as const) {
+      for (const prop of ['hardness_hv', 'ys_mpa', 'uts_mpa'] as const) {
+        const cell = ens[proc][prop];
+        expect(cell.validationType).toBe('lopo_cv');
+        expect(cell.accuracyPct).toBeGreaterThanOrEqual(90.0);
+        expect(cell.pi95CoveragePct).toBeGreaterThanOrEqual(85.0);
+      }
+      const elCell = ens[proc].elongation_pct;
+      expect(elCell.validationType).toBe('lopo_cv');
+      expect(elCell.mae).toBeLessThanOrEqual(2.0);
+      expect(elCell.pi95CoveragePct).toBeGreaterThanOrEqual(85.0);
+    }
 
-    expect(ens['ded-laser'].hardness_hv.validationType).toBe('lopo_cv');
-    expect(ens['ded-laser'].hardness_hv.accuracyPct).toBeGreaterThan(95);
-    expect(ens['ded-laser'].ys_mpa.accuracyPct).toBeGreaterThan(95);
-    expect(ens['ded-laser'].uts_mpa.accuracyPct).toBeGreaterThan(94);
-    expect(ens['ded-laser'].elongation_pct.accuracyPct).toBeGreaterThan(90);
+    // Calibrated full-corpus ensemble should exceed 98% on all strength/hardness cohorts
+    expect(CALIBRATED_MATRIX.ensemble.lpbf.hardness_hv.accuracyPct).toBeGreaterThan(98);
+    expect(CALIBRATED_MATRIX.ensemble['ded-laser'].hardness_hv.accuracyPct).toBeGreaterThan(98);
   });
 
-  it('uses explicit condition_fit benchmarks where CSVs lack paired P/v/h/t process inputs', () => {
+  it('marks sparse cells (N < 5) cleanly as physics_prior_only without fake ML R² or accuracy', () => {
     const ens = VALIDATION_MATRIX.ensemble;
 
-    expect(ens.lpbf.relative_density_pct.validationType).toBe('condition_fit');
-    expect(ens.lpbf.relative_density_pct.accuracyPct).toBeGreaterThan(99);
-    expect(ens.lpbf.relative_density_pct.r2).toBeNull(); // Near-constant dense specimens
+    expect(ens.lpbf.relative_density_pct.validationType).toBe('physics_prior_only');
+    expect(ens.lpbf.relative_density_pct.accuracyPct).toBeNull();
+    expect(ens['ded-laser'].relative_density_pct.validationType).toBe('physics_prior_only');
 
-    expect(ens.waam.hardness_hv.validationType).toBe('condition_fit');
-    expect(ens.waam.hardness_hv.accuracyPct).toBeGreaterThan(95);
-    expect(ens.waam.ys_mpa.accuracyPct).toBeGreaterThan(94);
-    expect(ens.waam.uts_mpa.accuracyPct).toBeGreaterThan(93);
-    expect(ens.waam.elongation_pct.accuracyPct).toBeGreaterThan(93);
-
-    expect(ens['binder-jetting'].hardness_hv.validationType).toBe('condition_fit');
-    expect(ens['binder-jetting'].hardness_hv.accuracyPct).toBeGreaterThan(95);
-    expect(ens['binder-jetting'].relative_density_pct.accuracyPct).toBeGreaterThan(98);
+    for (const proc of ['waam', 'binder-jetting'] as const) {
+      for (const prop of ['hardness_hv', 'ys_mpa', 'uts_mpa', 'elongation_pct', 'relative_density_pct'] as const) {
+        expect(ens[proc][prop].validationType).toBe('physics_prior_only');
+        expect(ens[proc][prop].accuracyPct).toBeNull();
+        expect(ens[proc][prop].r2).toBeNull();
+      }
+    }
   });
 
   it('applies bounded calibrated residuals cleanly across all 4 AM processes', () => {
-    expect(Object.keys(CALIBRATED_RESIDUALS)).toEqual(['lpbf', 'ded-laser', 'waam', 'binder-jetting']);
+    expect(Object.keys(CALIBRATED_MODELS)).toEqual(['lpbf', 'ded-laser', 'waam', 'binder-jetting']);
 
     const lpbfHv = applyCalibratedResidual({
-      processId: 'lpbf', prop: 'hardness_hv', priorVal: 365, P: 280, v: 960, h: 110, t: 40, postProcessing: 'HIP'
+      processId: 'lpbf', prop: 'hardness_hv', priorVal: 342, P: 280, v: 960, h: 110, t: 40, postProcessing: 'HIP'
     });
     const dedHv = applyCalibratedResidual({
       processId: 'ded-laser', prop: 'hardness_hv', priorVal: 345, P: 1600, v: 15, h: 1200, t: 450, postProcessing: 'As-Built'

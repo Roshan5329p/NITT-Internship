@@ -96,7 +96,7 @@ const STATE_FACTORS = {
     tabor_factor: 3.15, // fine acicular alpha' martensite
     ys_offset: +160,
     uts_offset: +170,
-    elong_pct: 6.8, // < 8% elongation
+    elong_pct: 7.0, // room-temp as-built baseline (< 8% elongation)
     lath_um: 0.65,
     phase: "88% acicular α' martensite + 12% prior-β",
     astm_class: "Class 3",
@@ -141,7 +141,7 @@ const STATE_FACTORS = {
     tabor_factor: 2.95, // coarse lamellar alpha+beta basketweave
     ys_offset: -65,
     uts_offset: -55,
-    elong_pct: 14.8,
+    elong_pct: 15.0,
     lath_um: 2.80,
     phase: "92% α + 8% β basketweave",
     astm_class: "Class 1",
@@ -321,13 +321,20 @@ export default function handler(req, res) {
     // Calibrated process/condition residual adjustment from data/pinn_ti64_weights.json
     const liveBundle = getPinnCalibrationData();
     const matrixSource = liveBundle.validation_matrix || VALIDATION_MATRIX;
+    const valCellKey = ['analytical', 'rf', 'xgboost', 'svm', 'gpr', 'ensemble'].includes(requestedModel) ? requestedModel : 'ensemble';
+    const htTempC = Number.isFinite(Number(q.ht_temp_c)) ? Number(q.ht_temp_c) : undefined;
+    const buildOriDeg = Number.isFinite(Number(q.orientation_deg)) ? Number(q.orientation_deg) : 0;
+    const preheatSigmoid = 1.0 / (1.0 + Math.exp(-(preheatC - 320.0) / 30.0));
+    if (proc === 'lpbf' && stateKey === 'as_built') {
+      finalHv -= 38.0 * preheatSigmoid;
+    }
     const calHv = Math.round(applyCalibratedResidual({
       processId: proc, prop: 'hardness_hv', priorVal: finalHv,
-      P: p, v, h, t, T0: preheatC, ved, postProcessing: stateKey, isEli
+      P: p, v, h, t, T0: preheatC, ved, hi, htTempC, postProcessing: stateKey,
+      oxygenWtPct: o2Wt, buildOrientationDeg: buildOriDeg, isEli, modelId: valCellKey
     }));
-    finalHv = Math.max(state.hv_range[0] - 20, Math.min(state.hv_range[1] + 20, calHv));
+    finalHv = Math.max(state.hv_range[0] - 25, Math.min(state.hv_range[1] + 25, calHv));
 
-    const valCellKey = ['analytical', 'rf', 'xgboost', 'svm', 'gpr', 'ensemble'].includes(requestedModel) ? requestedModel : 'ensemble';
     const procValidation = matrixSource?.[valCellKey]?.[proc] || null;
     const hvCell = procValidation?.hardness_hv || null;
 
@@ -341,7 +348,7 @@ export default function handler(req, res) {
       upper_hv: finalHv + piHalfWidth,
       half_width_hv: piHalfWidth,
       confidence_level: '95% Calibrated Prediction Interval',
-      empirical_coverage_pct: 95.2
+      empirical_coverage_pct: (hvCell && Number.isFinite(hvCell.pi95CoveragePct)) ? hvCell.pi95CoveragePct : 95.2
     };
 
     // Tabor Scaling + Calibrated Tensile & Elongation predictions
@@ -349,16 +356,22 @@ export default function handler(req, res) {
     const rawUts = Math.round(finalHv * taborFactor);
     const predUts = Math.round(applyCalibratedResidual({
       processId: proc, prop: 'uts_mpa', priorVal: rawUts,
-      P: p, v, h, t, T0: preheatC, ved, postProcessing: stateKey, isEli
+      P: p, v, h, t, T0: preheatC, ved, hi, htTempC, postProcessing: stateKey,
+      oxygenWtPct: o2Wt, buildOrientationDeg: buildOriDeg, isEli, modelId: valCellKey
     }));
     const rawYs = Math.round(predUts * 0.91);
     const predYs = Math.round(applyCalibratedResidual({
       processId: proc, prop: 'ys_mpa', priorVal: rawYs,
-      P: p, v, h, t, T0: preheatC, ved, postProcessing: stateKey, isEli
+      P: p, v, h, t, T0: preheatC, ved, hi, htTempC, postProcessing: stateKey,
+      oxygenWtPct: o2Wt, buildOrientationDeg: buildOriDeg, isEli, modelId: valCellKey
     }));
+    const elPriorBase = (proc === 'lpbf' && stateKey === 'as_built')
+      ? (7.0 + (14.2 - 7.0) * preheatSigmoid)
+      : state.elong_pct;
     const rawElong = applyCalibratedResidual({
-      processId: proc, prop: 'elongation_pct', priorVal: state.elong_pct,
-      P: p, v, h, t, T0: preheatC, ved, postProcessing: stateKey, isEli
+      processId: proc, prop: 'elongation_pct', priorVal: elPriorBase,
+      P: p, v, h, t, T0: preheatC, ved, hi, htTempC, postProcessing: stateKey,
+      oxygenWtPct: o2Wt, buildOrientationDeg: buildOriDeg, isEli, modelId: valCellKey
     });
     const predElong = parseFloat(Math.max(1.5, Math.min(22.0, rawElong)).toFixed(1));
 

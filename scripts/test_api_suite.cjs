@@ -268,7 +268,14 @@ async function runTests() {
       assert(Number.isFinite(res.body.predictions.vickers_hardness_hv));
       assert(Number.isFinite(res.body.predictions.yield_strength_ys_mpa));
       assert(res.body.validation_matrix_summary && res.body.validation_matrix_summary.hardness_hv);
-      assert(res.body.validation_matrix_summary.hardness_hv.accuracyPct > 90);
+      const cell = res.body.validation_matrix_summary.hardness_hv;
+      if (q.process === 'lpbf' || q.process === 'ded-laser') {
+        assert.strictEqual(cell.validationType, 'lopo_cv');
+        assert(cell.accuracyPct > 90);
+      } else {
+        assert.strictEqual(cell.validationType, 'physics_prior_only');
+        assert.strictEqual(cell.accuracyPct, null);
+      }
     }
   });
 

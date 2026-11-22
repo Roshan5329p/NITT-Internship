@@ -1,0 +1,4436 @@
+{
+  "generated_at": "2026-11-22T10:30:29.808Z",
+  "calibrated_model_version": "ti64-calibrated-v3.0",
+  "gate_passed": true,
+  "failures": [],
+  "corpus_summary": {
+    "total_csv_papers": 199,
+    "benchmark_eligible": 35,
+    "excluded_by_reason": {
+      "lattice": 5,
+      "modified_alloy": 4,
+      "placeholder_recipe": 16,
+      "pending_extraction": 104,
+      "non_target_process": 34,
+      "duplicate": 1
+    }
+  },
+  "gate_checks": [
+    {
+      "process": "lpbf",
+      "property": "hardness_hv",
+      "tier": "evaluated_strength_hardness",
+      "nSamples": 24,
+      "criterion": "LOPO Mean Accuracy >= 90.0% AND 95% PI Coverage >= 85%",
+      "status": "PASS",
+      "lopoStats": {
+        "nSamples": 24,
+        "mae": 5.531,
+        "rmse": 8.797,
+        "mapePct": 1.51,
+        "accuracyPct": 98.49,
+        "r2": 0.846,
+        "pi95HalfWidth": 17.24,
+        "pi95CoveragePct": 91.7,
+        "papersAbove90Count": 24,
+        "papersAbove90Pct": 100,
+        "meetsAccuracy90": true
+      },
+      "calibratedRuntimeStats": {
+        "nSamples": 24,
+        "mae": 2.014,
+        "rmse": 2.91,
+        "mapePct": 0.55,
+        "accuracyPct": 99.45,
+        "r2": 0.983,
+        "pi95HalfWidth": 5.7,
+        "pi95CoveragePct": 91.7,
+        "papersAbove90Count": 24,
+        "papersAbove90Pct": 100,
+        "meetsAccuracy90": true
+      },
+      "matrixSynced": true
+    },
+    {
+      "process": "lpbf",
+      "property": "ys_mpa",
+      "tier": "evaluated_strength_hardness",
+      "nSamples": 24,
+      "criterion": "LOPO Mean Accuracy >= 90.0% AND 95% PI Coverage >= 85%",
+      "status": "PASS",
+      "lopoStats": {
+        "nSamples": 24,
+        "mae": 20.563,
+        "rmse": 32.265,
+        "mapePct": 2.13,
+        "accuracyPct": 97.87,
+        "r2": 0.822,
+        "pi95HalfWidth": 63.24,
+        "pi95CoveragePct": 95.8,
+        "papersAbove90Count": 23,
+        "papersAbove90Pct": 95.8,
+        "meetsAccuracy90": true
+      },
+      "calibratedRuntimeStats": {
+        "nSamples": 24,
+        "mae": 7.815,
+        "rmse": 12.4,
+        "mapePct": 0.81,
+        "accuracyPct": 99.19,
+        "r2": 0.974,
+        "pi95HalfWidth": 24.3,
+        "pi95CoveragePct": 95.8,
+        "papersAbove90Count": 24,
+        "papersAbove90Pct": 100,
+        "meetsAccuracy90": true
+      },
+      "matrixSynced": true
+    },
+    {
+      "process": "lpbf",
+      "property": "uts_mpa",
+      "tier": "evaluated_strength_hardness",
+      "nSamples": 24,
+      "criterion": "LOPO Mean Accuracy >= 90.0% AND 95% PI Coverage >= 85%",
+      "status": "PASS",
+      "lopoStats": {
+        "nSamples": 24,
+        "mae": 25.014,
+        "rmse": 40.066,
+        "mapePct": 2.27,
+        "accuracyPct": 97.73,
+        "r2": 0.845,
+        "pi95HalfWidth": 78.53,
+        "pi95CoveragePct": 91.7,
+        "papersAbove90Count": 23,
+        "papersAbove90Pct": 95.8,
+        "meetsAccuracy90": true
+      },
+      "calibratedRuntimeStats": {
+        "nSamples": 24,
+        "mae": 8.786,
+        "rmse": 15.105,
+        "mapePct": 0.8,
+        "accuracyPct": 99.2,
+        "r2": 0.978,
+        "pi95HalfWidth": 29.61,
+        "pi95CoveragePct": 95.8,
+        "papersAbove90Count": 24,
+        "papersAbove90Pct": 100,
+        "meetsAccuracy90": true
+      },
+      "matrixSynced": true
+    },
+    {
+      "process": "lpbf",
+      "property": "elongation_pct",
+      "tier": "evaluated_ductility",
+      "nSamples": 24,
+      "criterion": "LOPO MAE <= 2.0 pp AND 95% PI Coverage >= 85%",
+      "status": "PASS",
+      "lopoStats": {
+        "nSamples": 24,
+        "mae": 0.572,
+        "rmse": 1.004,
+        "mapePct": 5.58,
+        "accuracyPct": 94.42,
+        "r2": 0.897,
+        "pi95HalfWidth": 1.97,
+        "pi95CoveragePct": 95.8,
+        "papersAbove90Count": 21,
+        "papersAbove90Pct": 87.5,
+        "meetsAccuracy90": true
+      },
+      "calibratedRuntimeStats": {
+        "nSamples": 24,
+        "mae": 0.324,
+        "rmse": 0.545,
+        "mapePct": 3.2,
+        "accuracyPct": 96.8,
+        "r2": 0.97,
+        "pi95HalfWidth": 1.07,
+        "pi95CoveragePct": 95.8,
+        "papersAbove90Count": 22,
+        "papersAbove90Pct": 91.7,
+        "meetsAccuracy90": true
+      },
+      "matrixSynced": false
+    },
+    {
+      "process": "lpbf",
+      "property": "relative_density_pct",
+      "tier": "physics_prior_only",
+      "nSamples": 0,
+      "status": "PASS",
+      "allFinite": true,
+      "withinPhysicalBounds": true,
+      "bounds": [
+        90,
+        100
+      ],
+      "sampleOutputs": [
+        99.8,
+        99.92
+      ],
+      "matrixTag": "physics_prior_only"
+    },
+    {
+      "process": "ded-laser",
+      "property": "hardness_hv",
+      "tier": "evaluated_strength_hardness",
+      "nSamples": 10,
+      "criterion": "LOPO Mean Accuracy >= 90.0% AND 95% PI Coverage >= 85%",
+      "status": "PASS",
+      "lopoStats": {
+        "nSamples": 10,
+        "mae": 6.427,
+        "rmse": 9.065,
+        "mapePct": 1.86,
+        "accuracyPct": 98.14,
+        "r2": 0.649,
+        "pi95HalfWidth": 17.77,
+        "pi95CoveragePct": 90,
+        "papersAbove90Count": 10,
+        "papersAbove90Pct": 100,
+        "meetsAccuracy90": true
+      },
+      "calibratedRuntimeStats": {
+        "nSamples": 10,
+        "mae": 3.878,
+        "rmse": 4.982,
+        "mapePct": 1.13,
+        "accuracyPct": 98.87,
+        "r2": 0.894,
+        "pi95HalfWidth": 9.76,
+        "pi95CoveragePct": 90,
+        "papersAbove90Count": 10,
+        "papersAbove90Pct": 100,
+        "meetsAccuracy90": true
+      },
+      "matrixSynced": false
+    },
+    {
+      "process": "ded-laser",
+      "property": "ys_mpa",
+      "tier": "evaluated_strength_hardness",
+      "nSamples": 10,
+      "criterion": "LOPO Mean Accuracy >= 90.0% AND 95% PI Coverage >= 85%",
+      "status": "PASS",
+      "lopoStats": {
+        "nSamples": 10,
+        "mae": 23.039,
+        "rmse": 41.326,
+        "mapePct": 2.47,
+        "accuracyPct": 97.53,
+        "r2": 0.344,
+        "pi95HalfWidth": 81,
+        "pi95CoveragePct": 90,
+        "papersAbove90Count": 9,
+        "papersAbove90Pct": 90,
+        "meetsAccuracy90": true
+      },
+      "calibratedRuntimeStats": {
+        "nSamples": 10,
+        "mae": 10.16,
+        "rmse": 17.343,
+        "mapePct": 1.1,
+        "accuracyPct": 98.9,
+        "r2": 0.885,
+        "pi95HalfWidth": 33.99,
+        "pi95CoveragePct": 90,
+        "papersAbove90Count": 10,
+        "papersAbove90Pct": 100,
+        "meetsAccuracy90": true
+      },
+      "matrixSynced": false
+    },
+    {
+      "process": "ded-laser",
+      "property": "uts_mpa",
+      "tier": "evaluated_strength_hardness",
+      "nSamples": 10,
+      "criterion": "LOPO Mean Accuracy >= 90.0% AND 95% PI Coverage >= 85%",
+      "status": "PASS",
+      "lopoStats": {
+        "nSamples": 10,
+        "mae": 37.024,
+        "rmse": 70.385,
+        "mapePct": 3.42,
+        "accuracyPct": 96.58,
+        "r2": 0.068,
+        "pi95HalfWidth": 137.95,
+        "pi95CoveragePct": 90,
+        "papersAbove90Count": 9,
+        "papersAbove90Pct": 90,
+        "meetsAccuracy90": true
+      },
+      "calibratedRuntimeStats": {
+        "nSamples": 10,
+        "mae": 20.124,
+        "rmse": 38.239,
+        "mapePct": 1.86,
+        "accuracyPct": 98.14,
+        "r2": 0.725,
+        "pi95HalfWidth": 74.95,
+        "pi95CoveragePct": 90,
+        "papersAbove90Count": 10,
+        "papersAbove90Pct": 100,
+        "meetsAccuracy90": true
+      },
+      "matrixSynced": false
+    },
+    {
+      "process": "ded-laser",
+      "property": "elongation_pct",
+      "tier": "evaluated_ductility",
+      "nSamples": 10,
+      "criterion": "LOPO MAE <= 2.0 pp AND 95% PI Coverage >= 85%",
+      "status": "PASS",
+      "lopoStats": {
+        "nSamples": 10,
+        "mae": 1.008,
+        "rmse": 1.333,
+        "mapePct": 10.03,
+        "accuracyPct": 89.97,
+        "r2": 0.334,
+        "pi95HalfWidth": 2.61,
+        "pi95CoveragePct": 90,
+        "papersAbove90Count": 6,
+        "papersAbove90Pct": 60,
+        "meetsAccuracy90": false
+      },
+      "calibratedRuntimeStats": {
+        "nSamples": 10,
+        "mae": 0.662,
+        "rmse": 0.924,
+        "mapePct": 6.74,
+        "accuracyPct": 93.26,
+        "r2": 0.68,
+        "pi95HalfWidth": 1.81,
+        "pi95CoveragePct": 90,
+        "papersAbove90Count": 7,
+        "papersAbove90Pct": 70,
+        "meetsAccuracy90": true
+      },
+      "matrixSynced": false
+    },
+    {
+      "process": "ded-laser",
+      "property": "relative_density_pct",
+      "tier": "physics_prior_only",
+      "nSamples": 0,
+      "status": "PASS",
+      "allFinite": true,
+      "withinPhysicalBounds": true,
+      "bounds": [
+        90,
+        100
+      ],
+      "sampleOutputs": [
+        99.8,
+        99.8
+      ],
+      "matrixTag": "physics_prior_only"
+    },
+    {
+      "process": "waam",
+      "property": "hardness_hv",
+      "tier": "physics_prior_only",
+      "nSamples": 1,
+      "status": "PASS",
+      "allFinite": true,
+      "withinPhysicalBounds": true,
+      "bounds": [
+        180,
+        520
+      ],
+      "sampleOutputs": [
+        324,
+        324,
+        310
+      ],
+      "matrixTag": "physics_prior_only"
+    },
+    {
+      "process": "waam",
+      "property": "ys_mpa",
+      "tier": "physics_prior_only",
+      "nSamples": 1,
+      "status": "PASS",
+      "allFinite": true,
+      "withinPhysicalBounds": true,
+      "bounds": [
+        500,
+        1300
+      ],
+      "sampleOutputs": [
+        833.93,
+        834.51,
+        783.9
+      ],
+      "matrixTag": "physics_prior_only"
+    },
+    {
+      "process": "waam",
+      "property": "uts_mpa",
+      "tier": "physics_prior_only",
+      "nSamples": 1,
+      "status": "PASS",
+      "allFinite": true,
+      "withinPhysicalBounds": true,
+      "bounds": [
+        550,
+        1450
+      ],
+      "sampleOutputs": [
+        925.67,
+        926.3,
+        870.13
+      ],
+      "matrixTag": "physics_prior_only"
+    },
+    {
+      "process": "waam",
+      "property": "elongation_pct",
+      "tier": "physics_prior_only",
+      "nSamples": 1,
+      "status": "PASS",
+      "allFinite": true,
+      "withinPhysicalBounds": true,
+      "bounds": [
+        2,
+        25
+      ],
+      "sampleOutputs": [
+        13.8,
+        13.8,
+        15.5
+      ],
+      "matrixTag": "physics_prior_only"
+    },
+    {
+      "process": "waam",
+      "property": "relative_density_pct",
+      "tier": "physics_prior_only",
+      "nSamples": 0,
+      "status": "PASS",
+      "allFinite": true,
+      "withinPhysicalBounds": true,
+      "bounds": [
+        90,
+        100
+      ],
+      "sampleOutputs": [
+        99.8,
+        99.92
+      ],
+      "matrixTag": "physics_prior_only"
+    },
+    {
+      "process": "binder-jetting",
+      "property": "hardness_hv",
+      "tier": "physics_prior_only",
+      "nSamples": 0,
+      "status": "PASS",
+      "allFinite": true,
+      "withinPhysicalBounds": true,
+      "bounds": [
+        180,
+        520
+      ],
+      "sampleOutputs": [
+        286,
+        332
+      ],
+      "matrixTag": "physics_prior_only"
+    },
+    {
+      "process": "binder-jetting",
+      "property": "ys_mpa",
+      "tier": "physics_prior_only",
+      "nSamples": 0,
+      "status": "PASS",
+      "allFinite": true,
+      "withinPhysicalBounds": true,
+      "bounds": [
+        500,
+        1300
+      ],
+      "sampleOutputs": [
+        710,
+        840
+      ],
+      "matrixTag": "physics_prior_only"
+    },
+    {
+      "process": "binder-jetting",
+      "property": "uts_mpa",
+      "tier": "physics_prior_only",
+      "nSamples": 0,
+      "status": "PASS",
+      "allFinite": true,
+      "withinPhysicalBounds": true,
+      "bounds": [
+        550,
+        1450
+      ],
+      "sampleOutputs": [
+        820.05,
+        945
+      ],
+      "matrixTag": "physics_prior_only"
+    },
+    {
+      "process": "binder-jetting",
+      "property": "elongation_pct",
+      "tier": "physics_prior_only",
+      "nSamples": 0,
+      "status": "PASS",
+      "allFinite": true,
+      "withinPhysicalBounds": true,
+      "bounds": [
+        2,
+        25
+      ],
+      "sampleOutputs": [
+        7.5,
+        12.3
+      ],
+      "matrixTag": "physics_prior_only"
+    },
+    {
+      "process": "binder-jetting",
+      "property": "relative_density_pct",
+      "tier": "physics_prior_only",
+      "nSamples": 0,
+      "status": "PASS",
+      "allFinite": true,
+      "withinPhysicalBounds": true,
+      "bounds": [
+        90,
+        100
+      ],
+      "sampleOutputs": [
+        96,
+        99.75
+      ],
+      "matrixTag": "physics_prior_only"
+    }
+  ],
+  "same_input_scatter_cohorts": [
+    {
+      "signature": "lpbf|As-Built|250|1000|100|30|200",
+      "count": 4,
+      "papers": [
+        "4 Awan et al. (2026)",
+        "15 Ganeriwala et al. (2019)",
+        "54 Yang et al. (2023)",
+        "55 Coen et al. (2022)"
+      ],
+      "experimentalSpread": {
+        "hardness_hv": {
+          "min": 382,
+          "max": 390,
+          "spread": 8,
+          "mean": 386.25
+        },
+        "ys_mpa": {
+          "min": 1040,
+          "max": 1070,
+          "spread": 30,
+          "mean": 1053.75
+        },
+        "uts_mpa": {
+          "min": 1210,
+          "max": 1240,
+          "spread": 30,
+          "mean": 1223.75
+        },
+        "elongation_pct": {
+          "min": 7,
+          "max": 8.2,
+          "spread": 1.2,
+          "mean": 7.75
+        }
+      }
+    },
+    {
+      "signature": "lpbf|As-Built|200|900|100|30|200",
+      "count": 2,
+      "papers": [
+        "7 Bartsch et al. (2022)",
+        "42 Obeidi et al. (2022)"
+      ],
+      "experimentalSpread": {
+        "hardness_hv": {
+          "min": 380,
+          "max": 380,
+          "spread": 0,
+          "mean": 380
+        },
+        "ys_mpa": {
+          "min": 1055,
+          "max": 1060,
+          "spread": 5,
+          "mean": 1057.5
+        },
+        "uts_mpa": {
+          "min": 1210,
+          "max": 1220,
+          "spread": 10,
+          "mean": 1215
+        },
+        "elongation_pct": {
+          "min": 7.4,
+          "max": 8.5,
+          "spread": 1.1,
+          "mean": 7.95
+        }
+      }
+    },
+    {
+      "signature": "lpbf|Annealed|200|900|100|30|200",
+      "count": 2,
+      "papers": [
+        "18 Gryaznov et al. (2023)",
+        "26 Lee et al. (2017)"
+      ],
+      "experimentalSpread": {
+        "hardness_hv": {
+          "min": 335,
+          "max": 355,
+          "spread": 20,
+          "mean": 345
+        },
+        "ys_mpa": {
+          "min": 865,
+          "max": 950,
+          "spread": 85,
+          "mean": 907.5
+        },
+        "uts_mpa": {
+          "min": 960,
+          "max": 1045,
+          "spread": 85,
+          "mean": 1002.5
+        },
+        "elongation_pct": {
+          "min": 12,
+          "max": 15.2,
+          "spread": 3.2,
+          "mean": 13.6
+        }
+      }
+    }
+  ],
+  "lopo_outliers_below_90pct": [
+    {
+      "paperNumber": "1",
+      "authors": "Alegre et al.",
+      "year": "2022",
+      "process": "lpbf",
+      "condition": "HIPed (850°C / 200 MPa)",
+      "property": "ys_mpa",
+      "exp": 885,
+      "lopoPredEnsemble": 775.67,
+      "lopoAccuracyPct": 87.65,
+      "calibratedAccuracyPct": 94.68
+    },
+    {
+      "paperNumber": "1",
+      "authors": "Alegre et al.",
+      "year": "2022",
+      "process": "lpbf",
+      "condition": "HIPed (850°C / 200 MPa)",
+      "property": "uts_mpa",
+      "exp": 995,
+      "lopoPredEnsemble": 863.57,
+      "lopoAccuracyPct": 86.79,
+      "calibratedAccuracyPct": 93.99
+    },
+    {
+      "paperNumber": "2",
+      "authors": "Artzt et al.",
+      "year": "2020",
+      "process": "lpbf",
+      "condition": "as-built",
+      "property": "elongation_pct",
+      "exp": 6.8,
+      "lopoPredEnsemble": 7.76,
+      "lopoAccuracyPct": 85.88,
+      "calibratedAccuracyPct": 95.68
+    },
+    {
+      "paperNumber": "6",
+      "authors": "Barriobero-Vila et al.",
+      "year": "2017",
+      "process": "lpbf",
+      "condition": "as-built",
+      "property": "elongation_pct",
+      "exp": 11.5,
+      "lopoPredEnsemble": 7.36,
+      "lopoAccuracyPct": 64.01,
+      "calibratedAccuracyPct": 81.45
+    },
+    {
+      "paperNumber": "15",
+      "authors": "Ganeriwala et al.",
+      "year": "2019",
+      "process": "lpbf",
+      "condition": "as-built",
+      "property": "elongation_pct",
+      "exp": 7,
+      "lopoPredEnsemble": 7.9,
+      "lopoAccuracyPct": 87.14,
+      "calibratedAccuracyPct": 89.61
+    },
+    {
+      "paperNumber": "40",
+      "authors": "Nursyifaulkhair et al.",
+      "year": "2019",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "property": "elongation_pct",
+      "exp": 8.5,
+      "lopoPredEnsemble": 11.53,
+      "lopoAccuracyPct": 64.35,
+      "calibratedAccuracyPct": 76.65
+    },
+    {
+      "paperNumber": "50",
+      "authors": "Wang et al.",
+      "year": "2025",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "property": "elongation_pct",
+      "exp": 13.5,
+      "lopoPredEnsemble": 11.44,
+      "lopoAccuracyPct": 84.74,
+      "calibratedAccuracyPct": 89.54
+    },
+    {
+      "paperNumber": "56",
+      "authors": "Bontha et al.",
+      "year": "2009",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "property": "ys_mpa",
+      "exp": 1010,
+      "lopoPredEnsemble": 888.52,
+      "lopoAccuracyPct": 87.97,
+      "calibratedAccuracyPct": 95.02
+    },
+    {
+      "paperNumber": "56",
+      "authors": "Bontha et al.",
+      "year": "2009",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "property": "uts_mpa",
+      "exp": 1180,
+      "lopoPredEnsemble": 973.81,
+      "lopoAccuracyPct": 82.53,
+      "calibratedAccuracyPct": 90.49
+    },
+    {
+      "paperNumber": "56",
+      "authors": "Bontha et al.",
+      "year": "2009",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "property": "elongation_pct",
+      "exp": 8.2,
+      "lopoPredEnsemble": 9.5,
+      "lopoAccuracyPct": 84.2,
+      "calibratedAccuracyPct": 83.66
+    },
+    {
+      "paperNumber": "57",
+      "authors": "Bontha et al.",
+      "year": "2006",
+      "process": "ded-laser",
+      "condition": "as-built",
+      "property": "elongation_pct",
+      "exp": 9.8,
+      "lopoPredEnsemble": 10.91,
+      "lopoAccuracyPct": 88.65,
+      "calibratedAccuracyPct": 93
+    }
+  ],
+  "excluded_records": [
+    {
+      "paperNumber": "9",
+      "authors": "Cutolo et al.",
+      "year": "2020",
+      "process": "lpbf",
+      "specimen_type": "lattice",
+      "exclusion_reason": "Porous / lattice scaffold geometry (non-bulk coupon)"
+    },
+    {
+      "paperNumber": "13",
+      "authors": "Emminghaus et al.",
+      "year": "2022",
+      "process": "lpbf",
+      "specimen_type": "modified_alloy",
+      "exclusion_reason": "Modified alloy / composite (outside standard Ti-6Al-4V Gr5/23 ELI)"
+    },
+    {
+      "paperNumber": "14",
+      "authors": "Fereiduni et al.",
+      "year": "2023",
+      "process": "lpbf",
+      "specimen_type": "modified_alloy",
+      "exclusion_reason": "Modified alloy / composite (outside standard Ti-6Al-4V Gr5/23 ELI)"
+    },
+    {
+      "paperNumber": "16",
+      "authors": "Ghosh & Choi",
+      "year": "2018",
+      "process": "lpbf",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "17",
+      "authors": "Goettgens et al.",
+      "year": "2023",
+      "process": "lpbf",
+      "specimen_type": "modified_alloy",
+      "exclusion_reason": "Modified alloy / composite (outside standard Ti-6Al-4V Gr5/23 ELI)"
+    },
+    {
+      "paperNumber": "20",
+      "authors": "Jamshidi et al.",
+      "year": "2020",
+      "process": "lpbf",
+      "specimen_type": "lattice",
+      "exclusion_reason": "Porous / lattice scaffold geometry (non-bulk coupon)"
+    },
+    {
+      "paperNumber": "21",
+      "authors": "Kallel et al.",
+      "year": "2019",
+      "process": "ded-laser",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "22",
+      "authors": "Kim et al.",
+      "year": "2026",
+      "process": "ded-laser",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "23",
+      "authors": "Koushik et al.",
+      "year": "2023",
+      "process": "lpbf",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "25",
+      "authors": "Le Roux et al.",
+      "year": "2025",
+      "process": "lpbf",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "27",
+      "authors": "Lee et al.",
+      "year": "2018",
+      "process": "ded-laser",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "28",
+      "authors": "Lee et al.",
+      "year": "2025",
+      "process": "lpbf",
+      "specimen_type": "lattice",
+      "exclusion_reason": "Porous / lattice scaffold geometry (non-bulk coupon)"
+    },
+    {
+      "paperNumber": "29",
+      "authors": "Linde et al.",
+      "year": "2026",
+      "process": "lpbf",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "30",
+      "authors": "Lu et al.",
+      "year": "2019",
+      "process": "lpbf",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "31",
+      "authors": "Lu et al.",
+      "year": "2020",
+      "process": "lpbf",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "32",
+      "authors": "Luo et al.",
+      "year": "2025",
+      "process": "lpbf",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "35",
+      "authors": "Merkibayev et al.",
+      "year": "2026",
+      "process": "lpbf",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "38",
+      "authors": "Moridi et al.",
+      "year": "2019",
+      "process": "lpbf",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "39",
+      "authors": "Nitzler et al.",
+      "year": "2021",
+      "process": "lpbf",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "45",
+      "authors": "Salikhyanov et al.",
+      "year": "2021",
+      "process": "lpbf",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "46",
+      "authors": "Simonelli et al.",
+      "year": "2020",
+      "process": "lpbf",
+      "specimen_type": "modified_alloy",
+      "exclusion_reason": "Modified alloy / composite (outside standard Ti-6Al-4V Gr5/23 ELI)"
+    },
+    {
+      "paperNumber": "47",
+      "authors": "Sinclair et al.",
+      "year": "2021",
+      "process": "lpbf",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "49",
+      "authors": "Vayssette et al.",
+      "year": "2018",
+      "process": "lpbf",
+      "specimen_type": "placeholder_recipe",
+      "exclusion_reason": "Repeated placeholder process/tensile recipe in raw CSV"
+    },
+    {
+      "paperNumber": "59",
+      "authors": "Vrancken et al.",
+      "year": "2012",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "60",
+      "authors": "Vilaro et al.",
+      "year": "2011",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "61",
+      "authors": "Simonelli et al.",
+      "year": "2014",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "62",
+      "authors": "Gorsse et al.",
+      "year": "2017",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Review / AM outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "63",
+      "authors": "Todaro et al.",
+      "year": "2020",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "64",
+      "authors": "Bermingham et al.",
+      "year": "2019",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "65",
+      "authors": "Zhao et al.",
+      "year": "2017",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "66",
+      "authors": "Murr et al.",
+      "year": "2010",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process EBM outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "67",
+      "authors": "Tammas-Williams et al.",
+      "year": "2015",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process EBM outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "68",
+      "authors": "Facchini et al.",
+      "year": "2010",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "69",
+      "authors": "Heigel et al.",
+      "year": "2015",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "70",
+      "authors": "Ly et al.",
+      "year": "2017",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "71",
+      "authors": "Murr et al.",
+      "year": "2012",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process EBM / DED outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "72",
+      "authors": "Cain et al.",
+      "year": "2015",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "73",
+      "authors": "Dilip et al.",
+      "year": "2017",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "74",
+      "authors": "Simonelli et al.",
+      "year": "2015",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "75",
+      "authors": "de Formanoir et al.",
+      "year": "2016",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process EBM outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "76",
+      "authors": "Simonelli et al.",
+      "year": "2014",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "77",
+      "authors": "Liu et al.",
+      "year": "2021",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Review / DED outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "78",
+      "authors": "Cunningham et al.",
+      "year": "2017",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "155",
+      "authors": "Meier C. et al.",
+      "year": "2019",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "156",
+      "authors": "Miyanaji H. et al.",
+      "year": "2018",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "157",
+      "authors": "Stevens E. et al.",
+      "year": "2018",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "158",
+      "authors": "Phua A. et al.",
+      "year": "2021",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "160",
+      "authors": "Simchi A. et al.",
+      "year": "2023",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "162",
+      "authors": "Janzen K. et al.",
+      "year": "2024",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "163",
+      "authors": "Alegre J.M. et al.",
+      "year": "2024",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "164",
+      "authors": "Tischel F. et al.",
+      "year": "2024",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "165",
+      "authors": "Siddiqui M.A.S. et al.",
+      "year": "2025",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "166",
+      "authors": "Janzen K. et al.",
+      "year": "2025",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "167",
+      "authors": "Bhaduri D. et al.",
+      "year": "2025",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "168",
+      "authors": "Frieden Templeton W. et al.",
+      "year": "2024",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "169",
+      "authors": "Jump N. et al.",
+      "year": "2025",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "170",
+      "authors": "Bernhard G.H. et al.",
+      "year": "2021",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "172",
+      "authors": "Janzen K. et al.",
+      "year": "2025",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "173",
+      "authors": "Simchi A. et al.",
+      "year": "2022",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "174",
+      "authors": "Paramore J.D. et al.",
+      "year": "2020",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "175",
+      "authors": "Janzen K. et al.",
+      "year": "2022",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "176",
+      "authors": "Simchi A. et al.",
+      "year": "2021",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "177",
+      "authors": "Qian Y. et al.",
+      "year": "2026",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "178",
+      "authors": "Persson M. et al.",
+      "year": "2017",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "79",
+      "authors": "Tischel F. et al.",
+      "year": "2024",
+      "process": "binder-jetting",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "80",
+      "authors": "Williams S.W. et al.",
+      "year": "2016",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "81",
+      "authors": "Wang F. et al.",
+      "year": "2013",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "82",
+      "authors": "Bermingham M.J. et al.",
+      "year": "2015",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "83",
+      "authors": "Szost B.A. et al.",
+      "year": "2016",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "84",
+      "authors": "Donoghue J. et al.",
+      "year": "2016",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "85",
+      "authors": "Wu B. et al.",
+      "year": "2017",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "86",
+      "authors": "Martina F. et al.",
+      "year": "2015",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "87",
+      "authors": "McAndrew A.R. et al.",
+      "year": "2018",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "88",
+      "authors": "Wu B. et al.",
+      "year": "2018",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "89",
+      "authors": "Wu B. et al.",
+      "year": "2018",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "90",
+      "authors": "Wu B. et al.",
+      "year": "2018",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "91",
+      "authors": "Zhang J. et al.",
+      "year": "2016",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "92",
+      "authors": "Martina F. et al.",
+      "year": "2016",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "93",
+      "authors": "Bermingham M.J. et al.",
+      "year": "2018",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "94",
+      "authors": "Biswal R. et al.",
+      "year": "2019",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "95",
+      "authors": "Yang J. et al.",
+      "year": "2017",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "96",
+      "authors": "Hönnige J.R. et al.",
+      "year": "2018",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "97",
+      "authors": "Bambach M. et al.",
+      "year": "2020",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "98",
+      "authors": "Motallebi R. et al.",
+      "year": "2022",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "99",
+      "authors": "Wang J. et al.",
+      "year": "2018",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "100",
+      "authors": "Sequeira Almeida P.M. et al.",
+      "year": "2010",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "101",
+      "authors": "Shi X. et al.",
+      "year": "2017",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "102",
+      "authors": "Kennedy J.R. et al.",
+      "year": "2021",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "103",
+      "authors": "Wu Q. et al.",
+      "year": "2019",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "104",
+      "authors": "Zhang X. et al.",
+      "year": "2017",
+      "process": "waam",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "105",
+      "authors": "Liu S. et al.",
+      "year": "2019",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "106",
+      "authors": "Lewandowski J.J. et al.",
+      "year": "2016",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "107",
+      "authors": "Carroll B.E. et al.",
+      "year": "2015",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "108",
+      "authors": "Nguyen H.D. et al.",
+      "year": "2022",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "110",
+      "authors": "Wu X. et al.",
+      "year": "2004",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "111",
+      "authors": "Bobbio L.D. et al.",
+      "year": "2017",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "112",
+      "authors": "Kelly S.M. et al.",
+      "year": "2004",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "113",
+      "authors": "Bandyopadhyay A. et al.",
+      "year": "2010",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "114",
+      "authors": "Sterling A.J. et al.",
+      "year": "2016",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "116",
+      "authors": "Azarniya A. et al.",
+      "year": "2019",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "117",
+      "authors": "Beese A.M. et al.",
+      "year": "2016",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "119",
+      "authors": "Kelly S.M. et al.",
+      "year": "2004",
+      "process": "ded-laser",
+      "specimen_type": "duplicate",
+      "exclusion_reason": "Duplicate catalog entry"
+    },
+    {
+      "paperNumber": "120",
+      "authors": "Onuike B. et al.",
+      "year": "2018",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "121",
+      "authors": "Zhai Y. et al.",
+      "year": "2016",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "122",
+      "authors": "Khanzadeh M. et al.",
+      "year": "2019",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "123",
+      "authors": "Qian M. et al.",
+      "year": "2016",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "124",
+      "authors": "Yang Q. et al.",
+      "year": "2016",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "125",
+      "authors": "Hayes B.J. et al.",
+      "year": "2017",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "126",
+      "authors": "Lu H. et al.",
+      "year": "2022",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "128",
+      "authors": "Sahasrabudhe H. et al.",
+      "year": "2015",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "129",
+      "authors": "Li W. et al.",
+      "year": "2017",
+      "process": "ded-laser",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "130",
+      "authors": "Thijs L. et al.",
+      "year": "2010",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "133",
+      "authors": "Murr L.E. et al.",
+      "year": "2012",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "134",
+      "authors": "Xu W. et al.",
+      "year": "2015",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "136",
+      "authors": "Gong H. et al.",
+      "year": "2014",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "137",
+      "authors": "Qiu C. et al.",
+      "year": "2015",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "138",
+      "authors": "Murr L.E. et al.",
+      "year": "2009",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "139",
+      "authors": "Gong H. et al.",
+      "year": "2015",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "140",
+      "authors": "Vandenbroucke B. et al.",
+      "year": "2007",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "141",
+      "authors": "Bobbert F.S.L. et al.",
+      "year": "2017",
+      "process": "lpbf",
+      "specimen_type": "lattice",
+      "exclusion_reason": "Porous / lattice scaffold geometry (non-bulk coupon)"
+    },
+    {
+      "paperNumber": "142",
+      "authors": "Edwards P. et al.",
+      "year": "2014",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "143",
+      "authors": "Yang J. et al.",
+      "year": "2016",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "144",
+      "authors": "Qiu C. et al.",
+      "year": "2013",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "146",
+      "authors": "Zhang L.C. et al.",
+      "year": "2016",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "147",
+      "authors": "Yan C. et al.",
+      "year": "2015",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "148",
+      "authors": "Zhao C. et al.",
+      "year": "2020",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "149",
+      "authors": "Xu W. et al.",
+      "year": "2017",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "150",
+      "authors": "Zhao X. et al.",
+      "year": "2016",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "152",
+      "authors": "Shipley H. et al.",
+      "year": "2018",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "154",
+      "authors": "Dai N. et al.",
+      "year": "2016",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "179",
+      "authors": "El-Magd E. et al.",
+      "year": "2006",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Ti-6Al-4V Tensile / Wrought outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "180",
+      "authors": "Wang Z. et al.",
+      "year": "2018",
+      "process": "lpbf",
+      "specimen_type": "lattice",
+      "exclusion_reason": "Porous / lattice scaffold geometry (non-bulk coupon)"
+    },
+    {
+      "paperNumber": "181",
+      "authors": "Smith B.D. et al.",
+      "year": "2018",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Ti-6Al-4V Tensile / Wrought outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "182",
+      "authors": "Mohammadhosseini A. et al.",
+      "year": "2013",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process EBM outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "183",
+      "authors": "Motyka M. et al.",
+      "year": "2014",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Ti-6Al-4V Tensile / Wrought outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "185",
+      "authors": "Xiao J. et al.",
+      "year": "2012",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Ti-6Al-4V Tensile / Wrought outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "186",
+      "authors": "Jiang Y.Q. et al.",
+      "year": "2020",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Ti-6Al-4V Tensile / Wrought outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "187",
+      "authors": "Wang S. et al.",
+      "year": "2014",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Ti-6Al-4V Tensile / Wrought outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "188",
+      "authors": "Mirone G. et al.",
+      "year": "2020",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process EBM outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "189",
+      "authors": "Saboori M. et al.",
+      "year": "2016",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Ti-6Al-4V Tensile / Wrought outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "190",
+      "authors": "Moćko W. et al.",
+      "year": "2015",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Ti-6Al-4V Tensile / Wrought outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "191",
+      "authors": "Semiatin S.L. et al.",
+      "year": "1999",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Thermo-Mech / Compression outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "192",
+      "authors": "Semiatin S.L. et al.",
+      "year": "2001",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Thermo-Mech / Compression outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "193",
+      "authors": "Cai J. et al.",
+      "year": "2011",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Thermo-Mech / Compression outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "194",
+      "authors": "Seo S. et al.",
+      "year": "2005",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Thermo-Mech / Compression outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "195",
+      "authors": "Heinl P. et al.",
+      "year": "2007",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process EBM outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "196",
+      "authors": "Babu B. et al.",
+      "year": "2013",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Thermo-Mech / Compression outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "197",
+      "authors": "Nalla R.K. et al.",
+      "year": "2003",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process HCF & LCF / Surface outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "198",
+      "authors": "Altenberger I. et al.",
+      "year": "2012",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process HCF & LCF / Surface outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "199",
+      "authors": "Maxwell D.C. et al.",
+      "year": "1999",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process HCF & LCF / Surface outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "201",
+      "authors": "Zabeen S. et al.",
+      "year": "2015",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process HCF & LCF / Surface outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "202",
+      "authors": "Karimi J. et al.",
+      "year": "2022",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "203",
+      "authors": "Alabort E. et al.",
+      "year": "2016",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Creep / Ti-6Al-4V outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "204",
+      "authors": "Barboza M.J.R. et al.",
+      "year": "2004",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Creep / Ti-6Al-4V outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "205",
+      "authors": "Kim Y.K. et al.",
+      "year": "2018",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "206",
+      "authors": "Reis D.A.P. et al.",
+      "year": "2005",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Creep / Ti-6Al-4V outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "207",
+      "authors": "Yamada T. et al.",
+      "year": "2004",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Creep / Ti-6Al-4V outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "208",
+      "authors": "Badea L. et al.",
+      "year": "2014",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Creep / Ti-6Al-4V outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "209",
+      "authors": "Tan X. et al.",
+      "year": "2015",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process EBM outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "210",
+      "authors": "Yasa E. et al.",
+      "year": "2011",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "211",
+      "authors": "Lu J. et al.",
+      "year": "2020",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Ti-6Al-4V Tensile / Wrought outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "212",
+      "authors": "Yang J. et al.",
+      "year": "2016",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    },
+    {
+      "paperNumber": "213",
+      "authors": "Wu S.Q. et al.",
+      "year": "2016",
+      "process": "other",
+      "specimen_type": "non_target_process",
+      "exclusion_reason": "Process Ti-6Al-4V Tensile / Wrought outside 4 target AM cohorts"
+    },
+    {
+      "paperNumber": "214",
+      "authors": "Benedetti M. et al.",
+      "year": "2018",
+      "process": "lpbf",
+      "specimen_type": "pending_extraction",
+      "exclusion_reason": "Pending parameter extraction (missing P/v/h/t)"
+    }
+  ],
+  "per_paper_audit": [
+    {
+      "paperNumber": "1",
+      "authors": "Alegre et al.",
+      "year": "2022",
+      "process": "lpbf",
+      "condition": "HIP",
+      "rawCondition": "HIPed (850°C / 200 MPa)",
+      "P": 280,
+      "v": 1200,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 850,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 345,
+          "physicsPriorPred": 317.4,
+          "lopoPredEnsemble": 320.36,
+          "lopoDelta": -24.64,
+          "lopoApePct": 7.14,
+          "lopoAccuracyPct": 92.86,
+          "calibratedRuntimePred": 337.74,
+          "calibratedDelta": -7.26,
+          "calibratedApePct": 2.1,
+          "calibratedAccuracyPct": 97.9
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 885,
+          "physicsPriorPred": 744.2,
+          "lopoPredEnsemble": 775.67,
+          "lopoDelta": -109.33,
+          "lopoApePct": 12.35,
+          "lopoAccuracyPct": 87.65,
+          "calibratedRuntimePred": 837.89,
+          "calibratedDelta": -47.11,
+          "calibratedApePct": 5.32,
+          "calibratedAccuracyPct": 94.68
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 995,
+          "physicsPriorPred": 837.23,
+          "lopoPredEnsemble": 863.57,
+          "lopoDelta": -131.43,
+          "lopoApePct": 13.21,
+          "lopoAccuracyPct": 86.79,
+          "calibratedRuntimePred": 935.25,
+          "calibratedDelta": -59.75,
+          "calibratedApePct": 6.01,
+          "calibratedAccuracyPct": 93.99
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 14.5,
+          "physicsPriorPred": 15.8,
+          "lopoPredEnsemble": 15.33,
+          "lopoDelta": 0.83,
+          "lopoApePct": 5.73,
+          "lopoAccuracyPct": 94.27,
+          "calibratedRuntimePred": 14.87,
+          "calibratedDelta": 0.37,
+          "calibratedApePct": 2.56,
+          "calibratedAccuracyPct": 97.44
+        }
+      }
+    },
+    {
+      "paperNumber": "2",
+      "authors": "Artzt et al.",
+      "year": "2020",
+      "process": "lpbf",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 175,
+      "v": 900,
+      "h": 90,
+      "t": 50,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 385,
+          "physicsPriorPred": 378.72,
+          "lopoPredEnsemble": 372.05,
+          "lopoDelta": -12.95,
+          "lopoApePct": 3.36,
+          "lopoAccuracyPct": 96.64,
+          "calibratedRuntimePred": 382.68,
+          "calibratedDelta": -2.32,
+          "calibratedApePct": 0.6,
+          "calibratedAccuracyPct": 99.4
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1050,
+          "physicsPriorPred": 1005.45,
+          "lopoPredEnsemble": 998.36,
+          "lopoDelta": -51.64,
+          "lopoApePct": 4.92,
+          "lopoAccuracyPct": 95.08,
+          "calibratedRuntimePred": 1041.48,
+          "calibratedDelta": -8.52,
+          "calibratedApePct": 0.81,
+          "calibratedAccuracyPct": 99.19
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1220,
+          "physicsPriorPred": 1161.3,
+          "lopoPredEnsemble": 1145.55,
+          "lopoDelta": -74.45,
+          "lopoApePct": 6.1,
+          "lopoAccuracyPct": 93.9,
+          "calibratedRuntimePred": 1206.71,
+          "calibratedDelta": -13.29,
+          "calibratedApePct": 1.09,
+          "calibratedAccuracyPct": 98.91
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 6.8,
+          "physicsPriorPred": 7.13,
+          "lopoPredEnsemble": 7.76,
+          "lopoDelta": 0.96,
+          "lopoApePct": 14.12,
+          "lopoAccuracyPct": 85.88,
+          "calibratedRuntimePred": 7.09,
+          "calibratedDelta": 0.29,
+          "calibratedApePct": 4.32,
+          "calibratedAccuracyPct": 95.68
+        }
+      }
+    },
+    {
+      "paperNumber": "3",
+      "authors": "Asherloo et al.",
+      "year": "2022",
+      "process": "lpbf",
+      "condition": "Stress-Relieved",
+      "rawCondition": "stress-relieved",
+      "P": 280,
+      "v": 1250,
+      "h": 105,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 650,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 370,
+          "physicsPriorPred": 368,
+          "lopoPredEnsemble": 367.14,
+          "lopoDelta": -2.86,
+          "lopoApePct": 0.77,
+          "lopoAccuracyPct": 99.23,
+          "calibratedRuntimePred": 368.98,
+          "calibratedDelta": -1.02,
+          "calibratedApePct": 0.27,
+          "calibratedAccuracyPct": 99.73
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1010,
+          "physicsPriorPred": 1042,
+          "lopoPredEnsemble": 1034.76,
+          "lopoDelta": 24.76,
+          "lopoApePct": 2.45,
+          "lopoAccuracyPct": 97.55,
+          "calibratedRuntimePred": 1012.52,
+          "calibratedDelta": 2.52,
+          "calibratedApePct": 0.25,
+          "calibratedAccuracyPct": 99.75
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1175,
+          "physicsPriorPred": 1203.51,
+          "lopoPredEnsemble": 1188.66,
+          "lopoDelta": 13.66,
+          "lopoApePct": 1.16,
+          "lopoAccuracyPct": 98.84,
+          "calibratedRuntimePred": 1174.57,
+          "calibratedDelta": -0.43,
+          "calibratedApePct": 0.04,
+          "calibratedAccuracyPct": 99.96
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 7.6,
+          "physicsPriorPred": 7.36,
+          "lopoPredEnsemble": 7.31,
+          "lopoDelta": -0.29,
+          "lopoApePct": 3.83,
+          "lopoAccuracyPct": 96.17,
+          "calibratedRuntimePred": 7.46,
+          "calibratedDelta": -0.14,
+          "calibratedApePct": 1.91,
+          "calibratedAccuracyPct": 98.09
+        }
+      }
+    },
+    {
+      "paperNumber": "4",
+      "authors": "Awan et al.",
+      "year": "2026",
+      "process": "lpbf",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 250,
+      "v": 1000,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 390,
+          "physicsPriorPred": 381.72,
+          "lopoPredEnsemble": 383.66,
+          "lopoDelta": -6.34,
+          "lopoApePct": 1.63,
+          "lopoAccuracyPct": 98.37,
+          "calibratedRuntimePred": 385.06,
+          "calibratedDelta": -4.94,
+          "calibratedApePct": 1.27,
+          "calibratedAccuracyPct": 98.73
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1060,
+          "physicsPriorPred": 1044.73,
+          "lopoPredEnsemble": 1050.13,
+          "lopoDelta": -9.87,
+          "lopoApePct": 0.93,
+          "lopoAccuracyPct": 99.07,
+          "calibratedRuntimePred": 1052.49,
+          "calibratedDelta": -7.51,
+          "calibratedApePct": 0.71,
+          "calibratedAccuracyPct": 99.29
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1230,
+          "physicsPriorPred": 1206.66,
+          "lopoPredEnsemble": 1212.86,
+          "lopoDelta": -17.14,
+          "lopoApePct": 1.39,
+          "lopoAccuracyPct": 98.61,
+          "calibratedRuntimePred": 1218.49,
+          "calibratedDelta": -11.51,
+          "calibratedApePct": 0.94,
+          "calibratedAccuracyPct": 99.06
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 8.2,
+          "physicsPriorPred": 7.13,
+          "lopoPredEnsemble": 7.64,
+          "lopoDelta": -0.56,
+          "lopoApePct": 6.77,
+          "lopoAccuracyPct": 93.23,
+          "calibratedRuntimePred": 7.73,
+          "calibratedDelta": -0.47,
+          "calibratedApePct": 5.76,
+          "calibratedAccuracyPct": 94.24
+        }
+      }
+    },
+    {
+      "paperNumber": "5",
+      "authors": "Banerjee et al.",
+      "year": "2025",
+      "process": "lpbf",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 300,
+      "v": 1300,
+      "h": 110,
+      "t": 40,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 382,
+          "physicsPriorPred": 383.72,
+          "lopoPredEnsemble": 389.26,
+          "lopoDelta": 7.26,
+          "lopoApePct": 1.9,
+          "lopoAccuracyPct": 98.1,
+          "calibratedRuntimePred": 385.37,
+          "calibratedDelta": 3.37,
+          "calibratedApePct": 0.88,
+          "calibratedAccuracyPct": 99.12
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1040,
+          "physicsPriorPred": 1027.39,
+          "lopoPredEnsemble": 1045.74,
+          "lopoDelta": 5.74,
+          "lopoApePct": 0.55,
+          "lopoAccuracyPct": 99.45,
+          "calibratedRuntimePred": 1046.83,
+          "calibratedDelta": 6.83,
+          "calibratedApePct": 0.66,
+          "calibratedAccuracyPct": 99.34
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1205,
+          "physicsPriorPred": 1186.63,
+          "lopoPredEnsemble": 1209.89,
+          "lopoDelta": 4.89,
+          "lopoApePct": 0.41,
+          "lopoAccuracyPct": 99.59,
+          "calibratedRuntimePred": 1214.18,
+          "calibratedDelta": 9.18,
+          "calibratedApePct": 0.76,
+          "calibratedAccuracyPct": 99.24
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 7.1,
+          "physicsPriorPred": 7.13,
+          "lopoPredEnsemble": 6.69,
+          "lopoDelta": -0.41,
+          "lopoApePct": 5.84,
+          "lopoAccuracyPct": 94.16,
+          "calibratedRuntimePred": 6.8,
+          "calibratedDelta": -0.3,
+          "calibratedApePct": 4.25,
+          "calibratedAccuracyPct": 95.75
+        }
+      }
+    },
+    {
+      "paperNumber": "6",
+      "authors": "Barriobero-Vila et al.",
+      "year": "2017",
+      "process": "lpbf",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 200,
+      "v": 800,
+      "h": 80,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 355,
+          "physicsPriorPred": 379.72,
+          "lopoPredEnsemble": 380.83,
+          "lopoDelta": 25.83,
+          "lopoApePct": 7.28,
+          "lopoAccuracyPct": 92.72,
+          "calibratedRuntimePred": 361.41,
+          "calibratedDelta": 6.41,
+          "calibratedApePct": 1.81,
+          "calibratedAccuracyPct": 98.19
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 980,
+          "physicsPriorPred": 1035.73,
+          "lopoPredEnsemble": 1041.5,
+          "lopoDelta": 61.5,
+          "lopoApePct": 6.28,
+          "lopoAccuracyPct": 93.72,
+          "calibratedRuntimePred": 993.01,
+          "calibratedDelta": 13.01,
+          "calibratedApePct": 1.33,
+          "calibratedAccuracyPct": 98.67
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1110,
+          "physicsPriorPred": 1196.27,
+          "lopoPredEnsemble": 1202.8,
+          "lopoDelta": 92.8,
+          "lopoApePct": 8.36,
+          "lopoAccuracyPct": 91.64,
+          "calibratedRuntimePred": 1133.68,
+          "calibratedDelta": 23.68,
+          "calibratedApePct": 2.13,
+          "calibratedAccuracyPct": 97.87
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 11.5,
+          "physicsPriorPred": 7.13,
+          "lopoPredEnsemble": 7.36,
+          "lopoDelta": -4.14,
+          "lopoApePct": 35.99,
+          "lopoAccuracyPct": 64.01,
+          "calibratedRuntimePred": 9.37,
+          "calibratedDelta": -2.13,
+          "calibratedApePct": 18.55,
+          "calibratedAccuracyPct": 81.45
+        }
+      }
+    },
+    {
+      "paperNumber": "7",
+      "authors": "Bartsch et al.",
+      "year": "2022",
+      "process": "lpbf",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 200,
+      "v": 900,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 380,
+          "physicsPriorPred": 379.72,
+          "lopoPredEnsemble": 386.2,
+          "lopoDelta": 6.2,
+          "lopoApePct": 1.63,
+          "lopoAccuracyPct": 98.37,
+          "calibratedRuntimePred": 383.53,
+          "calibratedDelta": 3.53,
+          "calibratedApePct": 0.93,
+          "calibratedAccuracyPct": 99.07
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1055,
+          "physicsPriorPred": 1035.73,
+          "lopoPredEnsemble": 1051.8,
+          "lopoDelta": -3.2,
+          "lopoApePct": 0.3,
+          "lopoAccuracyPct": 99.7,
+          "calibratedRuntimePred": 1054.7,
+          "calibratedDelta": -0.3,
+          "calibratedApePct": 0.03,
+          "calibratedAccuracyPct": 99.97
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1210,
+          "physicsPriorPred": 1196.27,
+          "lopoPredEnsemble": 1205.91,
+          "lopoDelta": -4.09,
+          "lopoApePct": 0.34,
+          "lopoAccuracyPct": 99.66,
+          "calibratedRuntimePred": 1210.39,
+          "calibratedDelta": 0.39,
+          "calibratedApePct": 0.03,
+          "calibratedAccuracyPct": 99.97
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 7.4,
+          "physicsPriorPred": 7.13,
+          "lopoPredEnsemble": 7.51,
+          "lopoDelta": 0.11,
+          "lopoApePct": 1.53,
+          "lopoAccuracyPct": 98.47,
+          "calibratedRuntimePred": 7.55,
+          "calibratedDelta": 0.15,
+          "calibratedApePct": 2.06,
+          "calibratedAccuracyPct": 97.94
+        }
+      }
+    },
+    {
+      "paperNumber": "8",
+      "authors": "Cao et al.",
+      "year": "2021",
+      "process": "lpbf",
+      "condition": "Annealed",
+      "rawCondition": "annealed (840°C 2h)",
+      "P": 250,
+      "v": 1100,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 840,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 350,
+          "physicsPriorPred": 347,
+          "lopoPredEnsemble": 347.35,
+          "lopoDelta": -2.65,
+          "lopoApePct": 0.76,
+          "lopoAccuracyPct": 99.24,
+          "calibratedRuntimePred": 348.38,
+          "calibratedDelta": -1.62,
+          "calibratedApePct": 0.46,
+          "calibratedAccuracyPct": 99.54
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 920,
+          "physicsPriorPred": 916.75,
+          "lopoPredEnsemble": 915.82,
+          "lopoDelta": -4.18,
+          "lopoApePct": 0.45,
+          "lopoAccuracyPct": 99.55,
+          "calibratedRuntimePred": 916.81,
+          "calibratedDelta": -3.19,
+          "calibratedApePct": 0.35,
+          "calibratedAccuracyPct": 99.65
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1010,
+          "physicsPriorPred": 1031.34,
+          "lopoPredEnsemble": 1013.17,
+          "lopoDelta": 3.17,
+          "lopoApePct": 0.31,
+          "lopoAccuracyPct": 99.69,
+          "calibratedRuntimePred": 1010.25,
+          "calibratedDelta": 0.25,
+          "calibratedApePct": 0.02,
+          "calibratedAccuracyPct": 99.98
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 13.5,
+          "physicsPriorPred": 13.44,
+          "lopoPredEnsemble": 13.44,
+          "lopoDelta": -0.06,
+          "lopoApePct": 0.44,
+          "lopoAccuracyPct": 99.56,
+          "calibratedRuntimePred": 13.46,
+          "calibratedDelta": -0.04,
+          "calibratedApePct": 0.29,
+          "calibratedAccuracyPct": 99.71
+        }
+      }
+    },
+    {
+      "paperNumber": "10",
+      "authors": "Denti et al.",
+      "year": "2019",
+      "process": "lpbf",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 200,
+      "v": 900,
+      "h": 105,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 395,
+          "physicsPriorPred": 379.72,
+          "lopoPredEnsemble": 381.84,
+          "lopoDelta": -13.16,
+          "lopoApePct": 3.33,
+          "lopoAccuracyPct": 96.67,
+          "calibratedRuntimePred": 390.05,
+          "calibratedDelta": -4.95,
+          "calibratedApePct": 1.25,
+          "calibratedAccuracyPct": 98.75
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1085,
+          "physicsPriorPred": 1049.73,
+          "lopoPredEnsemble": 1060.86,
+          "lopoDelta": -24.14,
+          "lopoApePct": 2.22,
+          "lopoAccuracyPct": 97.78,
+          "calibratedRuntimePred": 1075.42,
+          "calibratedDelta": -9.58,
+          "calibratedApePct": 0.88,
+          "calibratedAccuracyPct": 99.12
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1240,
+          "physicsPriorPred": 1212.44,
+          "lopoPredEnsemble": 1221.14,
+          "lopoDelta": -18.86,
+          "lopoApePct": 1.52,
+          "lopoAccuracyPct": 98.48,
+          "calibratedRuntimePred": 1234.46,
+          "calibratedDelta": -5.54,
+          "calibratedApePct": 0.45,
+          "calibratedAccuracyPct": 99.55
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 6.8,
+          "physicsPriorPred": 6.85,
+          "lopoPredEnsemble": 7.06,
+          "lopoDelta": 0.26,
+          "lopoApePct": 3.78,
+          "lopoAccuracyPct": 96.22,
+          "calibratedRuntimePred": 7,
+          "calibratedDelta": 0.2,
+          "calibratedApePct": 2.88,
+          "calibratedAccuracyPct": 97.12
+        }
+      }
+    },
+    {
+      "paperNumber": "11",
+      "authors": "Dhekne et al.",
+      "year": "2025",
+      "process": "lpbf",
+      "condition": "Annealed",
+      "rawCondition": "annealed (800°C 2h)",
+      "P": 275,
+      "v": 1150,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 800,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 352,
+          "physicsPriorPred": 351,
+          "lopoPredEnsemble": 352.32,
+          "lopoDelta": 0.32,
+          "lopoApePct": 0.09,
+          "lopoAccuracyPct": 99.91,
+          "calibratedRuntimePred": 351.74,
+          "calibratedDelta": -0.26,
+          "calibratedApePct": 0.07,
+          "calibratedAccuracyPct": 99.93
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 935,
+          "physicsPriorPred": 933.75,
+          "lopoPredEnsemble": 932.85,
+          "lopoDelta": -2.15,
+          "lopoApePct": 0.23,
+          "lopoAccuracyPct": 99.77,
+          "calibratedRuntimePred": 932.08,
+          "calibratedDelta": -2.92,
+          "calibratedApePct": 0.31,
+          "calibratedAccuracyPct": 99.69
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1030,
+          "physicsPriorPred": 1050.47,
+          "lopoPredEnsemble": 1033.38,
+          "lopoDelta": 3.38,
+          "lopoApePct": 0.33,
+          "lopoAccuracyPct": 99.67,
+          "calibratedRuntimePred": 1029.43,
+          "calibratedDelta": -0.57,
+          "calibratedApePct": 0.06,
+          "calibratedAccuracyPct": 99.94
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 12.8,
+          "physicsPriorPred": 12.8,
+          "lopoPredEnsemble": 12.88,
+          "lopoDelta": 0.08,
+          "lopoApePct": 0.62,
+          "lopoAccuracyPct": 99.38,
+          "calibratedRuntimePred": 12.88,
+          "calibratedDelta": 0.08,
+          "calibratedApePct": 0.6,
+          "calibratedAccuracyPct": 99.4
+        }
+      }
+    },
+    {
+      "paperNumber": "12",
+      "authors": "Díaz et al.",
+      "year": "2022",
+      "process": "lpbf",
+      "condition": "Stress-Relieved",
+      "rawCondition": "stress-relieved",
+      "P": 200,
+      "v": 900,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 650,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 365,
+          "physicsPriorPred": 368,
+          "lopoPredEnsemble": 367.94,
+          "lopoDelta": 2.94,
+          "lopoApePct": 0.81,
+          "lopoAccuracyPct": 99.19,
+          "calibratedRuntimePred": 365.29,
+          "calibratedDelta": 0.29,
+          "calibratedApePct": 0.08,
+          "calibratedAccuracyPct": 99.92
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 990,
+          "physicsPriorPred": 1000,
+          "lopoPredEnsemble": 998.68,
+          "lopoDelta": 8.68,
+          "lopoApePct": 0.88,
+          "lopoAccuracyPct": 99.12,
+          "calibratedRuntimePred": 991.24,
+          "calibratedDelta": 1.24,
+          "calibratedApePct": 0.12,
+          "calibratedAccuracyPct": 99.88
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1130,
+          "physicsPriorPred": 1155,
+          "lopoPredEnsemble": 1147.16,
+          "lopoDelta": 17.16,
+          "lopoApePct": 1.52,
+          "lopoAccuracyPct": 98.48,
+          "calibratedRuntimePred": 1132.37,
+          "calibratedDelta": 2.37,
+          "calibratedApePct": 0.21,
+          "calibratedAccuracyPct": 99.79
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 8.5,
+          "physicsPriorPred": 8.2,
+          "lopoPredEnsemble": 8.27,
+          "lopoDelta": -0.23,
+          "lopoApePct": 2.76,
+          "lopoAccuracyPct": 97.24,
+          "calibratedRuntimePred": 8.39,
+          "calibratedDelta": -0.11,
+          "calibratedApePct": 1.26,
+          "calibratedAccuracyPct": 98.74
+        }
+      }
+    },
+    {
+      "paperNumber": "15",
+      "authors": "Ganeriwala et al.",
+      "year": "2019",
+      "process": "lpbf",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 250,
+      "v": 1000,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 388,
+          "physicsPriorPred": 381.72,
+          "lopoPredEnsemble": 384.08,
+          "lopoDelta": -3.92,
+          "lopoApePct": 1.01,
+          "lopoAccuracyPct": 98.99,
+          "calibratedRuntimePred": 385.06,
+          "calibratedDelta": -2.94,
+          "calibratedApePct": 0.76,
+          "calibratedAccuracyPct": 99.24
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1070,
+          "physicsPriorPred": 1044.73,
+          "lopoPredEnsemble": 1047.85,
+          "lopoDelta": -22.15,
+          "lopoApePct": 2.07,
+          "lopoAccuracyPct": 97.93,
+          "calibratedRuntimePred": 1052.49,
+          "calibratedDelta": -17.51,
+          "calibratedApePct": 1.64,
+          "calibratedAccuracyPct": 98.36
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1240,
+          "physicsPriorPred": 1206.66,
+          "lopoPredEnsemble": 1210.52,
+          "lopoDelta": -29.48,
+          "lopoApePct": 2.38,
+          "lopoAccuracyPct": 97.62,
+          "calibratedRuntimePred": 1218.49,
+          "calibratedDelta": -21.51,
+          "calibratedApePct": 1.73,
+          "calibratedAccuracyPct": 98.27
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 7,
+          "physicsPriorPred": 7.13,
+          "lopoPredEnsemble": 7.9,
+          "lopoDelta": 0.9,
+          "lopoApePct": 12.86,
+          "lopoAccuracyPct": 87.14,
+          "calibratedRuntimePred": 7.73,
+          "calibratedDelta": 0.73,
+          "calibratedApePct": 10.39,
+          "calibratedAccuracyPct": 89.61
+        }
+      }
+    },
+    {
+      "paperNumber": "18",
+      "authors": "Gryaznov et al.",
+      "year": "2023",
+      "process": "lpbf",
+      "condition": "Annealed",
+      "rawCondition": "annealed (750°C 2h)",
+      "P": 200,
+      "v": 900,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 750,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 355,
+          "physicsPriorPred": 356,
+          "lopoPredEnsemble": 356.86,
+          "lopoDelta": 1.86,
+          "lopoApePct": 0.52,
+          "lopoAccuracyPct": 99.48,
+          "calibratedRuntimePred": 356.23,
+          "calibratedDelta": 1.23,
+          "calibratedApePct": 0.35,
+          "calibratedAccuracyPct": 99.65
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 950,
+          "physicsPriorPred": 955,
+          "lopoPredEnsemble": 956.91,
+          "lopoDelta": 6.91,
+          "lopoApePct": 0.73,
+          "lopoAccuracyPct": 99.27,
+          "calibratedRuntimePred": 954.42,
+          "calibratedDelta": 4.42,
+          "calibratedApePct": 0.46,
+          "calibratedAccuracyPct": 99.54
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1045,
+          "physicsPriorPred": 1074.38,
+          "lopoPredEnsemble": 1061.73,
+          "lopoDelta": 16.73,
+          "lopoApePct": 1.6,
+          "lopoAccuracyPct": 98.4,
+          "calibratedRuntimePred": 1053.63,
+          "calibratedDelta": 8.63,
+          "calibratedApePct": 0.83,
+          "calibratedAccuracyPct": 99.17
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 12,
+          "physicsPriorPred": 12,
+          "lopoPredEnsemble": 12.05,
+          "lopoDelta": 0.05,
+          "lopoApePct": 0.39,
+          "lopoAccuracyPct": 99.61,
+          "calibratedRuntimePred": 12.04,
+          "calibratedDelta": 0.04,
+          "calibratedApePct": 0.34,
+          "calibratedAccuracyPct": 99.66
+        }
+      }
+    },
+    {
+      "paperNumber": "19",
+      "authors": "Halder et al.",
+      "year": "2024",
+      "process": "ded-laser",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 3200,
+      "v": 16.7,
+      "h": 2800,
+      "t": 1200,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 325,
+          "physicsPriorPred": 334.29,
+          "lopoPredEnsemble": 327.87,
+          "lopoDelta": 2.87,
+          "lopoApePct": 0.88,
+          "lopoAccuracyPct": 99.12,
+          "calibratedRuntimePred": 325.67,
+          "calibratedDelta": 0.67,
+          "calibratedApePct": 0.21,
+          "calibratedAccuracyPct": 99.79
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 840,
+          "physicsPriorPred": 850.79,
+          "lopoPredEnsemble": 842.21,
+          "lopoDelta": 2.21,
+          "lopoApePct": 0.26,
+          "lopoAccuracyPct": 99.74,
+          "calibratedRuntimePred": 838.88,
+          "calibratedDelta": -1.12,
+          "calibratedApePct": 0.13,
+          "calibratedAccuracyPct": 99.87
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 935,
+          "physicsPriorPred": 944.37,
+          "lopoPredEnsemble": 935.87,
+          "lopoDelta": 0.87,
+          "lopoApePct": 0.09,
+          "lopoAccuracyPct": 99.91,
+          "calibratedRuntimePred": 932.42,
+          "calibratedDelta": -2.58,
+          "calibratedApePct": 0.28,
+          "calibratedAccuracyPct": 99.72
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 12.5,
+          "physicsPriorPred": 11.6,
+          "lopoPredEnsemble": 11.87,
+          "lopoDelta": -0.63,
+          "lopoApePct": 5.06,
+          "lopoAccuracyPct": 94.94,
+          "calibratedRuntimePred": 12.14,
+          "calibratedDelta": -0.36,
+          "calibratedApePct": 2.88,
+          "calibratedAccuracyPct": 97.12
+        }
+      }
+    },
+    {
+      "paperNumber": "24",
+      "authors": "Lan et al.",
+      "year": "2020",
+      "process": "lpbf",
+      "condition": "LSP",
+      "rawCondition": "Laser Shock Peened",
+      "P": 250,
+      "v": 1050,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 425,
+          "physicsPriorPred": 425,
+          "lopoPredEnsemble": 428.32,
+          "lopoDelta": 3.32,
+          "lopoApePct": 0.78,
+          "lopoAccuracyPct": 99.22,
+          "calibratedRuntimePred": 425.11,
+          "calibratedDelta": 0.11,
+          "calibratedApePct": 0.02,
+          "calibratedAccuracyPct": 99.98
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1120,
+          "physicsPriorPred": 1120,
+          "lopoPredEnsemble": 1127.9,
+          "lopoDelta": 7.9,
+          "lopoApePct": 0.71,
+          "lopoAccuracyPct": 99.29,
+          "calibratedRuntimePred": 1120.3,
+          "calibratedDelta": 0.3,
+          "calibratedApePct": 0.03,
+          "calibratedAccuracyPct": 99.97
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1260,
+          "physicsPriorPred": 1293.6,
+          "lopoPredEnsemble": 1303.34,
+          "lopoDelta": 43.34,
+          "lopoApePct": 3.44,
+          "lopoAccuracyPct": 96.56,
+          "calibratedRuntimePred": 1264.17,
+          "calibratedDelta": 4.17,
+          "calibratedApePct": 0.33,
+          "calibratedAccuracyPct": 99.67
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 8.8,
+          "physicsPriorPred": 8.8,
+          "lopoPredEnsemble": 9.19,
+          "lopoDelta": 0.39,
+          "lopoApePct": 4.44,
+          "lopoAccuracyPct": 95.56,
+          "calibratedRuntimePred": 8.85,
+          "calibratedDelta": 0.05,
+          "calibratedApePct": 0.55,
+          "calibratedAccuracyPct": 99.45
+        }
+      }
+    },
+    {
+      "paperNumber": "26",
+      "authors": "Lee et al.",
+      "year": "2017",
+      "process": "lpbf",
+      "condition": "Annealed",
+      "rawCondition": "annealed (950°C 2h)",
+      "P": 200,
+      "v": 900,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 950,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 335,
+          "physicsPriorPred": 336,
+          "lopoPredEnsemble": 336.44,
+          "lopoDelta": 1.44,
+          "lopoApePct": 0.43,
+          "lopoAccuracyPct": 99.57,
+          "calibratedRuntimePred": 335.82,
+          "calibratedDelta": 0.82,
+          "calibratedApePct": 0.25,
+          "calibratedAccuracyPct": 99.75
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 865,
+          "physicsPriorPred": 870,
+          "lopoPredEnsemble": 869.92,
+          "lopoDelta": 4.92,
+          "lopoApePct": 0.57,
+          "lopoAccuracyPct": 99.43,
+          "calibratedRuntimePred": 867.73,
+          "calibratedDelta": 2.73,
+          "calibratedApePct": 0.32,
+          "calibratedAccuracyPct": 99.68
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 960,
+          "physicsPriorPred": 978.75,
+          "lopoPredEnsemble": 957.49,
+          "lopoDelta": -2.51,
+          "lopoApePct": 0.26,
+          "lopoAccuracyPct": 99.74,
+          "calibratedRuntimePred": 957.27,
+          "calibratedDelta": -2.73,
+          "calibratedApePct": 0.28,
+          "calibratedAccuracyPct": 99.72
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 15.2,
+          "physicsPriorPred": 15.2,
+          "lopoPredEnsemble": 15.19,
+          "lopoDelta": -0.01,
+          "lopoApePct": 0.05,
+          "lopoAccuracyPct": 99.95,
+          "calibratedRuntimePred": 15.19,
+          "calibratedDelta": -0.01,
+          "calibratedApePct": 0.07,
+          "calibratedAccuracyPct": 99.93
+        }
+      }
+    },
+    {
+      "paperNumber": "33",
+      "authors": "Mahmud et al.",
+      "year": "2021",
+      "process": "lpbf",
+      "condition": "Stress-Relieved",
+      "rawCondition": "stress-relieved",
+      "P": 275,
+      "v": 1150,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 650,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 348,
+          "physicsPriorPred": 338.56,
+          "lopoPredEnsemble": 346.22,
+          "lopoDelta": -1.78,
+          "lopoApePct": 0.51,
+          "lopoAccuracyPct": 99.49,
+          "calibratedRuntimePred": 348.73,
+          "calibratedDelta": 0.73,
+          "calibratedApePct": 0.21,
+          "calibratedAccuracyPct": 99.79
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 945,
+          "physicsPriorPred": 850,
+          "lopoPredEnsemble": 887.93,
+          "lopoDelta": -57.07,
+          "lopoApePct": 6.04,
+          "lopoAccuracyPct": 93.96,
+          "calibratedRuntimePred": 927,
+          "calibratedDelta": -18,
+          "calibratedApePct": 1.9,
+          "calibratedAccuracyPct": 98.1
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1060,
+          "physicsPriorPred": 981.75,
+          "lopoPredEnsemble": 1022.6,
+          "lopoDelta": -37.4,
+          "lopoApePct": 3.53,
+          "lopoAccuracyPct": 96.47,
+          "calibratedRuntimePred": 1051.03,
+          "calibratedDelta": -8.97,
+          "calibratedApePct": 0.85,
+          "calibratedAccuracyPct": 99.15
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 12.8,
+          "physicsPriorPred": 13.8,
+          "lopoPredEnsemble": 13.72,
+          "lopoDelta": 0.92,
+          "lopoApePct": 7.15,
+          "lopoAccuracyPct": 92.85,
+          "calibratedRuntimePred": 13.21,
+          "calibratedDelta": 0.41,
+          "calibratedApePct": 3.24,
+          "calibratedAccuracyPct": 96.76
+        }
+      }
+    },
+    {
+      "paperNumber": "34",
+      "authors": "McGregor et al.",
+      "year": "2021",
+      "process": "lpbf",
+      "condition": "HIP",
+      "rawCondition": "HIPed",
+      "P": 250,
+      "v": 1100,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 920,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 340,
+          "physicsPriorPred": 339,
+          "lopoPredEnsemble": 340.11,
+          "lopoDelta": 0.11,
+          "lopoApePct": 0.03,
+          "lopoAccuracyPct": 99.97,
+          "calibratedRuntimePred": 340.12,
+          "calibratedDelta": 0.12,
+          "calibratedApePct": 0.04,
+          "calibratedAccuracyPct": 99.96
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 875,
+          "physicsPriorPred": 865,
+          "lopoPredEnsemble": 864.87,
+          "lopoDelta": -10.13,
+          "lopoApePct": 1.16,
+          "lopoAccuracyPct": 98.84,
+          "calibratedRuntimePred": 871.26,
+          "calibratedDelta": -3.74,
+          "calibratedApePct": 0.43,
+          "calibratedAccuracyPct": 99.57
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 980,
+          "physicsPriorPred": 973.13,
+          "lopoPredEnsemble": 974,
+          "lopoDelta": -6,
+          "lopoApePct": 0.61,
+          "lopoAccuracyPct": 99.39,
+          "calibratedRuntimePred": 978.39,
+          "calibratedDelta": -1.61,
+          "calibratedApePct": 0.16,
+          "calibratedAccuracyPct": 99.84
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 14.5,
+          "physicsPriorPred": 15.6,
+          "lopoPredEnsemble": 15.45,
+          "lopoDelta": 0.95,
+          "lopoApePct": 6.57,
+          "lopoAccuracyPct": 93.43,
+          "calibratedRuntimePred": 15.1,
+          "calibratedDelta": 0.6,
+          "calibratedApePct": 4.13,
+          "calibratedAccuracyPct": 95.87
+        }
+      }
+    },
+    {
+      "paperNumber": "36",
+      "authors": "Meshram et al.",
+      "year": "2026",
+      "process": "lpbf",
+      "condition": "HIP",
+      "rawCondition": "HIPed",
+      "P": 280,
+      "v": 1200,
+      "h": 105,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 920,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 338,
+          "physicsPriorPred": 339,
+          "lopoPredEnsemble": 342.93,
+          "lopoDelta": 4.93,
+          "lopoApePct": 1.46,
+          "lopoAccuracyPct": 98.54,
+          "calibratedRuntimePred": 340.53,
+          "calibratedDelta": 2.53,
+          "calibratedApePct": 0.75,
+          "calibratedAccuracyPct": 99.25
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 855,
+          "physicsPriorPred": 865,
+          "lopoPredEnsemble": 879.74,
+          "lopoDelta": 24.74,
+          "lopoApePct": 2.89,
+          "lopoAccuracyPct": 97.11,
+          "calibratedRuntimePred": 865.34,
+          "calibratedDelta": 10.34,
+          "calibratedApePct": 1.21,
+          "calibratedAccuracyPct": 98.79
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 965,
+          "physicsPriorPred": 973.13,
+          "lopoPredEnsemble": 988.89,
+          "lopoDelta": 23.89,
+          "lopoApePct": 2.48,
+          "lopoAccuracyPct": 97.52,
+          "calibratedRuntimePred": 976.27,
+          "calibratedDelta": 11.27,
+          "calibratedApePct": 1.17,
+          "calibratedAccuracyPct": 98.83
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 15,
+          "physicsPriorPred": 15.6,
+          "lopoPredEnsemble": 15.04,
+          "lopoDelta": 0.04,
+          "lopoApePct": 0.25,
+          "lopoAccuracyPct": 99.75,
+          "calibratedRuntimePred": 14.97,
+          "calibratedDelta": -0.03,
+          "calibratedApePct": 0.18,
+          "calibratedAccuracyPct": 99.82
+        }
+      }
+    },
+    {
+      "paperNumber": "37",
+      "authors": "Moon et al.",
+      "year": "2021",
+      "process": "lpbf",
+      "condition": "As-Built",
+      "rawCondition": "as-built vs polished",
+      "P": 280,
+      "v": 1200,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 378,
+          "physicsPriorPred": 382.92,
+          "lopoPredEnsemble": 380.67,
+          "lopoDelta": 2.67,
+          "lopoApePct": 0.71,
+          "lopoAccuracyPct": 99.29,
+          "calibratedRuntimePred": 377.93,
+          "calibratedDelta": -0.07,
+          "calibratedApePct": 0.02,
+          "calibratedAccuracyPct": 99.98
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1030,
+          "physicsPriorPred": 1023.88,
+          "lopoPredEnsemble": 1021.09,
+          "lopoDelta": -8.91,
+          "lopoApePct": 0.87,
+          "lopoAccuracyPct": 99.13,
+          "calibratedRuntimePred": 1027.19,
+          "calibratedDelta": -2.81,
+          "calibratedApePct": 0.27,
+          "calibratedAccuracyPct": 99.73
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1180,
+          "physicsPriorPred": 1182.58,
+          "lopoPredEnsemble": 1177.81,
+          "lopoDelta": -2.19,
+          "lopoApePct": 0.19,
+          "lopoAccuracyPct": 99.81,
+          "calibratedRuntimePred": 1178.38,
+          "calibratedDelta": -1.62,
+          "calibratedApePct": 0.14,
+          "calibratedAccuracyPct": 99.86
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 7.5,
+          "physicsPriorPred": 7.13,
+          "lopoPredEnsemble": 7.45,
+          "lopoDelta": -0.05,
+          "lopoApePct": 0.7,
+          "lopoAccuracyPct": 99.3,
+          "calibratedRuntimePred": 7.52,
+          "calibratedDelta": 0.02,
+          "calibratedApePct": 0.25,
+          "calibratedAccuracyPct": 99.75
+        }
+      }
+    },
+    {
+      "paperNumber": "40",
+      "authors": "Nursyifaulkhair et al.",
+      "year": "2019",
+      "process": "ded-laser",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 800,
+      "v": 15,
+      "h": 1100,
+      "t": 500,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 335,
+          "physicsPriorPred": 336.34,
+          "lopoPredEnsemble": 339.87,
+          "lopoDelta": 4.87,
+          "lopoApePct": 1.45,
+          "lopoAccuracyPct": 98.55,
+          "calibratedRuntimePred": 339.44,
+          "calibratedDelta": 4.44,
+          "calibratedApePct": 1.33,
+          "calibratedAccuracyPct": 98.67
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 875,
+          "physicsPriorPred": 855.24,
+          "lopoPredEnsemble": 876.12,
+          "lopoDelta": 1.12,
+          "lopoApePct": 0.13,
+          "lopoAccuracyPct": 99.87,
+          "calibratedRuntimePred": 878.38,
+          "calibratedDelta": 3.38,
+          "calibratedApePct": 0.39,
+          "calibratedAccuracyPct": 99.61
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 965,
+          "physicsPriorPred": 949.31,
+          "lopoPredEnsemble": 974.3,
+          "lopoDelta": 9.3,
+          "lopoApePct": 0.96,
+          "lopoAccuracyPct": 99.04,
+          "calibratedRuntimePred": 973.81,
+          "calibratedDelta": 8.81,
+          "calibratedApePct": 0.91,
+          "calibratedAccuracyPct": 99.09
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 8.5,
+          "physicsPriorPred": 11.6,
+          "lopoPredEnsemble": 11.53,
+          "lopoDelta": 3.03,
+          "lopoApePct": 35.65,
+          "lopoAccuracyPct": 64.35,
+          "calibratedRuntimePred": 10.48,
+          "calibratedDelta": 1.98,
+          "calibratedApePct": 23.35,
+          "calibratedAccuracyPct": 76.65
+        }
+      }
+    },
+    {
+      "paperNumber": "41",
+      "authors": "Oshiro et al.",
+      "year": "2026",
+      "process": "ded-laser",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 2500,
+      "v": 12.5,
+      "h": 3000,
+      "t": 1500,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 320,
+          "physicsPriorPred": 334.74,
+          "lopoPredEnsemble": 330.43,
+          "lopoDelta": 10.43,
+          "lopoApePct": 3.26,
+          "lopoAccuracyPct": 96.74,
+          "calibratedRuntimePred": 324.46,
+          "calibratedDelta": 4.46,
+          "calibratedApePct": 1.4,
+          "calibratedAccuracyPct": 98.6
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 825,
+          "physicsPriorPred": 830.18,
+          "lopoPredEnsemble": 841.46,
+          "lopoDelta": 16.46,
+          "lopoApePct": 1.99,
+          "lopoAccuracyPct": 98.01,
+          "calibratedRuntimePred": 830.43,
+          "calibratedDelta": 5.43,
+          "calibratedApePct": 0.66,
+          "calibratedAccuracyPct": 99.34
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 920,
+          "physicsPriorPred": 921.5,
+          "lopoPredEnsemble": 944.27,
+          "lopoDelta": 24.27,
+          "lopoApePct": 2.64,
+          "lopoAccuracyPct": 97.36,
+          "calibratedRuntimePred": 931.04,
+          "calibratedDelta": 11.04,
+          "calibratedApePct": 1.2,
+          "calibratedAccuracyPct": 98.8
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 11.2,
+          "physicsPriorPred": 11.6,
+          "lopoPredEnsemble": 11.7,
+          "lopoDelta": 0.5,
+          "lopoApePct": 4.48,
+          "lopoAccuracyPct": 95.52,
+          "calibratedRuntimePred": 11.43,
+          "calibratedDelta": 0.23,
+          "calibratedApePct": 2.01,
+          "calibratedAccuracyPct": 97.99
+        }
+      }
+    },
+    {
+      "paperNumber": "42",
+      "authors": "Obeidi et al.",
+      "year": "2022",
+      "process": "lpbf",
+      "condition": "As-Built",
+      "rawCondition": "Laser Polished",
+      "P": 200,
+      "v": 900,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 380,
+          "physicsPriorPred": 379.72,
+          "lopoPredEnsemble": 382.79,
+          "lopoDelta": 2.79,
+          "lopoApePct": 0.73,
+          "lopoAccuracyPct": 99.27,
+          "calibratedRuntimePred": 380.14,
+          "calibratedDelta": 0.14,
+          "calibratedApePct": 0.04,
+          "calibratedAccuracyPct": 99.96
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1060,
+          "physicsPriorPred": 1035.73,
+          "lopoPredEnsemble": 1050.18,
+          "lopoDelta": -9.82,
+          "lopoApePct": 0.93,
+          "lopoAccuracyPct": 99.07,
+          "calibratedRuntimePred": 1058.02,
+          "calibratedDelta": -1.98,
+          "calibratedApePct": 0.19,
+          "calibratedAccuracyPct": 99.81
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1220,
+          "physicsPriorPred": 1196.27,
+          "lopoPredEnsemble": 1204.82,
+          "lopoDelta": -15.18,
+          "lopoApePct": 1.24,
+          "lopoAccuracyPct": 98.76,
+          "calibratedRuntimePred": 1217.97,
+          "calibratedDelta": -2.03,
+          "calibratedApePct": 0.17,
+          "calibratedAccuracyPct": 99.83
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 8.5,
+          "physicsPriorPred": 8.33,
+          "lopoPredEnsemble": 8.65,
+          "lopoDelta": 0.15,
+          "lopoApePct": 1.82,
+          "lopoAccuracyPct": 98.18,
+          "calibratedRuntimePred": 8.47,
+          "calibratedDelta": -0.03,
+          "calibratedApePct": 0.34,
+          "calibratedAccuracyPct": 99.66
+        }
+      }
+    },
+    {
+      "paperNumber": "43",
+      "authors": "Pedrazzini et al.",
+      "year": "2020",
+      "process": "lpbf",
+      "condition": "As-Built",
+      "rawCondition": "as-built (500°C bed preheat)",
+      "P": 200,
+      "v": 900,
+      "h": 100,
+      "t": 30,
+      "T0": 500,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 342,
+          "physicsPriorPred": 342.49,
+          "lopoPredEnsemble": 342.26,
+          "lopoDelta": 0.26,
+          "lopoApePct": 0.08,
+          "lopoAccuracyPct": 99.92,
+          "calibratedRuntimePred": 341.97,
+          "calibratedDelta": -0.03,
+          "calibratedApePct": 0.01,
+          "calibratedAccuracyPct": 99.99
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 910,
+          "physicsPriorPred": 923.08,
+          "lopoPredEnsemble": 918.61,
+          "lopoDelta": 8.61,
+          "lopoApePct": 0.95,
+          "lopoAccuracyPct": 99.05,
+          "calibratedRuntimePred": 911.28,
+          "calibratedDelta": 1.28,
+          "calibratedApePct": 0.14,
+          "calibratedAccuracyPct": 99.86
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1025,
+          "physicsPriorPred": 1066.16,
+          "lopoPredEnsemble": 1042.8,
+          "lopoDelta": 17.8,
+          "lopoApePct": 1.74,
+          "lopoAccuracyPct": 98.26,
+          "calibratedRuntimePred": 1027.82,
+          "calibratedDelta": 2.82,
+          "calibratedApePct": 0.27,
+          "calibratedAccuracyPct": 99.73
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 13.8,
+          "physicsPriorPred": 14.18,
+          "lopoPredEnsemble": 14.64,
+          "lopoDelta": 0.84,
+          "lopoApePct": 6.12,
+          "lopoAccuracyPct": 93.88,
+          "calibratedRuntimePred": 14.32,
+          "calibratedDelta": 0.52,
+          "calibratedApePct": 3.76,
+          "calibratedAccuracyPct": 96.24
+        }
+      }
+    },
+    {
+      "paperNumber": "44",
+      "authors": "Rauch et al.",
+      "year": "2020",
+      "process": "ded-laser",
+      "condition": "Stress-Relieved",
+      "rawCondition": "stress-relieved",
+      "P": 1200,
+      "v": 15,
+      "h": 1200,
+      "t": 600,
+      "T0": 200,
+      "htTempC": 650,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 335,
+          "physicsPriorPred": 336.96,
+          "lopoPredEnsemble": 335.59,
+          "lopoDelta": 0.59,
+          "lopoApePct": 0.18,
+          "lopoAccuracyPct": 99.82,
+          "calibratedRuntimePred": 335.73,
+          "calibratedDelta": 0.73,
+          "calibratedApePct": 0.22,
+          "calibratedAccuracyPct": 99.78
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 850,
+          "physicsPriorPred": 853.57,
+          "lopoPredEnsemble": 858.8,
+          "lopoDelta": 8.8,
+          "lopoApePct": 1.04,
+          "lopoAccuracyPct": 98.96,
+          "calibratedRuntimePred": 854.42,
+          "calibratedDelta": 4.42,
+          "calibratedApePct": 0.52,
+          "calibratedAccuracyPct": 99.48
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 955,
+          "physicsPriorPred": 947.46,
+          "lopoPredEnsemble": 957.85,
+          "lopoDelta": 2.85,
+          "lopoApePct": 0.3,
+          "lopoAccuracyPct": 99.7,
+          "calibratedRuntimePred": 957.65,
+          "calibratedDelta": 2.65,
+          "calibratedApePct": 0.28,
+          "calibratedAccuracyPct": 99.72
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 11.8,
+          "physicsPriorPred": 11.9,
+          "lopoPredEnsemble": 11.45,
+          "lopoDelta": -0.35,
+          "lopoApePct": 3,
+          "lopoAccuracyPct": 97,
+          "calibratedRuntimePred": 11.75,
+          "calibratedDelta": -0.05,
+          "calibratedApePct": 0.43,
+          "calibratedAccuracyPct": 99.57
+        }
+      }
+    },
+    {
+      "paperNumber": "48",
+      "authors": "Sutherland et al.",
+      "year": "2026",
+      "process": "ded-laser",
+      "condition": "Stress-Relieved",
+      "rawCondition": "stress-relieved",
+      "P": 2200,
+      "v": 14,
+      "h": 2400,
+      "t": 1100,
+      "T0": 200,
+      "htTempC": 650,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 330,
+          "physicsPriorPred": 335.28,
+          "lopoPredEnsemble": 330.32,
+          "lopoDelta": 0.32,
+          "lopoApePct": 0.1,
+          "lopoAccuracyPct": 99.9,
+          "calibratedRuntimePred": 330.11,
+          "calibratedDelta": 0.11,
+          "calibratedApePct": 0.03,
+          "calibratedAccuracyPct": 99.97
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 845,
+          "physicsPriorPred": 852.65,
+          "lopoPredEnsemble": 843.18,
+          "lopoDelta": -1.82,
+          "lopoApePct": 0.22,
+          "lopoAccuracyPct": 99.78,
+          "calibratedRuntimePred": 842.24,
+          "calibratedDelta": -2.76,
+          "calibratedApePct": 0.33,
+          "calibratedAccuracyPct": 99.67
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 945,
+          "physicsPriorPred": 946.44,
+          "lopoPredEnsemble": 941.91,
+          "lopoDelta": -3.09,
+          "lopoApePct": 0.33,
+          "lopoAccuracyPct": 99.67,
+          "calibratedRuntimePred": 941.86,
+          "calibratedDelta": -3.14,
+          "calibratedApePct": 0.33,
+          "calibratedAccuracyPct": 99.67
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 12,
+          "physicsPriorPred": 11.9,
+          "lopoPredEnsemble": 12.06,
+          "lopoDelta": 0.06,
+          "lopoApePct": 0.51,
+          "lopoAccuracyPct": 99.49,
+          "calibratedRuntimePred": 12.04,
+          "calibratedDelta": 0.04,
+          "calibratedApePct": 0.32,
+          "calibratedAccuracyPct": 99.68
+        }
+      }
+    },
+    {
+      "paperNumber": "50",
+      "authors": "Wang et al.",
+      "year": "2025",
+      "process": "ded-laser",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 1800,
+      "v": 10,
+      "h": 1800,
+      "t": 800,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 335,
+          "physicsPriorPred": 336.08,
+          "lopoPredEnsemble": 329.51,
+          "lopoDelta": -5.49,
+          "lopoApePct": 1.64,
+          "lopoAccuracyPct": 98.36,
+          "calibratedRuntimePred": 330.86,
+          "calibratedDelta": -4.14,
+          "calibratedApePct": 1.24,
+          "calibratedAccuracyPct": 98.76
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 860,
+          "physicsPriorPred": 853.09,
+          "lopoPredEnsemble": 848.28,
+          "lopoDelta": -11.72,
+          "lopoApePct": 1.36,
+          "lopoAccuracyPct": 98.64,
+          "calibratedRuntimePred": 852.05,
+          "calibratedDelta": -7.95,
+          "calibratedApePct": 0.92,
+          "calibratedAccuracyPct": 99.08
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 950,
+          "physicsPriorPred": 946.93,
+          "lopoPredEnsemble": 944.22,
+          "lopoDelta": -5.78,
+          "lopoApePct": 0.61,
+          "lopoAccuracyPct": 99.39,
+          "calibratedRuntimePred": 944.92,
+          "calibratedDelta": -5.08,
+          "calibratedApePct": 0.53,
+          "calibratedAccuracyPct": 99.47
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 13.5,
+          "physicsPriorPred": 11.6,
+          "lopoPredEnsemble": 11.44,
+          "lopoDelta": -2.06,
+          "lopoApePct": 15.26,
+          "lopoAccuracyPct": 84.74,
+          "calibratedRuntimePred": 12.09,
+          "calibratedDelta": -1.41,
+          "calibratedApePct": 10.46,
+          "calibratedAccuracyPct": 89.54
+        }
+      }
+    },
+    {
+      "paperNumber": "51",
+      "authors": "Wang et al.",
+      "year": "2026",
+      "process": "ded-laser",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 2400,
+      "v": 10,
+      "h": 2500,
+      "t": 1200,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 322,
+          "physicsPriorPred": 334.84,
+          "lopoPredEnsemble": 328.23,
+          "lopoDelta": 6.23,
+          "lopoApePct": 1.94,
+          "lopoAccuracyPct": 98.06,
+          "calibratedRuntimePred": 326.76,
+          "calibratedDelta": 4.76,
+          "calibratedApePct": 1.48,
+          "calibratedAccuracyPct": 98.52
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 830,
+          "physicsPriorPred": 850.48,
+          "lopoPredEnsemble": 845.76,
+          "lopoDelta": 15.76,
+          "lopoApePct": 1.9,
+          "lopoAccuracyPct": 98.1,
+          "calibratedRuntimePred": 839.58,
+          "calibratedDelta": 9.58,
+          "calibratedApePct": 1.15,
+          "calibratedAccuracyPct": 98.85
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 925,
+          "physicsPriorPred": 944.03,
+          "lopoPredEnsemble": 938.09,
+          "lopoDelta": 13.09,
+          "lopoApePct": 1.42,
+          "lopoAccuracyPct": 98.58,
+          "calibratedRuntimePred": 931.79,
+          "calibratedDelta": 6.79,
+          "calibratedApePct": 0.73,
+          "calibratedAccuracyPct": 99.27
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 12,
+          "physicsPriorPred": 11.6,
+          "lopoPredEnsemble": 12.26,
+          "lopoDelta": 0.26,
+          "lopoApePct": 2.15,
+          "lopoAccuracyPct": 97.85,
+          "calibratedRuntimePred": 12.2,
+          "calibratedDelta": 0.2,
+          "calibratedApePct": 1.64,
+          "calibratedAccuracyPct": 98.36
+        }
+      }
+    },
+    {
+      "paperNumber": "52",
+      "authors": "Xing et al.",
+      "year": "2021",
+      "process": "lpbf",
+      "condition": "As-Built",
+      "rawCondition": "as-built (400°C preheat)",
+      "P": 200,
+      "v": 900,
+      "h": 100,
+      "t": 30,
+      "T0": 400,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 345,
+          "physicsPriorPred": 344.87,
+          "lopoPredEnsemble": 345.83,
+          "lopoDelta": 0.83,
+          "lopoApePct": 0.24,
+          "lopoAccuracyPct": 99.76,
+          "calibratedRuntimePred": 345.53,
+          "calibratedDelta": 0.53,
+          "calibratedApePct": 0.15,
+          "calibratedAccuracyPct": 99.85
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 925,
+          "physicsPriorPred": 930.27,
+          "lopoPredEnsemble": 929.04,
+          "lopoDelta": 4.04,
+          "lopoApePct": 0.44,
+          "lopoAccuracyPct": 99.56,
+          "calibratedRuntimePred": 926.75,
+          "calibratedDelta": 1.75,
+          "calibratedApePct": 0.19,
+          "calibratedAccuracyPct": 99.81
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1040,
+          "physicsPriorPred": 1074.46,
+          "lopoPredEnsemble": 1056.1,
+          "lopoDelta": 16.1,
+          "lopoApePct": 1.55,
+          "lopoAccuracyPct": 98.45,
+          "calibratedRuntimePred": 1046.55,
+          "calibratedDelta": 6.55,
+          "calibratedApePct": 0.63,
+          "calibratedAccuracyPct": 99.37
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 14.8,
+          "physicsPriorPred": 13.73,
+          "lopoPredEnsemble": 13.7,
+          "lopoDelta": -1.1,
+          "lopoApePct": 7.44,
+          "lopoAccuracyPct": 92.56,
+          "calibratedRuntimePred": 14.08,
+          "calibratedDelta": -0.72,
+          "calibratedApePct": 4.86,
+          "calibratedAccuracyPct": 95.14
+        }
+      }
+    },
+    {
+      "paperNumber": "53",
+      "authors": "Chen et al.",
+      "year": "2016",
+      "process": "ded-laser",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 450,
+      "v": 16.7,
+      "h": 1000,
+      "t": 400,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 350,
+          "physicsPriorPred": 336.74,
+          "lopoPredEnsemble": 342.77,
+          "lopoDelta": -7.23,
+          "lopoApePct": 2.07,
+          "lopoAccuracyPct": 97.93,
+          "calibratedRuntimePred": 344.14,
+          "calibratedDelta": -5.86,
+          "calibratedApePct": 1.67,
+          "calibratedAccuracyPct": 98.33
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 890,
+          "physicsPriorPred": 857.38,
+          "lopoPredEnsemble": 903.79,
+          "lopoDelta": 13.79,
+          "lopoApePct": 1.55,
+          "lopoAccuracyPct": 98.45,
+          "calibratedRuntimePred": 890.79,
+          "calibratedDelta": 0.79,
+          "calibratedApePct": 0.09,
+          "calibratedAccuracyPct": 99.91
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 980,
+          "physicsPriorPred": 951.69,
+          "lopoPredEnsemble": 1014.55,
+          "lopoDelta": 34.55,
+          "lopoApePct": 3.53,
+          "lopoAccuracyPct": 96.47,
+          "calibratedRuntimePred": 987.97,
+          "calibratedDelta": 7.97,
+          "calibratedApePct": 0.81,
+          "calibratedAccuracyPct": 99.19
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 11,
+          "physicsPriorPred": 11.6,
+          "lopoPredEnsemble": 10.23,
+          "lopoDelta": -0.77,
+          "lopoApePct": 7.02,
+          "lopoAccuracyPct": 92.98,
+          "calibratedRuntimePred": 10.67,
+          "calibratedDelta": -0.33,
+          "calibratedApePct": 2.98,
+          "calibratedAccuracyPct": 97.02
+        }
+      }
+    },
+    {
+      "paperNumber": "54",
+      "authors": "Yang et al.",
+      "year": "2023",
+      "process": "lpbf",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 250,
+      "v": 1000,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 382,
+          "physicsPriorPred": 381.72,
+          "lopoPredEnsemble": 385.45,
+          "lopoDelta": 3.45,
+          "lopoApePct": 0.9,
+          "lopoAccuracyPct": 99.1,
+          "calibratedRuntimePred": 385.06,
+          "calibratedDelta": 3.06,
+          "calibratedApePct": 0.8,
+          "calibratedAccuracyPct": 99.2
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1045,
+          "physicsPriorPred": 1044.73,
+          "lopoPredEnsemble": 1053.49,
+          "lopoDelta": 8.49,
+          "lopoApePct": 0.81,
+          "lopoAccuracyPct": 99.19,
+          "calibratedRuntimePred": 1052.49,
+          "calibratedDelta": 7.49,
+          "calibratedApePct": 0.72,
+          "calibratedAccuracyPct": 99.28
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1215,
+          "physicsPriorPred": 1206.66,
+          "lopoPredEnsemble": 1216.29,
+          "lopoDelta": 1.29,
+          "lopoApePct": 0.11,
+          "lopoAccuracyPct": 99.89,
+          "calibratedRuntimePred": 1218.49,
+          "calibratedDelta": 3.49,
+          "calibratedApePct": 0.29,
+          "calibratedAccuracyPct": 99.71
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 8,
+          "physicsPriorPred": 7.13,
+          "lopoPredEnsemble": 7.69,
+          "lopoDelta": -0.31,
+          "lopoApePct": 3.86,
+          "lopoAccuracyPct": 96.14,
+          "calibratedRuntimePred": 7.73,
+          "calibratedDelta": -0.27,
+          "calibratedApePct": 3.41,
+          "calibratedAccuracyPct": 96.59
+        }
+      }
+    },
+    {
+      "paperNumber": "55",
+      "authors": "Coen et al.",
+      "year": "2022",
+      "process": "lpbf",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 250,
+      "v": 1000,
+      "h": 100,
+      "t": 30,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 385,
+          "physicsPriorPred": 381.72,
+          "lopoPredEnsemble": 384.77,
+          "lopoDelta": -0.23,
+          "lopoApePct": 0.06,
+          "lopoAccuracyPct": 99.94,
+          "calibratedRuntimePred": 385.06,
+          "calibratedDelta": 0.06,
+          "calibratedApePct": 0.02,
+          "calibratedAccuracyPct": 99.98
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1040,
+          "physicsPriorPred": 1044.73,
+          "lopoPredEnsemble": 1054.6,
+          "lopoDelta": 14.6,
+          "lopoApePct": 1.4,
+          "lopoAccuracyPct": 98.6,
+          "calibratedRuntimePred": 1052.49,
+          "calibratedDelta": 12.49,
+          "calibratedApePct": 1.2,
+          "calibratedAccuracyPct": 98.8
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1210,
+          "physicsPriorPred": 1206.66,
+          "lopoPredEnsemble": 1217.4,
+          "lopoDelta": 7.4,
+          "lopoApePct": 0.61,
+          "lopoAccuracyPct": 99.39,
+          "calibratedRuntimePred": 1218.49,
+          "calibratedDelta": 8.49,
+          "calibratedApePct": 0.7,
+          "calibratedAccuracyPct": 99.3
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 7.8,
+          "physicsPriorPred": 7.13,
+          "lopoPredEnsemble": 7.73,
+          "lopoDelta": -0.07,
+          "lopoApePct": 0.91,
+          "lopoAccuracyPct": 99.09,
+          "calibratedRuntimePred": 7.73,
+          "calibratedDelta": -0.07,
+          "calibratedApePct": 0.93,
+          "calibratedAccuracyPct": 99.07
+        }
+      }
+    },
+    {
+      "paperNumber": "56",
+      "authors": "Bontha et al.",
+      "year": "2009",
+      "process": "ded-laser",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 300,
+      "v": 800,
+      "h": 110,
+      "t": 40,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 375,
+          "physicsPriorPred": 341.76,
+          "lopoPredEnsemble": 351.51,
+          "lopoDelta": -23.49,
+          "lopoApePct": 6.26,
+          "lopoAccuracyPct": 93.74,
+          "calibratedRuntimePred": 363.68,
+          "calibratedDelta": -11.32,
+          "calibratedApePct": 3.02,
+          "calibratedAccuracyPct": 96.98
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1010,
+          "physicsPriorPred": 866.96,
+          "lopoPredEnsemble": 888.52,
+          "lopoDelta": -121.48,
+          "lopoApePct": 12.03,
+          "lopoAccuracyPct": 87.97,
+          "calibratedRuntimePred": 959.69,
+          "calibratedDelta": -50.31,
+          "calibratedApePct": 4.98,
+          "calibratedAccuracyPct": 95.02
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1180,
+          "physicsPriorPred": 962.33,
+          "lopoPredEnsemble": 973.81,
+          "lopoDelta": -206.19,
+          "lopoApePct": 17.47,
+          "lopoAccuracyPct": 82.53,
+          "calibratedRuntimePred": 1067.83,
+          "calibratedDelta": -112.17,
+          "calibratedApePct": 9.51,
+          "calibratedAccuracyPct": 90.49
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 8.2,
+          "physicsPriorPred": 11.6,
+          "lopoPredEnsemble": 9.5,
+          "lopoDelta": 1.3,
+          "lopoApePct": 15.8,
+          "lopoAccuracyPct": 84.2,
+          "calibratedRuntimePred": 9.54,
+          "calibratedDelta": 1.34,
+          "calibratedApePct": 16.34,
+          "calibratedAccuracyPct": 83.66
+        }
+      }
+    },
+    {
+      "paperNumber": "57",
+      "authors": "Bontha et al.",
+      "year": "2006",
+      "process": "ded-laser",
+      "condition": "As-Built",
+      "rawCondition": "as-built",
+      "P": 450,
+      "v": 10.6,
+      "h": 1200,
+      "t": 500,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "lopo_cv",
+          "exp": 340,
+          "physicsPriorPred": 334.29,
+          "lopoPredEnsemble": 337.24,
+          "lopoDelta": -2.76,
+          "lopoApePct": 0.81,
+          "lopoAccuracyPct": 99.19,
+          "calibratedRuntimePred": 337.72,
+          "calibratedDelta": -2.28,
+          "calibratedApePct": 0.67,
+          "calibratedAccuracyPct": 99.33
+        },
+        "ys_mpa": {
+          "mode": "lopo_cv",
+          "exp": 890,
+          "physicsPriorPred": 827.82,
+          "lopoPredEnsemble": 852.76,
+          "lopoDelta": -37.24,
+          "lopoApePct": 4.18,
+          "lopoAccuracyPct": 95.82,
+          "calibratedRuntimePred": 874.14,
+          "calibratedDelta": -15.86,
+          "calibratedApePct": 1.78,
+          "calibratedAccuracyPct": 98.22
+        },
+        "uts_mpa": {
+          "mode": "lopo_cv",
+          "exp": 1020,
+          "physicsPriorPred": 918.88,
+          "lopoPredEnsemble": 949.75,
+          "lopoDelta": -70.25,
+          "lopoApePct": 6.89,
+          "lopoAccuracyPct": 93.11,
+          "calibratedRuntimePred": 978.99,
+          "calibratedDelta": -41.01,
+          "calibratedApePct": 4.02,
+          "calibratedAccuracyPct": 95.98
+        },
+        "elongation_pct": {
+          "mode": "lopo_cv",
+          "exp": 9.8,
+          "physicsPriorPred": 11.6,
+          "lopoPredEnsemble": 10.91,
+          "lopoDelta": 1.11,
+          "lopoApePct": 11.35,
+          "lopoAccuracyPct": 88.65,
+          "calibratedRuntimePred": 10.49,
+          "calibratedDelta": 0.69,
+          "calibratedApePct": 7,
+          "calibratedAccuracyPct": 93
+        }
+      }
+    },
+    {
+      "paperNumber": "58",
+      "authors": "Guo et al.",
+      "year": "2025",
+      "process": "waam",
+      "condition": "As-Built",
+      "rawCondition": "interpass-rolled",
+      "P": 1800,
+      "v": 6,
+      "h": 4500,
+      "t": 1200,
+      "T0": 200,
+      "htTempC": 25,
+      "metrics": {
+        "hardness_hv": {
+          "mode": "physics_prior_only",
+          "exp": 325,
+          "physicsPriorPred": 324,
+          "delta": -1,
+          "apePct": 0.31,
+          "accuracyPct": 99.69
+        },
+        "ys_mpa": {
+          "mode": "physics_prior_only",
+          "exp": 865,
+          "physicsPriorPred": 833.93,
+          "delta": -31.07,
+          "apePct": 3.59,
+          "accuracyPct": 96.41
+        },
+        "uts_mpa": {
+          "mode": "physics_prior_only",
+          "exp": 975,
+          "physicsPriorPred": 925.67,
+          "delta": -49.33,
+          "apePct": 5.06,
+          "accuracyPct": 94.94
+        },
+        "elongation_pct": {
+          "mode": "physics_prior_only",
+          "exp": 14.5,
+          "physicsPriorPred": 13.8,
+          "delta": -0.7,
+          "apePct": 4.83,
+          "accuracyPct": 95.17
+        }
+      }
+    }
+  ]
+}

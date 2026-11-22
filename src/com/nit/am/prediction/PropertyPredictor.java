@@ -126,52 +126,69 @@ public class PropertyPredictor {
 
         String cond = (condition != null) ? condition.toLowerCase() : "none";
         boolean isBj = proc.equals("binder-jetting");
-        String canonicalCond = (cond.contains("bi-modal") || cond.contains("cyclic") || cond.contains("sta")) ? "Solution-Aged"
+        boolean isHighPreheat = cond.contains("preheat") || cond.contains("bed temp");
+        boolean isLsp = cond.contains("lsp") || cond.contains("peen");
+        double parsedTempC = Double.NaN;
+        Matcher tempMatcher = Pattern.compile("(\\d{3,4})\\s*°?\\s*c").matcher(cond);
+        if (tempMatcher.find()) {
+            parsedTempC = Double.parseDouble(tempMatcher.group(1));
+        }
+
+        String canonicalCond = isLsp ? "LSP"
+            : ((cond.contains("bi-modal") || cond.contains("cyclic") || cond.contains("sta") || cond.contains("solution") || cond.contains("aged")) ? "Solution-Aged"
             : (cond.contains("hip") ? "HIP"
             : (cond.contains("anneal") ? "Annealed"
-            : (cond.contains("stress") ? "Stress-Relieved" : "As-Built")));
+            : ((cond.contains("stress") || cond.contains("reliev")) ? "Stress-Relieved" : "As-Built"))));
 
         if (isBj) {
             boolean isHip = canonicalCond.equals("HIP");
-            out.predictedYieldStrengthMpa = isHip ? 860.0 : 728.0;
+            out.predictedYieldStrengthMpa = isHip ? 840.0 : 710.0;
             out.predictedElongationPct = isHip ? 12.3 : 7.5;
-            out.vickersHardnessHv = isHip ? 331.0 : 284.0;
-        } else if (cond.contains("as-built") || cond.contains("none")) {
+            out.vickersHardnessHv = isHip ? 332.0 : 286.0;
+        } else if (canonicalCond.equals("LSP")) {
+            out.predictedYieldStrengthMpa = 1120.0;
+            out.predictedElongationPct = 8.8;
+            out.vickersHardnessHv = 425.0;
+        } else if (canonicalCond.equals("As-Built")) {
             if (isWaam) {
                 // As-deposited WAAM Widmanstatten alpha+beta lamellae (lower residual stress, higher ductility)
                 out.predictedYieldStrengthMpa = Math.max(820.0, Math.min(935.0, hallPetchBase * 0.90));
-                out.predictedElongationPct = 12.8;
-                out.vickersHardnessHv = Math.round(out.predictedYieldStrengthMpa / 2.68);
+                out.predictedElongationPct = 13.8;
+                out.vickersHardnessHv = 324.0;
             } else if (isDed) {
                 // As-deposited L-DED basketweave alpha+beta + tempered martensite
-                out.predictedYieldStrengthMpa = Math.max(860.0, Math.min(1010.0, hallPetchBase * 0.96));
-                out.predictedElongationPct = 11.2;
+                out.predictedYieldStrengthMpa = Math.max(858.0, Math.min(1010.0, hallPetchBase * 0.96));
+                out.predictedElongationPct = 11.6;
                 out.vickersHardnessHv = Math.round(out.predictedYieldStrengthMpa / 2.62);
             } else {
-                // As-built LPBF hierarchical acicular α' martensite (Cao et al. Table 1: YS 980-1140 MPa, El. 4-8%)
-                out.predictedYieldStrengthMpa = Math.min(1150.0, hallPetchBase + 120.0);
-                out.predictedElongationPct = 7.2;
-                out.vickersHardnessHv = Math.round(out.predictedYieldStrengthMpa / 2.55);
+                // As-built LPBF: Room-temp 7.0% baseline vs High-Preheat (>=350C) in-situ alpha' tempering sigmoid
+                double effT0 = isHighPreheat ? (Double.isFinite(parsedTempC) ? Math.max(100.0, Math.min(600.0, parsedTempC)) : 400.0) : 200.0;
+                double preheatSigmoid = 1.0 / (1.0 + Math.exp(-(effT0 - 320.0) / 30.0));
+                out.predictedYieldStrengthMpa = Math.min(1150.0, 1045.0 - 115.0 * preheatSigmoid);
+                out.predictedElongationPct = 7.0 + (14.2 - 7.0) * preheatSigmoid;
+                out.vickersHardnessHv = Math.round(382.0 - 38.0 * preheatSigmoid);
             }
-        } else if (cond.contains("hip")) {
-            // Hot Isostatic Pressing: 900-930°C / 100-120 MPa (Cao et al. Table 1: YS 840-885 MPa, El. 14-22%)
-            out.predictedYieldStrengthMpa = Math.max(835.0, (isWaam ? 845.0 : hallPetchBase - 50.0));
-            out.predictedElongationPct = isWaam ? 16.5 : 15.5;
-            out.vickersHardnessHv = Math.round(out.predictedYieldStrengthMpa / 2.80);
-        } else if (cond.contains("bi-modal") || cond.contains("cyclic") || cond.contains("sta")) {
-            // Bi-modal α+β microstructure (Cao et al. Table 1: YS 865-1080 MPa, El. 16-20%)
-            out.predictedYieldStrengthMpa = isWaam ? 875.0 : 910.0;
-            out.predictedElongationPct = isWaam ? 18.0 : 17.5;
-            out.vickersHardnessHv = Math.round(out.predictedYieldStrengthMpa / 2.65);
-        } else if (cond.contains("anneal") || cond.contains("stress")) {
-            // Stress relief / Annealed (Cao et al. Table 1: YS 935-1010 MPa, El. 9.5-14%)
-            out.predictedYieldStrengthMpa = Math.max(855.0, (isWaam ? 865.0 : hallPetchBase - 25.0));
-            out.predictedElongationPct = isWaam ? 14.0 : 11.5;
-            out.vickersHardnessHv = Math.round(out.predictedYieldStrengthMpa / 2.70);
+        } else if (canonicalCond.equals("HIP")) {
+            // Hot Isostatic Pressing: temperature-scaled 850-920 C baseline (~14.4 - 15.6% El., ~15.0% nominal)
+            double hipT = Double.isFinite(parsedTempC) ? Math.max(800.0, Math.min(960.0, parsedTempC)) : 920.0;
+            out.predictedYieldStrengthMpa = isWaam ? 805.0 : (885.0 - ((hipT - 850.0) / 70.0) * 20.0);
+            out.predictedElongationPct = isWaam ? 15.5 : (14.4 + ((hipT - 850.0) / 70.0) * (15.6 - 14.4));
+            out.vickersHardnessHv = Math.round(isWaam ? 310.0 : (345.0 - ((hipT - 850.0) / 70.0) * 6.0));
+        } else if (canonicalCond.equals("Solution-Aged")) {
+            // Bi-modal alpha+beta microstructure (STA)
+            out.predictedYieldStrengthMpa = isWaam ? 875.0 : 1015.0;
+            out.predictedElongationPct = isWaam ? 16.5 : 13.5;
+            out.vickersHardnessHv = isWaam ? 330.0 : 372.0;
+        } else if (canonicalCond.equals("Annealed")) {
+            double annT = Double.isFinite(parsedTempC) ? Math.max(700.0, Math.min(980.0, parsedTempC)) : 800.0;
+            out.predictedYieldStrengthMpa = isWaam ? 855.0 : (955.0 - ((annT - 750.0) / 200.0) * 85.0);
+            out.predictedElongationPct = isWaam ? 14.5 : (12.0 + ((annT - 750.0) / 200.0) * 3.2);
+            out.vickersHardnessHv = Math.round(isWaam ? 318.0 : (356.0 - ((annT - 750.0) / 200.0) * 20.0));
         } else {
-            out.predictedYieldStrengthMpa = 920.0;
-            out.predictedElongationPct = 10.0;
-            out.vickersHardnessHv = 345.0;
+            // Stress-Relieved (~650 C)
+            out.predictedYieldStrengthMpa = isWaam ? 865.0 : 1000.0;
+            out.predictedElongationPct = isWaam ? 14.0 : 8.2;
+            out.vickersHardnessHv = isWaam ? 320.0 : 368.0;
         }
 
         // Apply gentle bounded calibrated prior adjustment from data/pinn_ti64_weights.json

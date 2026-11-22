@@ -219,9 +219,10 @@ export default function handler(req, res) {
       if (isHip) relativeDensity = Math.min(99.98, relativeDensity + 0.4);
 
       // Mechanical Properties & Post-Processing State Rules (Section 4)
+      const preheatSigmoid = 1.0 / (1.0 + Math.exp(-(preheat - 320.0) / 30.0));
       if (isAsBuilt) {
-        predHv = 385; // 365-405 HV
-        predElong = 6.8; // < 8% elongation
+        predHv = (!isWaam && !isDed) ? (385 - 38.0 * preheatSigmoid) : 385; // room-temp 365-405 HV; high-preheat tempered
+        predElong = (!isWaam && !isDed) ? (7.0 + (14.2 - 7.0) * preheatSigmoid) : (isWaam ? 13.8 : 11.6);
       } else if (isSr) {
         predHv = 375; // 360-390 HV
         predElong = 10.5;
@@ -233,27 +234,35 @@ export default function handler(req, res) {
         predElong = 11.2;
       } else if (isHip) {
         predHv = 340; // 320-360 HV
-        predElong = 14.8;
+        predElong = 15.0;
       }
 
       // Tabor Scaling + Calibrated process residual alignment
       taborFactor = isAsBuilt ? 3.15 : (isHip ? 2.95 : (isSta ? 3.08 : 3.05));
       const postNormEval = isHip ? 'HIP' : (isSta ? 'Solution-Aged' : (isAnneal ? 'Annealed' : (isSr ? 'Stress-Relieved' : 'As-Built')));
+      const htTempC = Number.isFinite(Number(q.ht_temp_c)) ? Number(q.ht_temp_c) : undefined;
+      const o2Wt = Number.isFinite(Number(q.oxygen)) ? Number(q.oxygen) : (isEli ? 0.11 : 0.16);
+      const buildOriDeg = Number.isFinite(Number(q.orientation_deg)) ? Number(q.orientation_deg) : 0;
       predHv = Math.round(applyCalibratedResidual({
         processId: proc, prop: 'hardness_hv', priorVal: predHv,
-        P: p, v, h, t, T0: preheat, ved, postProcessing: postNormEval, isEli
+        P: p, v, h, t, T0: preheat, ved, hi: linearHeatInput, htTempC, postProcessing: postNormEval,
+        oxygenWtPct: o2Wt, buildOrientationDeg: buildOriDeg, isEli
       }));
       predUts = Math.round(applyCalibratedResidual({
         processId: proc, prop: 'uts_mpa', priorVal: predHv * taborFactor,
-        P: p, v, h, t, T0: preheat, ved, postProcessing: postNormEval, isEli
+        P: p, v, h, t, T0: preheat, ved, hi: linearHeatInput, htTempC, postProcessing: postNormEval,
+        oxygenWtPct: o2Wt, buildOrientationDeg: buildOriDeg, isEli
       }));
       predYs = Math.round(applyCalibratedResidual({
         processId: proc, prop: 'ys_mpa', priorVal: predUts * 0.91,
-        P: p, v, h, t, T0: preheat, ved, postProcessing: postNormEval, isEli
+        P: p, v, h, t, T0: preheat, ved, hi: linearHeatInput, htTempC, postProcessing: postNormEval,
+        oxygenWtPct: o2Wt, buildOrientationDeg: buildOriDeg, isEli
       }));
-      predElong = parseFloat(Math.max(1.5, Math.min(isAsBuilt && !isWaam && !isDed ? 8.9 : 22.0, applyCalibratedResidual({
+      const elongUpperCap = (isAsBuilt && !isWaam && !isDed && preheat < 350) ? 8.9 : 22.0;
+      predElong = parseFloat(Math.max(1.5, Math.min(elongUpperCap, applyCalibratedResidual({
         processId: proc, prop: 'elongation_pct', priorVal: predElong,
-        P: p, v, h, t, T0: preheat, ved, postProcessing: postNormEval, isEli
+        P: p, v, h, t, T0: preheat, ved, hi: linearHeatInput, htTempC, postProcessing: postNormEval,
+        oxygenWtPct: o2Wt, buildOrientationDeg: buildOriDeg, isEli
       }))).toFixed(1));
     }
 
