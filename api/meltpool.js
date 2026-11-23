@@ -209,6 +209,9 @@ export default function handler(req, res) {
 
     const { power: p, speed: v, hatch: h, layer: t, spot, preheat } = validation.accepted_parameters;
     const requestedModel = (q.model || 'coen').toLowerCase().trim();
+    if (req.method === 'GET') {
+      res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+    }
 
     function calculatePinnMeltPool() {
       const pinnRes = evaluateTi64PinnNode({

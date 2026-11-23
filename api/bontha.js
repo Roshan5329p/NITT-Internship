@@ -84,25 +84,40 @@ function compute2DThinWallProfile(p, vMs, alpha, deltaTm, thermalAccum, wallMm) 
     const r0 = Math.sqrt(x0 * x0 + z0 * z0);
     return Math.exp(-x0) * besselK0(r0);
   };
-
-  let maxZ = 0.02;
-  for (let z = 0.02; z <= 6.0; z += 0.02) {
-    let found = false;
-    for (let x = -4.0; x <= 0.5; x += 0.05) {
-      if (Tbar(x, z) >= TbarM) { found = true; break; }
+  const findPeakX = (z0) => {
+    let lx = -6.0, hx = 0.0;
+    for (let it = 0; it < 20; it++) {
+      const mx = (lx + hx) * 0.5;
+      const r0 = Math.sqrt(mx * mx + z0 * z0);
+      const derivSign = -(mx / Math.max(1e-9, r0)) * besselK1(r0) - besselK0(r0);
+      if (derivSign > 0) lx = mx; else hx = mx;
     }
-    if (found) maxZ = z; else break;
+    return (lx + hx) * 0.5;
+  };
+
+  let lz = 0.02, hz = 6.0;
+  for (let it = 0; it < 20; it++) {
+    const mz = (lz + hz) * 0.5;
+    if (Tbar(findPeakX(mz), mz) >= TbarM) lz = mz; else hz = mz;
   }
+  const maxZ = Math.max(0.02, lz);
 
   const profile = [];
   for (let i = 0; i < 10; i++) {
     const frac = Number((i / 9.0).toFixed(3));
     const zBar = Math.max(0.005, frac * maxZ);
-    let bestX = 0;
-    let minErr = Infinity;
-    for (let x = 0.5; x >= -8.0; x -= 0.02) {
-      const err = Math.abs(Tbar(x, zBar) - TbarM);
-      if (err < minErr) { minErr = err; bestX = x; }
+    const xPeak = findPeakX(zBar);
+    let bestX = xPeak;
+    if (Tbar(xPeak, zBar) > TbarM) {
+      let lowX = -8.0, highX = xPeak;
+      if (Tbar(lowX, zBar) > TbarM) {
+        lowX = Tbar(-24.0, zBar) > TbarM ? -80.0 : -24.0;
+      }
+      for (let iter = 0; iter < 22; iter++) {
+        const midX = (lowX + highX) * 0.5;
+        if (Tbar(midX, zBar) < TbarM) lowX = midX; else highX = midX;
+      }
+      bestX = (lowX + highX) * 0.5;
     }
     const r0 = Math.max(1e-4, Math.sqrt(bestX * bestX + zBar * zBar));
     const dTdtBar = Math.exp(-bestX) * ((bestX / r0) * besselK1(r0) + besselK0(r0));
@@ -298,6 +313,9 @@ export default function handler(req, res) {
 
     const cet = classifyBonthaMorphology(rawG_Kcm, rawR_cms);
 
+    if (req.method === 'GET') {
+      res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+    }
     res.status(200).json({
       status: 'success',
       dimension: isBinderJetting

@@ -2901,6 +2901,50 @@
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
   <script>
 // ========================================================
+// SHARED CORE UTILITIES (DOM CACHE, NORMALIZATION, CLAMP)
+// ========================================================
+const _domElCache = new Map();
+function $id(id) {
+  if (!id || typeof document === 'undefined') return null;
+  let el = _domElCache.get(id);
+  if (el && el.isConnected !== false) return el;
+  el = document.getElementById(id);
+  if (el) _domElCache.set(id, el);
+  return el;
+}
+function setElText(id, txt) { const el = $id(id); if (el && el.innerText !== txt) el.innerText = txt; }
+function setElHtml(id, htm) { const el = $id(id); if (el) el.innerHTML = htm; }
+
+function clampFinite(val, min, max, fallback) {
+  if (val === null || val === undefined || (typeof val === 'string' && val.trim() === '')) return fallback;
+  const n = typeof val === 'number' ? val : Number(val);
+  return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
+}
+
+function normalizeProcessId(raw) {
+  if (!raw) return 'lpbf';
+  const s = String(raw).toLowerCase().trim();
+  if (s === 'waam' || s.includes('wire+arc') || s.includes('wire + arc') || s.includes('wire-arc') || s.includes('cmt')) return 'waam';
+  if (s === 'ded-laser' || s === 'ded' || s === 'l-ded' || s === 'lded' || s.includes('l-ded') || /\bded\b|lmd|lens/.test(s)) return 'ded-laser';
+  if (s === 'binder-jetting' || s === 'binder_jetting' || s === 'bjt' || s === 'bj' || s.includes('binder')) return 'binder-jetting';
+  return 'lpbf';
+}
+
+function normalizeCondition(rawCond, defaultToHip = false) {
+  const s = String(rawCond || '').toLowerCase();
+  if (s === 'none' || s.includes('as-built') || s.includes('as_built') || s.includes('as-deposited') || s.includes('as-printed') || s.includes('pending')) {
+    return { condition: 'As-Built', htTempC: 25, stateKey: 'as_built', postNorm: 'None' };
+  }
+  if (s.includes('hip')) return { condition: 'HIP', htTempC: 920, stateKey: 'hip', postNorm: 'HIP' };
+  if (s.includes('bi-modal') || s.includes('bimodal')) return { condition: 'Bi-modal', htTempC: 940, stateKey: 'sta', postNorm: 'Bi-modal' };
+  if (s.includes('solution') || s.includes('aged') || s === 'sta') return { condition: 'Solution-Aged', htTempC: 540, stateKey: 'sta', postNorm: 'Solution-Aged' };
+  if (s.includes('stress')) return { condition: 'Stress-Relieved', htTempC: 650, stateKey: 'stress_relieved', postNorm: 'Stress-relieved' };
+  if (s.includes('anneal') || s.includes('heat-treat') || s.includes('interpass')) return { condition: 'Annealed', htTempC: 730, stateKey: 'annealed', postNorm: 'Annealed' };
+  if (defaultToHip) return { condition: 'HIP', htTempC: 920, stateKey: 'hip', postNorm: 'HIP' };
+  return { condition: 'As-Built', htTempC: 25, stateKey: 'as_built', postNorm: 'None' };
+}
+
+// ========================================================
 // UNIVERSAL MATERIAL STATE & PHASE FRACTION SYNCHRONIZER
 // ========================================================
 var globalMaterialState = 'hip';
@@ -3147,13 +3191,12 @@ function normalizeConditionUi(rawCond = '') {
   if (/preheat|bed\s*temp/.test(s)) {
     return { condition: 'As-Built', T0: (temp && temp >= 100 && temp <= 600) ? temp : 400, htTempC: 25, surfaceTreatment: null };
   }
-  if (/bi-?modal|\bsta\b|solution|aged/.test(s)) return { condition: 'Solution-Aged', T0: null, htTempC: temp || 705, surfaceTreatment: null };
-  if (/hip/.test(s)) return { condition: 'HIP', T0: null, htTempC: temp || 920, surfaceTreatment: null };
-  if (/anneal/.test(s)) return { condition: 'Annealed', T0: null, htTempC: temp || 730, surfaceTreatment: null };
-  if (/stress|reliev/.test(s)) return { condition: 'Stress-Relieved', T0: null, htTempC: temp || 650, surfaceTreatment: null };
   if (/peen|lsp/.test(s)) return { condition: 'LSP', T0: null, htTempC: 25, surfaceTreatment: 'lsp' };
   if (/laser\s*polish/.test(s)) return { condition: 'As-Built', T0: null, htTempC: 25, surfaceTreatment: 'laser_polished' };
-  return { condition: 'As-Built', T0: null, htTempC: 25, surfaceTreatment: null };
+  const base = normalizeCondition(rawCond);
+  const condOut = base.condition === 'Bi-modal' ? 'Solution-Aged' : base.condition;
+  const defTemp = condOut === 'Solution-Aged' ? 705 : (condOut === 'HIP' ? 920 : (condOut === 'Annealed' ? 730 : (condOut === 'Stress-Relieved' ? 650 : 25)));
+  return { condition: condOut, T0: null, htTempC: condOut === 'As-Built' ? 25 : (temp || defTemp), surfaceTreatment: null };
 }
 
 function computePhysicsPriorUi(row = {}) {
@@ -3349,7 +3392,7 @@ function applyCalibratedResidualUi(opts = {}) {
 }
 
 function _pinnClamp(val, min, max, fallback) {
-  return Number.isFinite(val) ? Math.max(min, Math.min(max, val)) : fallback;
+  return clampFinite(val, min, max, fallback);
 }
 
 function _forwardPinnSubNetWithJac(net, rawInputs) {
@@ -3942,11 +3985,10 @@ var MELT_POOL_PRESETS = [
 window.MELT_POOL_PRESETS = MELT_POOL_PRESETS;
 
 function normalizeCanonicalProcessId(rawProcessId) {
-  const norm = String(rawProcessId || 'lpbf').toLowerCase().trim();
-  if (norm === 'waam') return 'waam';
-  if (norm === 'lded' || norm === 'ded-laser' || norm === 'ded' || norm === 'l-ded') return 'lded';
-  if (norm === 'binder_jetting' || norm === 'binder-jetting' || norm === 'bj' || norm === 'bjt') return 'binder_jetting';
-  return 'lpbf';
+  const id = normalizeProcessId(rawProcessId);
+  if (id === 'ded-laser') return 'lded';
+  if (id === 'binder-jetting') return 'binder_jetting';
+  return id;
 }
 window.normalizeCanonicalProcessId = normalizeCanonicalProcessId;
 
@@ -4952,13 +4994,7 @@ function _normTi64Alloy(raw) {
   return (s.includes('eli') || s.includes('23') || s === 'f3001') ? 'ti64_eli' : 'ti64_gr5';
 }
 function _normTi64Post(raw) {
-  const s = String(raw || 'HIP').toLowerCase().trim();
-  if (s === 'none' || s.includes('as-built') || s.includes('as_built')) return 'None';
-  if (s.includes('stress')) return 'Stress-relieved';
-  if (s.includes('anneal')) return 'Annealed';
-  if (s.includes('bi-modal') || s.includes('bimodal')) return 'Bi-modal';
-  if (s.includes('solution') || s === 'sta') return 'Solution-Aged';
-  return 'HIP';
+  return normalizeCondition(raw || 'HIP', true).postNorm;
 }
 function computeOxygenAndReuseEffects(params) {
   const p = params || {};
@@ -5077,11 +5113,11 @@ function onAlloyGradeChange() {
   updateAll();
 }
 function onReuseSliderChange() {
-  const reuseSl = document.getElementById('sl_reuse');
-  const reuseVal = document.getElementById('val_reuse');
-  const o2Sl = document.getElementById('sl_oxygen');
-  const autoChk = document.getElementById('chk_auto_reuse');
-  const alloyEl = document.getElementById('alloySelect');
+  const reuseSl = $id('sl_reuse');
+  const reuseVal = $id('val_reuse');
+  const o2Sl = $id('sl_oxygen');
+  const autoChk = $id('chk_auto_reuse');
+  const alloyEl = $id('alloySelect');
   const cycles = reuseSl ? parseInt(reuseSl.value, 10) : 0;
   if (reuseVal) reuseVal.innerText = cycles + (cycles === 1 ? ' cycle' : ' cycles');
   if (autoChk && autoChk.checked && o2Sl) {
@@ -5094,16 +5130,31 @@ function onReuseSliderChange() {
     });
     o2Sl.value = eff.effectiveOxygenWtPct.toFixed(3);
   }
-  updateAll();
+  if (typeof schedulePhysicsCalculation === 'function') {
+    const postEl = $id('postProcessingSelect');
+    if (alloyEl) currentAlloy = alloyEl.value;
+    if (postEl && typeof syncMaterialStateUiFromPost === 'function') syncMaterialStateUiFromPost(postEl.value);
+    schedulePhysicsCalculation(false);
+  } else {
+    updateAll();
+  }
 }
 function onOxygenSliderChange() {
-  const o2Sl = document.getElementById('sl_oxygen');
-  const autoChk = document.getElementById('chk_auto_reuse');
+  const o2Sl = $id('sl_oxygen');
+  const autoChk = $id('chk_auto_reuse');
   // Allow manual oxygen exploration without being overwritten by reuse auto-coupling
   if (autoChk && autoChk.checked) autoChk.checked = false;
-  const valEl = document.getElementById('val_oxygen');
+  const valEl = $id('val_oxygen');
   if (o2Sl && valEl) valEl.innerText = parseFloat(o2Sl.value).toFixed(3) + ' wt%';
-  updateAll();
+  if (typeof schedulePhysicsCalculation === 'function') {
+    const alloyEl = $id('alloySelect');
+    const postEl = $id('postProcessingSelect');
+    if (alloyEl) currentAlloy = alloyEl.value;
+    if (postEl && typeof syncMaterialStateUiFromPost === 'function') syncMaterialStateUiFromPost(postEl.value);
+    schedulePhysicsCalculation(false);
+  } else {
+    updateAll();
+  }
 }
 window.onAlloyGradeChange = onAlloyGradeChange;
 window.onReuseSliderChange = onReuseSliderChange;
@@ -5116,7 +5167,7 @@ var stressStrainMode = 'engineering';
 var showCurvesOverlay = true;
 
 function _clampFiniteP3(val, min, max, fallback) {
-  return Number.isFinite(Number(val)) ? Math.max(min, Math.min(max, Number(val))) : fallback;
+  return clampFinite(val, min, max, fallback);
 }
 
 function computeTi64PhaseFractions(coolingRateKs, postProcessing) {
@@ -6096,12 +6147,7 @@ var _urlSyncTimerId = null;
 var _isHydratingFromUrl = false;
 
 function sanitizeProcessId(raw) {
-  if (!raw) return 'lpbf';
-  const norm = String(raw).toLowerCase().trim();
-  if (norm === 'bj' || norm === 'binder-jetting') return 'binder-jetting';
-  if (norm === 'ded' || norm === 'ded-laser') return 'ded-laser';
-  if (['lpbf', 'ded-laser', 'waam', 'binder-jetting'].includes(norm)) return norm;
-  return 'lpbf';
+  return normalizeProcessId(raw);
 }
 
 function sanitizeAlloyId(raw) {
@@ -6116,13 +6162,8 @@ function sanitizePostState(raw) {
   if (!raw) return 'HIP';
   const trimmed = String(raw).trim();
   if (['None', 'Stress-relieved', 'Annealed', 'HIP', 'Solution-Aged'].includes(trimmed)) return trimmed;
-  const lower = trimmed.toLowerCase();
-  if (lower === 'none' || lower === 'as_built' || lower === 'as-built') return 'None';
-  if (lower === 'stress-relieved' || lower === 'stress_relieved') return 'Stress-relieved';
-  if (lower === 'annealed') return 'Annealed';
-  if (lower === 'hip') return 'HIP';
-  if (lower === 'solution-aged' || lower === 'solution_aged' || lower === 'sta') return 'Solution-Aged';
-  return 'HIP';
+  const pn = normalizeCondition(raw, true).postNorm;
+  return pn === 'Bi-modal' ? 'HIP' : pn;
 }
 
 function sanitizeModelId(raw) {
@@ -6134,14 +6175,7 @@ function sanitizeModelId(raw) {
 }
 
 function clampFiniteNumber(raw, fallback, bounds) {
-  if (raw === null || raw === undefined || (typeof raw === 'string' && raw.trim() === '')) {
-    return fallback;
-  }
-  const num = Number(raw);
-  if (!Number.isFinite(num)) {
-    return fallback;
-  }
-  return Math.max(bounds[0], Math.min(bounds[1], num));
+  return clampFinite(raw, bounds[0], bounds[1], fallback);
 }
 
 function parseUrlDashboardState(search) {
@@ -11310,13 +11344,13 @@ function calculatePhysics() {
     betaTransusC: 995, baseHardnessHV: 345, nominalUTS: 950, hallPetchSlope: 68, laserAbsorptivity: 0.448,
     cellSpacingFactor: 18.5, cellSpacingExponent: 0.38
   });
-  const elP = document.getElementById('sl_p');
-  const elV = document.getElementById('sl_v');
-  const elH = document.getElementById('sl_h');
-  const elT = document.getElementById('sl_t');
-  const elSpot = document.getElementById('sl_spot');
-  const elPreheat = document.getElementById('sl_preheat');
-  const elPost = document.getElementById('postProcessingSelect');
+  const elP = $id('sl_p');
+  const elV = $id('sl_v');
+  const elH = $id('sl_h');
+  const elT = $id('sl_t');
+  const elSpot = $id('sl_spot');
+  const elPreheat = $id('sl_preheat');
+  const elPost = $id('postProcessingSelect');
 
   const p = elP ? parseFloat(elP.value) : 280;
   const v = elV ? parseFloat(elV.value) : 960;
@@ -11326,9 +11360,9 @@ function calculatePhysics() {
   const preheat = elPreheat ? parseFloat(elPreheat.value) : 200;
   const post = elPost ? elPost.value : 'HIP';
 
-  // Null-safe DOM text & HTML setters
-  const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
-  const setHtm = (id, htm) => { const el = document.getElementById(id); if (el) el.innerHTML = htm; };
+  // Cached DOM text & HTML setters backed by _domElCache
+  const setTxt = setElText;
+  const setHtm = setElHtml;
 
   // Synchronize displays
   setTxt('val_p', p + ' W');
@@ -11472,12 +11506,17 @@ function calculatePhysics() {
       isDed: false,
       stressField: bjStressField
     });
-    if (typeof updateAstmAuditor === 'function') updateAstmAuditor();
-    if (typeof updateTwinScaleAndHud === 'function') updateTwinScaleAndHud();
-    if (typeof renderTi64Phase3Curves === 'function') renderTi64Phase3Curves(window.latestPhysicsState);
-    updateDefectMapSvg(currentProcess, p, v);
-    updateMeltPoolAndThermal();
-    if (typeof renderBonthaProfileTable === 'function') renderBonthaProfileTable();
+    _lastCalcSnapshot = { process: currentProcess, p, v, h, t, spot, preheat, primaryHv: primaryHv, isExtrap: false, isBinderJetting: true };
+    if (isTabActive('qualification')) { if (typeof updateAstmAuditor === 'function') updateAstmAuditor(); } else { dirtyTabs.add('qualification'); }
+    if (isTabActive('digital-twin')) { if (typeof updateTwinScaleAndHud === 'function') updateTwinScaleAndHud(); } else { dirtyTabs.add('digital-twin'); }
+    if (isTabActive('predictions')) { if (typeof renderTi64Phase3Curves === 'function') renderTi64Phase3Curves(window.latestPhysicsState); } else { dirtyTabs.add('predictions'); }
+    if (isTabActive('defect-map')) { updateDefectMapSvg(currentProcess, p, v); } else { dirtyTabs.add('defect-map'); }
+    if (isTabActive('melt-pool')) {
+      updateMeltPoolAndThermal();
+      if (typeof renderBonthaProfileTable === 'function') renderBonthaProfileTable();
+    } else {
+      dirtyTabs.add('melt-pool');
+    }
     if (typeof updateLiteratureComparison === 'function') updateLiteratureComparison(true);
     if (typeof scheduleUrlStateSync === 'function') scheduleUrlStateSync();
     return;
@@ -12074,8 +12113,12 @@ function calculatePhysics() {
     scheduleUrlStateSync();
   }
 
-  // Update Dynamic SVG Operating Point & Zones on Defect Map
-  updateDefectMapSvg(currentProcess, p, v);
+  // Update Dynamic SVG Operating Point & Zones on Defect Map (lazy if tab inactive)
+  if (isTabActive('defect-map')) {
+    updateDefectMapSvg(currentProcess, p, v);
+  } else {
+    dirtyTabs.add('defect-map');
+  }
 
   // Reconciled Physical Residual Stress from unified 3D specimen stress field + CAD stress multiplier
   const regimeWithMet = Object.assign({}, regimeInfo, {
@@ -12161,9 +12204,11 @@ function calculatePhysics() {
     isWaam, isDed
   };
 
-  // Update Aerospace & Medical ASTM / AMS Qualification Auditor
-  if (typeof updateAstmAuditor === 'function') {
-    updateAstmAuditor();
+  // Update Aerospace & Medical ASTM / AMS Qualification Auditor (lazy if tab inactive)
+  if (isTabActive('qualification')) {
+    if (typeof updateAstmAuditor === 'function') updateAstmAuditor();
+  } else {
+    dirtyTabs.add('qualification');
   }
 
   // Update All 6 Build Economics Cards Dynamically
@@ -12217,61 +12262,32 @@ function calculatePhysics() {
   window.latestPhysicsState.hv = primaryHv;
   window.latestPhysicsState.preheat = preheat;
   window.latestPhysicsState.process = currentProcess;
-  if (typeof updateTwinScaleAndHud === 'function') {
-    updateTwinScaleAndHud();
+  if (isTabActive('digital-twin')) {
+    if (typeof updateTwinScaleAndHud === 'function') updateTwinScaleAndHud();
+  } else {
+    dirtyTabs.add('digital-twin');
   }
-  if (typeof renderTi64Phase3Curves === 'function') {
-    renderTi64Phase3Curves(window.latestPhysicsState);
-  }
-  if (typeof renderPredMechCurves === 'function') {
-    renderPredMechCurves(window.latestPhysicsState);
+  if (isTabActive('predictions')) {
+    if (typeof renderTi64Phase3Curves === 'function') renderTi64Phase3Curves(window.latestPhysicsState);
+    if (typeof renderPredMechCurves === 'function') renderPredMechCurves(window.latestPhysicsState);
+  } else {
+    dirtyTabs.add('predictions');
   }
 
   // 6. Update Bontha Solidification Map Cursor (Bontha et al. 2006, 2009)
-  const logR = Math.log10(Math.max(1e-4, bonthaR));
-  const bonthaX = Math.max(85, Math.min(695, 80 + ((logR - (-3)) / 4.0) * 620));
-  const logG = Math.log10(Math.max(10, bonthaG));
-  const bonthaY = Math.max(45, Math.min(295, 300 - ((logG - 2.0) / 5.0) * 260));
-
-  const bonthaCursor = document.getElementById('bonthaCursor');
-  const bonthaPing = document.getElementById('bonthaCursorPing');
-  const bonthaBox = document.getElementById('bonthaCursorBox');
-  const bonthaLabel1 = document.getElementById('bonthaCursorLabel1');
-  const bonthaLabel2 = document.getElementById('bonthaCursorLabel2');
-  const bonthaBadge = document.getElementById('bonthaMorphBadge');
-
-  if (bonthaCursor) {
-    bonthaCursor.setAttribute('cx', bonthaX);
-    bonthaCursor.setAttribute('cy', bonthaY);
-    if (bonthaPing) {
-      bonthaPing.setAttribute('cx', bonthaX);
-      bonthaPing.setAttribute('cy', bonthaY);
-    }
-    const boxX = bonthaX > 480 ? bonthaX - 230 : bonthaX + 15;
-    const boxY = Math.max(45, Math.min(250, bonthaY - 20));
-    if (bonthaBox) {
-      bonthaBox.setAttribute('x', boxX);
-      bonthaBox.setAttribute('y', boxY);
-    }
-    if (bonthaLabel1) {
-      bonthaLabel1.setAttribute('x', boxX + 10);
-      bonthaLabel1.setAttribute('y', boxY + 16);
-      bonthaLabel1.textContent = `R = ${bonthaR < 10 ? bonthaR.toFixed(2) : bonthaR.toFixed(1)} cm/s • G = ${bonthaG.toExponential(1)} K/cm`;
-    }
-    if (bonthaLabel2) {
-      bonthaLabel2.setAttribute('x', boxX + 10);
-      bonthaLabel2.setAttribute('y', boxY + 30);
-      bonthaLabel2.textContent = `${bonthaMorphLabel.split(' ')[0]} (Ṫ=${coolingRate < 1000 ? coolingRate.toFixed(0) : coolingRate.toExponential(1)} K/s)`;
-    }
-    if (bonthaBadge) {
-      bonthaBadge.textContent = bonthaMorphShort;
-      bonthaBadge.style.color = bonthaMorphRaw === 'Mixed' ? 'var(--accent-amber)' : (bonthaMorphRaw === 'Columnar' ? 'var(--accent-cyan)' : 'var(--accent-emerald)');
-      bonthaBadge.style.background = bonthaMorphRaw === 'Mixed' ? 'rgba(245, 158, 11, 0.2)' : (bonthaMorphRaw === 'Columnar' ? 'rgba(80, 216, 233, 0.2)' : 'rgba(16, 185, 129, 0.2)');
-    }
+  _lastCalcSnapshot = {
+    process: currentProcess, p, v, h, t, spot, preheat,
+    primaryHv, isExtrap: false, bonthaR, bonthaG, bonthaMorphLabel, bonthaMorphShort, bonthaMorphRaw, coolingRate,
+    isBinderJetting: false
+  };
+  if (isTabActive('process-map')) {
+    _renderBonthaCursorDom(_lastCalcSnapshot);
+  } else {
+    dirtyTabs.add('process-map');
   }
 
-  // Update post-processing explanation note
-  const noteEl = document.getElementById('postProcessingNote');
+  // Update post-processing explanation note (Sidebar / global control)
+  const noteEl = $id('postProcessingNote');
   if (noteEl) {
     if (post === 'Bi-modal') {
       noteEl.innerText = 'Bi-modal α+β microstructure formed via cyclic heat treatment / STA achieves both high tensile ductility (>16%) and high strength (>900 MPa) as reported by Cao et al. (2021).';
@@ -12293,11 +12309,21 @@ function calculatePhysics() {
     syncSolverDisplayFromSliders();
   }
   if (typeof runCadPhase4Simulation === 'function' && typeof cadActiveMesh !== 'undefined' && cadActiveMesh && typeof cadGeometryReport !== 'undefined' && cadGeometryReport) {
-    runCadPhase4Simulation();
+    if (isTabActive('cad-analyzer') || isTabActive('digital-twin')) {
+      if (_isCoalescedSliderPhysics) {
+        _scheduleCadPhase4SimDebounced();
+      } else {
+        runCadPhase4Simulation();
+      }
+    } else {
+      dirtyTabs.add('cad-analyzer');
+    }
   }
-  updateMeltPoolAndThermal();
-  if (typeof renderBonthaProfileTable === 'function') {
-    renderBonthaProfileTable();
+  if (isTabActive('melt-pool')) {
+    updateMeltPoolAndThermal();
+    if (typeof renderBonthaProfileTable === 'function') renderBonthaProfileTable();
+  } else {
+    dirtyTabs.add('melt-pool');
   }
 
   // Dynamic Scientific Rigor Engine Hooks (Explainable ML, DoA, Microstructure, Sensitivity, Traceability)
@@ -12305,26 +12331,83 @@ function calculatePhysics() {
     window.__lastCalcPrimaryHv = primaryHv;
     const isExtrap = checkDomainOfApplicability(p, v, h, t, currentProcess);
     window.__lastCalcIsExtrap = isExtrap;
+    _lastCalcSnapshot.isExtrap = isExtrap;
     if (typeof updateLiteratureComparison === 'function') updateLiteratureComparison(true, true);
-    renderParityAndResidualPlots(primaryHv, isExtrap, window.currentSelectedComparisonBenchmark || null);
-    updateShapAttribution(p, v, h, t, spot, preheat);
-    updateLiteratureTraceability(p, v, h, t);
-    updateSensitivityCurves(p, v, h, t);
-    updateScenarioComparison();
-    updateIndustrialEconomics();
-    if (typeof renderMicrostructureSvg === 'function') renderMicrostructureSvg(activeMicroPhase);
+    if (isTabActive('predictions')) {
+      renderParityAndResidualPlots(primaryHv, isExtrap, window.currentSelectedComparisonBenchmark || null);
+      updateShapAttribution(p, v, h, t, spot, preheat);
+      updateLiteratureTraceability(p, v, h, t);
+      updateSensitivityCurves(p, v, h, t);
+      updateScenarioComparison();
+      if (typeof renderMicrostructureSvg === 'function') renderMicrostructureSvg(activeMicroPhase);
+    } else {
+      dirtyTabs.add('predictions');
+    }
+    if (isTabActive('economics')) {
+      updateIndustrialEconomics();
+    } else {
+      dirtyTabs.add('economics');
+    }
   } catch (errRig) {
     console.warn('Scientific rigor update warning:', errRig);
   }
 }
 
+let _lastRenderedDefectMapProc = null;
+let _lastDefectMarkersSig = null;
+
+function _renderBonthaCursorDom(snap) {
+  if (!snap) return;
+  const logR = Math.log10(Math.max(1e-4, snap.bonthaR));
+  const bonthaX = Math.max(85, Math.min(695, 80 + ((logR - (-3)) / 4.0) * 620));
+  const logG = Math.log10(Math.max(10, snap.bonthaG));
+  const bonthaY = Math.max(45, Math.min(295, 300 - ((logG - 2.0) / 5.0) * 260));
+
+  const bonthaCursor = $id('bonthaCursor');
+  const bonthaPing = $id('bonthaCursorPing');
+  const bonthaBox = $id('bonthaCursorBox');
+  const bonthaLabel1 = $id('bonthaCursorLabel1');
+  const bonthaLabel2 = $id('bonthaCursorLabel2');
+  const bonthaBadge = $id('bonthaMorphBadge');
+
+  if (bonthaCursor) {
+    bonthaCursor.setAttribute('cx', bonthaX);
+    bonthaCursor.setAttribute('cy', bonthaY);
+    if (bonthaPing) {
+      bonthaPing.setAttribute('cx', bonthaX);
+      bonthaPing.setAttribute('cy', bonthaY);
+    }
+    const boxX = bonthaX > 480 ? bonthaX - 230 : bonthaX + 15;
+    const boxY = Math.max(45, Math.min(250, bonthaY - 20));
+    if (bonthaBox) {
+      bonthaBox.setAttribute('x', boxX);
+      bonthaBox.setAttribute('y', boxY);
+    }
+    if (bonthaLabel1) {
+      bonthaLabel1.setAttribute('x', boxX + 10);
+      bonthaLabel1.setAttribute('y', boxY + 16);
+      bonthaLabel1.textContent = `R = ${snap.bonthaR < 10 ? snap.bonthaR.toFixed(2) : snap.bonthaR.toFixed(1)} cm/s • G = ${snap.bonthaG.toExponential(1)} K/cm`;
+    }
+    if (bonthaLabel2) {
+      bonthaLabel2.setAttribute('x', boxX + 10);
+      bonthaLabel2.setAttribute('y', boxY + 30);
+      bonthaLabel2.textContent = `${snap.bonthaMorphLabel.split(' ')[0]} (Ṫ=${snap.coolingRate < 1000 ? snap.coolingRate.toFixed(0) : snap.coolingRate.toExponential(1)} K/s)`;
+    }
+    if (bonthaBadge) {
+      bonthaBadge.textContent = snap.bonthaMorphShort;
+      bonthaBadge.style.color = snap.bonthaMorphRaw === 'Mixed' ? 'var(--accent-amber)' : (snap.bonthaMorphRaw === 'Columnar' ? 'var(--accent-cyan)' : 'var(--accent-emerald)');
+      bonthaBadge.style.background = snap.bonthaMorphRaw === 'Mixed' ? 'rgba(245, 158, 11, 0.2)' : (snap.bonthaMorphRaw === 'Columnar' ? 'rgba(80, 216, 233, 0.2)' : 'rgba(16, 185, 129, 0.2)');
+    }
+  }
+}
+
 function updateDefectMapSvg(proc, p, v) {
-  const zones = document.getElementById('defectZonesGroup');
-  const ticks = document.getElementById('defectAxisTicks');
-  const titleEl = document.getElementById('defectMapTitle');
-  const subEl = document.getElementById('defectMapSubtitle');
-  const xLbl = document.getElementById('defectXAxisLabel');
-  const yLbl = document.getElementById('defectYAxisLabel');
+  const zones = $id('defectZonesGroup');
+  const ticks = $id('defectAxisTicks');
+  const titleEl = $id('defectMapTitle');
+  const subEl = $id('defectMapSubtitle');
+  const xLbl = $id('defectXAxisLabel');
+  const yLbl = $id('defectYAxisLabel');
 
   if (zones && window.__lpbfDefectZonesHtml === undefined) {
     window.__lpbfDefectZonesHtml = zones.innerHTML;
@@ -12334,105 +12417,115 @@ function updateDefectMapSvg(proc, p, v) {
   }
 
   let minP = 80, maxP = 450, minV = 300, maxV = 2200;
+  if (proc === 'waam') {
+    minP = 1000; maxP = 4500; minV = 2; maxV = 24;
+  } else if (proc === 'ded-laser') {
+    minP = 400; maxP = 3000; minV = 4; maxV = 40;
+  }
   const mapX = vv => 70 + ((vv - minV) / (maxV - minV)) * 490;
   const mapY = pp => 310 - ((pp - minP) / (maxP - minP)) * 280;
 
-  if (proc === 'waam') {
-    minP = 1000; maxP = 4500; minV = 2; maxV = 24;
-    if (titleEl) titleEl.innerText = 'Ti-6Al-4V WAAM Process Window (Arc Power vs Travel Speed)';
-    if (subEl) subEl.innerText = 'Linear Heat Input Zones: Lack of Fusion (<120 J/mm) · Conduction (120–600 J/mm) · Overheat/Coarse-β (>600 J/mm)';
-    if (xLbl) xLbl.textContent = 'Arc Travel Speed v (mm/s)';
-    if (yLbl) yLbl.textContent = 'Arc Power P (W)';
+  if (_lastRenderedDefectMapProc !== proc) {
+    _lastRenderedDefectMapProc = proc;
+    if (proc === 'waam') {
+      if (titleEl) titleEl.innerText = 'Ti-6Al-4V WAAM Process Window (Arc Power vs Travel Speed)';
+      if (subEl) subEl.innerText = 'Linear Heat Input Zones: Lack of Fusion (<120 J/mm) · Conduction (120–600 J/mm) · Overheat/Coarse-β (>600 J/mm)';
+      if (xLbl) xLbl.textContent = 'Arc Travel Speed v (mm/s)';
+      if (yLbl) yLbl.textContent = 'Arc Power P (W)';
 
-    if (zones) {
-      const x1_oh = mapX(2), y1_oh = mapY(1200);
-      const x2_oh = mapX(7.5), y2_oh = mapY(4500);
-      const x1_lof = mapX(1000 / 120), y1_lof = mapY(1000);
-      const x2_lof = mapX(24), y2_lof = mapY(24 * 120);
-      zones.innerHTML = `
-        <rect x="70" y="30" width="490" height="280" fill="rgba(16, 185, 129, 0.10)" />
-        <polygon points="70,30 ${x2_oh.toFixed(1)},30 ${x1_oh.toFixed(1)},${y1_oh.toFixed(1)} 70,${y1_oh.toFixed(1)}" fill="rgba(239, 68, 68, 0.18)" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" />
-        <polygon points="${x1_lof.toFixed(1)},310 560,310 560,${y2_lof.toFixed(1)}" fill="rgba(245, 158, 11, 0.18)" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" />
-        <text x="86" y="54" fill="#fca5a5" font-size="11" font-weight="600">OVERHEAT / COARSE-β (HI &gt; 600 J/mm)</text>
-        <text x="235" y="168" fill="#6ee7b7" font-size="12" font-weight="700">OPTIMAL WAAM WINDOW (120–600 J/mm)</text>
-        <text x="360" y="294" fill="#fcd34d" font-size="11" font-weight="600">LACK OF FUSION (HI &lt; 120 J/mm)</text>
-      `;
-    }
-    if (ticks) {
-      const xTicks = [4, 8, 12, 16, 20, 24].map(vt => {
-        const xx = mapX(vt).toFixed(1);
-        return `<line x1="${xx}" y1="310" x2="${xx}" y2="315" stroke="#64748b"/><text x="${xx}" y="328" fill="#94a3b8" font-size="10" text-anchor="middle">${vt}</text>`;
-      }).join('');
-      const yTicks = [1000, 1800, 2600, 3500, 4500].map(pt => {
-        const yy = mapY(pt).toFixed(1);
-        return `<line x1="65" y1="${yy}" x2="70" y2="${yy}" stroke="#64748b"/><text x="60" y="${parseFloat(yy) + 3}" fill="#94a3b8" font-size="10" text-anchor="end">${pt}</text>`;
-      }).join('');
-      ticks.innerHTML = xTicks + yTicks;
-    }
-  } else if (proc === 'ded-laser') {
-    minP = 400; maxP = 3000; minV = 4; maxV = 40;
-    if (titleEl) titleEl.innerText = 'Ti-6Al-4V L-DED Process Window (Laser Power vs Travel Speed)';
-    if (subEl) subEl.innerText = 'Linear Heat Input Zones: Lack of Fusion (<75 J/mm) · Conduction-Dilution (75–240 J/mm) · Over-dilution (>240 J/mm)';
-    if (xLbl) xLbl.textContent = 'Scan / Travel Speed v (mm/s)';
-    if (yLbl) yLbl.textContent = 'Laser Power P (W)';
+      if (zones) {
+        const x1_oh = mapX(2), y1_oh = mapY(1200);
+        const x2_oh = mapX(7.5), y2_oh = mapY(4500);
+        const x1_lof = mapX(1000 / 120);
+        const y2_lof = mapY(24 * 120);
+        zones.innerHTML = `
+          <rect x="70" y="30" width="490" height="280" fill="rgba(16, 185, 129, 0.10)" />
+          <polygon points="70,30 ${x2_oh.toFixed(1)},30 ${x1_oh.toFixed(1)},${y1_oh.toFixed(1)} 70,${y1_oh.toFixed(1)}" fill="rgba(239, 68, 68, 0.18)" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" />
+          <polygon points="${x1_lof.toFixed(1)},310 560,310 560,${y2_lof.toFixed(1)}" fill="rgba(245, 158, 11, 0.18)" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" />
+          <text x="86" y="54" fill="#fca5a5" font-size="11" font-weight="600">OVERHEAT / COARSE-β (HI &gt; 600 J/mm)</text>
+          <text x="235" y="168" fill="#6ee7b7" font-size="12" font-weight="700">OPTIMAL WAAM WINDOW (120–600 J/mm)</text>
+          <text x="360" y="294" fill="#fcd34d" font-size="11" font-weight="600">LACK OF FUSION (HI &lt; 120 J/mm)</text>
+        `;
+      }
+      if (ticks) {
+        const xTicks = [4, 8, 12, 16, 20, 24].map(vt => {
+          const xx = mapX(vt).toFixed(1);
+          return `<line x1="${xx}" y1="310" x2="${xx}" y2="315" stroke="#64748b"/><text x="${xx}" y="328" fill="#94a3b8" font-size="10" text-anchor="middle">${vt}</text>`;
+        }).join('');
+        const yTicks = [1000, 1800, 2600, 3500, 4500].map(pt => {
+          const yy = mapY(pt).toFixed(1);
+          return `<line x1="65" y1="${yy}" x2="70" y2="${yy}" stroke="#64748b"/><text x="60" y="${parseFloat(yy) + 3}" fill="#94a3b8" font-size="10" text-anchor="end">${pt}</text>`;
+        }).join('');
+        ticks.innerHTML = xTicks + yTicks;
+      }
+    } else if (proc === 'ded-laser') {
+      if (titleEl) titleEl.innerText = 'Ti-6Al-4V L-DED Process Window (Laser Power vs Travel Speed)';
+      if (subEl) subEl.innerText = 'Linear Heat Input Zones: Lack of Fusion (<75 J/mm) · Conduction-Dilution (75–240 J/mm) · Over-dilution (>240 J/mm)';
+      if (xLbl) xLbl.textContent = 'Scan / Travel Speed v (mm/s)';
+      if (yLbl) yLbl.textContent = 'Laser Power P (W)';
 
-    if (zones) {
-      const x1_kh = mapX(4), y1_kh = mapY(960);
-      const x2_kh = mapX(12.5), y2_kh = mapY(3000);
-      const x1_lof = mapX(400 / 75), y1_lof = mapY(400);
-      zones.innerHTML = `
-        <rect x="70" y="30" width="490" height="280" fill="rgba(16, 185, 129, 0.10)" />
-        <polygon points="70,30 ${x2_kh.toFixed(1)},30 ${x1_kh.toFixed(1)},${y1_kh.toFixed(1)} 70,${y1_kh.toFixed(1)}" fill="rgba(239, 68, 68, 0.18)" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" />
-        <polygon points="${x1_lof.toFixed(1)},310 560,310 560,30" fill="rgba(245, 158, 11, 0.18)" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" />
-        <text x="86" y="54" fill="#fca5a5" font-size="11" font-weight="600">KEYHOLE / OVER-DILUTION (HI &gt; 240 J/mm)</text>
-        <text x="195" y="150" fill="#6ee7b7" font-size="12" font-weight="700">L-DED CONDUCTION WINDOW (75–240 J/mm)</text>
-        <text x="345" y="294" fill="#fcd34d" font-size="11" font-weight="600">LACK OF FUSION (HI &lt; 75 J/mm)</text>
-      `;
+      if (zones) {
+        const x1_kh = mapX(4), y1_kh = mapY(960);
+        const x2_kh = mapX(12.5);
+        const x1_lof = mapX(400 / 75);
+        zones.innerHTML = `
+          <rect x="70" y="30" width="490" height="280" fill="rgba(16, 185, 129, 0.10)" />
+          <polygon points="70,30 ${x2_kh.toFixed(1)},30 ${x1_kh.toFixed(1)},${y1_kh.toFixed(1)} 70,${y1_kh.toFixed(1)}" fill="rgba(239, 68, 68, 0.18)" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" />
+          <polygon points="${x1_lof.toFixed(1)},310 560,310 560,30" fill="rgba(245, 158, 11, 0.18)" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" />
+          <text x="86" y="54" fill="#fca5a5" font-size="11" font-weight="600">KEYHOLE / OVER-DILUTION (HI &gt; 240 J/mm)</text>
+          <text x="195" y="150" fill="#6ee7b7" font-size="12" font-weight="700">L-DED CONDUCTION WINDOW (75–240 J/mm)</text>
+          <text x="345" y="294" fill="#fcd34d" font-size="11" font-weight="600">LACK OF FUSION (HI &lt; 75 J/mm)</text>
+        `;
+      }
+      if (ticks) {
+        const xTicks = [5, 10, 15, 20, 25, 30, 35, 40].map(vt => {
+          const xx = mapX(vt).toFixed(1);
+          return `<line x1="${xx}" y1="310" x2="${xx}" y2="315" stroke="#64748b"/><text x="${xx}" y="328" fill="#94a3b8" font-size="10" text-anchor="middle">${vt}</text>`;
+        }).join('');
+        const yTicks = [400, 1000, 1600, 2200, 3000].map(pt => {
+          const yy = mapY(pt).toFixed(1);
+          return `<line x1="65" y1="${yy}" x2="70" y2="${yy}" stroke="#64748b"/><text x="60" y="${parseFloat(yy) + 3}" fill="#94a3b8" font-size="10" text-anchor="end">${pt}</text>`;
+        }).join('');
+        ticks.innerHTML = xTicks + yTicks;
+      }
+    } else {
+      if (titleEl) titleEl.innerText = 'Ti-6Al-4V LPBF Process Defect Map (Power vs Scan Speed)';
+      if (subEl) subEl.innerText = 'Coupled Rosenthal-Eagar Regimes: Lack of Fusion (A < 1.0) · Conduction · Keyhole (P* > 26)';
+      if (xLbl) xLbl.textContent = 'Scan Speed v (mm/s)';
+      if (yLbl) yLbl.textContent = 'Laser Power P (W)';
+      if (zones && window.__lpbfDefectZonesHtml) zones.innerHTML = window.__lpbfDefectZonesHtml;
+      if (ticks && window.__lpbfDefectTicksHtml) ticks.innerHTML = window.__lpbfDefectTicksHtml;
     }
-    if (ticks) {
-      const xTicks = [5, 10, 15, 20, 25, 30, 35, 40].map(vt => {
-        const xx = mapX(vt).toFixed(1);
-        return `<line x1="${xx}" y1="310" x2="${xx}" y2="315" stroke="#64748b"/><text x="${xx}" y="328" fill="#94a3b8" font-size="10" text-anchor="middle">${vt}</text>`;
-      }).join('');
-      const yTicks = [400, 1000, 1600, 2200, 3000].map(pt => {
-        const yy = mapY(pt).toFixed(1);
-        return `<line x1="65" y1="${yy}" x2="70" y2="${yy}" stroke="#64748b"/><text x="60" y="${parseFloat(yy) + 3}" fill="#94a3b8" font-size="10" text-anchor="end">${pt}</text>`;
-      }).join('');
-      ticks.innerHTML = xTicks + yTicks;
-    }
-  } else {
-    minP = 80; maxP = 450; minV = 300; maxV = 2200;
-    if (titleEl) titleEl.innerText = 'Ti-6Al-4V LPBF Process Defect Map (Power vs Scan Speed)';
-    if (subEl) subEl.innerText = 'Coupled Rosenthal-Eagar Regimes: Lack of Fusion (A < 1.0) · Conduction · Keyhole (P* > 26)';
-    if (xLbl) xLbl.textContent = 'Scan Speed v (mm/s)';
-    if (yLbl) yLbl.textContent = 'Laser Power P (W)';
-    if (zones && window.__lpbfDefectZonesHtml) zones.innerHTML = window.__lpbfDefectZonesHtml;
-    if (ticks && window.__lpbfDefectTicksHtml) ticks.innerHTML = window.__lpbfDefectTicksHtml;
   }
 
   const svgP = Math.max(30, Math.min(310, mapY(p)));
   const svgV = Math.max(70, Math.min(560, mapX(v)));
 
-  const markersGrp = document.getElementById('labExperimentalMarkersGroup');
+  const markersGrp = $id('labExperimentalMarkersGroup');
   if (markersGrp) {
-    if (typeof uploadedLabCoupons !== 'undefined' && Array.isArray(uploadedLabCoupons) && uploadedLabCoupons.length > 0) {
-      const matching = uploadedLabCoupons.filter(c => c.process === proc);
-      markersGrp.innerHTML = matching.map((c) => {
-        const mx = Math.max(70, Math.min(560, mapX(c.v_mm_s)));
-        const my = Math.max(30, Math.min(310, mapY(c.P_W)));
-        const safeId = typeof escapeHtml === 'function' ? escapeHtml(String(c.sample_id || '')) : String(c.sample_id || '').replace(/[&<>"']/g, '');
-        return `<polygon points="${mx.toFixed(1)},${(my - 6).toFixed(1)} ${(mx + 6).toFixed(1)},${my.toFixed(1)} ${mx.toFixed(1)},${(my + 6).toFixed(1)} ${(mx - 6).toFixed(1)},${my.toFixed(1)}" fill="#fbbf24" stroke="#0f172a" stroke-width="1.5"><title>${safeId} (${c.P_W}W, ${c.v_mm_s}mm/s, HV=${c.measured_HV || 'N/A'})</title></polygon><text x="${(mx + 8).toFixed(1)}" y="${(my - 6).toFixed(1)}" fill="#fde047" font-size="9" font-family="monospace">${safeId}</text>`;
-      }).join('');
-    } else {
-      markersGrp.innerHTML = '';
+    const labCount = (typeof uploadedLabCoupons !== 'undefined' && Array.isArray(uploadedLabCoupons)) ? uploadedLabCoupons.length : 0;
+    const markerSig = `${proc}:${labCount}`;
+    if (markerSig !== _lastDefectMarkersSig) {
+      _lastDefectMarkersSig = markerSig;
+      if (labCount > 0) {
+        const matching = uploadedLabCoupons.filter(c => c.process === proc);
+        markersGrp.innerHTML = matching.map((c) => {
+          const mx = Math.max(70, Math.min(560, mapX(c.v_mm_s)));
+          const my = Math.max(30, Math.min(310, mapY(c.P_W)));
+          const safeId = typeof escapeHtml === 'function' ? escapeHtml(String(c.sample_id || '')) : String(c.sample_id || '').replace(/[&<>"']/g, '');
+          return `<polygon points="${mx.toFixed(1)},${(my - 6).toFixed(1)} ${(mx + 6).toFixed(1)},${my.toFixed(1)} ${mx.toFixed(1)},${(my + 6).toFixed(1)} ${(mx - 6).toFixed(1)},${my.toFixed(1)}" fill="#fbbf24" stroke="#0f172a" stroke-width="1.5"><title>${safeId} (${c.P_W}W, ${c.v_mm_s}mm/s, HV=${c.measured_HV || 'N/A'})</title></polygon><text x="${(mx + 8).toFixed(1)}" y="${(my - 6).toFixed(1)}" fill="#fde047" font-size="9" font-family="monospace">${safeId}</text>`;
+        }).join('');
+      } else {
+        markersGrp.innerHTML = '';
+      }
     }
   }
 
-  const cursor = document.getElementById('svgCursor');
+  const cursor = $id('svgCursor');
   if (cursor) {
     cursor.setAttribute('cx', svgV);
     cursor.setAttribute('cy', svgP);
-    const curLabel = document.getElementById('svgCursorLabel');
+    const curLabel = $id('svgCursorLabel');
     if (curLabel) {
       curLabel.setAttribute('x', svgV > 395 ? Math.max(85, svgV - 165) : svgV + 14);
       curLabel.setAttribute('y', Math.max(48, Math.min(295, svgP + 5)));
@@ -12484,16 +12577,60 @@ function tweakToConduction() {
   }
 }
 
+let _physicsRafPending = false;
+let _physicsSolverSync = false;
+let _isCoalescedSliderPhysics = false;
+let _cadSimDebounceTimer = null;
+
+function _scheduleCadPhase4SimDebounced() {
+  if (_cadSimDebounceTimer) clearTimeout(_cadSimDebounceTimer);
+  _cadSimDebounceTimer = setTimeout(() => {
+    _cadSimDebounceTimer = null;
+    if (typeof runCadPhase4Simulation === 'function') runCadPhase4Simulation();
+  }, 120);
+}
+
+function schedulePhysicsCalculation(syncSolver = false) {
+  if (syncSolver) _physicsSolverSync = true;
+  if (typeof requestAnimationFrame !== 'function') {
+    const doSync = _physicsSolverSync;
+    _physicsSolverSync = false;
+    _isCoalescedSliderPhysics = false;
+    calculatePhysics();
+    if (doSync && typeof syncSolverDisplayFromSliders === 'function') syncSolverDisplayFromSliders();
+    return;
+  }
+  if (_physicsRafPending) return;
+  _physicsRafPending = true;
+  requestAnimationFrame(() => {
+    _physicsRafPending = false;
+    const doSync = _physicsSolverSync;
+    _physicsSolverSync = false;
+    _isCoalescedSliderPhysics = true;
+    try {
+      calculatePhysics();
+      if (doSync && typeof syncSolverDisplayFromSliders === 'function') syncSolverDisplayFromSliders();
+    } finally {
+      _isCoalescedSliderPhysics = false;
+    }
+  });
+}
+
 function onSliderChange() {
   bonthaOverridePower = null;
   bonthaOverrideSpeed = null;
   bonthaPreset = 'custom';
-  const sel = document.getElementById('bonthaPresetSelect');
+  const sel = $id('bonthaPresetSelect');
   if (sel) sel.value = 'custom';
-  calculatePhysics();
-  if (typeof syncSolverDisplayFromSliders === 'function') {
-    syncSolverDisplayFromSliders();
-  }
+  // Immediate lightweight label feedback so slider readouts stay 0-lag while physics coalesces per frame
+  const pEl = $id('sl_p'), vEl = $id('sl_v'), hEl = $id('sl_h'), tEl = $id('sl_t'), sEl = $id('sl_spot'), prEl = $id('sl_preheat');
+  if (pEl) setElText('val_p', pEl.value + ' W');
+  if (vEl) setElText('val_v', vEl.value + ' mm/s');
+  if (hEl) setElText('val_h', hEl.value + ' µm');
+  if (tEl) setElText('val_t', tEl.value + ' µm');
+  if (sEl) setElText('val_spot', sEl.value + ' µm');
+  if (prEl) setElText('val_preheat', prEl.value + ' °C');
+  schedulePhysicsCalculation(true);
 }
 
 function configureProcessControls(proc) {
@@ -12811,6 +12948,56 @@ function exportPredictionsCsv() {
 // ==========================================
 // 4. TAB NAVIGATION & EVIDENCE HUB ROUTING
 // ==========================================
+const dirtyTabs = new Set();
+let _lastCalcSnapshot = null;
+
+function isTabActive(tabId) {
+  const v = $id('view_' + tabId);
+  return !v || !v.classList || v.classList.contains('active');
+}
+
+function flushDirtyTab(tabId) {
+  if (!dirtyTabs.has(tabId)) return;
+  dirtyTabs.delete(tabId);
+  const s = _lastCalcSnapshot;
+  if (tabId === 'qualification') {
+    if (typeof updateAstmAuditor === 'function') updateAstmAuditor();
+  } else if (tabId === 'defect-map') {
+    if (s) updateDefectMapSvg(s.process, s.p, s.v);
+  } else if (tabId === 'process-map') {
+    if (s && !s.isBinderJetting) _renderBonthaCursorDom(s);
+  } else if (tabId === 'economics') {
+    if (typeof updateIndustrialEconomics === 'function') updateIndustrialEconomics();
+  } else if (tabId === 'digital-twin') {
+    if (dirtyTabs.has('cad-analyzer') && typeof runCadPhase4Simulation === 'function' && typeof cadActiveMesh !== 'undefined' && cadActiveMesh && typeof cadGeometryReport !== 'undefined' && cadGeometryReport) {
+      dirtyTabs.delete('cad-analyzer');
+      runCadPhase4Simulation();
+    }
+    if (typeof updateTwinScaleAndHud === 'function') updateTwinScaleAndHud();
+  } else if (tabId === 'cad-analyzer') {
+    if (typeof runCadPhase4Simulation === 'function' && typeof cadActiveMesh !== 'undefined' && cadActiveMesh && typeof cadGeometryReport !== 'undefined' && cadGeometryReport) {
+      runCadPhase4Simulation();
+    }
+  } else if (tabId === 'melt-pool') {
+    if (typeof renderBonthaProfileTable === 'function') renderBonthaProfileTable();
+  } else if (tabId === 'predictions') {
+    if (typeof renderTi64Phase3Curves === 'function') renderTi64Phase3Curves(window.latestPhysicsState);
+    if (typeof renderPredMechCurves === 'function') renderPredMechCurves(window.latestPhysicsState);
+    if (s && !s.isBinderJetting) {
+      try {
+        renderParityAndResidualPlots(s.primaryHv, s.isExtrap, window.currentSelectedComparisonBenchmark || null);
+        updateShapAttribution(s.p, s.v, s.h, s.t, s.spot, s.preheat);
+        updateLiteratureTraceability(s.p, s.v, s.h, s.t);
+        updateSensitivityCurves(s.p, s.v, s.h, s.t);
+        updateScenarioComparison();
+        if (typeof renderMicrostructureSvg === 'function') renderMicrostructureSvg(activeMicroPhase);
+      } catch (errFlush) {
+        console.warn('Tab flush warning:', errFlush);
+      }
+    }
+  }
+}
+
 function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
@@ -12828,8 +13015,12 @@ function switchTab(tabId, btn) {
     }
   }
   if (targetBtn) targetBtn.classList.add('active');
-  const targetView = document.getElementById('view_' + tabId);
+  const targetView = $id('view_' + tabId);
   if (targetView) targetView.classList.add('active');
+
+  const hadDirtyPreds = tabId === 'predictions' && dirtyTabs.has('predictions');
+  const hadDirtyMeltPool = tabId === 'melt-pool' && dirtyTabs.has('melt-pool');
+  flushDirtyTab(tabId);
 
   if (tabId === 'digital-twin') {
     if (twinNeedsCadAutoFit) {
@@ -12841,7 +13032,7 @@ function switchTab(tabId, btn) {
   if (tabId === 'cad-analyzer' && typeof initCadAnalyzerTab === 'function') {
     initCadAnalyzerTab();
   }
-  if (tabId === 'predictions' && typeof renderPredMechCurves === 'function') {
+  if (tabId === 'predictions' && !hadDirtyPreds && typeof renderPredMechCurves === 'function') {
     setTimeout(() => renderPredMechCurves(window.latestPhysicsState), 30);
   }
   if (tabId === 'literature' && typeof drawLitTopicGraph === 'function') {
@@ -12849,6 +13040,7 @@ function switchTab(tabId, btn) {
   }
   if (tabId === 'melt-pool') {
     updateMeltPoolAndThermal();
+    if (typeof renderBonthaProfileTable === 'function') renderBonthaProfileTable();
     ensureMpAnimationRunning();
   } else {
     cancelMpAnimation();
@@ -12896,6 +13088,19 @@ function openCadAnalyzerFromTwin() {
 }
 window.openCadAnalyzerFromTwin = openCadAnalyzerFromTwin;
 
+function requestTwinFrame() {
+  if (animFrameId !== null) return;
+  if (typeof document !== 'undefined' && document.hidden) return;
+  const viewTwin = $id('view_digital-twin');
+  if (viewTwin && !viewTwin.classList.contains('active')) return;
+  if (typeof requestAnimationFrame === 'function') {
+    animFrameId = requestAnimationFrame(renderTwin);
+  } else {
+    renderTwin();
+  }
+}
+window.requestTwinFrame = requestTwinFrame;
+
 function toggleTwinGeometrySource() {
   if (!hasLoadedCadMeshForTwin()) {
     openCadAnalyzerFromTwin();
@@ -12903,40 +13108,42 @@ function toggleTwinGeometrySource() {
   }
   twinGeometrySource = isTwinUsingCad() ? 'dogbone' : 'cad';
   updateTwinScaleAndHud();
-  if (!animFrameId) renderTwin();
+  requestTwinFrame();
 }
 window.toggleTwinGeometrySource = toggleTwinGeometrySource;
 
 function setTwinMode(mode) {
   twinMode = mode;
-  const btnStress = document.getElementById('twinMode_stress');
-  const btnCooling = document.getElementById('twinMode_cooling');
-  const btnPhase = document.getElementById('twinMode_phase');
+  const btnStress = $id('twinMode_stress');
+  const btnCooling = $id('twinMode_cooling');
+  const btnPhase = $id('twinMode_phase');
   if (btnStress) btnStress.classList.toggle('active', mode === 'residual-stress');
   if (btnCooling) btnCooling.classList.toggle('active', mode === 'cooling-rate');
   if (btnPhase) btnPhase.classList.toggle('active', mode === 'phase-fraction');
 
   updateTwinScaleAndHud();
+  requestTwinFrame();
 }
 
 function toggleAutoOrbit() {
   autoOrbit = !autoOrbit;
-  const btn = document.getElementById('btnAutoOrbit');
+  const btn = $id('btnAutoOrbit');
   if (btn) {
     btn.innerText = 'Auto-Orbit: ' + (autoOrbit ? 'ON' : 'OFF');
     btn.classList.toggle('active', autoOrbit);
   }
+  if (autoOrbit) requestTwinFrame();
 }
 
 function toggleCutaway() {
   cutaway = !cutaway;
   window.twinCutaway = cutaway;
-  const btn = document.getElementById('btnCutaway');
+  const btn = $id('btnCutaway');
   if (btn) {
     btn.innerText = 'Cutaway: ' + (cutaway ? 'ON' : 'OFF');
     btn.classList.toggle('active', cutaway);
   }
-  if (!animFrameId) renderTwin();
+  requestTwinFrame();
 }
 window.toggleCutaway = toggleCutaway;
 
@@ -12944,18 +13151,18 @@ function toggleWireframe() {
   if (isTwinUsingCad() && typeof isCadDecimatedProxy === 'function' && isCadDecimatedProxy(cadActiveMesh)) {
     wireframe = false;
     window.twinWireframe = false;
-    const btn = document.getElementById('btnWireframe');
+    const btn = $id('btnWireframe');
     if (btn) btn.classList.remove('active');
-    if (!animFrameId) renderTwin();
+    requestTwinFrame();
     return;
   }
   wireframe = !wireframe;
   window.twinWireframe = wireframe;
-  const btn = document.getElementById('btnWireframe');
+  const btn = $id('btnWireframe');
   if (btn) {
     btn.classList.toggle('active', wireframe);
   }
-  if (!animFrameId) renderTwin();
+  requestTwinFrame();
 }
 
 function resetCamera() {
@@ -12963,31 +13170,29 @@ function resetCamera() {
   pitch = -0.34;
   scale = 1.25;
   sliceDepth = 100;
-  const slZoom = document.getElementById('slTwinZoom');
-  const lblZoom = document.getElementById('lblZoomLevel');
-  const slSlice = document.getElementById('slTwinSlice');
-  const lblSlice = document.getElementById('lblSliceDepth');
+  const slZoom = $id('slTwinZoom');
+  const lblZoom = $id('lblZoomLevel');
+  const slSlice = $id('slTwinSlice');
+  const lblSlice = $id('lblSliceDepth');
   if (slZoom) slZoom.value = '1.15';
   if (lblZoom) lblZoom.innerText = '1.15x';
   if (slSlice) slSlice.value = '100';
   if (lblSlice) lblSlice.innerText = '100%';
-  if (!animFrameId) {
-    animFrameId = requestAnimationFrame(renderTwin);
-  }
+  requestTwinFrame();
 }
 
 function setSliceDepth(val) {
   sliceDepth = parseInt(val, 10);
-  const lbl = document.getElementById('lblSliceDepth');
+  const lbl = $id('lblSliceDepth');
   if (lbl) lbl.innerText = sliceDepth + '%';
-  if (!animFrameId) renderTwin();
+  requestTwinFrame();
 }
 
 function setZoomLevel(val) {
   scale = parseFloat(val) * 1.087;
-  const lbl = document.getElementById('lblZoomLevel');
+  const lbl = $id('lblZoomLevel');
   if (lbl) lbl.innerText = parseFloat(val).toFixed(2) + 'x';
-  if (!animFrameId) renderTwin();
+  requestTwinFrame();
 }
 
 const canvas = document.getElementById('twinCanvas');
@@ -13000,16 +13205,17 @@ if (wrapper && canvas && ctx) {
     isDragging = true;
     lastMouseX = e.clientX;
     lastMouseY = e.clientY;
+    requestTwinFrame();
   });
   wrapper.addEventListener('wheel', (e) => {
     e.preventDefault();
     scale = Math.max(0.70, Math.min(2.4, scale - e.deltaY * 0.0012));
-    const slZoom = document.getElementById('slTwinZoom');
-    const lblZoom = document.getElementById('lblZoomLevel');
+    const slZoom = $id('slTwinZoom');
+    const lblZoom = $id('lblZoomLevel');
     const displayVal = (scale / 1.087).toFixed(2);
     if (slZoom) slZoom.value = displayVal;
     if (lblZoom) lblZoom.innerText = displayVal + 'x';
-    if (!animFrameId) renderTwin();
+    requestTwinFrame();
   }, { passive: false });
 }
 window.addEventListener('mousemove', (e) => {
@@ -13020,6 +13226,7 @@ window.addEventListener('mousemove', (e) => {
   lastMouseY = e.clientY;
   yaw += dx * 0.009;
   pitch = Math.max(-1.4, Math.min(1.4, pitch + dy * 0.009));
+  requestTwinFrame();
 });
 window.addEventListener('mouseup', () => { isDragging = false; });
 
@@ -13370,7 +13577,7 @@ function updateTwinScaleAndHud() {
     }
   }
 
-  if (!animFrameId) renderTwin();
+  requestTwinFrame();
 }
 
 function getHeatmapNormalizedU(rFrac, zNorm, angle, field, aPrimeVal) {
@@ -13483,6 +13690,84 @@ function evaluateCadTriangleHeatmapU(t, zNorm, rHorizFrac, isInteriorFace, field
 }
 window.evaluateCadTriangleHeatmapU = evaluateCadTriangleHeatmapU;
 
+let _twinCadColorCache = {
+  meshRef: null,
+  simRef: null,
+  geoRef: null,
+  mode: '',
+  stressKey: '',
+  nTri: 0,
+  frontRgb: null,
+  interiorRgb: null
+};
+
+let _twinTriCap = 0;
+let _twinP0x = null, _twinP0y = null, _twinP1x = null, _twinP1y = null, _twinP2x = null, _twinP2y = null;
+let _twinDepth = null, _twinLight = null, _twinFlags = null, _twinOrigIdx = null, _twinOrder = null;
+
+function _ensureTwinTriBuffers(cap) {
+  if (_twinTriCap >= cap) return;
+  const nextCap = Math.max(cap, _twinTriCap > 0 ? _twinTriCap * 2 : 1024);
+  _twinTriCap = nextCap;
+  _twinP0x = new Float32Array(nextCap); _twinP0y = new Float32Array(nextCap);
+  _twinP1x = new Float32Array(nextCap); _twinP1y = new Float32Array(nextCap);
+  _twinP2x = new Float32Array(nextCap); _twinP2y = new Float32Array(nextCap);
+  _twinDepth = new Float32Array(nextCap);
+  _twinLight = new Float32Array(nextCap);
+  _twinFlags = new Uint8Array(nextCap);
+  _twinOrigIdx = new Int32Array(nextCap);
+  _twinOrder = new Int32Array(nextCap);
+}
+
+function _getTwinCadColorCache(mesh, sf, aPrimeVal) {
+  const nTri = mesh.triangleCount;
+  const sim = typeof cadSimReport !== 'undefined' ? cadSimReport : null;
+  const geo = typeof cadGeometryReport !== 'undefined' ? cadGeometryReport : null;
+  const peakCool = window.currentTwinCooling || 480000;
+  const stressKey = `${twinMode}|${sf.coreCompressiveStressMpa}|${sf.gaugeSurfaceStressMpa}|${sf.isBinderJetting}|${peakCool}|${aPrimeVal}`;
+  if (
+    _twinCadColorCache.meshRef === mesh &&
+    _twinCadColorCache.simRef === sim &&
+    _twinCadColorCache.geoRef === geo &&
+    _twinCadColorCache.stressKey === stressKey &&
+    _twinCadColorCache.nTri === nTri
+  ) {
+    return _twinCadColorCache;
+  }
+
+  const frontRgb = (_twinCadColorCache.frontRgb && _twinCadColorCache.frontRgb.length >= nTri * 3)
+    ? _twinCadColorCache.frontRgb
+    : new Uint8Array(nTri * 3);
+  const interiorRgb = (_twinCadColorCache.interiorRgb && _twinCadColorCache.interiorRgb.length >= nTri * 3)
+    ? _twinCadColorCache.interiorRgb
+    : new Uint8Array(nTri * 3);
+
+  const pos = mesh.positions;
+  const bb = mesh.boundingBox;
+  const cx = (bb.min[0] + bb.max[0]) * 0.5;
+  const cy = (bb.min[1] + bb.max[1]) * 0.5;
+  const sz = Math.max(1e-4, bb.size[2]);
+  const rHorizMax = Math.max(1e-3, 0.5 * Math.hypot(bb.size[0], bb.size[1]));
+
+  for (let t = 0; t < nTri; t++) {
+    const b = t * 9;
+    const cxTri = (pos[b] + pos[b + 3] + pos[b + 6]) * 0.33333333;
+    const cyTri = (pos[b + 1] + pos[b + 4] + pos[b + 7]) * 0.33333333;
+    const czTri = (pos[b + 2] + pos[b + 5] + pos[b + 8]) * 0.33333333;
+    const zNorm = Math.max(0, Math.min(1, (czTri - bb.min[2]) / sz));
+    const rHorizFrac = Math.min(1.0, Math.hypot(cxTri - cx, cyTri - cy) / rHorizMax);
+
+    const cFront = getTwinColormapColor(evaluateCadTriangleHeatmapU(t, zNorm, rHorizFrac, false, sf, aPrimeVal));
+    const cInt = getTwinColormapColor(evaluateCadTriangleHeatmapU(t, zNorm, rHorizFrac, true, sf, aPrimeVal));
+    const o = t * 3;
+    frontRgb[o] = cFront.r; frontRgb[o + 1] = cFront.g; frontRgb[o + 2] = cFront.b;
+    interiorRgb[o] = cInt.r; interiorRgb[o + 1] = cInt.g; interiorRgb[o + 2] = cInt.b;
+  }
+
+  _twinCadColorCache = { meshRef: mesh, simRef: sim, geoRef: geo, stressKey, nTri, frontRgb, interiorRgb };
+  return _twinCadColorCache;
+}
+
 function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
   const mesh = cadActiveMesh;
   if (!mesh || !mesh.positions || !mesh.triangleCount || !mesh.boundingBox) return;
@@ -13506,7 +13791,6 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
   const drawWire = wireframe && !isDecimatedProxy;
   const geoRep = typeof cadGeometryReport !== 'undefined' ? cadGeometryReport : null;
 
-  // Verify signed-volume winding sign directly if report isn't ready
   let windingSign = (geoRep && geoRep.windingSign) ? geoRep.windingSign : 1;
   if (!geoRep && !isDecimatedProxy) {
     let signedVol = 0;
@@ -13521,16 +13805,21 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
     if (signedVol < 0) windingSign = -1;
   }
 
-  // Only cull backfaces when watertight and un-sliced; non-watertight, thin-walled, proxy, or sliced/cutaway meshes render double-sided
   const isWatertight = Boolean(!isDecimatedProxy && geoRep && geoRep.isWatertight);
   const doubleSided = drawWire || !isWatertight || cutaway || sliceDepth < 99.5;
-
-  // Never skip triangles on meshes <= 60,000 tris (prevents zebra-striping on 29k-tri STLs during orbit/drag)
   const triBudget = nTri <= 60000 ? nTri : ((isDragging || autoOrbit) ? 45000 : 60000);
   const drawCount = Math.min(nTri, triBudget);
   const stepFrac = nTri / Math.max(1, drawCount);
 
-  // Subtle build-plate footprint frame at Z = min[2]
+  const colorCache = _getTwinCadColorCache(mesh, sf, aPrimeVal);
+  _ensureTwinTriBuffers(drawCount);
+
+  const cosY = Math.cos(yaw), sinY = Math.sin(yaw);
+  const cosP = Math.cos(pitch), sinP = Math.sin(pitch);
+  const halfW = w * 0.5, halfH = h * 0.5;
+  const fovScale = 420.0 * scale;
+
+  // Build-plate footprint frame at Z = min[2]
   const yBaseWorld = (bb.min[2] - cz) * normScale;
   const hxWorld = sx * 0.56 * normScale;
   const hzWorld = sy * 0.56 * normScale;
@@ -13554,7 +13843,7 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
   ctx.stroke();
   ctx.restore();
 
-  const tris = [];
+  let count = 0;
   for (let idx = 0; idx < drawCount; idx++) {
     const t = drawCount === nTri ? idx : Math.floor(idx * stepFrac);
     const b = t * 9;
@@ -13568,18 +13857,30 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
     if (sliceDepth < 99.5 && czTri > zCutMax) continue;
     if (cutaway && cxTri > cx && cyTri > cy) continue;
 
-    const zNorm = Math.max(0, Math.min(1, (czTri - bb.min[2]) / sz));
-    const rHorizFrac = Math.min(1.0, Math.hypot(cxTri - cx, cyTri - cy) / rHorizMax);
-    const warpDy = warpageAmp > 0 ? (warpageAmp * (rHorizFrac * rHorizFrac - 0.35)) : 0;
+    let warpDy = 0;
+    if (warpageAmp > 0) {
+      const rHorizFrac = Math.min(1.0, Math.hypot(cxTri - cx, cyTri - cy) / rHorizMax);
+      warpDy = warpageAmp * (rHorizFrac * rHorizFrac - 0.35);
+    }
 
-    // Transform vertices to 3D camera view space (rx, ry, rz)
-    const p0 = project((x0 - cx) * normScale, (z0 - cz) * normScale + warpDy, (y0 - cy) * normScale, w, h);
-    const p1 = project((x1 - cx) * normScale, (z1 - cz) * normScale + warpDy, (y1 - cy) * normScale, w, h);
-    const p2 = project((x2 - cx) * normScale, (z2 - cz) * normScale + warpDy, (y2 - cy) * normScale, w, h);
+    // Inline 3D view-space transform (0 object allocations)
+    const wx0 = (x0 - cx) * normScale, wy0 = (z0 - cz) * normScale + warpDy, wz0 = (y0 - cy) * normScale;
+    const p0rx = wx0 * cosY - wz0 * sinY, p0z1 = wx0 * sinY + wz0 * cosY;
+    const p0ry = wy0 * cosP - p0z1 * sinP, p0rz = wy0 * sinP + p0z1 * cosP;
+    const f0 = fovScale / (450.0 + p0rz);
 
-    // Compute geometric normal directly in 3D view space; negate for the (x, z, y) axis-swap reflection
-    const e1x = p1.rx - p0.rx, e1y = p1.ry - p0.ry, e1z = p1.rz - p0.rz;
-    const e2x = p2.rx - p0.rx, e2y = p2.ry - p0.ry, e2z = p2.rz - p0.rz;
+    const wx1 = (x1 - cx) * normScale, wy1 = (z1 - cz) * normScale + warpDy, wz1 = (y1 - cy) * normScale;
+    const p1rx = wx1 * cosY - wz1 * sinY, p1z1 = wx1 * sinY + wz1 * cosY;
+    const p1ry = wy1 * cosP - p1z1 * sinP, p1rz = wy1 * sinP + p1z1 * cosP;
+    const f1 = fovScale / (450.0 + p1rz);
+
+    const wx2 = (x2 - cx) * normScale, wy2 = (z2 - cz) * normScale + warpDy, wz2 = (y2 - cy) * normScale;
+    const p2rx = wx2 * cosY - wz2 * sinY, p2z1 = wx2 * sinY + wz2 * cosY;
+    const p2ry = wy2 * cosP - p2z1 * sinP, p2rz = wy2 * sinP + p2z1 * cosP;
+    const f2 = fovScale / (450.0 + p2rz);
+
+    const e1x = p1rx - p0rx, e1y = p1ry - p0ry, e1z = p1rz - p0rz;
+    const e2x = p2rx - p0rx, e2y = p2ry - p0ry, e2z = p2rz - p0rz;
     let nxCam = -(e1y * e2z - e1z * e2y) * windingSign;
     let nyCam = -(e1z * e2x - e1x * e2z) * windingSign;
     let nzCam = -(e1x * e2y - e1y * e2x) * windingSign;
@@ -13587,45 +13888,54 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
     if (nLen < 1e-10) continue;
     nxCam /= nLen; nyCam /= nLen; nzCam /= nLen;
 
-    // Camera sits at (0, 0, -450) looking toward +rz; outward faces facing camera have dot(nCam, toCam) > 0
-    const crx = (p0.rx + p1.rx + p2.rx) * 0.33333333;
-    const cry = (p0.ry + p1.ry + p2.ry) * 0.33333333;
-    const crz = (p0.rz + p1.rz + p2.rz) * 0.33333333;
-    const facingDot = nxCam * (-crx) + nyCam * (-cry) + nzCam * (-450 - crz);
-    if (!doubleSided && facingDot < -25.0) {
-      continue;
-    }
-    const isInteriorFace = !isDecimatedProxy && (cutaway || sliceDepth < 99.5) && (facingDot < 0);
+    const crx = (p0rx + p1rx + p2rx) * 0.33333333;
+    const cry = (p0ry + p1ry + p2ry) * 0.33333333;
+    const crz = (p0rz + p1rz + p2rz) * 0.33333333;
+    const facingDot = nxCam * (-crx) + nyCam * (-cry) + nzCam * (-450.0 - crz);
+    if (!doubleSided && facingDot < -25.0) continue;
 
+    const isInteriorFace = !isDecimatedProxy && (cutaway || sliceDepth < 99.5) && (facingDot < 0);
     const rawDot = nxCam * nlx + nyCam * nly + nzCam * nlz;
     const diffuse = doubleSided ? Math.abs(rawDot) : Math.max(0.08, Math.min(1.0, rawDot));
     const light = isInteriorFace ? (0.38 + 0.42 * diffuse) : (0.46 + 0.54 * Math.max(0.08, diffuse));
-    const uVal = evaluateCadTriangleHeatmapU(t, zNorm, rHorizFrac, isInteriorFace, sf, aPrimeVal);
-    const avgZ = crz;
 
-    tris.push({ p0, p1, p2, uVal, light, avgZ, isFront: facingDot >= 0 });
+    _twinP0x[count] = halfW + p0rx * f0; _twinP0y[count] = halfH - p0ry * f0;
+    _twinP1x[count] = halfW + p1rx * f1; _twinP1y[count] = halfH - p1ry * f1;
+    _twinP2x[count] = halfW + p2rx * f2; _twinP2y[count] = halfH - p2ry * f2;
+    _twinDepth[count] = crz;
+    _twinLight[count] = light;
+    _twinFlags[count] = (facingDot >= 0 ? 1 : 0) | (isInteriorFace ? 2 : 0);
+    _twinOrigIdx[count] = t;
+    _twinOrder[count] = count;
+    count++;
   }
 
-  tris.sort((a, b) => b.avgZ - a.avgZ);
+  const orderView = _twinOrder.subarray(0, count);
+  orderView.sort((a, b) => _twinDepth[b] - _twinDepth[a]);
 
+  const frontRgb = colorCache.frontRgb;
+  const interiorRgb = colorCache.interiorRgb;
   ctx.save();
   ctx.lineJoin = 'round';
   const edgeWidth = isDecimatedProxy ? 1.35 : 0.75;
-  for (let i = 0; i < tris.length; i++) {
-    const f = tris[i];
-    const baseColor = getTwinColormapColor(f.uVal);
-    const cr = Math.min(255, Math.round(baseColor.r * f.light));
-    const cg = Math.min(255, Math.round(baseColor.g * f.light));
-    const cb = Math.min(255, Math.round(baseColor.b * f.light));
+  for (let i = 0; i < count; i++) {
+    const k = orderView[i];
+    const flags = _twinFlags[k];
+    const light = _twinLight[k];
+    const colOff = _twinOrigIdx[k] * 3;
+    const rgbArr = (flags & 2) ? interiorRgb : frontRgb;
+    const cr = Math.min(255, Math.round(rgbArr[colOff] * light));
+    const cg = Math.min(255, Math.round(rgbArr[colOff + 1] * light));
+    const cb = Math.min(255, Math.round(rgbArr[colOff + 2] * light));
 
     ctx.beginPath();
-    ctx.moveTo(f.p0.px, f.p0.py);
-    ctx.lineTo(f.p1.px, f.p1.py);
-    ctx.lineTo(f.p2.px, f.p2.py);
+    ctx.moveTo(_twinP0x[k], _twinP0y[k]);
+    ctx.lineTo(_twinP1x[k], _twinP1y[k]);
+    ctx.lineTo(_twinP2x[k], _twinP2y[k]);
     ctx.closePath();
 
     if (drawWire) {
-      if (f.isFront) {
+      if (flags & 1) {
         ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.22)`;
         ctx.fill();
         ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.92)`;
@@ -13702,13 +14012,12 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
 }
 
 function renderTwin() {
-  if (!canvas || !ctx || document.hidden) {
-    animFrameId = null;
+  animFrameId = null;
+  if (!canvas || !ctx || (typeof document !== 'undefined' && document.hidden)) {
     return;
   }
-  const viewTwin = document.getElementById('view_digital-twin');
+  const viewTwin = $id('view_digital-twin');
   if (viewTwin && !viewTwin.classList.contains('active')) {
-    animFrameId = null;
     return;
   }
   const w = canvas.width;
@@ -13745,7 +14054,7 @@ function renderTwin() {
     } catch (err) {
       console.error('Error in renderTwinCadMesh:', err);
     }
-    animFrameId = requestAnimationFrame(renderTwin);
+    if (autoOrbit || isDragging) requestTwinFrame();
     return;
   }
 
@@ -14013,16 +14322,16 @@ function renderTwin() {
     console.error('Error in renderTwin mesh traversal:', err);
   }
 
-  animFrameId = requestAnimationFrame(renderTwin);
+  if (autoOrbit || isDragging) {
+    requestTwinFrame();
+  }
 }
 
 function startTwinAnimation() {
   if (typeof updateTwinScaleAndHud === 'function') {
     updateTwinScaleAndHud();
   }
-  if (!animFrameId) {
-    animFrameId = requestAnimationFrame(renderTwin);
-  }
+  requestTwinFrame();
 }
 
 // 6. 199 CLEANED LITERATURE PAPERS DATABASE
@@ -15541,6 +15850,52 @@ function updateMeltPoolAndThermal() {
 
     let svgHtml = '';
 
+    const buildMeltPoolGridSvg = (beamLineTopY, includeYGrid) => {
+      if (!mpGrid) return '';
+      let g = `<g class="grid-lines" opacity="${mpHighGrid ? '0.9' : '0.5'}">`;
+      const targetPx = isDedRegime ? 75 : 65;
+      const rawStep = targetPx / Math.max(1e-5, scale);
+      const candidates = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
+      let gridStep = candidates[candidates.length - 1];
+      for (const c of candidates) {
+        if (c >= rawStep) { gridStep = c; break; }
+      }
+      const maxReachLen = mpPyrometry ? (poolLength * 3.0) : (poolLength * 2.0);
+      const minXGrid = -Math.ceil(maxReachLen / gridStep) * gridStep;
+      const maxXGrid = Math.ceil((poolLength * 1.0) / gridStep) * gridStep;
+      let lastLabelPx = -Infinity;
+      for (let x = Math.max(-200000, minXGrid); x <= Math.min(200000, maxXGrid); x += gridStep) {
+        const px = xBeam + x * scale;
+        if (px >= 85 && px <= 860) {
+          g += `<line x1="${px.toFixed(1)}" y1="45" x2="${px.toFixed(1)}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
+          if (px >= 105 && px <= 845) {
+            const distFromBeamPx = Math.abs(px - xBeam);
+            const isNearBeam = (x !== 0 && distFromBeamPx < 52);
+            if (!isNearBeam && (Math.abs(px - lastLabelPx) >= 72 || x === 0)) {
+              lastLabelPx = px;
+              const absX = Math.abs(x);
+              const sign = x > 0 ? '+' : (x < 0 ? '' : '');
+              const xLbl = (x === 0) ? '0' : (absX >= 1000 ? sign + (x / 1000).toFixed(absX % 1000 === 0 ? 0 : 1) + 'mm' : sign + x + 'µm');
+              g += `<text x="${px.toFixed(1)}" y="393" fill="${x === 0 ? '#38bdf8' : '#94a3b8'}" font-size="9" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
+            }
+          }
+        }
+      }
+      if (includeYGrid) {
+        const yReach = Math.ceil((poolWidth * 1.5) / gridStep) * gridStep;
+        for (let y = -yReach; y <= yReach; y += gridStep) {
+          const py = 210 + y * scale;
+          if (py >= 45 && py <= 375) {
+            g += `<line x1="80" y1="${py.toFixed(1)}" x2="860" y2="${py.toFixed(1)}" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
+          }
+        }
+        g += `<line x1="80" y1="210" x2="860" y2="210" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="6 3" opacity="0.8"/>`;
+        g += `<text x="24" y="210" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" transform="rotate(-90 24 210)" font-family="monospace">Transverse Width y</text>`;
+      }
+      g += `<line x1="${xBeam}" y1="${beamLineTopY}" x2="${xBeam}" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;
+      return g + `</g>`;
+    };
+
     if (currentProcess === 'binder-jetting') {
       // BINDER JETTING DEDICATED SINTERING SCHEMATIC (NO MOLTEN LIQUID POOL)
       svgHtml += '<g class="bjt-schematic">' +
@@ -15563,49 +15918,7 @@ function updateMeltPoolAndThermal() {
       const pathMushy = createTeardropPath(poolLength * 1.15, poolWidth * 1.18, 0.17, 0.98, scale, xBeam, 210.0);
       const pathHaz = createTeardropPath(poolLength * 1.45, poolWidth * 1.48, 0.26, 1.25, scale, xBeam, 210.0);
 
-      if (mpGrid) {
-        svgHtml += `<g class="grid-lines" opacity="${mpHighGrid ? '0.9' : '0.5'}">`;
-        const targetPx = isDedRegime ? 75 : 65;
-        const rawStep = targetPx / Math.max(1e-5, scale);
-        const candidates = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
-        let gridStep = candidates[candidates.length - 1];
-        for (let c of candidates) {
-          if (c >= rawStep) { gridStep = c; break; }
-        }
-
-        const maxReachLen = mpPyrometry ? (poolLength * 3.0) : (poolLength * 2.0);
-        const minXGrid = -Math.ceil(maxReachLen / gridStep) * gridStep;
-        const maxXGrid = Math.ceil((poolLength * 1.0) / gridStep) * gridStep;
-        let lastLabelPx = -Infinity;
-        for (let x = Math.max(-200000, minXGrid); x <= Math.min(200000, maxXGrid); x += gridStep) {
-          const px = xBeam + x * scale;
-          if (px >= 85 && px <= 860) {
-            svgHtml += `<line x1="${px.toFixed(1)}" y1="45" x2="${px.toFixed(1)}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
-            if (px >= 105 && px <= 845) {
-              const distFromBeamPx = Math.abs(px - xBeam);
-              const isNearBeam = (x !== 0 && distFromBeamPx < 52);
-              if (!isNearBeam && (Math.abs(px - lastLabelPx) >= 72 || x === 0)) {
-                lastLabelPx = px;
-                const absX = Math.abs(x);
-                const sign = x > 0 ? '+' : (x < 0 ? '' : '');
-                const xLbl = (x === 0) ? '0' : (absX >= 1000 ? sign + (x / 1000).toFixed(absX % 1000 === 0 ? 0 : 1) + 'mm' : sign + x + 'µm');
-                svgHtml += `<text x="${px.toFixed(1)}" y="393" fill="${x === 0 ? '#38bdf8' : '#94a3b8'}" font-size="9" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
-              }
-            }
-          }
-        }
-        const yReach = Math.ceil((poolWidth * 1.5) / gridStep) * gridStep;
-        for (let y = -yReach; y <= yReach; y += gridStep) {
-          const py = 210 + y * scale;
-          if (py >= 45 && py <= 375) {
-            svgHtml += `<line x1="80" y1="${py.toFixed(1)}" x2="860" y2="${py.toFixed(1)}" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
-          }
-        }
-        svgHtml += `<line x1="80" y1="210" x2="860" y2="210" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="6 3" opacity="0.8"/>`;
-        svgHtml += `<line x1="${xBeam}" y1="45" x2="${xBeam}" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;
-        svgHtml += `<text x="24" y="210" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" transform="rotate(-90 24 210)" font-family="monospace">Transverse Width y</text>`;
-        svgHtml += `</g>`;
-      }
+      if (mpGrid) svgHtml += buildMeltPoolGridSvg(45, true);
       svgHtml += `<text id="mpXAxisLabel" x="470" y="413" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">${xAxisTitle}</text>`;
 
       // Hard-clipped Thermal Envelope strictly inside [80, 45, 780, 330] frame
@@ -15785,40 +16098,7 @@ function updateMeltPoolAndThermal() {
 
       svgHtml += `<rect x="80" y="${zSurface}" width="780" height="230" fill="#0a1222" fill-opacity="0.6"/>`;
 
-      if (mpGrid) {
-        svgHtml += `<g class="grid-lines" opacity="${mpHighGrid ? '0.9' : '0.5'}">`;
-        const targetPx = isDedRegime ? 75 : 65;
-        const rawStep = targetPx / Math.max(1e-5, scale);
-        const candidates = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
-        let gridStep = candidates[candidates.length - 1];
-        for (let c of candidates) {
-          if (c >= rawStep) { gridStep = c; break; }
-        }
-
-        const maxReachLen = mpPyrometry ? (poolLength * 3.0) : (poolLength * 2.0);
-        const minXGrid = -Math.ceil(maxReachLen / gridStep) * gridStep;
-        const maxXGrid = Math.ceil((poolLength * 1.0) / gridStep) * gridStep;
-        let lastLabelPx = -Infinity;
-        for (let x = Math.max(-200000, minXGrid); x <= Math.min(200000, maxXGrid); x += gridStep) {
-          const px = xBeam + x * scale;
-          if (px >= 85 && px <= 860) {
-            svgHtml += `<line x1="${px.toFixed(1)}" y1="45" x2="${px.toFixed(1)}" y2="375" stroke="#1c2d42" stroke-width="0.9" stroke-dasharray="3 3"/>`;
-            if (px >= 105 && px <= 845) {
-              const distFromBeamPx = Math.abs(px - xBeam);
-              const isNearBeam = (x !== 0 && distFromBeamPx < 52);
-              if (!isNearBeam && (Math.abs(px - lastLabelPx) >= 72 || x === 0)) {
-                lastLabelPx = px;
-                const absX = Math.abs(x);
-                const sign = x > 0 ? '+' : (x < 0 ? '' : '');
-                const xLbl = (x === 0) ? '0' : (absX >= 1000 ? sign + (x / 1000).toFixed(absX % 1000 === 0 ? 0 : 1) + 'mm' : sign + x + 'µm');
-                svgHtml += `<text x="${px.toFixed(1)}" y="393" fill="${x === 0 ? '#38bdf8' : '#94a3b8'}" font-size="9" font-family="monospace" text-anchor="middle" font-weight="${x === 0 ? 'bold' : 'normal'}">${xLbl}</text>`;
-              }
-            }
-          }
-        }
-        svgHtml += `<line x1="${xBeam}" y1="${zSurface}" x2="${xBeam}" y2="375" stroke="#38bdf8" stroke-width="1.8" opacity="0.9"/>`;
-        svgHtml += `</g>`;
-      }
+      if (mpGrid) svgHtml += buildMeltPoolGridSvg(zSurface, false);
       svgHtml += `<text id="mpXAxisLabel" x="470" y="413" fill="#cbd5e1" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">${xAxisTitle}</text>`;
 
       svgHtml += `
@@ -16030,8 +16310,29 @@ function classifyMorphology(G_Kcm, R_cms) {
   return 'Columnar';
 }
 
+const _bontha2dCache = new Map();
+const _bontha3dCache = new Map();
+const _BONTHA_LRU_CAP = 64;
+function _bonthaLruGet(cache, key) {
+  if (!cache.has(key)) return null;
+  const val = cache.get(key);
+  cache.delete(key);
+  cache.set(key, val);
+  return val;
+}
+function _bonthaLruSet(cache, key, val) {
+  if (cache.has(key)) cache.delete(key);
+  else if (cache.size >= _BONTHA_LRU_CAP) cache.delete(cache.keys().next().value);
+  cache.set(key, val);
+  return val;
+}
+
 function calculateBontha2D(P_W, V_mms, alpha, b_mm, T0 = 25, physicsMode = 'rosenthal') {
   const Tm = (typeof ALLOY_DATA !== 'undefined' && typeof currentAlloy !== 'undefined' && ALLOY_DATA[currentAlloy] && ALLOY_DATA[currentAlloy].liquidusC) ? ALLOY_DATA[currentAlloy].liquidusC : 1660;
+  const cacheKey = `${Tm}|${P_W}|${V_mms}|${alpha}|${b_mm}|${T0}|${physicsMode || 'rosenthal'}`;
+  const cached = _bonthaLruGet(_bontha2dCache, cacheKey);
+  if (cached) return cached;
+
   const Ts = Tm - 56;
   const rho = 4430, c = 670, k = 21.9;
   const V_ms = V_mms / 1000.0;
@@ -16045,15 +16346,24 @@ function calculateBontha2D(P_W, V_mms, alpha, b_mm, T0 = 25, physicsMode = 'rose
     const r0 = Math.sqrt(x0 * x0 + z0 * z0);
     return Math.exp(-x0) * besselK0(r0);
   }
-
-  let maxZ = 0.01;
-  for (let z = 0.01; z <= 6.0; z += 0.02) {
-    let found = false;
-    for (let x = -4.0; x <= 0.5; x += 0.05) {
-      if (T_bar(x, z) >= T_bar_m) { found = true; break; }
+  function findPeakX(z0) {
+    let lx = -6.0, hx = 0.0;
+    for (let it = 0; it < 20; it++) {
+      const mx = (lx + hx) * 0.5;
+      const r0 = Math.sqrt(mx * mx + z0 * z0);
+      const derivSign = -(mx / Math.max(1e-9, r0)) * besselK1(r0) - besselK0(r0);
+      if (derivSign > 0) lx = mx; else hx = mx;
     }
-    if (found) maxZ = z; else break;
+    return (lx + hx) * 0.5;
   }
+
+  // Monotone 20-step bisection on max melt pool depth z_bar
+  let lz = 0.005, hz = 6.0;
+  for (let it = 0; it < 20; it++) {
+    const mz = (lz + hz) * 0.5;
+    if (T_bar(findPeakX(mz), mz) >= T_bar_m) lz = mz; else hz = mz;
+  }
+  const maxZ = Math.max(0.01, lz);
 
   const depthStations = [];
   const femStations = [];
@@ -16061,10 +16371,18 @@ function calculateBontha2D(P_W, V_mms, alpha, b_mm, T0 = 25, physicsMode = 'rose
   for (let i = 0; i <= 9; i++) {
     const frac = i / 9.0;
     const z_bar = Math.max(0.005, frac * maxZ);
-    let bestX = 0, minErr = Infinity;
-    for (let x = 0.5; x >= -8.0; x -= 0.01) {
-      const err = Math.abs(T_bar(x, z_bar) - T_bar_m);
-      if (err < minErr) { minErr = err; bestX = x; }
+    const xPeak = findPeakX(z_bar);
+    let bestX = xPeak;
+    if (T_bar(xPeak, z_bar) > T_bar_m) {
+      let lowX = -8.0, highX = xPeak;
+      if (T_bar(lowX, z_bar) > T_bar_m) {
+        lowX = T_bar(-24.0, z_bar) > T_bar_m ? -80.0 : -24.0;
+      }
+      for (let iter = 0; iter < 22; iter++) {
+        const midX = (lowX + highX) * 0.5;
+        if (T_bar(midX, z_bar) < T_bar_m) lowX = midX; else highX = midX;
+      }
+      bestX = (lowX + highX) * 0.5;
     }
     const r0 = Math.sqrt(bestX * bestX + z_bar * z_bar);
     const dT_dt_bar = Math.exp(-bestX) * ((bestX / r0) * besselK1(r0) + besselK0(r0));
@@ -16113,7 +16431,7 @@ function calculateBontha2D(P_W, V_mms, alpha, b_mm, T0 = 25, physicsMode = 'rose
     }
   }
 
-  return {
+  return _bonthaLruSet(_bontha2dCache, cacheKey, {
     geometryMode: '2d-thin-wall',
     physicsMode: physicsMode || 'rosenthal',
     normalizedTm: parseFloat(T_bar_m.toFixed(3)),
@@ -16130,11 +16448,14 @@ function calculateBontha2D(P_W, V_mms, alpha, b_mm, T0 = 25, physicsMode = 'rose
     depthProfile: depthStations,
     femComparisonProfile: femStations,
     columnarPct: Math.round((columnarCount / 10) * 100)
-  };
+  });
 }
 
 function calculateBontha3D(P_W, V_mms, alpha, physicsMode, T0 = 25) {
   const Tm = (typeof ALLOY_DATA !== 'undefined' && typeof currentAlloy !== 'undefined' && ALLOY_DATA[currentAlloy] && ALLOY_DATA[currentAlloy].liquidusC) ? ALLOY_DATA[currentAlloy].liquidusC : 1660;
+  const cacheKey = `${Tm}|${P_W}|${V_mms}|${alpha}|${physicsMode || 'rosenthal'}|${T0}`;
+  const cached = _bonthaLruGet(_bontha3dCache, cacheKey);
+  if (cached) return cached;
   const rho = 4430, c = 670, k = 21.9;
   const V_ms = V_mms / 1000.0;
   const alpha_Q = alpha * P_W;
@@ -16222,7 +16543,7 @@ function calculateBontha3D(P_W, V_mms, alpha, physicsMode, T0 = 25) {
     }
   }
 
-  return {
+  return _bonthaLruSet(_bontha3dCache, cacheKey, {
     geometryMode: '3d-bulky',
     physicsMode: physicsMode || 'rosenthal',
     normalizedTm: parseFloat(T_bar_m.toFixed(3)),
@@ -16239,7 +16560,7 @@ function calculateBontha3D(P_W, V_mms, alpha, physicsMode, T0 = 25) {
     depthProfile: depthStations,
     femComparisonProfile: femStations,
     columnarPct: Math.round((columnarCount / 10) * 100)
-  };
+  });
 }
 
 function renderBonthaSolidificationPhysics(pLive, vLiveMs, spot, t, preheatLive) {
@@ -16655,9 +16976,28 @@ function setLitTopicSubMode(k, v) {
 }
 window.setLitTopicSubMode = setLitTopicSubMode;
 
+const _canvasWidthCache = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
+const _chartResizeObserver = (typeof ResizeObserver !== 'undefined')
+  ? new ResizeObserver((entries) => {
+      for (let i = 0; i < entries.length; i++) {
+        const e = entries[i];
+        const w = e.contentRect && e.contentRect.width ? Math.round(e.contentRect.width) : 0;
+        if (w > 0 && _canvasWidthCache) _canvasWidthCache.set(e.target, w);
+      }
+    })
+  : null;
+
 function _setupCrispCanvasChart(canvas, cssHeight = 320) {
-  const rect = canvas.getBoundingClientRect();
-  const W = Math.max(460, Math.round((rect && rect.width) ? rect.width : 820));
+  let measuredW = _canvasWidthCache ? (_canvasWidthCache.get(canvas) || 0) : 0;
+  if (!measuredW) {
+    const rect = canvas.getBoundingClientRect();
+    measuredW = (rect && rect.width) ? Math.round(rect.width) : 0;
+    if (measuredW > 0 && _canvasWidthCache) {
+      _canvasWidthCache.set(canvas, measuredW);
+      if (_chartResizeObserver) _chartResizeObserver.observe(canvas);
+    }
+  }
+  const W = Math.max(460, measuredW || 820);
   const H = cssHeight;
   const dpr = Math.min(2.5, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
   canvas.width = Math.round(W * dpr);
@@ -17329,11 +17669,7 @@ function _posMetricOrNull(val) {
 }
 
 function _normCompProcKey(p) {
-  const s = String(p || 'lpbf').toLowerCase();
-  if (s === 'ded' || s === 'l-ded' || s === 'ded-laser') return 'ded-laser';
-  if (s === 'bjt' || s === 'binder-jetting' || s.includes('binder')) return 'binder-jetting';
-  if (s === 'waam') return 'waam';
-  return 'lpbf';
+  return normalizeProcessId(p);
 }
 
 function hasValidProcessInputs(paper, processId) {
@@ -20574,6 +20910,8 @@ function _renderCadPrintabilityAndOriUi() {
 
 var cadSimReport = null;
 var cadEconomicsReport = null;
+var _cadSimPerThermalBuf = null;
+var _cadSimPerStressBuf = null;
 
 function simulatePartBuildUi(mesh, geo, printability, mac) {
   const numOr = (val, fb) => (Number.isFinite(val) ? val : fb);
@@ -20650,12 +20988,7 @@ function simulatePartBuildUi(mesh, geo, printability, mac) {
 
   // Screening Distortion & Residual Stress (Non-FEA)
   const sz = mesh.boundingBox.size, longSpan = Math.max(sz[0], sz[1]), slend = sz[2] / Math.max(1, Math.min(sz[0], sz[1]));
-  const _pLow = String(post || 'HIP').toLowerCase();
-  const postN = (_pLow === 'none' || _pLow.includes('as-built') || _pLow.includes('as_built')) ? 'None'
-    : (_pLow.includes('stress') ? 'Stress-relieved'
-    : (_pLow.includes('anneal') ? 'Annealed'
-    : (_pLow.includes('bi-modal') || _pLow.includes('bimodal') ? 'Bi-modal'
-    : (_pLow.includes('solution') || _pLow === 'sta' ? 'Solution-Aged' : 'HIP'))));
+  const postN = normalizeCondition(post || 'HIP').postNorm;
   const abStress = Math.round(minLayerYs * (proc==='waam'?0.72:(proc==='ded-laser'?0.82:1.02)) * (1 + Math.min(0.28, geo.sharpConcaveCornerCount*0.03) + Math.min(0.18, geo.abruptAreaJumpCount*0.035)));
   const relF = postN==='HIP' ? 0.045 : (postN==='Annealed' ? 0.085 : (postN==='Stress-relieved' ? 0.14 : (postN==='Solution-Aged' ? 0.12 : 1.0)));
   const surfStress = Math.max(12, Math.round(abStress * relF * (scanRot===67?0.93:1.04)));
@@ -20669,9 +21002,14 @@ function simulatePartBuildUi(mesh, geo, printability, mac) {
   if (postN === 'None') stressNotes.push('Apply 650°C/2h stress relief before wire-EDM cut-off from plate.');
   if (stressNotes.length === 0) stressNotes.push('Low distortion risk with current thermal state & 67° scan rotation.');
 
-  // Paint per-triangle hotspots for 3D viewer
+  // Paint per-triangle hotspots for 3D viewer (reusing pre-allocated buffers when triangle count matches)
   const nTri = mesh.triangleCount, pos = mesh.positions, norm = mesh.normals, zMin = mesh.boundingBox.min[2], hSafe = Math.max(0.1, sz[2]);
-  const perThermal = new Float32Array(nTri), perStress = new Float32Array(nTri);
+  const perThermal = (typeof _cadSimPerThermalBuf !== 'undefined' && _cadSimPerThermalBuf && _cadSimPerThermalBuf.length === nTri)
+    ? _cadSimPerThermalBuf
+    : (_cadSimPerThermalBuf = new Float32Array(nTri));
+  const perStress = (typeof _cadSimPerStressBuf !== 'undefined' && _cadSimPerStressBuf && _cadSimPerStressBuf.length === nTri)
+    ? _cadSimPerStressBuf
+    : (_cadSimPerStressBuf = new Float32Array(nTri));
   for (let t = 0; t < nTri; t++) {
     const i = t * 9, zc = (pos[i+2] + pos[i+5] + pos[i+8]) / 3;
     const zf = Math.max(0, Math.min(1, (zc - zMin) / hSafe));
@@ -20942,6 +21280,83 @@ window.toggleCadFitMode = toggleCadFitMode;
 window.setCadSectionPct = setCadSectionPct;
 window.resetCadCamera = resetCadCamera;
 
+let _cadColorCache = {
+  mesh: null, mode: null, geoRef: null, simRef: null,
+  nTri: 0, rgb: null
+};
+function _getCadViewerColorCache(mesh, mode, zMinMesh, zSpanMesh, czBase) {
+  const nTri = mesh.triangleCount;
+  const geoRef = typeof cadGeometryReport !== 'undefined' ? cadGeometryReport : null;
+  const simRef = typeof cadSimReport !== 'undefined' ? cadSimReport : null;
+  const c = _cadColorCache;
+  if (c.mesh === mesh && c.mode === mode && c.geoRef === geoRef && c.simRef === simRef && c.nTri === nTri && c.rgb) {
+    return c;
+  }
+  const rgb = (c.rgb && c.rgb.length === nTri * 3) ? c.rgb : new Uint8Array(nTri * 3);
+  const pos = mesh.positions, norm = mesh.normals;
+  const perOverhang = geoRef && geoRef.perOverhang ? geoRef.perOverhang : null;
+  const perThick = geoRef && geoRef.perThick ? geoRef.perThick : null;
+  const perStress = simRef && simRef.perStress ? simRef.perStress : null;
+  const perThermal = simRef && simRef.perThermal ? simRef.perThermal : null;
+  const overhangZMin = czBase + 0.01 * zSpanMesh;
+
+  for (let t = 0; t < nTri; t++) {
+    const b = t * 9;
+    const avgZ = (pos[b + 2] + pos[b + 5] + pos[b + 8]) * 0.3333333333;
+    let r = 85, g = 175, bl = 235;
+    if (mode === 'solid') {
+      r = 172; g = 188; bl = 205;
+    } else if (mode === 'zheight') {
+      const z = Math.max(0, Math.min(1, (avgZ - zMinMesh) / zSpanMesh));
+      r = Math.round(z < 0.5 ? 56 + z * 2 * 195 : 251 - (z - 0.5) * 2 * 24);
+      g = Math.round(z < 0.5 ? 189 + z * 2 * 2 : 191 - (z - 0.5) * 2 * 80);
+      bl = Math.round(z < 0.5 ? 248 - z * 2 * 212 : 36 + (z - 0.5) * 2 * 100);
+    } else if (mode === 'thickness') {
+      const thickMm = perThick ? perThick[t] : 99;
+      if (thickMm < 1.2) { r = 239; g = 68; bl = 68; }
+      else if (thickMm < 3.5) { r = 245; g = 158; bl = 11; }
+      else if (thickMm < 10.0) { r = 52; g = 211; bl = 153; }
+      else { r = 56; g = 189; bl = 248; }
+    } else if (mode === 'stress') {
+      const v = perStress ? perStress[t] : 0.2;
+      r = Math.round(v < 0.5 ? 56 + (v * 2) * 195 : 251 - ((v - 0.5) * 2) * 12);
+      g = Math.round(v < 0.5 ? 189 + (v * 2) * 2 : 191 - ((v - 0.5) * 2) * 123);
+      bl = Math.round(v < 0.5 ? 248 - (v * 2) * 212 : 36 + ((v - 0.5) * 2) * 32);
+    } else if (mode === 'thermal') {
+      const v = perThermal ? perThermal[t] : 0.2;
+      r = Math.round(60 + v * 195);
+      g = Math.round(190 - v * 115);
+      bl = Math.round(245 - v * 210);
+    } else {
+      const isOh = perOverhang ? Boolean(perOverhang[t]) : (norm[b + 2] < -0.707 && avgZ > overhangZMin);
+      if (isOh) { r = 220; g = 80; bl = 65; }
+    }
+    const o = t * 3;
+    rgb[o] = r; rgb[o + 1] = g; rgb[o + 2] = bl;
+  }
+  _cadColorCache = { mesh, mode, geoRef, simRef, nTri, rgb };
+  return _cadColorCache;
+}
+
+let _cadRenderBuf = {
+  cap: 0,
+  p0x: null, p0y: null, p1x: null, p1y: null, p2x: null, p2y: null,
+  depth: null, light: null, triIdx: null, order: null
+};
+function _ensureCadRenderBuffers(cap) {
+  if (_cadRenderBuf.cap >= cap) return _cadRenderBuf;
+  const nextCap = Math.max(cap, 1024);
+  _cadRenderBuf = {
+    cap: nextCap,
+    p0x: new Float32Array(nextCap), p0y: new Float32Array(nextCap),
+    p1x: new Float32Array(nextCap), p1y: new Float32Array(nextCap),
+    p2x: new Float32Array(nextCap), p2y: new Float32Array(nextCap),
+    depth: new Float32Array(nextCap), light: new Float32Array(nextCap),
+    triIdx: new Int32Array(nextCap), order: new Int32Array(nextCap)
+  };
+  return _cadRenderBuf;
+}
+
 function renderCadViewer() {
   const canvas = document.getElementById('cadViewerCanvas');
   if (!canvas) return;
@@ -21007,73 +21422,103 @@ function renderCadViewer() {
     const zClip = czBase + zSpanMesh * (cadViewerState.sectionPct / 100);
     const maxDrawTris = cadViewerState.dragging ? 25000 : CAD_STL_PROXY_MAX_TRIS;
     const step = nTri > maxDrawTris ? Math.ceil(nTri / maxDrawTris) : 1;
-    const drawList = [];
     const windingSign = (cadGeometryReport && cadGeometryReport.windingSign) || 1;
     const isDecimatedProxy = isCadDecimatedProxy(cadActiveMesh);
+    const mode = cadViewerState.overlayMode;
+
+    // Cache static unlit base RGB per triangle so camera orbit frames avoid recomputing overlay ramps
+    const cc = _getCadViewerColorCache(cadActiveMesh, mode, zMinMesh, zSpanMesh, czBase);
+    const baseRgb = cc.rgb;
+
+    // Ensure reusable typed buffers fit worst-case surviving triangle count (no per-frame object allocations)
+    const maxSlots = Math.ceil(nTri / step);
+    const buf = _ensureCadRenderBuffers(maxSlots);
+    const bP0x = buf.p0x, bP0y = buf.p0y;
+    const bP1x = buf.p1x, bP1y = buf.p1y;
+    const bP2x = buf.p2x, bP2y = buf.p2y;
+    const bDepth = buf.depth, bLight = buf.light;
+    const bTri = buf.triIdx, bOrd = buf.order;
+
+    const halfW = W * 0.5, halfH = H * 0.52;
+    const invPersp = 1.0 / perspDist;
+    let drawCount = 0;
+
     for (let t = 0; t < nTri; t += step) {
       const b = t * 9;
-      const ax=pos[b], ay=pos[b+1], az=pos[b+2];
-      const bx=pos[b+3], by=pos[b+4], bz=pos[b+5];
-      const cxV=pos[b+6], cyV=pos[b+7], czV=pos[b+8];
-      const avgZ = (az + bz + czV) / 3;
+      const ax = pos[b], ay = pos[b + 1], az = pos[b + 2];
+      const bx = pos[b + 3], by = pos[b + 4], bz = pos[b + 5];
+      const cxV = pos[b + 6], cyV = pos[b + 7], czV = pos[b + 8];
+      const avgZ = (az + bz + czV) * 0.3333333333;
       if (avgZ > zClip) continue;
-      const p0 = proj(ax,ay,az), p1 = proj(bx,by,bz), p2 = proj(cxV,cyV,czV);
+
+      // Project v0
+      const dx0 = ax - cx, dy0 = ay - cy, dz0 = (az - czBase) - zMid;
+      const x10 = dx0 * cyaw - dy0 * syaw, y10 = dx0 * syaw + dy0 * cyaw;
+      const z20 = dz0 * cpit - y10 * spit, y20 = dz0 * spit + y10 * cpit;
+      const pS0 = pxScale / (1.0 + y20 * invPersp);
+      const p0x = halfW + x10 * pS0, p0y = halfH - z20 * pS0;
+
+      // Project v1
+      const dx1 = bx - cx, dy1 = by - cy, dz1 = (bz - czBase) - zMid;
+      const x11 = dx1 * cyaw - dy1 * syaw, y11 = dx1 * syaw + dy1 * cyaw;
+      const z21 = dz1 * cpit - y11 * spit, y21 = dz1 * spit + y11 * cpit;
+      const pS1 = pxScale / (1.0 + y21 * invPersp);
+      const p1x = halfW + x11 * pS1, p1y = halfH - z21 * pS1;
+
+      // Project v2
+      const dx2 = cxV - cx, dy2 = cyV - cy, dz2 = (czV - czBase) - zMid;
+      const x12 = dx2 * cyaw - dy2 * syaw, y12 = dx2 * syaw + dy2 * cyaw;
+      const z22 = dz2 * cpit - y12 * spit, y22 = dz2 * spit + y12 * cpit;
+      const pS2 = pxScale / (1.0 + y22 * invPersp);
+      const p2x = halfW + x12 * pS2, p2y = halfH - z22 * pS2;
+
       // Winding-aware backface culling (supports standard CCW and inverted-winding STLs)
-      const area2 = (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p1[1] - p0[1]) * (p2[0] - p0[0]);
+      const area2 = (p1x - p0x) * (p2y - p0y) - (p1y - p0y) * (p2x - p0x);
       if ((area2 * windingSign) >= 0) continue;
-      const nx = norm[b], ny = norm[b+1], nz = norm[b+2];
+
+      const nx = norm[b], ny = norm[b + 1], nz = norm[b + 2];
       const light = Math.max(0.30, 0.36 + Math.abs(nx * 0.45 + ny * 0.35 + nz * 0.82) * 0.64);
-      const isOverhang = cadGeometryReport && cadGeometryReport.perOverhang
-        ? Boolean(cadGeometryReport.perOverhang[t])
-        : (nz < -0.707 && avgZ > czBase + 0.01 * zSpanMesh);
-      const thickMm = (cadGeometryReport && cadGeometryReport.perThick) ? cadGeometryReport.perThick[t] : 99;
-      const stressVal = (cadSimReport && cadSimReport.perStress) ? cadSimReport.perStress[t] : 0.2;
-      const thermVal = (cadSimReport && cadSimReport.perThermal) ? cadSimReport.perThermal[t] : 0.2;
-      const zFrac = Math.max(0, Math.min(1, (avgZ - zMinMesh) / zSpanMesh));
-      drawList.push({ p0, p1, p2, depth: (p0[2] + p1[2] + p2[2]) / 3, light, isOverhang, thickMm, stressVal, thermVal, zFrac });
+
+      const s = drawCount++;
+      bP0x[s] = p0x; bP0y[s] = p0y;
+      bP1x[s] = p1x; bP1y[s] = p1y;
+      bP2x[s] = p2x; bP2y[s] = p2y;
+      bDepth[s] = (y20 + y21 + y22) * 0.3333333333;
+      bLight[s] = light;
+      bTri[s] = t;
+      bOrd[s] = s;
     }
-    drawList.sort((a, b) => b.depth - a.depth);
-    const drawWire = Boolean(cadViewerState.wireframe) && !isDecimatedProxy && drawList.length <= 12000;
-    for (let i = 0; i < drawList.length; i++) {
-      const f = drawList[i];
-      ctx.beginPath(); ctx.moveTo(f.p0[0], f.p0[1]); ctx.lineTo(f.p1[0], f.p1[1]); ctx.lineTo(f.p2[0], f.p2[1]); ctx.closePath();
-      let fillColor;
-      if (cadViewerState.overlayMode === 'solid') {
-        const gCol = Math.round(188 * f.light), bCol = Math.round(205 * f.light), rCol = Math.round(172 * f.light);
-        fillColor = `rgb(${rCol}, ${gCol}, ${bCol})`;
-      } else if (cadViewerState.overlayMode === 'zheight') {
-        const z = f.zFrac;
-        const r = Math.round((z < 0.5 ? 56 + z * 2 * 195 : 251 - (z - 0.5) * 2 * 24) * f.light);
-        const g = Math.round((z < 0.5 ? 189 + z * 2 * 2 : 191 - (z - 0.5) * 2 * 80) * f.light);
-        const bl = Math.round((z < 0.5 ? 248 - z * 2 * 212 : 36 + (z - 0.5) * 2 * 100) * f.light);
-        fillColor = `rgb(${r}, ${g}, ${bl})`;
-      } else if (cadViewerState.overlayMode === 'thickness') {
-        const rgb = f.thickMm < 1.2 ? [239, 68, 68] : (f.thickMm < 3.5 ? [245, 158, 11] : (f.thickMm < 10.0 ? [52, 211, 153] : [56, 189, 248]));
-        fillColor = `rgb(${Math.round(rgb[0]*f.light)}, ${Math.round(rgb[1]*f.light)}, ${Math.round(rgb[2]*f.light)})`;
-      } else if (cadViewerState.overlayMode === 'stress') {
-        const v = f.stressVal;
-        const r = Math.round((v < 0.5 ? 56 + (v * 2) * 195 : 251 - ((v - 0.5) * 2) * 12) * f.light);
-        const g = Math.round((v < 0.5 ? 189 + (v * 2) * 2 : 191 - ((v - 0.5) * 2) * 123) * f.light);
-        const bl = Math.round((v < 0.5 ? 248 - (v * 2) * 212 : 36 + ((v - 0.5) * 2) * 32) * f.light);
-        fillColor = `rgb(${r}, ${g}, ${bl})`;
-      } else if (cadViewerState.overlayMode === 'thermal') {
-        const v = f.thermVal;
-        const r = Math.round((60 + v * 195) * f.light);
-        const g = Math.round((190 - v * 115) * f.light);
-        const bl = Math.round((245 - v * 210) * f.light);
-        fillColor = `rgb(${r}, ${g}, ${bl})`;
-      } else if (f.isOverhang) {
-        fillColor = `rgb(${Math.round(220*f.light)}, ${Math.round(80*f.light)}, ${Math.round(65*f.light)})`;
-      } else {
-        fillColor = `rgb(${Math.round(85*f.light)}, ${Math.round(175*f.light)}, ${Math.round(235*f.light)})`;
-      }
+
+    const orderView = bOrd.subarray(0, drawCount);
+    orderView.sort((ia, ib) => bDepth[ib] - bDepth[ia]);
+    const drawWire = Boolean(cadViewerState.wireframe) && !isDecimatedProxy && drawCount <= 12000;
+    const strokeDefaultWidth = isDecimatedProxy ? 1.45 : 0.6;
+
+    for (let i = 0; i < drawCount; i++) {
+      const s = orderView[i];
+      const light = bLight[s];
+      const cIdx = bTri[s] * 3;
+      const rCol = Math.round(baseRgb[cIdx] * light);
+      const gCol = Math.round(baseRgb[cIdx + 1] * light);
+      const bCol = Math.round(baseRgb[cIdx + 2] * light);
+      const fillColor = `rgb(${rCol}, ${gCol}, ${bCol})`;
+
+      ctx.beginPath();
+      ctx.moveTo(bP0x[s], bP0y[s]);
+      ctx.lineTo(bP1x[s], bP1y[s]);
+      ctx.lineTo(bP2x[s], bP2y[s]);
+      ctx.closePath();
       ctx.fillStyle = fillColor;
       ctx.fill();
       if (drawWire) {
-        ctx.strokeStyle = 'rgba(15, 23, 42, 0.35)'; ctx.lineWidth = 0.7; ctx.stroke();
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.35)';
+        ctx.lineWidth = 0.7;
+        ctx.stroke();
       } else {
         // Sub-pixel/proxy overlap matching fill eliminates hairline seams & stipple gaps on strided meshes
-        ctx.strokeStyle = fillColor; ctx.lineWidth = isDecimatedProxy ? 1.45 : 0.6; ctx.stroke();
+        ctx.strokeStyle = fillColor;
+        ctx.lineWidth = strokeDefaultWidth;
+        ctx.stroke();
       }
     }
   }

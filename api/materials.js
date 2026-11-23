@@ -20,6 +20,7 @@ export default function handler(req, res) {
   }
 
   try {
+    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800');
     res.status(200).json({
       status: 'success',
       total_variants: 209,
