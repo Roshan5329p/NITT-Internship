@@ -9103,9 +9103,9 @@ window.addEventListener('click', function(e) {
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
               <div class="model-card-title" style="font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: -0.2px;">3D Digital Twin &amp; Stress Tensor Heatmap</div>
-              <span style="border: 1px solid rgba(56, 189, 248, 0.45); background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 9999px;">Interactive WebGL Specimen</span>
+              <span id="twinCardBadge" style="border: 1px solid rgba(56, 189, 248, 0.45); background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 9999px;">Interactive WebGL Specimen</span>
             </div>
-            <div class="model-card-sub" style="font-size: 12.5px; color: #94a3b8; margin-top: 6px; line-height: 1.5; max-width: 820px;">
+            <div class="model-card-sub" id="twinCardSub" style="font-size: 12.5px; color: #94a3b8; margin-top: 6px; line-height: 1.5; max-width: 820px;">
               Real-time volumetric 3D representation of an <strong>ASTM E8 Tensile Specimen</strong> in Ti-6Al-4V (Grade 5, α+β workhorse). Drag to orbit, zoom, slice cross-sections, and visualize residual stress tensors and thermal cooling contours.
             </div>
           </div>
@@ -9128,6 +9128,8 @@ window.addEventListener('click', function(e) {
                   <span id="twinEngineTitle">ASTM E8 Solid Round Tensile Specimen • 60 FPS FEA Twin</span>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <button type="button" class="twin-pill-btn" id="btnTwinGeomSource" onclick="toggleTwinGeometrySource()" title="Load a CAD file in Part Analyzer to enable CAD Twin" disabled style="opacity: 0.55; cursor: not-allowed;">Use Uploaded CAD</button>
+                  <button type="button" class="twin-pill-btn" id="btnTwinUploadCad" onclick="openCadAnalyzerFromTwin()" title="Open CAD Part Analyzer to upload or change 3D part" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);">Upload / Change CAD</button>
                   <button type="button" class="twin-pill-btn active" id="btnAutoOrbit" onclick="toggleAutoOrbit()">Auto-Orbit: ON</button>
                   <button type="button" class="twin-pill-btn" id="btnCutaway" onclick="toggleCutaway()">Cutaway: OFF</button>
                   <button type="button" class="twin-pill-btn" id="btnWireframe" onclick="toggleWireframe()">Wireframe</button>
@@ -12812,6 +12814,10 @@ function switchTab(tabId, btn) {
   if (targetView) targetView.classList.add('active');
 
   if (tabId === 'digital-twin') {
+    if (twinNeedsCadAutoFit) {
+      twinNeedsCadAutoFit = false;
+      resetCamera();
+    }
     startTwinAnimation();
   }
   if (tabId === 'cad-analyzer' && typeof initCadAnalyzerTab === 'function') {
@@ -12837,7 +12843,7 @@ function openEvidenceHub() {
 }
 
 // ==========================================
-// 5. 3D DIGITAL TWIN CANVAS ENGINE (60 FPS SOLID ASTM E8)
+// 5. 3D DIGITAL TWIN CANVAS ENGINE (60 FPS SOLID ASTM E8 + UPLOADED CAD MESH)
 // ==========================================
 let twinMode = 'residual-stress';
 let autoOrbit = true;
@@ -12851,6 +12857,37 @@ let isDragging = false;
 let lastMouseX = 0;
 let lastMouseY = 0;
 let animFrameId = null;
+let twinGeometrySource = 'auto'; // 'auto' | 'cad' | 'dogbone'
+let twinNeedsCadAutoFit = false;
+
+function hasLoadedCadMeshForTwin() {
+  return Boolean(typeof cadActiveMesh !== 'undefined' && cadActiveMesh && cadActiveMesh.triangleCount > 0);
+}
+window.hasLoadedCadMeshForTwin = hasLoadedCadMeshForTwin;
+
+function isTwinUsingCad() {
+  return Boolean((twinGeometrySource === 'auto' || twinGeometrySource === 'cad') && hasLoadedCadMeshForTwin());
+}
+window.isTwinUsingCad = isTwinUsingCad;
+
+function openCadAnalyzerFromTwin() {
+  const cadBtn = document.querySelector(".tab-btn[onclick*=\"'cad-analyzer'\"]");
+  if (typeof switchTab === 'function') {
+    switchTab('cad-analyzer', cadBtn || undefined);
+  }
+}
+window.openCadAnalyzerFromTwin = openCadAnalyzerFromTwin;
+
+function toggleTwinGeometrySource() {
+  if (!hasLoadedCadMeshForTwin()) {
+    openCadAnalyzerFromTwin();
+    return;
+  }
+  twinGeometrySource = isTwinUsingCad() ? 'dogbone' : 'cad';
+  updateTwinScaleAndHud();
+  if (!animFrameId) renderTwin();
+}
+window.toggleTwinGeometrySource = toggleTwinGeometrySource;
 
 function setTwinMode(mode) {
   twinMode = mode;
@@ -12886,6 +12923,14 @@ function toggleCutaway() {
 window.toggleCutaway = toggleCutaway;
 
 function toggleWireframe() {
+  if (isTwinUsingCad() && typeof isCadDecimatedProxy === 'function' && isCadDecimatedProxy(cadActiveMesh)) {
+    wireframe = false;
+    window.twinWireframe = false;
+    const btn = document.getElementById('btnWireframe');
+    if (btn) btn.classList.remove('active');
+    if (!animFrameId) renderTwin();
+    return;
+  }
   wireframe = !wireframe;
   window.twinWireframe = wireframe;
   const btn = document.getElementById('btnWireframe');
@@ -13117,6 +13162,74 @@ function updateTwinScaleAndHud() {
   window.currentTwinCooling = currentCooling;
   window.currentTwinAlphaPrime = alphaPrime;
 
+  const engineTitleEl = document.getElementById('twinEngineTitle');
+  const cardSubEl = document.getElementById('twinCardSub');
+  const cardBadgeEl = document.getElementById('twinCardBadge');
+  const btnGeomSource = document.getElementById('btnTwinGeomSource');
+  const btnWireEl = document.getElementById('btnWireframe');
+  const hasCad = hasLoadedCadMeshForTwin();
+  const usingCad = isTwinUsingCad();
+
+  if (btnGeomSource) {
+    if (!hasCad) {
+      btnGeomSource.disabled = true;
+      btnGeomSource.style.opacity = '0.55';
+      btnGeomSource.style.cursor = 'not-allowed';
+      btnGeomSource.classList.remove('active');
+      btnGeomSource.innerText = 'Use Uploaded CAD';
+      btnGeomSource.title = 'Load a CAD file in Part Analyzer to enable CAD Twin';
+    } else if (usingCad) {
+      btnGeomSource.disabled = false;
+      btnGeomSource.style.opacity = '1';
+      btnGeomSource.style.cursor = 'pointer';
+      btnGeomSource.classList.add('active');
+      btnGeomSource.innerText = 'ASTM E8 Reference';
+      btnGeomSource.title = 'Currently rendering Uploaded CAD Part — click to switch to ASTM E8 Reference Specimen';
+    } else {
+      btnGeomSource.disabled = false;
+      btnGeomSource.style.opacity = '1';
+      btnGeomSource.style.cursor = 'pointer';
+      btnGeomSource.classList.remove('active');
+      btnGeomSource.innerText = 'Use Uploaded CAD';
+      btnGeomSource.title = 'Currently rendering ASTM E8 Specimen — click to switch to Uploaded CAD Part';
+    }
+  }
+
+  if (usingCad) {
+    const bb = cadActiveMesh.boundingBox || { size: [0, 0, 0] };
+    const sizeX = Number(bb.size?.[0] || 0);
+    const sizeY = Number(bb.size?.[1] || 0);
+    const sizeZ = Number(bb.size?.[2] || 0);
+    const fullTriCount = Number(cadActiveMesh.originalTriangleCount || cadActiveMesh.triangleCount || 0);
+    const rawName = (typeof cadCurrentFileName !== 'undefined' && cadCurrentFileName) ? cadCurrentFileName : 'Uploaded CAD';
+    const safeName = typeof escapeHtml === 'function' ? escapeHtml(rawName) : rawName;
+    if (engineTitleEl) {
+      engineTitleEl.innerHTML = `${safeName} • ${sizeX.toFixed(1)} × ${sizeY.toFixed(1)} × ${sizeZ.toFixed(1)} mm • ${fullTriCount.toLocaleString()} tris • Coupled FEA Twin`;
+    }
+    if (cardBadgeEl) {
+      cardBadgeEl.innerText = 'Interactive CAD FEA Twin';
+    }
+    if (cardSubEl) {
+      cardSubEl.innerHTML = `Real-time volumetric 3D Digital Twin of uploaded CAD geometry <strong>${safeName}</strong> (${sizeX.toFixed(1)} × ${sizeY.toFixed(1)} × ${sizeZ.toFixed(1)} mm, ${fullTriCount.toLocaleString()} triangles) in Ti-6Al-4V. Drag to orbit, zoom, slice build layers, cutaway interior core, and visualize coupled residual stress, cooling rate, and α' martensite heatmaps.`;
+    }
+    const isProxy = typeof isCadDecimatedProxy === 'function' && isCadDecimatedProxy(cadActiveMesh);
+    if (isProxy && wireframe) {
+      wireframe = false;
+      window.twinWireframe = false;
+      if (btnWireEl) btnWireEl.classList.remove('active');
+    }
+  } else {
+    if (engineTitleEl) {
+      engineTitleEl.innerText = 'ASTM E8 Solid Round Tensile Specimen • 60 FPS FEA Twin';
+    }
+    if (cardBadgeEl) {
+      cardBadgeEl.innerText = 'Interactive WebGL Specimen';
+    }
+    if (cardSubEl) {
+      cardSubEl.innerHTML = 'Real-time volumetric 3D representation of an <strong>ASTM E8 Tensile Specimen</strong> in Ti-6Al-4V (Grade 5, α+β workhorse). Drag to orbit, zoom, slice cross-sections, and visualize residual stress tensors and thermal cooling contours.';
+    }
+  }
+
   if (ctxBadge) {
     ctxBadge.innerText = stressField.contextHudSummary;
     ctxBadge.style.borderColor = stressField.regimeSeverity === 'danger'
@@ -13285,6 +13398,273 @@ function getHeatmapNormalizedU(rFrac, zNorm, angle, field, aPrimeVal) {
   return 0.28 + 0.08 * rFrac + 0.04 * (1.0 - Math.abs(zNorm));
 }
 
+function evaluateCadTriangleHeatmapU(t, zNorm, rHorizFrac, isInteriorFace, field, aPrimeVal) {
+  const sf = field || window.currentTwinStressField || {
+    coreCompressiveStressMpa: -30,
+    gaugeSurfaceStressMpa: 38,
+    peakSurfaceStressMpa: 43,
+    neutralRadiusFraction: 0.70,
+    filletConcentrationFactor: 1.12,
+    referenceScaleMinMpa: -450,
+    referenceScaleMaxMpa: 650,
+    isBinderJetting: false
+  };
+
+  const geo = typeof cadGeometryReport !== 'undefined' ? cadGeometryReport : null;
+  const sim = typeof cadSimReport !== 'undefined' ? cadSimReport : null;
+  const isOh = (geo && geo.perOverhang && t < geo.perOverhang.length) ? geo.perOverhang[t] : 0;
+  const thickMm = (geo && geo.perThick && t < geo.perThick.length && geo.perThick[t] > 0) ? geo.perThick[t] : 4.0;
+  const simStress = (sim && sim.perStress && t < sim.perStress.length)
+    ? sim.perStress[t]
+    : (0.35 + 0.35 * rHorizFrac + (zNorm < 0.14 ? 0.25 : 0));
+  const simTherm = (sim && sim.perThermal && t < sim.perThermal.length)
+    ? sim.perThermal[t]
+    : (0.35 * zNorm + (isOh ? 0.25 : 0));
+
+  if (twinMode === 'residual-stress') {
+    let localSigma = 0;
+    if (isInteriorFace) {
+      localSigma = sf.coreCompressiveStressMpa * (0.76 + 0.24 * (1.0 - zNorm));
+    } else {
+      const geomFactor = Math.max(
+        0.34,
+        Math.min(
+          1.18,
+          0.44 + 0.48 * simStress + (isOh ? 0.16 : 0) + (thickMm < 2.0 ? 0.12 : 0) + (zNorm < 0.12 ? 0.10 : 0)
+        )
+      );
+      localSigma = sf.gaugeSurfaceStressMpa * geomFactor;
+    }
+    if (sf.isBinderJetting) {
+      return Math.max(0.15, Math.min(0.85, 0.40 + (localSigma / 120.0)));
+    }
+    const refMin = sf.referenceScaleMinMpa !== undefined ? sf.referenceScaleMinMpa : -450;
+    const refMax = sf.referenceScaleMaxMpa !== undefined ? sf.referenceScaleMaxMpa : 650;
+    return Math.max(0.02, Math.min(0.99, (localSigma - refMin) / Math.max(1, refMax - refMin)));
+  }
+
+  if (twinMode === 'cooling-rate') {
+    const peakCooling = window.currentTwinCooling || 480000;
+    const thinBoost = thickMm < 2.5 ? 1.12 : (thickMm > 8.0 ? 0.68 : 0.92);
+    const sinkFactor = isInteriorFace
+      ? 0.28
+      : Math.max(0.30, Math.min(1.15, thinBoost * (1.05 - 0.38 * simTherm - 0.18 * zNorm + 0.15 * rHorizFrac)));
+    const localCool = Math.max(0.05, peakCooling * sinkFactor);
+    return Math.max(0.05, Math.min(0.98, Math.log10(localCool + 1.0) / 6.1));
+  }
+
+  // phase-fraction mode (Martensite α')
+  const aRatio = Math.max(0, Math.min(1, (aPrimeVal || 0) / 100.0));
+  if (aRatio > 0.15) {
+    const quenchWeight = isInteriorFace
+      ? 0.46
+      : Math.max(0.45, Math.min(1.08, (thickMm < 2.5 ? 1.05 : 0.88) * (1.0 - 0.28 * simTherm) * (0.75 + 0.25 * rHorizFrac)));
+    return Math.max(0.15, Math.min(0.98, 0.22 + 0.76 * aRatio * quenchWeight));
+  }
+  return isInteriorFace ? 0.24 : (0.26 + 0.08 * rHorizFrac + 0.04 * (1.0 - Math.abs(2.0 * zNorm - 1.0)));
+}
+window.evaluateCadTriangleHeatmapU = evaluateCadTriangleHeatmapU;
+
+function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
+  const mesh = cadActiveMesh;
+  if (!mesh || !mesh.positions || !mesh.triangleCount || !mesh.boundingBox) return;
+
+  const pos = mesh.positions;
+  const nTri = mesh.triangleCount;
+  const bb = mesh.boundingBox;
+  const cx = (bb.min[0] + bb.max[0]) * 0.5;
+  const cy = (bb.min[1] + bb.max[1]) * 0.5;
+  const cz = (bb.min[2] + bb.max[2]) * 0.5;
+  const sx = Math.max(1e-4, bb.size[0]);
+  const sy = Math.max(1e-4, bb.size[1]);
+  const sz = Math.max(1e-4, bb.size[2]);
+  const R = Math.max(1e-3, 0.5 * Math.hypot(sx, sy, sz));
+  const rHorizMax = Math.max(1e-3, 0.5 * Math.hypot(sx, sy));
+  const normScale = 135.0 / R;
+
+  const zSliceFrac = Math.max(0.05, Math.min(1.0, sliceDepth / 100.0));
+  const zCutMax = bb.min[2] + sz * zSliceFrac;
+  const isDecimatedProxy = typeof isCadDecimatedProxy === 'function' && isCadDecimatedProxy(mesh);
+  const drawWire = wireframe && !isDecimatedProxy;
+  const windingSign = (!isDecimatedProxy && typeof cadGeometryReport !== 'undefined' && cadGeometryReport && cadGeometryReport.windingSign)
+    ? cadGeometryReport.windingSign
+    : 1;
+
+  const triBudget = (isDragging || autoOrbit) ? 20000 : 60000;
+  const stride = Math.max(1, Math.ceil(nTri / triBudget));
+  const cosY = Math.cos(yaw), sinY = Math.sin(yaw);
+  const cosP = Math.cos(pitch), sinP = Math.sin(pitch);
+
+  // Subtle build-plate footprint frame at Z = min[2]
+  const yBaseWorld = (bb.min[2] - cz) * normScale;
+  const hxWorld = sx * 0.56 * normScale;
+  const hzWorld = sy * 0.56 * normScale;
+  const plateCorners = [
+    project(-hxWorld, yBaseWorld, -hzWorld, w, h),
+    project(hxWorld, yBaseWorld, -hzWorld, w, h),
+    project(hxWorld, yBaseWorld, hzWorld, w, h),
+    project(-hxWorld, yBaseWorld, hzWorld, w, h)
+  ];
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(plateCorners[0].px, plateCorners[0].py);
+  ctx.lineTo(plateCorners[1].px, plateCorners[1].py);
+  ctx.lineTo(plateCorners[2].px, plateCorners[2].py);
+  ctx.lineTo(plateCorners[3].px, plateCorners[3].py);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.36)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+
+  const tris = [];
+  for (let t = 0; t < nTri; t += stride) {
+    const b = t * 9;
+    const x0 = pos[b], y0 = pos[b + 1], z0 = pos[b + 2];
+    const x1 = pos[b + 3], y1 = pos[b + 4], z1 = pos[b + 5];
+    const x2 = pos[b + 6], y2 = pos[b + 7], z2 = pos[b + 8];
+    const cxTri = (x0 + x1 + x2) * 0.33333333;
+    const cyTri = (y0 + y1 + y2) * 0.33333333;
+    const czTri = (z0 + z1 + z2) * 0.33333333;
+
+    if (sliceDepth < 99.5 && czTri > zCutMax) continue;
+    if (cutaway && cxTri > cx && cyTri > cy) continue;
+
+    const ux = x1 - x0, uy = y1 - y0, uz = z1 - z0;
+    const vx = x2 - x0, vy = y2 - y0, vz = z2 - z0;
+    let cnx = (uy * vz - uz * vy) * windingSign;
+    let cny = (uz * vx - ux * vz) * windingSign;
+    let cnz = (ux * vy - uy * vx) * windingSign;
+    const nLen = Math.hypot(cnx, cny, cnz);
+    if (nLen < 1e-10) continue;
+    cnx /= nLen; cny /= nLen; cnz /= nLen;
+
+    // Map CAD normal (cnx, cny, cnz) -> Twin world (cnx, cnz, cny) and rotate into camera space
+    const nx1 = cnx * cosY - cny * sinY;
+    const nz1 = cnx * sinY + cny * cosY;
+    const nyCam = cnz * cosP - nz1 * sinP;
+    const nzCam = cnz * sinP + nz1 * cosP;
+    const nxCam = nx1;
+
+    if (!drawWire && !isDecimatedProxy && !cutaway && sliceDepth >= 99.5 && nzCam > 0.05) {
+      continue;
+    }
+    const isInteriorFace = !isDecimatedProxy && (cutaway || sliceDepth < 99.5) && (nzCam > 0.05);
+
+    const zNorm = Math.max(0, Math.min(1, (czTri - bb.min[2]) / sz));
+    const rHorizFrac = Math.min(1.0, Math.hypot(cxTri - cx, cyTri - cy) / rHorizMax);
+    const warpDy = warpageAmp > 0 ? (warpageAmp * (rHorizFrac * rHorizFrac - 0.35)) : 0;
+
+    const p0 = project((x0 - cx) * normScale, (z0 - cz) * normScale + warpDy, (y0 - cy) * normScale, w, h);
+    const p1 = project((x1 - cx) * normScale, (z1 - cz) * normScale + warpDy, (y1 - cy) * normScale, w, h);
+    const p2 = project((x2 - cx) * normScale, (z2 - cz) * normScale + warpDy, (y2 - cy) * normScale, w, h);
+
+    const rawDot = -(nxCam * nlx + nyCam * nly + nzCam * nlz);
+    const dot = (isDecimatedProxy || isInteriorFace)
+      ? Math.max(0.10, Math.abs(rawDot))
+      : Math.max(0.08, Math.min(1.0, rawDot));
+    const light = isInteriorFace ? (0.38 + 0.42 * dot) : (0.46 + 0.54 * dot);
+    const uVal = evaluateCadTriangleHeatmapU(t, zNorm, rHorizFrac, isInteriorFace, sf, aPrimeVal);
+    const avgZ = (p0.zDepth + p1.zDepth + p2.zDepth) * 0.33333333;
+
+    tris.push({ p0, p1, p2, uVal, light, avgZ, nzCam });
+  }
+
+  tris.sort((a, b) => b.avgZ - a.avgZ);
+
+  const edgeWidth = isDecimatedProxy ? 1.35 : 0.55;
+  for (let i = 0; i < tris.length; i++) {
+    const f = tris[i];
+    const baseColor = getTwinColormapColor(f.uVal);
+    const cr = Math.min(255, Math.round(baseColor.r * f.light));
+    const cg = Math.min(255, Math.round(baseColor.g * f.light));
+    const cb = Math.min(255, Math.round(baseColor.b * f.light));
+
+    ctx.beginPath();
+    ctx.moveTo(f.p0.px, f.p0.py);
+    ctx.lineTo(f.p1.px, f.p1.py);
+    ctx.lineTo(f.p2.px, f.p2.py);
+    ctx.closePath();
+
+    if (drawWire) {
+      const isFront = f.nzCam <= 0.05;
+      if (isFront) {
+        ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.22)`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.92)`;
+        ctx.lineWidth = 0.95;
+      } else {
+        ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.16)`;
+        ctx.lineWidth = 0.6;
+      }
+      ctx.stroke();
+    } else {
+      const rgbStr = `rgb(${cr}, ${cg}, ${cb})`;
+      ctx.fillStyle = rgbStr;
+      ctx.fill();
+      ctx.strokeStyle = rgbStr;
+      ctx.lineWidth = edgeWidth;
+      ctx.stroke();
+    }
+  }
+
+  if (cutaway || sliceDepth < 98) {
+    const zFocusWorld = sliceDepth < 98 ? ((zCutMax - cz) * normScale) : 0;
+    const pTarget = project(0, zFocusWorld, 0, w, h);
+    ctx.beginPath();
+    ctx.arc(pTarget.px, pTarget.py, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    const coreVal = window.currentTwinCoreStress !== undefined ? window.currentTwinCoreStress : -30;
+    const tagText = sliceDepth < 98
+      ? `Z-SLICE ${sliceDepth}% • CORE: ${coreVal} MPa`
+      : `CUTAWAY CORE: ${coreVal} MPa`;
+    ctx.font = 'bold 11px "JetBrains Mono", monospace';
+    const tw = ctx.measureText(tagText).width;
+    const tagX = Math.min(w - tw - 18, Math.max(16, pTarget.px + 12));
+    const tagY = Math.max(24, Math.min(h - 32, pTarget.py - 8));
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(tagX - 5, tagY - 13, tw + 10, 18, 4);
+    } else {
+      ctx.rect(tagX - 5, tagY - 13, tw + 10, 18);
+    }
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.textAlign = 'left';
+    ctx.fillText(tagText, tagX, tagY);
+  }
+
+  if (warpageAmp > 0) {
+    const warnTxt = '⚠️ Thermal Warpage / Corner Lift Active (HI > 600 J/mm)';
+    ctx.save();
+    ctx.font = 'bold 10.5px "JetBrains Mono", monospace';
+    const wTw = ctx.measureText(warnTxt).width;
+    ctx.fillStyle = 'rgba(127, 29, 29, 0.85)';
+    ctx.strokeStyle = 'rgba(244, 63, 94, 0.75)';
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(14, 12, wTw + 16, 22, 6);
+    } else {
+      ctx.rect(14, 12, wTw + 16, 22);
+    }
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#fecaca';
+    ctx.fillText(warnTxt, 22, 27);
+    ctx.restore();
+  }
+}
+
 function renderTwin() {
   if (!canvas || !ctx || document.hidden) {
     animFrameId = null;
@@ -13318,6 +13698,21 @@ function renderTwin() {
   const aPrimeVal = window.currentTwinAlphaPrime !== undefined ? window.currentTwinAlphaPrime : 0.0;
   const warpageAmp = (sf.thermalDistortionActive && sf.warpageSeverity > 0) ? (8.5 * sf.warpageSeverity) : 0;
 
+  // Directional light from front-top-right
+  const lx = 0.45, ly = 0.65, lz = -0.60;
+  const lMag = Math.sqrt(lx * lx + ly * ly + lz * lz);
+  const nlx = lx / lMag, nly = ly / lMag, nlz = lz / lMag;
+
+  if (isTwinUsingCad()) {
+    try {
+      renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz);
+    } catch (err) {
+      console.error('Error in renderTwinCadMesh:', err);
+    }
+    animFrameId = requestAnimationFrame(renderTwin);
+    return;
+  }
+
   const projectWithWarp = (x, y, z, zNorm) => {
     const yW = warpageAmp > 0 ? (y + warpageAmp * (1.0 - zNorm * zNorm)) : y;
     return project(x, yW, z, w, h);
@@ -13332,11 +13727,6 @@ function renderTwin() {
   const zMinNorm = dogboneMesh.outerRings[0][0].zNorm;
   const zMax = dogboneMesh.outerRings[maxSlice][0].z;
   const zMaxNorm = dogboneMesh.outerRings[maxSlice][0].zNorm;
-
-  // Directional light from front-top-right
-  const lx = 0.45, ly = 0.65, lz = -0.60;
-  const lMag = Math.sqrt(lx * lx + ly * ly + lz * lz);
-  const nlx = lx / lMag, nly = ly / lMag, nlz = lz / lMag;
 
   try {
     // 1. Project outer shell vertices for i = 0..maxSlice
@@ -19300,6 +19690,8 @@ function _applyCadMesh(mesh, fileName, extraWarnings, fullMetrics) {
 
   cadViewerState.cameraFitMode = 'part';
   if (isCadDecimatedProxy(active)) cadViewerState.wireframe = false;
+  twinGeometrySource = 'auto';
+  twinNeedsCadAutoFit = true;
   changeCadSourceUnit('mm');
   resetCadCamera();
 }
@@ -19328,9 +19720,11 @@ function changeCadSourceUnit(unit) {
     for (let i = 0; i < pos.length; i++) pos[i] = cadRawMesh.positions[i] * factor;
     cadActiveMesh = Object.assign({}, cadRawMesh, { positions: pos, boundingBox: _cadBbox(pos) });
   }
+  twinNeedsCadAutoFit = true;
   _syncCadUiGuards();
   _updateCadMeshSummaryUi();
   if (typeof runCadGeometryAnalysis === 'function') runCadGeometryAnalysis();
+  if (typeof updateTwinScaleAndHud === 'function') updateTwinScaleAndHud();
   renderCadViewer();
 }
 window.changeCadSourceUnit = changeCadSourceUnit;
@@ -19498,6 +19892,8 @@ function clearLoadedCadPart() {
   cadOriginalMesh = null; cadOriginalProxyVerts = null; cadOriginalProxyNormals = null; cadWorkerFullMetrics = null; cadIsRotatedFromOriginal = false;
   cadRawMesh = null; cadActiveMesh = null; cadGeometryReport = null; cadPrintabilityReport = null; cadOrientationResult = null; cadSimReport = null; cadEconomicsReport = null; cadCurrentFileName = '';
   window.cadActiveScrubIdx = 0;
+  twinGeometrySource = 'auto';
+  twinNeedsCadAutoFit = true;
   const unitRow = document.getElementById('cadUnitRow'); if (unitRow) unitRow.style.display = 'none';
   const convBtn = document.getElementById('btnCadConvertInchMm'); if (convBtn) convBtn.style.display = 'none';
   const guardBox = document.getElementById('cadGuardrailBox'); if (guardBox) guardBox.style.display = 'none';
@@ -19512,6 +19908,7 @@ function clearLoadedCadPart() {
   if (typeof _updateCadHeatmapLegend === 'function') _updateCadHeatmapLegend();
   renderCadViewer();
   if (typeof calculatePhysics === 'function') calculatePhysics();
+  if (typeof updateTwinScaleAndHud === 'function') updateTwinScaleAndHud();
 }
 window.clearLoadedCadPart = clearLoadedCadPart;
 
