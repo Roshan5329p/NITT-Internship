@@ -395,17 +395,8 @@ export function solveInverseTi64Recipes(rawConstraints: InverseTargetConstraints
   });
 
   // Pick diverse specialists first (Highest Balanced Score, Max Build Rate, Max Strength, Lowest Stress, Best LPBF Precision)
-  const selected: typeof scored = [];
   const usedKeys = new Set<string>();
   const keyOf = (x: typeof scored[0]) => `${x.processId}:${x.P}:${x.v}:${x.postProcessing}`;
-
-  const tryPick = (item: typeof scored[0] | undefined, tag: string) => {
-    if (!item) return;
-    const k = keyOf(item);
-    if (usedKeys.has(k) || selected.length >= maxReturn) return;
-    usedKeys.add(k);
-    selected.push({ ...item, tag } as typeof scored[0] & { tag: string });
-  };
 
   const byScore = [...scored].sort((a, b) => b.paretoScore - a.paretoScore);
   const byRate = [...scored].sort((a, b) => b.buildRateCm3H - a.buildRateCm3H);

@@ -4,7 +4,12 @@ import com.matsci.model.Material;
 import com.matsci.model.MaterialVariant;
 import com.matsci.repository.MaterialRepository;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * High-level business logic service for materials retrieval and comparative analytics.

@@ -96,7 +96,7 @@ const DEFAULT_RIDGE_LAMBDA = 1e-4;
  *   G = B * B^T + diag(idiosyncraticDiag)
  *   R_ij = G_ij / sqrt(G_ii * G_jj)
  */
-export function buildSpdCorrelationMatrix(
+function buildSpdCorrelationMatrix(
   factorLoadings: readonly (readonly number[])[],
   idiosyncraticDiag: readonly number[]
 ): number[][] {

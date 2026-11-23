@@ -78,7 +78,7 @@ function clampFinite(val: number, min: number, max: number, fallback: number): n
   return Number.isFinite(val) ? Math.max(min, Math.min(max, val)) : fallback;
 }
 
-export function resolveHeatTreatmentParams(postRaw?: string, customTempC?: number): {
+function resolveHeatTreatmentParams(postRaw?: string, customTempC?: number): {
   post: Ti64PostProcessing;
   htTempC: number;
   isSta: number;

@@ -101,7 +101,7 @@ export interface MeltPoolPresetSpec {
   v: number;
 }
 
-export const MELT_POOL_PRESETS: readonly MeltPoolPresetSpec[] = [
+const MELT_POOL_PRESETS: readonly MeltPoolPresetSpec[] = [
   { id: '200w', buttonId: 'btnMpPreset200', label: 'KU Leuven (200W)', processId: 'lpbf', P: 200, v: 950 },
   { id: '300w', buttonId: 'btnMpPreset300', label: 'Concept Laser M2 (300W)', processId: 'lpbf', P: 300, v: 1050 },
   { id: 'ded',  buttonId: 'btnMpPresetDed', label: 'L-DED (1.6 kW)', processId: 'lded', P: 1600, v: 15 },

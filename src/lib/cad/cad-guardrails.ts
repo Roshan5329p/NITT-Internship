@@ -41,11 +41,11 @@ export interface MeshComplexityReport {
   warnings: string[];
 }
 
-export const CAD_SOFT_WARNING_MB = 50;
+const CAD_SOFT_WARNING_MB = 50;
 export const CAD_STL_CAP_MB = 150;
 export const CAD_BREP_CAP_MB = 60;
-export const CAD_SOFT_TRIANGLE_WARNING = 1_000_000;
-export const CAD_DECIMATE_THRESHOLD = 2_000_000;
+const CAD_SOFT_TRIANGLE_WARNING = 1_000_000;
+const CAD_DECIMATE_THRESHOLD = 2_000_000;
 export const NATIVE_HEADER_SLICE_BYTES = 65_536; // 64 KB inspection limit
 
 export function getCadExtension(fileName: string): string {
@@ -55,7 +55,7 @@ export function getCadExtension(fileName: string): string {
   return clean.slice(dot + 1);
 }
 
-export function classifyCadExtension(ext: string): CadParseCategory {
+function classifyCadExtension(ext: string): CadParseCategory {
   if (ext === 'stl') return 'stl';
   if (ext === 'step' || ext === 'stp' || ext === 'iges' || ext === 'igs') return 'brep';
   if (ext === 'ipt' || ext === 'prt') return 'native_guide';

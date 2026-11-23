@@ -27,7 +27,7 @@ export interface MachinePreset {
   notes: string;
 }
 
-export const MACHINE_STORAGE_KEY = 'nit_am_custom_machines_v1';
+const MACHINE_STORAGE_KEY = 'nit_am_custom_machines_v1';
 
 export const DEFAULT_MACHINE_PRESETS: readonly MachinePreset[] = [
   {

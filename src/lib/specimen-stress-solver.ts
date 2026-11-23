@@ -65,7 +65,7 @@ export interface SpecimenStressFieldResult {
   regimeSeverity: string;
 }
 
-export const POST_PROCESSING_STRESS_FACTORS: Record<string, number> = {
+const POST_PROCESSING_STRESS_FACTORS: Record<string, number> = {
   None: 1.00,
   'As-Built': 1.00,
   'Stress-relieved': 0.28,

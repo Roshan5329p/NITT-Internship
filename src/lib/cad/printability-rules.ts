@@ -54,7 +54,7 @@ function getProcessMinWallMm(proc: MachineProcessType): number {
  * Estimates vertical projected support volume beneath overhanging faces (> threshold)
  * down to either the lower underlying solid surface or the baseplate zMin.
  */
-export function estimateSupportVolume(
+function estimateSupportVolume(
   mesh: ParsedCadMesh,
   geo: CadGeometryReport,
   fillFraction: number = 0.22 // Typical lattice/block Ti-6Al-4V LPBF support density ~18-25%

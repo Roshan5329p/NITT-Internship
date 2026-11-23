@@ -1,13 +1,25 @@
 package com.nit.am;
 
-import java.awt.*;
-import java.awt.geom.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Polygon;
+import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import javax.imageio.ImageIO;
 
 /**
@@ -852,13 +864,6 @@ public class ProcessWindowPlotter {
             g.drawString(labels[i], x + 38, curY);
             curY += 24;
         }
-    }
-
-    private String getAuthorShort(String title) {
-        if (title.length() > 22) {
-            return title.substring(0, 19) + "...";
-        }
-        return title;
     }
 
     public void generateHtmlDashboard(String outputPath) throws IOException {

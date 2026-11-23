@@ -13,9 +13,7 @@ const RHO = 4430.0;              // Density ρ (kg/m³)
 const CP = 670.0;                // Specific heat capacity cp (J/kg·K, solid-liquid average)
 const K = 21.9;                  // Thermal conductivity k (W/m·K, near solidus)
 const DIFFUSIVITY = 7.38e-6;     // Thermal diffusivity α = k / (ρ·cp) (m²/s)
-const T_SOLIDUS = 1604.0;        // Solidus temperature Ts (°C) [1877.15 K]
 const T_LIQUIDUS = 1660.0;       // Liquidus temperature Tl (°C) [1933.15 K]
-const LATENT_FUSION = 286000.0;  // Latent heat of fusion Lf (J/kg)
 
 export default function handler(req, res) {
   if (setCorsHeaders(req, res)) return;

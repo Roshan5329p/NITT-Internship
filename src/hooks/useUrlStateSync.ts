@@ -36,7 +36,7 @@ const ALLOWED_POST_STATES: readonly PostProcessingState[] = [
   'Solution-Aged'
 ];
 
-export function sanitizeProcessId(raw?: string | null): ValidProcessId {
+function sanitizeProcessId(raw?: string | null): ValidProcessId {
   if (!raw) return 'lpbf';
   const norm = raw.toLowerCase().trim();
   if (norm === 'bj' || norm === 'binder-jetting') return 'binder-jetting';
@@ -45,7 +45,7 @@ export function sanitizeProcessId(raw?: string | null): ValidProcessId {
   return 'lpbf';
 }
 
-export function sanitizeAlloyId(raw?: string | null): ValidAlloyId {
+function sanitizeAlloyId(raw?: string | null): ValidAlloyId {
   if (!raw) return 'ti64_gr5';
   const norm = raw.toLowerCase().trim();
   if (norm === 'ti64_eli' || norm === 'ti64_gr23' || norm === 'eli') return 'ti64_eli';
@@ -53,7 +53,7 @@ export function sanitizeAlloyId(raw?: string | null): ValidAlloyId {
   return 'ti64_gr5';
 }
 
-export function sanitizePostState(raw?: string | null): PostProcessingState {
+function sanitizePostState(raw?: string | null): PostProcessingState {
   if (!raw) return 'HIP';
   const trimmed = raw.trim();
   if ((ALLOWED_POST_STATES as readonly string[]).includes(trimmed)) {
@@ -68,7 +68,7 @@ export function sanitizePostState(raw?: string | null): PostProcessingState {
   return 'HIP';
 }
 
-export function sanitizeModelId(raw?: string | null): ValidModelId {
+function sanitizeModelId(raw?: string | null): ValidModelId {
   if (!raw) return 'ensemble';
   const lower = raw.toLowerCase().trim();
   if (lower === 'hybridgpr' || lower === 'hybrid-gpr' || lower === 'hybrid_gpr') return 'gpr';
@@ -76,7 +76,7 @@ export function sanitizeModelId(raw?: string | null): ValidModelId {
   return 'ensemble';
 }
 
-export function clampFiniteNumber(
+function clampFiniteNumber(
   raw: string | number | null | undefined,
   fallback: number,
   bounds: [number, number]

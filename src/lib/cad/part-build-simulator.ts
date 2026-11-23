@@ -103,7 +103,6 @@ export function simulatePartBuild(
   const scanRot = params.scanRotationDeg === 90 ? 90 : 67;
   const oriDeg = params.buildOrientationDeg === 90 ? 90 : (params.buildOrientationDeg === 45 ? 45 : 0);
 
-  const eta = proc === 'waam' ? 0.78 : (proc === 'ded-laser' ? 0.38 : 0.42);
   const laserCount = Math.max(1, machine.laserCount || 1);
   const hMm = h * 1e-3;
   const recoatSec = proc === 'lpbf' ? 8.5 : 0.5;

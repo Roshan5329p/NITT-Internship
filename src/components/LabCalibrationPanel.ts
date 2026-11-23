@@ -110,7 +110,7 @@ const REQUIRED_HEADERS = [
   'post_proc'
 ] as const;
 
-export function normalizeLabProcessId(raw: string): LabCouponRecord['process'] | null {
+function normalizeLabProcessId(raw: string): LabCouponRecord['process'] | null {
   const s = (raw || '').toLowerCase().trim();
   if (s === 'lpbf' || s === 'slm' || s === 'pbf') return 'lpbf';
   if (s === 'lded' || s === 'l-ded' || s === 'ded-laser' || s === 'ded') return 'ded-laser';

@@ -94,7 +94,7 @@ export interface Ti64MetallurgyResult {
   predictedKicMpaM05: number;
 }
 
-export function normalizeTi64Alloy(raw?: string): Ti64AlloyGrade {
+function normalizeTi64Alloy(raw?: string): Ti64AlloyGrade {
   const s = (raw || 'ti64_gr5').toLowerCase().trim();
   if (s.includes('eli') || s.includes('23') || s === 'f3001') return 'ti64_eli';
   return 'ti64_gr5';
@@ -116,11 +116,11 @@ export function normalizeBuildOrientation(deg?: number): BuildOrientationDeg {
   return 0;
 }
 
-export function normalizeScanRotation(deg?: number): ScanRotationDeg {
+function normalizeScanRotation(deg?: number): ScanRotationDeg {
   return deg === 90 ? 90 : 67;
 }
 
-export function getDefaultOxygenForAlloy(alloyId?: string): number {
+function getDefaultOxygenForAlloy(alloyId?: string): number {
   return normalizeTi64Alloy(alloyId) === 'ti64_eli' ? 0.11 : 0.16;
 }
 

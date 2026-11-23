@@ -69,8 +69,4 @@ public class AmRecord {
         }
         return energyDensityJmm3;
     }
-
-    public double getMeltPoolAspectRatio() {
-        return (meltPoolWidthUm > 0) ? (meltPoolDepthUm / meltPoolWidthUm) : 0.0;
-    }
 }

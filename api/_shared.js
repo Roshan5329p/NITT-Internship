@@ -3,7 +3,7 @@
  * Enforces Physical Input Validation, CORS Security, and Provenance Metadata.
  */
 
-export const ALLOWED_ORIGINS = [
+const ALLOWED_ORIGINS = [
   'https://nit-titanium-am-platform.vercel.app',
   'https://nitt-am-platform.vercel.app',
   'http://localhost:8080',
@@ -40,7 +40,7 @@ export function setCorsHeaders(req, res) {
 
 const _rateBuckets = new Map();
 
-export function getClientIp(req) {
+function getClientIp(req) {
   const fwd = req?.headers?.['x-forwarded-for'] || req?.headers?.['x-real-ip'];
   if (typeof fwd === 'string' && fwd.trim()) {
     return fwd.split(',')[0].trim().slice(0, 64);
@@ -70,7 +70,7 @@ export function checkRateLimit(req, { windowMs = 60000, maxRequests = 60, prefix
   return true;
 }
 
-export const PROCESS_LIMITS = {
+const PROCESS_LIMITS = {
   lpbf: {
     name: 'Laser Powder Bed Fusion (LPBF)',
     power: { min: 20, max: 1000, unit: 'W', default: 280, reason: 'LPBF laser power operates between 20 W and 1000 W for single-mode fiber lasers on Ti-6Al-4V.' },

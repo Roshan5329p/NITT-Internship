@@ -73,14 +73,6 @@ public class ThermalPhysicsEngine {
     }
 
     /**
-     * Full parametric physics evaluation including beam spot size, substrate preheat, and optical absorptivity.
-     */
-    public static PhysicsResult evaluateExtended(double powerW, double speedMms, double layerUm, double hatchUm,
-                                                 double spotDiameterUm, double preheatC, double absorptivity) {
-        return evaluateForProcess("lpbf", powerW, speedMms, layerUm, hatchUm, spotDiameterUm, preheatC, absorptivity);
-    }
-
-    /**
      * Process-aware analytical physics evaluation supporting LPBF, L-DED, WAAM, and Binder Jetting.
      * Preserves KU Leuven (Coen 2022) / Rosenthal / Bontha equations for LPBF and switches absorption,
      * power-density conduction vs. keyhole scaling, and linear heat input (P/v) process windows for DED/WAAM.
