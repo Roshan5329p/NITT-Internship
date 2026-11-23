@@ -2894,6 +2894,447 @@
       break-inside: avoid !important;
     }
   }
+
+    /* =========================================================================
+       ANIMATA UI ENHANCEMENTS (Ported from codse/animata — Pure CSS + Vanilla JS)
+       Includes: Dot Backdrop, Animated Gradient Text, Fluid Tabs & Sibling Focus,
+       Cursor Spotlight Cards, Conic Border Trail, Content Scan, Shining CTA & Ripple
+       ========================================================================= */
+
+    @property --border-trail-angle {
+      syntax: "<angle>";
+      inherits: false;
+      initial-value: 0deg;
+    }
+
+    @keyframes animata-border-trail {
+      to {
+        --border-trail-angle: 360deg;
+      }
+    }
+
+    @keyframes animata-gradient-x {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    @keyframes animata-content-scan {
+      0% { transform: translateX(-100%); opacity: 0; }
+      18% { opacity: 0.75; }
+      82% { opacity: 0.75; }
+      100% { transform: translateX(220%); opacity: 0; }
+    }
+
+    @keyframes animata-ripple-expand {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0.48;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(2.8);
+        opacity: 0;
+      }
+    }
+
+    @keyframes animata-live-ping {
+      0% {
+        box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55);
+      }
+      70% {
+        box-shadow: 0 0 0 7px rgba(52, 211, 153, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+      }
+    }
+
+    @keyframes animata-card-enter {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.99);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* 1. Engineering Dot Grid Backdrop (animata/background/dot) */
+    body {
+      background-image: radial-gradient(rgba(148, 163, 184, 0.10) 1px, transparent 1px);
+      background-size: 20px 20px;
+      background-attachment: fixed;
+    }
+    html.light body {
+      background-image: radial-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+    }
+
+    /* 2. Animated Gradient Text on Header Active Breadcrumb (animata/text/animated-gradient-text) */
+    .snow-breadcrumbs .bc-active {
+      background: linear-gradient(110deg, #f8fafc 0%, #38bdf8 28%, #818cf8 54%, #34d399 78%, #f8fafc 100%);
+      background-size: 240% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent !important;
+      animation: animata-gradient-x 7s ease-in-out infinite;
+    }
+    html.light .snow-breadcrumbs .bc-active {
+      background: linear-gradient(110deg, #0f172a 0%, #0284c7 30%, #4f46e5 58%, #0d9488 82%, #0f172a 100%);
+      background-size: 240% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent !important;
+    }
+
+    /* 3. Fluid Sliding Pill Tabs + Sibling Focus Nav (animata/tabs/fluid-tabs & sibling-focus-nav) */
+    .tabs-bar {
+      position: relative;
+      isolation: isolate;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs-bar::-webkit-scrollbar {
+      display: none;
+    }
+    .animata-tab-indicator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-radius: 7px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(99, 102, 241, 0.14));
+      border: 1px solid rgba(56, 189, 248, 0.42);
+      box-shadow: 0 2px 10px rgba(56, 189, 248, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      transform: translate3d(0, 0, 0);
+      transition:
+        transform 0.36s cubic-bezier(0.32, 0.72, 0, 1),
+        width 0.36s cubic-bezier(0.32, 0.72, 0, 1),
+        height 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+        opacity 0.2s ease;
+    }
+    .animata-tab-indicator.is-ready {
+      opacity: 1;
+    }
+    html.light .animata-tab-indicator {
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.13), rgba(79, 70, 229, 0.10));
+      border-color: rgba(2, 132, 199, 0.38);
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.12);
+    }
+    .tabs-bar .tab-btn {
+      position: relative;
+      z-index: 2;
+      flex-shrink: 0;
+      white-space: nowrap;
+      transition: color 0.18s ease, opacity 0.22s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .tabs-bar.has-fluid-indicator .tab-btn.active,
+    html.light .tabs-bar.has-fluid-indicator .tab-btn.active {
+      background: transparent !important;
+      border-color: transparent !important;
+      box-shadow: none !important;
+    }
+    html.light .snow-header-actions .step-btn[onclick*="openEngineeringReportModal"] {
+      color: #0369a1 !important;
+      background: rgba(2, 132, 199, 0.11) !important;
+      border-color: rgba(2, 132, 199, 0.36) !important;
+    }
+    .tabs-bar:hover .tab-btn:not(:hover):not(.active) {
+      opacity: 0.66;
+    }
+    .tabs-bar .tab-btn:hover {
+      opacity: 1;
+      transform: translateY(-1px);
+    }
+
+    /* 4. Cursor-Following Specular Spotlight Cards (animata/card/github-card-shiny & glowing-card) */
+    .kpi-card,
+    .side-card,
+    .model-card,
+    .res-card,
+    .econ-kpi-card,
+    .audit-panel,
+    .micro-card,
+    .defect-svg-container {
+      position: relative;
+    }
+    .kpi-card::before,
+    .side-card::before,
+    .model-card::before,
+    .res-card::before,
+    .econ-kpi-card::before,
+    .audit-panel::before,
+    .micro-card::before,
+    .defect-svg-container::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 0;
+      transition: opacity 0.28s ease;
+      background: radial-gradient(
+        240px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(56, 189, 248, 0.13),
+        rgba(99, 102, 241, 0.04) 45%,
+        transparent 72%
+      );
+    }
+    html.light .kpi-card::before,
+    html.light .side-card::before,
+    html.light .model-card::before,
+    html.light .res-card::before,
+    html.light .econ-kpi-card::before,
+    html.light .audit-panel::before,
+    html.light .micro-card::before,
+    html.light .defect-svg-container::before {
+      background: radial-gradient(
+        240px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(2, 132, 199, 0.09),
+        rgba(79, 70, 229, 0.03) 45%,
+        transparent 72%
+      );
+    }
+    .kpi-card:hover::before,
+    .side-card:hover::before,
+    .model-card:hover::before,
+    .res-card:hover::before,
+    .econ-kpi-card:hover::before,
+    .audit-panel:hover::before,
+    .micro-card:hover::before,
+    .defect-svg-container:hover::before {
+      opacity: 1;
+    }
+    .kpi-card:hover,
+    .model-card:hover,
+    .res-card:hover,
+    .econ-kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(56, 189, 248, 0.36);
+      box-shadow: 0 10px 26px -10px rgba(2, 132, 199, 0.28);
+    }
+
+    /* Staggered card entrance on active Predictions KPI grid */
+    .tab-view.active .kpi-row .kpi-card {
+      animation: animata-card-enter 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .tab-view.active .kpi-row .kpi-card:nth-child(1) { animation-delay: 0.02s; }
+    .tab-view.active .kpi-row .kpi-card:nth-child(2) { animation-delay: 0.06s; }
+    .tab-view.active .kpi-row .kpi-card:nth-child(3) { animation-delay: 0.10s; }
+    .tab-view.active .kpi-row .kpi-card:nth-child(4) { animation-delay: 0.14s; }
+    .tab-view.active .kpi-row .kpi-card:nth-child(5) { animation-delay: 0.18s; }
+
+    /* 5. Conic Animated Border Trail (animata/container/animated-border-trail) */
+    .regime-banner,
+    #cadCouplingBanner,
+    #oodExtrapolationBanner,
+    .audit-std-tab.active {
+      position: relative;
+    }
+    .regime-banner::after,
+    #cadCouplingBanner::after,
+    #oodExtrapolationBanner::after,
+    .audit-std-tab.active::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.5px;
+      pointer-events: none;
+      background: conic-gradient(
+        from var(--border-trail-angle) at 50% 50%,
+        transparent 68%,
+        rgba(52, 211, 153, 0.85) 86%,
+        rgba(56, 189, 248, 0.9) 94%,
+        transparent 100%
+      );
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      animation: animata-border-trail 6.5s linear infinite;
+      opacity: 0.82;
+    }
+    .regime-banner.warning::after,
+    #oodExtrapolationBanner::after {
+      background: conic-gradient(
+        from var(--border-trail-angle) at 50% 50%,
+        transparent 66%,
+        rgba(251, 191, 36, 0.92) 86%,
+        rgba(245, 158, 11, 0.95) 95%,
+        transparent 100%
+      );
+    }
+    .regime-banner.defect::after {
+      background: conic-gradient(
+        from var(--border-trail-angle) at 50% 50%,
+        transparent 64%,
+        rgba(248, 113, 113, 0.95) 86%,
+        rgba(251, 146, 60, 0.92) 95%,
+        transparent 100%
+      );
+    }
+    #cadCouplingBanner::after,
+    .audit-std-tab.active::after {
+      background: conic-gradient(
+        from var(--border-trail-angle) at 50% 50%,
+        transparent 68%,
+        rgba(56, 189, 248, 0.88) 88%,
+        rgba(129, 140, 248, 0.88) 95%,
+        transparent 100%
+      );
+    }
+
+    /* 6. PINN Audit Strip Top Content-Scan Sweep (animata/feature-cards/content-scan) */
+    #pinnPhysicsAuditStrip {
+      position: relative;
+      overflow: hidden;
+    }
+    #pinnPhysicsAuditStrip::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 45%;
+      height: 1.5px;
+      pointer-events: none;
+      background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.85), rgba(52, 211, 153, 0.75), transparent);
+      animation: animata-content-scan 5.5s ease-in-out infinite;
+    }
+
+    /* 7. Shining CTA Buttons (animata/button/shining-button) */
+    .animata-shine-btn,
+    .apply-solved-btn,
+    .tweak-btn.primary,
+    .lit-strip-btn {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .animata-shine-btn::after,
+    .apply-solved-btn::after,
+    .tweak-btn.primary::after,
+    .lit-strip-btn::after {
+      content: "";
+      position: absolute;
+      top: -20%;
+      left: 0;
+      width: 42%;
+      height: 140%;
+      pointer-events: none;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+      transform: translateX(-160%) skewX(-22deg);
+      transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 1;
+    }
+    .animata-shine-btn:hover::after,
+    .apply-solved-btn:hover::after,
+    .tweak-btn.primary:hover::after,
+    .lit-strip-btn:hover::after {
+      transform: translateX(360%) skewX(-22deg);
+    }
+
+    /* 8. Click Ripple Micro-Feedback (animata/button/ripple-button) */
+    .tab-btn,
+    .step-btn,
+    .tweak-btn,
+    .preset-pill,
+    .apply-solved-btn,
+    .lit-strip-btn,
+    .audit-std-tab,
+    .twin-ctrl-btn {
+      position: relative;
+      overflow: hidden;
+    }
+    .animata-ripple-wave {
+      position: absolute;
+      width: 84px;
+      height: 84px;
+      border-radius: 999px;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.42) 0%, rgba(56, 189, 248, 0.08) 65%, transparent 100%);
+      animation: animata-ripple-expand 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      z-index: 0;
+    }
+    html.light .animata-ripple-wave {
+      background: radial-gradient(circle, rgba(2, 132, 199, 0.26) 0%, rgba(2, 132, 199, 0.05) 65%, transparent 100%);
+    }
+
+    /* 9. Live Status Telemetry Pulse & Action Feedback */
+    #liveStatusBadge {
+      position: relative;
+      animation: animata-live-ping 2.8s ease-out infinite;
+    }
+    .animata-status-pop {
+      transform: scale(1.03);
+      box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.28) !important;
+      transition: transform 0.18s ease, box-shadow 0.25s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .snow-breadcrumbs .bc-active,
+      .regime-banner::after,
+      #cadCouplingBanner::after,
+      #oodExtrapolationBanner::after,
+      .audit-std-tab.active::after,
+      #pinnPhysicsAuditStrip::before,
+      #liveStatusBadge,
+      .tab-view.active .kpi-row .kpi-card {
+        animation: none !important;
+      }
+      .animata-tab-indicator,
+      .animata-shine-btn::after,
+      .apply-solved-btn::after,
+      .tweak-btn.primary::after,
+      .lit-strip-btn::after,
+      .tabs-bar .tab-btn {
+        transition: none !important;
+      }
+      .animata-ripple-wave {
+        display: none !important;
+      }
+    }
+
+    @media print {
+      body {
+        background-image: none !important;
+      }
+      .snow-breadcrumbs .bc-active {
+        background: none !important;
+        -webkit-background-clip: border-box !important;
+        background-clip: border-box !important;
+        color: #0f172a !important;
+        animation: none !important;
+      }
+      .animata-tab-indicator,
+      .animata-ripple-wave,
+      .kpi-card::before,
+      .side-card::before,
+      .model-card::before,
+      .res-card::before,
+      .econ-kpi-card::before,
+      .audit-panel::before,
+      .micro-card::before,
+      .defect-svg-container::before,
+      .regime-banner::after,
+      #cadCouplingBanner::after,
+      #oodExtrapolationBanner::after,
+      .audit-std-tab.active::after,
+      #pinnPhysicsAuditStrip::before,
+      .animata-shine-btn::after,
+      .apply-solved-btn::after,
+      .tweak-btn.primary::after,
+      .lit-strip-btn::after {
+        display: none !important;
+        animation: none !important;
+      }
+      #liveStatusBadge {
+        animation: none !important;
+      }
+    }
   </style>
 
   <!-- KaTeX Publication-Grade Mathematical Rendering Engine (SRI Pinned) -->
@@ -6377,6 +6818,9 @@ function shareCurrentRun() {
     btn.style.background = 'rgba(16, 185, 129, 0.30)';
     btn.style.color = '#ffffff';
     btn.style.borderColor = '#10b981';
+    if (typeof flashAnimataButtonStatus === 'function') {
+      flashAnimataButtonStatus(btn, null, 450);
+    }
     _shareBtnResetTimer = setTimeout(function() {
       btn.innerText = '🔗 Share Run';
       btn.style.background = 'rgba(16,185,129,0.15)';
@@ -6785,10 +7229,10 @@ window.addEventListener('click', function(e) {
 
     <!-- SnowUI Header Actions -->
     <div class="snow-header-actions">
-        <button type="button" class="step-btn" style="background: rgba(56,189,248,0.15); color: #38bdf8; border-color: rgba(56,189,248,0.3); font-size: 11.5px; font-weight: 700; padding: 6px 12px;" onclick="openEngineeringReportModal()">
+        <button type="button" class="step-btn animata-shine-btn" style="background: rgba(56,189,248,0.15); color: #38bdf8; border-color: rgba(56,189,248,0.3); font-size: 11.5px; font-weight: 700; padding: 6px 12px;" onclick="openEngineeringReportModal()">
           📄 Export Technical Report
         </button>
-        <button type="button" class="step-btn" id="shareRunBtn" style="background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.35); font-size: 11.5px; font-weight: 700; padding: 6px 12px;" onclick="shareCurrentRun()" title="Copy shareable URL with current parameters">
+        <button type="button" class="step-btn animata-shine-btn" id="shareRunBtn" style="background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.35); font-size: 11.5px; font-weight: 700; padding: 6px 12px;" onclick="shareCurrentRun()" title="Copy shareable URL with current parameters">
           🔗 Share Run
         </button>
       <span class="counter-pill" id="liveStatusBadge">● Platform Online</span>
@@ -7001,7 +7445,7 @@ window.addEventListener('click', function(e) {
             <span>Build rate: <strong style="color: var(--text-primary);" id="sol_rate">15.2 cm³/h</strong></span>
             <span>Regime: <strong style="color: var(--accent-emerald);" id="sol_regime">Conduction mode</strong></span>
           </div>
-          <button class="apply-solved-btn" onclick="applySolvedToSliders()">Apply Solved (P, v, h, t) to Sliders</button>
+          <button class="apply-solved-btn" id="applySolvedBtn" onclick="applySolvedToSliders()">Apply Solved (P, v, h, t) to Sliders</button>
         </div>
 
         <label style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); cursor: pointer;">
@@ -8747,7 +9191,7 @@ window.addEventListener('click', function(e) {
             <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary);" id="defectMapTitle">2D Defect Process Window (King's Enthalpy Criterion)</h3>
             <p style="font-size: 11.5px; color: var(--text-muted);" id="defectMapSubtitle">Melt pool depth-to-width ratio & normalized enthalpy ΔH/h_s mapped across Laser Power P and Scan Speed v.</p>
           </div>
-          <button class="step-btn" style="background: var(--accent-cyan); color: #070b10; font-weight: bold; padding: 6px 14px;" onclick="autoTuneSafeWindow()">Auto-Tune to Safe Window</button>
+          <button class="step-btn animata-shine-btn" id="autoTuneSafeBtn" style="background: var(--accent-cyan); color: #070b10; font-weight: bold; padding: 6px 14px;" onclick="autoTuneSafeWindow()">Auto-Tune to Safe Window</button>
         </div>
 
         <div style="position: relative; width: 100%; height: 420px; background: #070b10; border: 1px solid #142131; border-radius: 8px; overflow: hidden;">
@@ -10959,6 +11403,9 @@ function applySolvedToSliders() {
   document.getElementById('sl_t').value = solvedCache.t;
   document.getElementById('sl_spot').value = solvedCache.spot;
   onSliderChange();
+  if (typeof flashAnimataButtonStatus === 'function') {
+    flashAnimataButtonStatus($id('applySolvedBtn'), '✓ Applied to Sliders', 1300);
+  }
 }
 
 function adjustTargetVed(delta) {
@@ -12849,6 +13296,9 @@ function autoTuneSafeWindow() {
     document.getElementById('sl_spot').value = 80;
   }
   calculatePhysics();
+  if (typeof flashAnimataButtonStatus === 'function') {
+    flashAnimataButtonStatus($id('autoTuneSafeBtn'), '✓ Safe Window Applied', 1300);
+  }
 }
 
 function exportPredictionsCsv() {
@@ -12954,6 +13404,9 @@ function switchTab(tabId, btn) {
     }
   }
   if (targetBtn) targetBtn.classList.add('active');
+  if (typeof updateFluidTabIndicator === 'function') {
+    updateFluidTabIndicator(targetBtn);
+  }
   const targetView = $id('view_' + tabId);
   if (targetView) targetView.classList.add('active');
 
@@ -17477,6 +17930,125 @@ function updateNetworkTelemetry() {
 window.addEventListener('online', updateNetworkTelemetry);
 window.addEventListener('offline', updateNetworkTelemetry);
 
+// =========================================================================
+// ANIMATA INTERACTION & MOTION CONTROLLER (Pure Vanilla JS, CSP & Node-Safe)
+// =========================================================================
+let _animataTabIndicatorEl = null;
+let _animataSpotlightRaf = null;
+let _animataSpotlightPending = null;
+const _ANIMATA_STATUS_TIMERS = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
+
+function updateFluidTabIndicator(activeBtn) {
+  if (typeof document === 'undefined') return;
+  const tabsBar = typeof document.querySelector === 'function' ? document.querySelector('.tabs-bar') : null;
+  if (!tabsBar || typeof tabsBar.querySelector !== 'function') return;
+  const target = activeBtn || tabsBar.querySelector('.tab-btn.active');
+  if (!target || typeof target.offsetLeft !== 'number' || !target.offsetWidth) return;
+  if (!_animataTabIndicatorEl) {
+    _animataTabIndicatorEl = tabsBar.querySelector('.animata-tab-indicator');
+    if (!_animataTabIndicatorEl && typeof document.createElement === 'function' && typeof tabsBar.insertBefore === 'function') {
+      _animataTabIndicatorEl = document.createElement('span');
+      _animataTabIndicatorEl.className = 'animata-tab-indicator';
+      if (typeof _animataTabIndicatorEl.setAttribute === 'function') {
+        _animataTabIndicatorEl.setAttribute('aria-hidden', 'true');
+      }
+      tabsBar.insertBefore(_animataTabIndicatorEl, tabsBar.firstChild || null);
+    }
+  }
+  if (!_animataTabIndicatorEl) return;
+  if (tabsBar.classList) tabsBar.classList.add('has-fluid-indicator');
+  _animataTabIndicatorEl.style.width = target.offsetWidth + 'px';
+  _animataTabIndicatorEl.style.height = target.offsetHeight + 'px';
+  _animataTabIndicatorEl.style.transform =
+    'translate3d(' + target.offsetLeft + 'px, ' + target.offsetTop + 'px, 0)';
+  if (_animataTabIndicatorEl.classList) _animataTabIndicatorEl.classList.add('is-ready');
+}
+
+function flashAnimataButtonStatus(btnEl, statusText, revertMs) {
+  if (!btnEl || typeof document === 'undefined') return;
+  if (statusText && btnEl.dataset) {
+    if (!btnEl.dataset.animataBaseText) {
+      btnEl.dataset.animataBaseText = btnEl.innerText;
+    }
+    btnEl.innerText = statusText;
+  }
+  if (_ANIMATA_STATUS_TIMERS) {
+    const prevTimer = _ANIMATA_STATUS_TIMERS.get(btnEl);
+    if (prevTimer) clearTimeout(prevTimer);
+  }
+  if (btnEl.classList) btnEl.classList.add('animata-status-pop');
+  const t = setTimeout(() => {
+    if (btnEl.classList) btnEl.classList.remove('animata-status-pop');
+    if (statusText && btnEl.dataset && btnEl.dataset.animataBaseText) {
+      btnEl.innerText = btnEl.dataset.animataBaseText;
+    }
+    if (_ANIMATA_STATUS_TIMERS) _ANIMATA_STATUS_TIMERS.delete(btnEl);
+  }, revertMs || 1400);
+  if (_ANIMATA_STATUS_TIMERS) _ANIMATA_STATUS_TIMERS.set(btnEl, t);
+}
+
+function spawnAnimataRipple(el, clientX, clientY) {
+  if (!el || typeof document === 'undefined' || typeof el.getBoundingClientRect !== 'function' || typeof el.appendChild !== 'function') return;
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return;
+  }
+  const rect = el.getBoundingClientRect();
+  if (!rect || !rect.width || !rect.height) return;
+  const wave = document.createElement('span');
+  wave.className = 'animata-ripple-wave';
+  const relX = (typeof clientX === 'number' && clientX > 0) ? (clientX - rect.left) : rect.width * 0.5;
+  const relY = (typeof clientY === 'number' && clientY > 0) ? (clientY - rect.top) : rect.height * 0.5;
+  wave.style.left = relX + 'px';
+  wave.style.top = relY + 'px';
+  el.appendChild(wave);
+  setTimeout(() => {
+    if (wave && wave.parentNode) wave.parentNode.removeChild(wave);
+  }, 580);
+}
+
+function initAnimataUi() {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return;
+  updateFluidTabIndicator();
+
+  if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
+    document.fonts.ready.then(() => updateFluidTabIndicator());
+  }
+
+  if (typeof requestAnimationFrame === 'function') {
+    document.addEventListener('pointermove', (e) => {
+      const target = e.target && typeof e.target.closest === 'function'
+        ? e.target.closest('.kpi-card, .side-card, .model-card, .res-card, .econ-kpi-card, .audit-panel, .micro-card, .defect-svg-container')
+        : null;
+      if (!target || typeof target.getBoundingClientRect !== 'function') return;
+      _animataSpotlightPending = { el: target, x: e.clientX, y: e.clientY };
+      if (_animataSpotlightRaf === null) {
+        _animataSpotlightRaf = requestAnimationFrame(() => {
+          _animataSpotlightRaf = null;
+          const p = _animataSpotlightPending;
+          _animataSpotlightPending = null;
+          if (!p || !p.el || !p.el.style) return;
+          const r = p.el.getBoundingClientRect();
+          p.el.style.setProperty('--mx', (p.x - r.left).toFixed(1) + 'px');
+          p.el.style.setProperty('--my', (p.y - r.top).toFixed(1) + 'px');
+        });
+      }
+    }, { passive: true });
+  }
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target && typeof e.target.closest === 'function'
+      ? e.target.closest('.tab-btn, .step-btn, .tweak-btn, .preset-pill, .apply-solved-btn, .lit-strip-btn, .audit-std-tab, .twin-ctrl-btn')
+      : null;
+    if (btn) {
+      spawnAnimataRipple(btn, e.clientX, e.clientY);
+    }
+  }, { passive: true });
+
+  window.addEventListener('resize', () => {
+    updateFluidTabIndicator();
+  }, { passive: true });
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   let rawTheme = 'dark';
   try {
@@ -17505,6 +18077,7 @@ window.addEventListener('DOMContentLoaded', () => {
   startTwinAnimation();
   // Start 60 FPS Live Melt Pool Fluid Dynamics Animation Loop
   ensureMpAnimationRunning();
+  if (typeof initAnimataUi === 'function') initAnimataUi();
 });
 
 // ========================================================
