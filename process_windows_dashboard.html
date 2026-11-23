@@ -3264,10 +3264,16 @@ function computePhysicsPriorUi(row = {}) {
     elPrior = 7.0 + (14.2 - 7.0) * preheatSigmoid + (surfTreat === 'laser_polished' ? 1.2 : 0.0);
   }
   elPrior = clamp(elPrior - ((oxygenWtPct - 0.16) / 0.05) * 1.4, 2.0, 22.0, 10.0);
-  const denPrior = isBj ? (post === 'HIP' ? 99.75 : 96.0) : (post === 'HIP' ? 99.92 : 99.80);
+  const sinterTempC = clamp(Number(row.sinterTempC ?? row.sinter_temp_c ?? (isBj && Number(row.htTempC) >= 900 ? row.htTempC : NaN)), 900, 1550, 1350);
+  const sinterHoldMin = clamp(Number(row.sinterHoldMin ?? row.sinter_hold_min), 15, 480, 120);
+  const denPrior = isBj
+    ? (post === 'HIP'
+        ? 99.75
+        : clamp(82.0 + 14.5 / (1.0 + Math.exp(-(sinterTempC - 1315.0) / 28.0)) + 0.008 * (sinterHoldMin - 120.0), 75.0, 99.2, 95.5))
+    : (post === 'HIP' ? 99.92 : 99.80);
 
   return {
-    P, v, h, t, T0, htTempC, ved, hi, coolingRateKs, lathUm, oxygenWtPct, oriCos, post, surfTreat, isEli,
+    P, v, h, t, T0, htTempC, sinterTempC, sinterHoldMin, ved, hi, coolingRateKs, lathUm, oxygenWtPct, oriCos, post, surfTreat, isEli,
     hardness_hv: hvPrior, ys_mpa: ysPrior, uts_mpa: utsPrior, elongation_pct: elPrior, relative_density_pct: denPrior
   };
 }
@@ -7456,21 +7462,23 @@ window.addEventListener('click', function(e) {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 9l-5 5-4-4-3 3"/></svg>
               <span>Literature vs. ML Benchmark Comparator</span>
               <span class="brand-badge" id="litCompProcessBadge" style="font-size: 10px; color: #38bdf8; background: rgba(56,189,248,0.12); border-color: rgba(56,189,248,0.35);">LPBF &bull; Verified Studies</span>
+              <span class="brand-badge" id="litCompExtractedInfoBadge" style="font-size: 10px; color: #94a3b8; background: rgba(148,163,184,0.10); border-color: rgba(148,163,184,0.28);">24 of 81 LPBF papers have extracted process inputs</span>
               <span class="brand-badge" id="litCompCohortBadge" style="font-size: 10px; color: #34d399; background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.35);">Cohort Accuracy &mdash;</span>
             </div>
-            <div class="res-card-sub">Compare peer-reviewed Ti-6Al-4V experimental results directly against your active ML surrogate &amp; 6-model ensemble</div>
+            <div class="res-card-sub">Compare peer-reviewed Ti-6Al-4V experimental results with verified process inputs directly against your active ML surrogate &amp; 6-model ensemble</div>
           </div>
           <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
             <button type="button" class="mp-toggle-btn active" id="btnLitCompPaperMode" onclick="setLitCompMode('paper_params')" style="font-size: 11px; padding: 5px 10px;">Compare at Paper's Exact Parameters</button>
             <button type="button" class="mp-toggle-btn" id="btnLitCompSliderMode" onclick="setLitCompMode('slider_params')" style="font-size: 11px; padding: 5px 10px;">Compare at Current Slider Parameters</button>
             <button type="button" class="step-btn" id="btnLoadPaperSliders" onclick="loadComparisonPaperToSliders()" style="color: #34d399; border-color: rgba(16,185,129,0.45); background: rgba(16,185,129,0.10); font-weight: 700;">Load Paper Parameters into Sliders &rarr;</button>
+            <button type="button" class="step-btn" id="btnLitCompExportCsv" onclick="exportComparatorBenchmarkCsv()" style="font-size: 11px; padding: 5px 9px; color: #38bdf8; border-color: rgba(56,189,248,0.35);">Export CSV</button>
+            <button type="button" class="step-btn" id="btnLitCompExportJson" onclick="exportComparatorBenchmarkJson()" style="font-size: 11px; padding: 5px 9px; color: #c084fc; border-color: rgba(192,132,252,0.35);">Export JSON</button>
           </div>
         </div>
 
         <div class="lit-comp-controls">
           <input type="search" id="litCompSearchInput" class="lit-comp-search" placeholder="Filter by author, year, ID, P..." oninput="updateLiteratureComparison(true)" aria-label="Filter literature studies">
           <select id="litCompPaperSelect" class="lit-comp-select" onchange="selectComparisonPaper(this.value)" aria-label="Select benchmark literature study"></select>
-          <label style="display:flex; align-items:center; gap:6px; font-size:11px; color:#cbd5e1; white-space:nowrap; cursor:pointer; padding:4px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); background:rgba(15,23,42,0.55);"><input type="checkbox" id="chkIncludePendingStudies" onchange="updateLiteratureComparison(true)"> Include Pending-Extraction Records</label>
         </div>
 
         <div class="lit-comp-pills" id="litCompQuickPills"></div>
@@ -11060,6 +11068,7 @@ function computeDashboardModelPredictions(opts = {}) {
   if (isBinderJetting) {
     const bjPrior = computePhysicsPriorUi({
       process: 'binder-jetting', P: p, v, h, t, T0: preheat, htTempC: opts.htTempC,
+      sinterTempC: opts.sinterTempC, sinterHoldMin: opts.sinterHoldMin,
       postProcessing: post, rawCondition: opts.rawCondition || post,
       oxygenWtPct: opts.oxygenWtPct, buildOrientationDeg: opts.buildOrientationDeg,
       surfaceTreatment: opts.surfaceTreatment, isEli: alloyId === 'ti64_eli'
@@ -16864,67 +16873,106 @@ function _posMetricOrNull(val) {
   return (Number.isFinite(n) && n > 0) ? n : null;
 }
 
-function findMatchingLiteratureStudies(state, limit = 5, includePendingOverride = null) {
-  const cur = state || readCurrentDashboardState();
-  const normProc = (function(p) {
-    const s = String(p || 'lpbf').toLowerCase();
-    if (s === 'ded' || s === 'l-ded' || s === 'ded-laser') return 'ded-laser';
-    if (s === 'bjt' || s === 'binder-jetting') return 'binder-jetting';
-    if (s === 'waam') return 'waam';
-    return 'lpbf';
-  })(cur.processId);
+function _normCompProcKey(p) {
+  const s = String(p || 'lpbf').toLowerCase();
+  if (s === 'ded' || s === 'l-ded' || s === 'ded-laser') return 'ded-laser';
+  if (s === 'bjt' || s === 'binder-jetting' || s.includes('binder')) return 'binder-jetting';
+  if (s === 'waam') return 'waam';
+  return 'lpbf';
+}
 
-  const chkEl = typeof document !== 'undefined' ? document.getElementById('chkIncludePendingStudies') : null;
-  const includePending = includePendingOverride !== null ? Boolean(includePendingOverride) : Boolean(chkEl && chkEl.checked);
+function hasValidProcessInputs(paper, processId) {
+  if (!paper || typeof paper !== 'object') return false;
+  if (paper.params_extracted === false || paper.benchmark_eligible === false) return false;
+  if (paper.specimen_type === 'placeholder_recipe') return false;
+  const metaText = `${paper.postProc || ''} ${paper.treatment || ''} ${paper.status || ''} ${paper.exclusion_reason || ''}`.toLowerCase();
+  if (/pending[\s_-]*extraction|params[\s_-]*n\/?a/.test(metaText)) return false;
+
+  const targetProc = processId ? _normCompProcKey(processId) : (normalizeComparatorProcess(paper.process)[0] || 'lpbf');
+  if (processId && !normalizeComparatorProcess(paper.process).includes(targetProc)) return false;
+
+  const numPos = (x) => _posMetricOrNull(x);
+  const pP = numPos(paper.P ?? paper.p);
+  const pV = numPos(paper.v);
+  const pH = numPos(paper.h);
+  const pT = numPos(paper.t);
+  const arcI = numPos(paper.arc_current_a);
+  const arcV = numPos(paper.arc_voltage_v);
+  const sinterT = numPos(paper.sinter_temp_c ?? paper.sinterTempC);
+
+  let inputsOk = false;
+  if (targetProc === 'binder-jetting') {
+    inputsOk = Boolean(sinterT && sinterT > 0);
+  } else if (targetProc === 'waam') {
+    inputsOk = Boolean(((pP && pP > 0) || (arcI && arcI > 0 && arcV && arcV > 0)) && pV && pV > 0);
+  } else {
+    inputsOk = Boolean(pP && pP > 0 && pV && pV > 0 && ((pH && pH > 0) || (pT && pT > 0)));
+  }
+  if (!inputsOk) return false;
+
+  return [
+    numPos(paper.hardness_hv ?? paper.hv),
+    numPos(paper.ys_mpa ?? paper.ys),
+    numPos(paper.uts_mpa ?? paper.uts),
+    numPos(paper.elongation_pct ?? paper.el),
+    numPos(paper.relative_density_pct ?? paper.density)
+  ].some(v => v !== null);
+}
+window.hasValidProcessInputs = hasValidProcessInputs;
+
+function findMatchingLiteratureStudies(state, limit = 5) {
+  const cur = state || readCurrentDashboardState();
+  const normProc = _normCompProcKey(cur.processId);
 
   const processFiltered = (typeof PAPERS_DATABASE !== 'undefined' ? PAPERS_DATABASE : []).filter(p => {
     return normalizeComparatorProcess(p.process).includes(normProc);
   });
-  const filtered = includePending
-    ? processFiltered
-    : processFiltered.filter(p => p.benchmark_eligible === true);
+  const filtered = processFiltered.filter(p => hasValidProcessInputs(p, normProc));
 
   const scalesByProc = {
     lpbf: { P: 220, v: 700, h: 50, t: 25, ved: 40 },
     'ded-laser': { P: 1200, v: 12, h: 600, t: 300, ved: 70 },
     waam: { P: 1800, v: 6, h: 1500, t: 800, ved: 50 },
-    'binder-jetting': { P: 120, v: 200, h: 60, t: 40, ved: 40 }
+    'binder-jetting': { sinterTempC: 120, t: 30 }
   };
   const sc = scalesByProc[normProc] || scalesByProc.lpbf;
   const stateVed = (cur.P > 0 && cur.v > 0 && cur.h > 0 && cur.t > 0) ? (cur.P * 1e6) / (cur.v * cur.h * cur.t) : null;
 
   const scored = filtered.map(paper => {
-    const pP = _posMetricOrNull(paper.p);
+    const arcI = _posMetricOrNull(paper.arc_current_a);
+    const arcV = _posMetricOrNull(paper.arc_voltage_v);
+    const pP = _posMetricOrNull(paper.P ?? paper.p) || (arcI && arcV ? arcI * arcV : null);
     const pV = _posMetricOrNull(paper.v);
     const pH = _posMetricOrNull(paper.h);
     const pT = _posMetricOrNull(paper.t);
+    const sinterT = _posMetricOrNull(paper.sinter_temp_c ?? paper.sinterTempC);
     const pVed = (pP && pV && pH && pT) ? (pP * 1e6) / (pV * pH * pT) : null;
     let sqSum = 0, dims = 0;
-    if (pP && cur.P > 0) { const d = (pP - cur.P) / sc.P; sqSum += d * d; dims++; }
-    if (pV && cur.v > 0) { const d = (pV - cur.v) / sc.v; sqSum += d * d; dims++; }
-    if (pH && cur.h > 0) { const d = (pH - cur.h) / sc.h; sqSum += d * d; dims++; }
-    if (pT && cur.t > 0) { const d = (pT - cur.t) / sc.t; sqSum += d * d; dims++; }
-    if (pVed && stateVed) { const d = (pVed - stateVed) / sc.ved; sqSum += d * d; dims++; }
+    if (normProc === 'binder-jetting') {
+      if (sinterT) { const d = (sinterT - 1350) / sc.sinterTempC; sqSum += d * d; dims++; }
+      if (pT && cur.t > 0) { const d = (pT - cur.t) / sc.t; sqSum += d * d; dims++; }
+    } else {
+      if (pP && cur.P > 0) { const d = (pP - cur.P) / sc.P; sqSum += d * d; dims++; }
+      if (pV && cur.v > 0) { const d = (pV - cur.v) / sc.v; sqSum += d * d; dims++; }
+      if (pH && cur.h > 0) { const d = (pH - cur.h) / sc.h; sqSum += d * d; dims++; }
+      if (pT && cur.t > 0) { const d = (pT - cur.t) / sc.t; sqSum += d * d; dims++; }
+      if (pVed && stateVed) { const d = (pVed - stateVed) / sc.ved; sqSum += d * d; dims++; }
+    }
 
-    const hasParams = dims >= 2;
-    let dist = hasParams ? Math.sqrt(sqSum / dims) : 2.15;
+    let dist = dims > 0 ? Math.sqrt(sqSum / dims) : 0.85;
     if (paper.alloy && cur.alloyId && paper.alloy !== cur.alloyId) dist += 0.25;
     if (paper.postProc && cur.postProcessing && normalizeConditionUi(paper.postProc).condition !== normalizeConditionUi(cur.postProcessing).condition) dist += 0.35;
-    const hasHv = _posMetricOrNull(paper.hv) !== null;
-    const hasMech = hasHv || _posMetricOrNull(paper.ys) !== null || _posMetricOrNull(paper.uts) !== null || _posMetricOrNull(paper.el) !== null;
+    const hasHv = _posMetricOrNull(paper.hv ?? paper.hardness_hv) !== null;
+    const hasMech = hasHv || _posMetricOrNull(paper.ys ?? paper.ys_mpa) !== null || _posMetricOrNull(paper.uts ?? paper.uts_mpa) !== null || _posMetricOrNull(paper.el ?? paper.elongation_pct) !== null || _posMetricOrNull(paper.density ?? paper.relative_density_pct) !== null;
     if (hasHv) dist = Math.max(0.01, dist - 0.12);
     else if (hasMech) dist = Math.max(0.02, dist - 0.05);
 
     const similarityPct = Math.round(Math.max(8, Math.min(99, 100 * Math.exp(-0.52 * dist))));
-    return { paper, dist, similarityPct, hasParams, hasHv, hasMech, pVed };
+    return { paper, dist, similarityPct, hasParams: true, pP, pV, pH, pT, sinterT, hasHv, hasMech, pVed };
   });
 
-  scored.sort((a, b) => {
-    if (Boolean(a.paper.benchmark_eligible) !== Boolean(b.paper.benchmark_eligible)) return a.paper.benchmark_eligible ? -1 : 1;
-    if (a.hasParams !== b.hasParams) return a.hasParams ? -1 : 1;
-    return a.dist - b.dist;
-  });
-  return { ranked: scored.slice(0, limit), allRanked: scored, filtered, totalProcessCount: processFiltered.length, includePending };
+  scored.sort((a, b) => a.dist - b.dist);
+  return { ranked: scored.slice(0, limit), allRanked: scored, filtered, totalProcessCount: processFiltered.length };
 }
 
 function _getModelPi95Hv(modelId) {
@@ -16983,11 +17031,15 @@ function _buildComparisonRowsForEval(paper, evalRes, activeId) {
 function comparePaperWithMlModels(paper, currentState) {
   const cur = currentState || readCurrentDashboardState();
   const activeId = cur.activeModelId || (typeof activeModelId !== 'undefined' ? activeModelId : 'ensemble');
-  const pP = _posMetricOrNull(paper.p);
+  const arcI = _posMetricOrNull(paper.arc_current_a);
+  const arcV = _posMetricOrNull(paper.arc_voltage_v);
+  const pP = _posMetricOrNull(paper.P ?? paper.p) || (arcI && arcV ? arcI * arcV : null);
   const pV = _posMetricOrNull(paper.v);
   const pH = _posMetricOrNull(paper.h);
   const pT = _posMetricOrNull(paper.t);
-  const hasPaperParams = Boolean(pP && pV);
+  const sinterTempC = _posMetricOrNull(paper.sinter_temp_c ?? paper.sinterTempC);
+  const sinterHoldMin = _posMetricOrNull(paper.sinter_hold_min ?? paper.sinterHoldMin);
+  const hasPaperParams = hasValidProcessInputs(paper, cur.processId);
 
   const paperParamsState = Object.assign({}, cur, {
     P: pP || cur.P,
@@ -16997,6 +17049,8 @@ function comparePaperWithMlModels(paper, currentState) {
     db: _posMetricOrNull(paper.db) || cur.db,
     T0: Number.isFinite(Number(paper.t0)) ? Number(paper.t0) : cur.T0,
     htTempC: Number.isFinite(Number(paper.htTempC)) ? Number(paper.htTempC) : undefined,
+    sinterTempC: sinterTempC || undefined,
+    sinterHoldMin: sinterHoldMin || undefined,
     postProcessing: paper.postProc || paper.treatment || cur.postProcessing,
     rawCondition: paper.treatment || paper.postProc || cur.postProcessing,
     alloyId: paper.alloy || cur.alloyId,
@@ -17058,10 +17112,118 @@ function comparePaperWithMlModels(paper, currentState) {
 
 function _formatCompPaperOptionLabel(item) {
   const p = item.paper;
-  const paramStr = item.hasParams ? `${p.p}W/${p.v}mm/s` : 'Params N/A';
-  const cond = p.postProc || p.treatment || 'Unreported cond.';
+  const sinterT = _posMetricOrNull(p.sinter_temp_c ?? p.sinterTempC);
+  const sinterH = _posMetricOrNull(p.sinter_hold_min ?? p.sinterHoldMin);
+  const pP = item.pP || _posMetricOrNull(p.P ?? p.p);
+  const pV = item.pV || _posMetricOrNull(p.v);
+  let paramStr = '';
+  if (sinterT && (!pP || !pV || _normCompProcKey(p.process) === 'binder-jetting')) {
+    paramStr = `T_sinter ${sinterT}°C${sinterH ? `/${sinterH}m` : ''}`;
+  } else {
+    paramStr = `${pP}W/${pV}mm/s`;
+  }
+  const cond = p.treatment || p.postProc || 'As-Built';
   return `[${p.id}] ${p.author} — ${paramStr} • ${cond} (${item.similarityPct}% match)`;
 }
+
+function evaluateProcessBenchmarkSuite(processId, currentState) {
+  const cur = Object.assign({}, currentState || readCurrentDashboardState(), processId ? { processId } : {});
+  const normProc = _normCompProcKey(cur.processId);
+  const procLabel = normProc === 'waam' ? 'WAAM' : (normProc === 'ded-laser' ? 'L-DED' : (normProc === 'binder-jetting' ? 'Binder Jetting' : 'LPBF'));
+  const { allRanked, filtered, totalProcessCount } = findMatchingLiteratureStudies(cur, 500);
+  const rows = [];
+  let accSum = 0, accCnt = 0, passStudies = 0;
+
+  for (const it of allRanked) {
+    const p = it.paper;
+    if (!hasValidProcessInputs(p, normProc)) continue;
+    const cmp = comparePaperWithMlModels(p, Object.assign({}, cur, { activeModelId: cur.activeModelId || 'ensemble' }));
+    const validMetrics = cmp.metricsAtPaper.filter(m => m.status === 'ok' && Number.isFinite(m.accuracyPct));
+    const studyMeanAcc = validMetrics.length > 0
+      ? Number((validMetrics.reduce((a, b) => a + b.accuracyPct, 0) / validMetrics.length).toFixed(2))
+      : null;
+    if (studyMeanAcc !== null) {
+      accSum += studyMeanAcc;
+      accCnt++;
+      if (studyMeanAcc >= 90.0) passStudies++;
+    }
+    rows.push({
+      paper_id: p.id,
+      authors: p.author,
+      process: procLabel,
+      condition: p.treatment || p.postProc || 'As-Built',
+      P_W: _posMetricOrNull(p.P ?? p.p),
+      v_mm_s: _posMetricOrNull(p.v),
+      h_um: _posMetricOrNull(p.h),
+      t_um: _posMetricOrNull(p.t),
+      sinter_temp_c: _posMetricOrNull(p.sinter_temp_c ?? p.sinterTempC),
+      study_mean_accuracy_pct: studyMeanAcc,
+      metrics: cmp.metricsAtPaper.filter(m => m.status === 'ok').map(m => ({
+        property: m.key,
+        experimental: m.exp,
+        active_pred: m.activePred,
+        ensemble_pred: m.ensemblePred,
+        delta: Number(m.delta.toFixed(3)),
+        ape_pct: Number(m.apePct.toFixed(2)),
+        accuracy_pct: Number(m.accuracyPct.toFixed(2)),
+        within_pi95: m.withinPi95
+      }))
+    });
+  }
+
+  return {
+    processId: normProc,
+    procLabel,
+    totalProcessCount,
+    verifiedCount: filtered.length,
+    evaluatedCount: accCnt,
+    meanAccuracyPct: accCnt > 0 ? Number((accSum / accCnt).toFixed(2)) : null,
+    studiesAbove90Count: passStudies,
+    studiesAbove90Pct: accCnt > 0 ? Number(((passStudies / accCnt) * 100).toFixed(1)) : null,
+    rows
+  };
+}
+window.evaluateProcessBenchmarkSuite = evaluateProcessBenchmarkSuite;
+
+function exportComparatorBenchmarkCsv() {
+  const suite = evaluateProcessBenchmarkSuite(currentProcess, readCurrentDashboardState());
+  const esc = (v) => { const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const lines = ['Paper_ID,Authors,Process,Condition,P_W,v_mm_s,h_um,t_um,sinter_temp_c,Property,Experimental,Active_Pred,Ensemble_Pred,Signed_Delta,APE_Pct,Accuracy_Pct,Within_PI95'];
+  for (const r of suite.rows) {
+    for (const m of r.metrics) {
+      lines.push([
+        r.paper_id, r.authors, r.process, r.condition,
+        r.P_W ?? '', r.v_mm_s ?? '', r.h_um ?? '', r.t_um ?? '', r.sinter_temp_c ?? '',
+        m.property, m.experimental, m.active_pred, m.ensemble_pred,
+        m.delta, m.ape_pct, m.accuracy_pct, m.within_pi95 ?? ''
+      ].map(esc).join(','));
+    }
+  }
+  const blob = new Blob([lines.join('\n') + '\n'], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ti64_${suite.processId}_verified_benchmark_${suite.verifiedCount}studies.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+window.exportComparatorBenchmarkCsv = exportComparatorBenchmarkCsv;
+
+function exportComparatorBenchmarkJson() {
+  const suite = evaluateProcessBenchmarkSuite(currentProcess, readCurrentDashboardState());
+  const blob = new Blob([JSON.stringify(suite, null, 2)], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ti64_${suite.processId}_verified_benchmark_${suite.verifiedCount}studies.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+window.exportComparatorBenchmarkJson = exportComparatorBenchmarkJson;
 
 var activeAccuracyMatrixModel = 'ensemble';
 const ACC_MATRIX_PROCESSES = [
@@ -17147,7 +17309,7 @@ function selectComparisonPaper(paperId) {
 function loadComparisonPaperToSliders() {
   if (!selectedLitCompPaperId || typeof PAPERS_DATABASE === 'undefined') return;
   const paper = PAPERS_DATABASE.find(x => x.id === selectedLitCompPaperId);
-  if (!paper) return;
+  if (!paper || !hasValidProcessInputs(paper, typeof currentProcess !== 'undefined' ? currentProcess : null)) return;
   const clampInput = (id, raw) => {
     const el = document.getElementById(id);
     if (!el || !Number.isFinite(raw) || raw <= 0) return;
@@ -17157,7 +17319,10 @@ function loadComparisonPaperToSliders() {
     if (Number.isFinite(mx)) v = Math.min(mx, v);
     el.value = v;
   };
-  clampInput('sl_p', _posMetricOrNull(paper.p));
+  const arcI = _posMetricOrNull(paper.arc_current_a);
+  const arcV = _posMetricOrNull(paper.arc_voltage_v);
+  const pVal = _posMetricOrNull(paper.P ?? paper.p) || (arcI && arcV ? arcI * arcV : null);
+  clampInput('sl_p', pVal);
   clampInput('sl_v', _posMetricOrNull(paper.v));
   clampInput('sl_h', _posMetricOrNull(paper.h));
   clampInput('sl_t', _posMetricOrNull(paper.t));
@@ -17168,10 +17333,10 @@ function loadComparisonPaperToSliders() {
     const alloyEl = document.getElementById('alloySelect');
     if (alloyEl) alloyEl.value = paper.alloy;
   }
-  if (paper.postProc) {
+  if (paper.postProc || paper.treatment) {
     const postEl = document.getElementById('postProcessingSelect');
     if (postEl) {
-      const condNorm = normalizeConditionUi(paper.postProc).condition;
+      const condNorm = normalizeConditionUi(paper.postProc || paper.treatment).condition;
       const optMap = { 'As-Built': 'None', 'Stress-Relieved': 'Stress-relieved', 'Annealed': 'Annealed', 'HIP': 'HIP', 'Solution-Aged': 'Solution-Aged', 'LSP': 'None' };
       const mapped = optMap[condNorm] || 'HIP';
       postEl.value = mapped;
@@ -17195,44 +17360,32 @@ function updateLiteratureComparison(preserveSelection = true, skipParityReRender
   if (!selEl || !tbody) return;
   const state = readCurrentDashboardState();
   if (typeof renderAccuracyMatrix === 'function') renderAccuracyMatrix(null, null);
-  const { ranked, allRanked, filtered, totalProcessCount, includePending } = findMatchingLiteratureStudies(state, 5);
+  const { ranked, allRanked, filtered, totalProcessCount } = findMatchingLiteratureStudies(state, 5);
 
   const procLabel = state.processId === 'waam' ? 'WAAM' : (state.processId === 'ded-laser' ? 'L-DED' : (state.processId === 'binder-jetting' ? 'Binder Jetting' : 'LPBF'));
   const badgeEl = document.getElementById('litCompProcessBadge');
   if (badgeEl) {
-    badgeEl.textContent = includePending
-      ? `${procLabel} • ${filtered.length} Total (${totalProcessCount} Indexed)`
-      : `${procLabel} • ${filtered.length} Verified Studies`;
+    badgeEl.textContent = `${procLabel} • ${filtered.length} Verified Studies`;
   }
 
-  // Cohort accuracy badge across verified bulk papers for this process
+  const extractedBadgeEl = document.getElementById('litCompExtractedInfoBadge');
+  if (extractedBadgeEl) {
+    extractedBadgeEl.textContent = `${filtered.length} of ${totalProcessCount} ${procLabel} papers have extracted process inputs`;
+  }
+
+  const suite = evaluateProcessBenchmarkSuite(state.processId, state);
   const cohortBadgeEl = document.getElementById('litCompCohortBadge');
   if (cohortBadgeEl) {
-    const verifiedInProc = allRanked.filter(it => it.paper.benchmark_eligible === true && it.hasParams);
-    if (verifiedInProc.length === 0) {
-      cohortBadgeEl.textContent = 'Physics-Prior Mode (N=0 Extracted)';
+    if (suite.verifiedCount === 0) {
+      cohortBadgeEl.textContent = 'Physics-Prior Mode (0 Extracted)';
       cohortBadgeEl.style.color = '#38bdf8';
-    } else {
-      let accSum = 0, accCnt = 0, passStudies = 0;
-      verifiedInProc.forEach(it => {
-        const res = comparePaperWithMlModels(it.paper, Object.assign({}, state, { activeModelId: state.activeModelId || 'ensemble' }));
-        const valid = res.metricsAtPaper.filter(m => m.status === 'ok' && Number.isFinite(m.accuracyPct));
-        if (valid.length > 0) {
-          const studyMean = valid.reduce((a, b) => a + b.accuracyPct, 0) / valid.length;
-          accSum += studyMean;
-          accCnt++;
-          if (studyMean >= 90.0) passStudies++;
-        }
-      });
-      if (verifiedInProc.length < 5) {
-        cohortBadgeEl.textContent = `Physics-Prior Mode (N=${verifiedInProc.length} Verified)`;
-        cohortBadgeEl.style.color = '#38bdf8';
-      } else if (accCnt > 0) {
-        const cohortMean = (accSum / accCnt).toFixed(1);
-        const passPct = ((passStudies / accCnt) * 100).toFixed(0);
-        cohortBadgeEl.textContent = `Cohort Mean Accuracy: ${cohortMean}% • ${passStudies}/${accCnt} (${passPct}%) Studies >90%`;
-        cohortBadgeEl.style.color = '#34d399';
-      }
+    } else if (suite.verifiedCount < 5) {
+      const mTxt = suite.meanAccuracyPct !== null ? ` • Prior Mean ${suite.meanAccuracyPct.toFixed(1)}%` : '';
+      cohortBadgeEl.textContent = `Physics-Prior Mode (N=${suite.verifiedCount} Verified${mTxt})`;
+      cohortBadgeEl.style.color = '#38bdf8';
+    } else if (suite.evaluatedCount > 0 && suite.meanAccuracyPct !== null) {
+      cohortBadgeEl.textContent = `Cohort Mean Accuracy: ${suite.meanAccuracyPct.toFixed(1)}% • ${suite.studiesAbove90Count}/${suite.evaluatedCount} (${suite.studiesAbove90Pct.toFixed(0)}%) Studies >90%`;
+      cohortBadgeEl.style.color = '#34d399';
     }
   }
 
@@ -17240,22 +17393,25 @@ function updateLiteratureComparison(preserveSelection = true, skipParityReRender
   const filteredSelectList = searchVal
     ? allRanked.filter(it => {
         const p = it.paper;
-        const hay = `${p.id} ${p.author} ${p.desc || ''} ${p.postProc || ''} ${p.p || ''} ${p.exclusion_reason || ''}`.toLowerCase();
+        const hay = `${p.id} ${p.author} ${p.desc || ''} ${p.postProc || ''} ${p.treatment || ''} ${p.p || ''} ${p.sinterTempC || ''}`.toLowerCase();
         return hay.includes(searchVal);
       })
     : allRanked;
 
-  const inCurrentProc = preserveSelection && selectedLitCompPaperId && allRanked.some(it => it.paper.id === selectedLitCompPaperId);
-  if (!inCurrentProc) {
-    selectedLitCompPaperId = (filteredSelectList[0] || allRanked[0])?.paper.id || null;
+  const optSource = filteredSelectList;
+  const inCurrentOpt = preserveSelection && selectedLitCompPaperId && optSource.some(it => it.paper.id === selectedLitCompPaperId);
+  if (!inCurrentOpt) {
+    selectedLitCompPaperId = optSource[0]?.paper.id || null;
   }
 
-  const optSource = filteredSelectList.length > 0 ? filteredSelectList : allRanked;
-  selEl.innerHTML = optSource.map(it => {
-    const selectedAttr = it.paper.id === selectedLitCompPaperId ? ' selected' : '';
-    const exclTag = it.paper.benchmark_eligible === false ? ` [${it.paper.exclusion_reason || 'Excluded'}]` : '';
-    return `<option value="${escapeHtml(it.paper.id)}"${selectedAttr}>${escapeHtml(_formatCompPaperOptionLabel(it) + exclTag)}</option>`;
-  }).join('');
+  if (optSource.length === 0) {
+    selEl.innerHTML = `<option value="" disabled selected>No ${escapeHtml(procLabel)} papers with extracted inputs available yet</option>`;
+  } else {
+    selEl.innerHTML = optSource.map(it => {
+      const selectedAttr = it.paper.id === selectedLitCompPaperId ? ' selected' : '';
+      return `<option value="${escapeHtml(it.paper.id)}"${selectedAttr}>${escapeHtml(_formatCompPaperOptionLabel(it))}</option>`;
+    }).join('');
+  }
 
   const pillsEl = document.getElementById('litCompQuickPills');
   if (pillsEl) {
@@ -17266,41 +17422,49 @@ function updateLiteratureComparison(preserveSelection = true, skipParityReRender
           const isAct = it.paper.id === selectedLitCompPaperId;
           return `<button type="button" class="lit-comp-pill${isAct ? ' active' : ''}" onclick="selectComparisonPaper('${escapeHtml(it.paper.id)}')">${escapeHtml(it.paper.id)} · ${escapeHtml(it.paper.author)} (${it.similarityPct}%)</button>`;
         }).join('')
-      : '<span style="font-size:10.5px; color:var(--text-muted);">No verified bulk parametric studies in this process — toggle "Include Pending-Extraction Records" to inspect archived entries.</span>';
+      : `<span style="font-size:10.5px; color:var(--text-muted);">No ${escapeHtml(procLabel)} papers with extracted inputs available yet — running Physics-Prior Mode.</span>`;
   }
 
-  const selectedItem = allRanked.find(it => it.paper.id === selectedLitCompPaperId) || allRanked[0];
+  const selectedItem = optSource.find(it => it.paper.id === selectedLitCompPaperId) || null;
   if (!selectedItem) {
     window.currentSelectedComparisonBenchmark = null;
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">No verified benchmark studies for this filter. Enable "Include Pending-Extraction Records" or switch AM process.</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">No ${escapeHtml(procLabel)} papers with extracted inputs available yet.</td></tr>`;
     const metaEl = document.getElementById('litCompMetaStrip');
-    if (metaEl) metaEl.innerHTML = `<span style="color:var(--text-muted);">No verified parametric records in <strong>${escapeHtml(procLabel)}</strong> — running Physics-Prior Mode. Toggle "Include Pending-Extraction Records" above to inspect archived citations.</span>`;
+    if (metaEl) metaEl.innerHTML = `<span style="color:var(--text-muted);">No <strong>${escapeHtml(procLabel)}</strong> studies match the active input-verified filter — running Physics-Prior Mode.</span>`;
     const barsEl = document.getElementById('litCompModelBars');
     if (barsEl) barsEl.innerHTML = '';
     const bestBadgeEl = document.getElementById('litCompBestModelBadge');
     if (bestBadgeEl) bestBadgeEl.textContent = 'Physics-Prior Mode (No active literature target)';
     const btnLoad = document.getElementById('btnLoadPaperSliders');
-    if (btnLoad) { btnLoad.disabled = true; btnLoad.style.opacity = '0.48'; }
+    if (btnLoad) { btnLoad.disabled = true; btnLoad.style.opacity = '0.48'; btnLoad.title = 'No input-verified study selected'; }
     return;
   }
 
   const cmp = comparePaperWithMlModels(selectedItem.paper, state);
   const p = cmp.paper;
+  const isBjPaper = _normCompProcKey(p.process) === 'binder-jetting';
+  const sinterT = _posMetricOrNull(p.sinter_temp_c ?? p.sinterTempC);
+  const sinterH = _posMetricOrNull(p.sinter_hold_min ?? p.sinterHoldMin);
+  const arcI = _posMetricOrNull(p.arc_current_a);
+  const arcV = _posMetricOrNull(p.arc_voltage_v);
+  const effP = _posMetricOrNull(p.P ?? p.p) || (arcI && arcV ? arcI * arcV : null);
   const metaEl = document.getElementById('litCompMetaStrip');
   if (metaEl) {
-    const paramTxt = cmp.hasPaperParams ? `P=${p.p}W · v=${p.v}mm/s · h=${p.h || '—'}µm · t=${p.t || '—'}µm${p.t0 ? ` · T0=${p.t0}°C` : ''}` : 'Paper numeric P/v/h/t not reported (evaluating active slider params)';
+    const paramTxt = isBjPaper && sinterT
+      ? `T_sinter=${sinterT}°C${sinterH ? ` · Hold=${sinterH} min` : ''}${p.t ? ` · t=${p.t}µm` : ''}`
+      : `P=${effP}W · v=${p.v}mm/s · h=${p.h || '—'}µm · t=${p.t || '—'}µm${p.t0 ? ` · T0=${p.t0}°C` : ''}`;
     const condTxt = p.treatment || p.postProc || 'Condition Unreported';
     const alloyTxt = p.alloy === 'ti64_eli' ? 'Ti-6Al-4V ELI (Gr 23)' : 'Ti-6Al-4V (Gr 5)';
-    const exclBadge = p.benchmark_eligible === false ? ` <span class="res-tag" style="background:rgba(245,158,11,0.16); color:#fbbf24; border-color:rgba(245,158,11,0.4);">Excluded: ${escapeHtml(p.exclusion_reason || p.specimen_type || 'pending')}</span>` : '';
     const doiHtml = p.doi ? `<a href="https://doi.org/${encodeURIComponent(p.doi)}" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline; font-family:'JetBrains Mono', monospace;">doi:${escapeHtml(p.doi)} ↗</a>` : '<span style="color:var(--text-muted);">DOI N/A</span>';
-    metaEl.innerHTML = `<div style="min-width:240px; flex:1;"><strong style="color:#f8fafc;">${escapeHtml(p.id)} — ${escapeHtml(p.author)}</strong> <span style="color:#94a3b8;">(${escapeHtml(condTxt)} · ${escapeHtml(alloyTxt)})</span>${exclBadge}<div style="color:#94a3b8; font-size:10.5px; margin-top:2px;">${escapeHtml(p.desc || '')}</div></div><div style="text-align:right; font-family:'JetBrains Mono', monospace; font-size:10.5px;"><div>${escapeHtml(paramTxt)}</div><div style="margin-top:2px;">${doiHtml}</div></div>`;
+    metaEl.innerHTML = `<div style="min-width:240px; flex:1;"><strong style="color:#f8fafc;">${escapeHtml(p.id)} — ${escapeHtml(p.author)}</strong> <span style="color:#94a3b8;">(${escapeHtml(condTxt)} · ${escapeHtml(alloyTxt)})</span><div style="color:#94a3b8; font-size:10.5px; margin-top:2px;">${escapeHtml(p.desc || '')}</div></div><div style="text-align:right; font-family:'JetBrains Mono', monospace; font-size:10.5px;"><div>${escapeHtml(paramTxt)}</div><div style="margin-top:2px;">${doiHtml}</div></div>`;
   }
 
   const btnLoad = document.getElementById('btnLoadPaperSliders');
   if (btnLoad) {
-    btnLoad.disabled = !cmp.hasPaperParams;
-    btnLoad.style.opacity = cmp.hasPaperParams ? '1' : '0.48';
-    btnLoad.title = cmp.hasPaperParams ? `Apply ${p.id} parameters to dashboard sliders` : 'Paper has no numeric (P, v, h, t) fields to load';
+    const canLoad = cmp.hasPaperParams && (!isBjPaper || Boolean(effP && p.v));
+    btnLoad.disabled = !canLoad;
+    btnLoad.style.opacity = canLoad ? '1' : '0.48';
+    btnLoad.title = canLoad ? `Apply ${p.id} parameters to dashboard sliders` : (isBjPaper ? 'Binder Jetting uses solid-state sintering (no laser P/v sliders)' : 'No numeric sliders to load');
   }
 
   tbody.innerHTML = cmp.metrics.map(row => {
