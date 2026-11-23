@@ -9105,7 +9105,7 @@ window.addEventListener('click', function(e) {
               <div class="model-card-title" style="font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: -0.2px;">3D Digital Twin &amp; Stress Tensor Heatmap</div>
               <span id="twinCardBadge" style="border: 1px solid rgba(56, 189, 248, 0.45); background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 9999px;">Interactive WebGL Specimen</span>
             </div>
-            <div class="model-card-sub" id="twinCardSub" style="font-size: 12.5px; color: #94a3b8; margin-top: 6px; line-height: 1.5; max-width: 820px;">
+            <div class="model-card-sub" id="twinCardSub" style="font-size: 12.5px; color: #94a3b8; margin-top: 6px; line-height: 1.5; max-width: 820px; white-space: normal; overflow-wrap: anywhere; word-break: break-word;">
               Real-time volumetric 3D representation of an <strong>ASTM E8 Tensile Specimen</strong> in Ti-6Al-4V (Grade 5, α+β workhorse). Drag to orbit, zoom, slice cross-sections, and visualize residual stress tensors and thermal cooling contours.
             </div>
           </div>
@@ -9142,14 +9142,14 @@ window.addEventListener('click', function(e) {
               <!-- Canvas element -->
               <canvas id="twinCanvas" width="760" height="420" style="width: 100%; height: 420px; display: block; cursor: grab;"></canvas>
 
-              <!-- Bottom left hint -->
-              <div style="position: absolute; bottom: 12px; left: 16px; font-size: 10.5px; color: #64748b; font-family: 'JetBrains Mono', monospace; pointer-events: none; user-select: none;">
-                Click &amp; Drag to Orbit • Scroll to Zoom
-              </div>
-
-              <!-- Bottom right live coupled context pill -->
-              <div id="twinContextBadge" style="position: absolute; bottom: 10px; right: 14px; font-size: 10.5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: #e2e8f0; background: rgba(7, 11, 20, 0.86); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 9999px; padding: 4px 12px; backdrop-filter: blur(8px); pointer-events: none; max-width: calc(100% - 260px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                LPBF • 280 W / 960 mm/s • T₀ 200°C • HIP | Peak +42 MPa • Optimal
+              <!-- Bottom flex footer bar (non-overlapping at all widths) -->
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.06);">
+                <div style="font-size: 10.5px; color: #64748b; font-family: 'JetBrains Mono', monospace; pointer-events: none; user-select: none;">
+                  Click &amp; Drag to Orbit • Scroll to Zoom
+                </div>
+                <div id="twinContextBadge" style="font-size: 10.5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: #e2e8f0; background: rgba(7, 11, 20, 0.86); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 9999px; padding: 4px 12px; backdrop-filter: blur(8px); pointer-events: none; max-width: 100%; white-space: normal; overflow-wrap: anywhere;">
+                  LPBF • 280 W / 960 mm/s • T₀ 200°C • HIP | Peak +42 MPa • Optimal
+                </div>
               </div>
             </div>
 
@@ -13486,14 +13486,31 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
   const zCutMax = bb.min[2] + sz * zSliceFrac;
   const isDecimatedProxy = typeof isCadDecimatedProxy === 'function' && isCadDecimatedProxy(mesh);
   const drawWire = wireframe && !isDecimatedProxy;
-  const windingSign = (!isDecimatedProxy && typeof cadGeometryReport !== 'undefined' && cadGeometryReport && cadGeometryReport.windingSign)
-    ? cadGeometryReport.windingSign
-    : 1;
+  const geoRep = typeof cadGeometryReport !== 'undefined' ? cadGeometryReport : null;
 
-  const triBudget = (isDragging || autoOrbit) ? 20000 : 60000;
-  const stride = Math.max(1, Math.ceil(nTri / triBudget));
-  const cosY = Math.cos(yaw), sinY = Math.sin(yaw);
-  const cosP = Math.cos(pitch), sinP = Math.sin(pitch);
+  // Verify signed-volume winding sign directly if report isn't ready
+  let windingSign = (geoRep && geoRep.windingSign) ? geoRep.windingSign : 1;
+  if (!geoRep && !isDecimatedProxy) {
+    let signedVol = 0;
+    const volStep = Math.max(1, Math.floor(nTri / 5000));
+    for (let t = 0; t < nTri; t += volStep) {
+      const b = t * 9;
+      const ax = pos[b] - cx, ay = pos[b + 1] - cy, az = pos[b + 2] - cz;
+      const bx = pos[b + 3] - cx, by = pos[b + 4] - cy, bz = pos[b + 5] - cz;
+      const cxv = pos[b + 6] - cx, cyv = pos[b + 7] - cy, czv = pos[b + 8] - cz;
+      signedVol += ax * (by * czv - bz * cyv) - ay * (bx * czv - bz * cxv) + az * (bx * cyv - by * cxv);
+    }
+    if (signedVol < 0) windingSign = -1;
+  }
+
+  // Only cull backfaces when watertight and un-sliced; non-watertight, thin-walled, proxy, or sliced/cutaway meshes render double-sided
+  const isWatertight = Boolean(!isDecimatedProxy && geoRep && geoRep.isWatertight);
+  const doubleSided = drawWire || !isWatertight || cutaway || sliceDepth < 99.5;
+
+  // Never skip triangles on meshes <= 60,000 tris (prevents zebra-striping on 29k-tri STLs during orbit/drag)
+  const triBudget = nTri <= 60000 ? nTri : ((isDragging || autoOrbit) ? 45000 : 60000);
+  const drawCount = Math.min(nTri, triBudget);
+  const stepFrac = nTri / Math.max(1, drawCount);
 
   // Subtle build-plate footprint frame at Z = min[2]
   const yBaseWorld = (bb.min[2] - cz) * normScale;
@@ -13520,7 +13537,8 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
   ctx.restore();
 
   const tris = [];
-  for (let t = 0; t < nTri; t += stride) {
+  for (let idx = 0; idx < drawCount; idx++) {
+    const t = drawCount === nTri ? idx : Math.floor(idx * stepFrac);
     const b = t * 9;
     const x0 = pos[b], y0 = pos[b + 1], z0 = pos[b + 2];
     const x1 = pos[b + 3], y1 = pos[b + 4], z1 = pos[b + 5];
@@ -13532,49 +13550,49 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
     if (sliceDepth < 99.5 && czTri > zCutMax) continue;
     if (cutaway && cxTri > cx && cyTri > cy) continue;
 
-    const ux = x1 - x0, uy = y1 - y0, uz = z1 - z0;
-    const vx = x2 - x0, vy = y2 - y0, vz = z2 - z0;
-    let cnx = (uy * vz - uz * vy) * windingSign;
-    let cny = (uz * vx - ux * vz) * windingSign;
-    let cnz = (ux * vy - uy * vx) * windingSign;
-    const nLen = Math.hypot(cnx, cny, cnz);
-    if (nLen < 1e-10) continue;
-    cnx /= nLen; cny /= nLen; cnz /= nLen;
-
-    // Map CAD normal (cnx, cny, cnz) -> Twin world (cnx, cnz, cny) and rotate into camera space
-    const nx1 = cnx * cosY - cny * sinY;
-    const nz1 = cnx * sinY + cny * cosY;
-    const nyCam = cnz * cosP - nz1 * sinP;
-    const nzCam = cnz * sinP + nz1 * cosP;
-    const nxCam = nx1;
-
-    if (!drawWire && !isDecimatedProxy && !cutaway && sliceDepth >= 99.5 && nzCam > 0.05) {
-      continue;
-    }
-    const isInteriorFace = !isDecimatedProxy && (cutaway || sliceDepth < 99.5) && (nzCam > 0.05);
-
     const zNorm = Math.max(0, Math.min(1, (czTri - bb.min[2]) / sz));
     const rHorizFrac = Math.min(1.0, Math.hypot(cxTri - cx, cyTri - cy) / rHorizMax);
     const warpDy = warpageAmp > 0 ? (warpageAmp * (rHorizFrac * rHorizFrac - 0.35)) : 0;
 
+    // Transform vertices to 3D camera view space (rx, ry, rz)
     const p0 = project((x0 - cx) * normScale, (z0 - cz) * normScale + warpDy, (y0 - cy) * normScale, w, h);
     const p1 = project((x1 - cx) * normScale, (z1 - cz) * normScale + warpDy, (y1 - cy) * normScale, w, h);
     const p2 = project((x2 - cx) * normScale, (z2 - cz) * normScale + warpDy, (y2 - cy) * normScale, w, h);
 
-    const rawDot = -(nxCam * nlx + nyCam * nly + nzCam * nlz);
-    const dot = (isDecimatedProxy || isInteriorFace)
-      ? Math.max(0.10, Math.abs(rawDot))
-      : Math.max(0.08, Math.min(1.0, rawDot));
-    const light = isInteriorFace ? (0.38 + 0.42 * dot) : (0.46 + 0.54 * dot);
-    const uVal = evaluateCadTriangleHeatmapU(t, zNorm, rHorizFrac, isInteriorFace, sf, aPrimeVal);
-    const avgZ = (p0.zDepth + p1.zDepth + p2.zDepth) * 0.33333333;
+    // Compute geometric normal directly in 3D view space; negate for the (x, z, y) axis-swap reflection
+    const e1x = p1.rx - p0.rx, e1y = p1.ry - p0.ry, e1z = p1.rz - p0.rz;
+    const e2x = p2.rx - p0.rx, e2y = p2.ry - p0.ry, e2z = p2.rz - p0.rz;
+    let nxCam = -(e1y * e2z - e1z * e2y) * windingSign;
+    let nyCam = -(e1z * e2x - e1x * e2z) * windingSign;
+    let nzCam = -(e1x * e2y - e1y * e2x) * windingSign;
+    const nLen = Math.hypot(nxCam, nyCam, nzCam);
+    if (nLen < 1e-10) continue;
+    nxCam /= nLen; nyCam /= nLen; nzCam /= nLen;
 
-    tris.push({ p0, p1, p2, uVal, light, avgZ, nzCam });
+    // Camera sits at (0, 0, -450) looking toward +rz; outward faces facing camera have dot(nCam, toCam) > 0
+    const crx = (p0.rx + p1.rx + p2.rx) * 0.33333333;
+    const cry = (p0.ry + p1.ry + p2.ry) * 0.33333333;
+    const crz = (p0.rz + p1.rz + p2.rz) * 0.33333333;
+    const facingDot = nxCam * (-crx) + nyCam * (-cry) + nzCam * (-450 - crz);
+    if (!doubleSided && facingDot < -25.0) {
+      continue;
+    }
+    const isInteriorFace = !isDecimatedProxy && (cutaway || sliceDepth < 99.5) && (facingDot < 0);
+
+    const rawDot = nxCam * nlx + nyCam * nly + nzCam * nlz;
+    const diffuse = doubleSided ? Math.abs(rawDot) : Math.max(0.08, Math.min(1.0, rawDot));
+    const light = isInteriorFace ? (0.38 + 0.42 * diffuse) : (0.46 + 0.54 * Math.max(0.08, diffuse));
+    const uVal = evaluateCadTriangleHeatmapU(t, zNorm, rHorizFrac, isInteriorFace, sf, aPrimeVal);
+    const avgZ = crz;
+
+    tris.push({ p0, p1, p2, uVal, light, avgZ, isFront: facingDot >= 0 });
   }
 
   tris.sort((a, b) => b.avgZ - a.avgZ);
 
-  const edgeWidth = isDecimatedProxy ? 1.35 : 0.55;
+  ctx.save();
+  ctx.lineJoin = 'round';
+  const edgeWidth = isDecimatedProxy ? 1.35 : 0.75;
   for (let i = 0; i < tris.length; i++) {
     const f = tris[i];
     const baseColor = getTwinColormapColor(f.uVal);
@@ -13589,8 +13607,7 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
     ctx.closePath();
 
     if (drawWire) {
-      const isFront = f.nzCam <= 0.05;
-      if (isFront) {
+      if (f.isFront) {
         ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.22)`;
         ctx.fill();
         ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.92)`;
@@ -13609,6 +13626,7 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
       ctx.stroke();
     }
   }
+  ctx.restore();
 
   if (cutaway || sliceDepth < 98) {
     const zFocusWorld = sliceDepth < 98 ? ((zCutMax - cz) * normScale) : 0;
