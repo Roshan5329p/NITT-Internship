@@ -44,10 +44,8 @@ public class ApiHandler implements HttpHandler {
         String path = uri.getPath();
         String method = exchange.getRequestMethod();
 
-        // Standard CORS support for web frontend
-        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
+        // Allowlisted CORS support matching API edge policy
+        SecurityHeaders.applyCors(exchange);
 
         if ("OPTIONS".equalsIgnoreCase(method)) {
             exchange.sendResponseHeaders(204, -1);
@@ -55,6 +53,15 @@ public class ApiHandler implements HttpHandler {
         }
 
         if ("POST".equalsIgnoreCase(method)) {
+            if (!SecurityHeaders.isAllowedPostOrigin(exchange)) {
+                sendJson(exchange, 403, Map.of("error", "Forbidden", "message", "Origin not allowed for state-mutating request."));
+                return;
+            }
+            String rateKey = "stats:" + SecurityHeaders.getClientIp(exchange);
+            if (!SecurityHeaders.allowRateLimit(rateKey, 60, 60_000L)) {
+                sendJson(exchange, 429, Map.of("error", "Too Many Requests", "message", "Rate limit exceeded for telemetry updates."));
+                return;
+            }
             try {
                 if (path.equals("/api/stats/visit")) {
                     sendJson(exchange, 200, usageStatsService.recordVisit());

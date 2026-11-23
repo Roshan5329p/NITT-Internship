@@ -57,6 +57,48 @@ export const SAMPLE_LAB_CSV_TEMPLATE = [
   'NITT-LDED-01,ded-laser,1600,15,1200,450,100,HIP,326,872,960,15.6'
 ].join('\n');
 
+export const MAX_LAB_CSV_FILE_BYTES = 2 * 1024 * 1024; // 2 MB cap
+export const MAX_LAB_CSV_ROWS = 5000; // 5,000 coupon rows cap
+
+/**
+ * Validates an external URL and returns its canonical href ONLY if it uses http: or https:.
+ * Rejects javascript:, data:, vbscript:, file:, and malformed URLs by returning ''.
+ */
+export function sanitizeExternalHttpUrl(rawUrl: unknown): string {
+  if (typeof rawUrl !== 'string') return '';
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return '';
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+      return parsed.href;
+    }
+    return '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Formats a CSV cell safely against spreadsheet formula injection (CSV Injection) and quote escaping.
+ */
+export function formatSafeCsvCell(val: unknown): string {
+  if (val === null || val === undefined) return '""';
+  if (typeof val === 'number') {
+    return Number.isFinite(val) ? String(val) : '""';
+  }
+  let str = String(val);
+  // Neutralize formula prefixes (=, +, -, @, tab, CR) unless it is a plain finite signed number
+  if (/^[\s]*[=+\-@\t\r]/.test(str)) {
+    const trimmed = str.trim();
+    const isPlainSignedNum = /^[+-]?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(trimmed) && Number.isFinite(Number(trimmed));
+    if (!isPlainSignedNum) {
+      str = "'" + str;
+    }
+  }
+  return '"' + str.replace(/"/g, '""') + '"';
+}
+
 const REQUIRED_HEADERS = [
   'sample_id',
   'process',
@@ -86,9 +128,18 @@ function parseOptionalPositive(raw: string | undefined): { valid: boolean; value
 
 /**
  * Validates and parses NIT Trichy experimental lab coupon CSV text.
- * Rejects malformed rows individually while preserving valid records and never crashing.
+ * Enforces 2 MB / 5,000-row safety limits and rejects malformed rows individually without crashing.
  */
-export function parseLabCouponsCsv(csvText: string): ParsedLabCsvResult {
+export function parseLabCouponsCsv(csvText: string, fileSizeBytes?: number): ParsedLabCsvResult {
+  const effectiveBytes = typeof fileSizeBytes === 'number' ? fileSizeBytes : (csvText ? csvText.length : 0);
+  if (effectiveBytes > MAX_LAB_CSV_FILE_BYTES) {
+    return {
+      coupons: [],
+      errors: [{ rowNumber: 0, rawLine: '', reason: `CSV file exceeds 2 MB (${MAX_LAB_CSV_FILE_BYTES.toLocaleString()} bytes) maximum size limit.` }],
+      validCount: 0,
+      rejectedCount: 1
+    };
+  }
   if (!csvText || !csvText.trim()) {
     return {
       coupons: [],
@@ -111,6 +162,15 @@ export function parseLabCouponsCsv(csvText: string): ParsedLabCsvResult {
       errors: [{ rowNumber: 1, rawLine: lines[0] || '', reason: 'CSV must contain a header row and at least one coupon data row.' }],
       validCount: 0,
       rejectedCount: 0
+    };
+  }
+
+  if (lines.length - 1 > MAX_LAB_CSV_ROWS) {
+    return {
+      coupons: [],
+      errors: [{ rowNumber: MAX_LAB_CSV_ROWS + 1, rawLine: '', reason: `CSV exceeds maximum limit of ${MAX_LAB_CSV_ROWS.toLocaleString()} coupon rows.` }],
+      validCount: 0,
+      rejectedCount: lines.length - 1
     };
   }
 

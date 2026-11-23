@@ -4,6 +4,7 @@ import com.matsci.model.Material;
 import com.matsci.model.MaterialVariant;
 import com.matsci.model.ProcessRecipe;
 import com.matsci.repository.CsvMaterialRepository;
+import com.matsci.security.SecurityHeaders;
 import com.matsci.service.MaterialService;
 import com.matsci.service.ParameterInferenceService;
 import com.matsci.util.JsonUtil;
@@ -297,7 +298,7 @@ public class AmPlatformApplication {
                         os.write(notFoundBytes);
                     }
                 } catch (Exception e) {
-                    sendErrorJson(exchange, 500, e.getMessage());
+                    logAndSendInternalError(exchange, e);
                 }
             }
         });
@@ -320,7 +321,7 @@ public class AmPlatformApplication {
 
                     sendJsonResponse(exchange, 200, json);
                 } catch (Exception e) {
-                    sendErrorJson(exchange, 500, e.getMessage());
+                    logAndSendInternalError(exchange, e);
                 }
             }
         });
@@ -386,7 +387,7 @@ public class AmPlatformApplication {
 
                     sendJsonResponse(exchange, 200, json);
                 } catch (Exception e) {
-                    sendErrorJson(exchange, 500, e.getMessage());
+                    logAndSendInternalError(exchange, e);
                 }
             }
         });
@@ -427,7 +428,7 @@ public class AmPlatformApplication {
 
                     sendJsonResponse(exchange, 200, json);
                 } catch (Exception e) {
-                    sendErrorJson(exchange, 500, e.getMessage());
+                    logAndSendInternalError(exchange, e);
                 }
             }
         });
@@ -475,7 +476,7 @@ public class AmPlatformApplication {
                     payload.put("papers", rows);
                     sendJsonResponse(exchange, 200, JsonUtil.toJson(payload));
                 } catch (Exception e) {
-                    sendErrorJson(exchange, 500, e.getMessage());
+                    logAndSendInternalError(exchange, e);
                 }
             }
         });
@@ -494,7 +495,7 @@ public class AmPlatformApplication {
                     String json = JsonUtil.toJson(list);
                     sendJsonResponse(exchange, 200, json);
                 } catch (Exception e) {
-                    sendErrorJson(exchange, 500, e.getMessage());
+                    logAndSendInternalError(exchange, e);
                 }
             }
         });
@@ -523,7 +524,7 @@ public class AmPlatformApplication {
                     String json = JsonUtil.toJson(recipe.toMap());
                     sendJsonResponse(exchange, 200, json);
                 } catch (Exception e) {
-                    sendErrorJson(exchange, 500, e.getMessage());
+                    logAndSendInternalError(exchange, e);
                 }
             }
         });
@@ -559,7 +560,7 @@ public class AmPlatformApplication {
                             : MeltPoolPhysicsEngine.calculate(model, p, v, spot, layer, hatch);
                     sendJsonResponse(exchange, 200, res.json);
                 } catch (Exception e) {
-                    sendErrorJson(exchange, 500, e.getMessage());
+                    logAndSendInternalError(exchange, e);
                 }
             }
         });
@@ -579,24 +580,40 @@ public class AmPlatformApplication {
                     BonthaSolidificationModel.BonthaResult res = BonthaSolidificationModel.evaluate(dim, physics, source, p, v);
                     sendJsonResponse(exchange, 200, res.json);
                 } catch (Exception e) {
-                    sendErrorJson(exchange, 500, e.getMessage());
+                    logAndSendInternalError(exchange, e);
                 }
             }
         });
 
         server.createContext("/api/scopus", new HttpHandler() {
+            private final Map<String, CachedScopusEntry> scopusCache = Collections.synchronizedMap(
+                new LinkedHashMap<>(64, 0.75f, true) {
+                    @Override
+                    protected boolean removeEldestEntry(Map.Entry<String, CachedScopusEntry> eldest) {
+                        return size() > 128;
+                    }
+                }
+            );
+
             @Override
             public void handle(HttpExchange exchange) throws IOException {
                 try {
                     if (handlePreflight(exchange)) return;
+                    String rateKey = "scopus:" + SecurityHeaders.getClientIp(exchange);
+                    if (!SecurityHeaders.allowRateLimit(rateKey, 30, 60_000L)) {
+                        sendJsonResponse(exchange, 429, "{\"status\":\"error\",\"code\":\"RATE_LIMITED\",\"message\":\"Too many Scopus search requests. Please retry after 60 seconds.\"}");
+                        return;
+                    }
                     Map<String, String> params = parseQueryParams(exchange.getRequestURI().getRawQuery());
                     String searchQuery = "TITLE-ABS-KEY(\"Ti-6Al-4V\" AND (\"selective laser melting\" OR \"LPBF\" OR \"additive manufacturing\") AND (\"solidification\" OR \"melt pool\"))";
                     int count = 10;
                     String sort = "citedby-count";
 
                     if (params.containsKey("query") && !params.get("query").isBlank()) {
-                        String q = params.get("query").trim();
-                        searchQuery = q.length() > 500 ? q.substring(0, 500) : q;
+                        String q = params.get("query").replaceAll("[\\x00-\\x1F\\x7F]", "").trim();
+                        if (!q.isEmpty()) {
+                            searchQuery = q.length() > 200 ? q.substring(0, 200) : q;
+                        }
                     }
                     if (params.containsKey("count")) {
                         count = Math.max(1, Math.min(parsePositiveI(params.get("count"), count), 25));
@@ -608,6 +625,14 @@ public class AmPlatformApplication {
                         }
                     }
 
+                    String cacheKey = searchQuery + "|" + count + "|" + sort;
+                    CachedScopusEntry cached = scopusCache.get(cacheKey);
+                    if (cached != null && (System.currentTimeMillis() - cached.cachedAtMs) < 3_600_000L) {
+                        exchange.getResponseHeaders().set("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=86400");
+                        sendJsonResponse(exchange, 200, cached.json);
+                        return;
+                    }
+
                     String apiKey = ScopusPaperFetcher.getApiKey();
                     if (apiKey == null || apiKey.isEmpty()) {
                         sendJsonResponse(exchange, 503, "{\"status\":\"error\",\"message\":\"SCOPUS_API_KEY is not defined in .env or environment\"}");
@@ -617,13 +642,15 @@ public class AmPlatformApplication {
                     try {
                         List<ScopusPaper> papers = ScopusPaperFetcher.searchPapers(apiKey, searchQuery, count, sort);
                         String json = ScopusPaperFetcher.toJson(papers, searchQuery);
+                        scopusCache.put(cacheKey, new CachedScopusEntry(json, System.currentTimeMillis()));
+                        exchange.getResponseHeaders().set("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=86400");
                         sendJsonResponse(exchange, 200, json);
                     } catch (Exception e) {
-                        String msg = (e.getMessage() != null && !e.getMessage().isBlank()) ? e.getMessage() : e.getClass().getSimpleName();
-                        sendJsonResponse(exchange, 502, "{\"status\":\"error\",\"message\":" + JsonUtil.escape(msg) + "}");
+                        System.err.println("[/api/scopus WARN] Upstream Scopus fetch failed: " + e.getMessage());
+                        sendJsonResponse(exchange, 502, "{\"status\":\"error\",\"message\":\"Upstream Elsevier Scopus service is temporarily unavailable.\"}");
                     }
                 } catch (Exception e) {
-                    sendErrorJson(exchange, 500, e.getMessage());
+                    logAndSendInternalError(exchange, e);
                 }
             }
         });
@@ -728,13 +755,20 @@ public class AmPlatformApplication {
         return file;
     }
 
+    private static class CachedScopusEntry {
+        final String json;
+        final long cachedAtMs;
+        CachedScopusEntry(String json, long cachedAtMs) {
+            this.json = json;
+            this.cachedAtMs = cachedAtMs;
+        }
+    }
+
     private static void addCommonHeaders(HttpExchange exchange) {
-        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        exchange.getResponseHeaders().set("X-Content-Type-Options", "nosniff");
-        exchange.getResponseHeaders().set("X-Frame-Options", "SAMEORIGIN");
-        exchange.getResponseHeaders().set("Referrer-Policy", "strict-origin-when-cross-origin");
+        boolean isApi = exchange.getRequestURI() != null && exchange.getRequestURI().getPath() != null
+                && exchange.getRequestURI().getPath().startsWith("/api/");
+        SecurityHeaders.apply(exchange, isApi);
+        SecurityHeaders.applyCors(exchange);
     }
 
     private static boolean handlePreflight(HttpExchange exchange) throws IOException {
@@ -764,8 +798,15 @@ public class AmPlatformApplication {
         return params;
     }
 
+    private static void logAndSendInternalError(HttpExchange exchange, Exception e) throws IOException {
+        System.err.println("[AmPlatformApplication ERROR] " + (e != null ? e.getMessage() : "unknown"));
+        sendErrorJson(exchange, 500, "An unexpected internal error occurred.");
+    }
+
     private static void sendErrorJson(HttpExchange exchange, int status, String message) throws IOException {
-        String safe = (message != null && !message.isBlank()) ? message : "Internal server error";
+        String safe = (status >= 500)
+                ? "An unexpected internal error occurred."
+                : ((message != null && !message.isBlank()) ? message : "Request could not be processed.");
         sendJsonResponseStatic(exchange, status, "{\"error\":" + JsonUtil.escape(safe) + "}");
     }
 

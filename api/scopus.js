@@ -1,4 +1,4 @@
-import { setCorsHeaders } from './_shared.js';
+import { setCorsHeaders, checkRateLimit } from './_shared.js';
 
 export default async function handler(req, res) {
   if (setCorsHeaders(req, res)) return;
@@ -13,6 +13,14 @@ export default async function handler(req, res) {
     });
   }
 
+  if (!checkRateLimit(req, { windowMs: 60000, maxRequests: 30, prefix: 'scopus' })) {
+    return res.status(429).json({
+      status: 'error',
+      code: 'RATE_LIMITED',
+      message: 'Too many Scopus search requests. Please retry after 60 seconds.'
+    });
+  }
+
   try {
     const q = req.query || {};
     const apiKey = process.env.SCOPUS_API_KEY || process.env.ELSEVIER_API_KEY;
@@ -23,9 +31,9 @@ export default async function handler(req, res) {
         message: 'SCOPUS_API_KEY is not configured in server environment variables.'
       });
     }
-    const rawQuery = typeof q.query === 'string' && q.query.trim()
-      ? q.query.trim().slice(0, 500)
-      : 'TITLE-ABS-KEY("Ti-6Al-4V" AND ("selective laser melting" OR "LPBF" OR "additive manufacturing") AND ("solidification" OR "melt pool"))';
+    const defaultQuery = 'TITLE-ABS-KEY("Ti-6Al-4V" AND ("selective laser melting" OR "LPBF" OR "additive manufacturing") AND ("solidification" OR "melt pool"))';
+    const rawUserQuery = typeof q.query === 'string' ? q.query.replace(/[\x00-\x1F\x7F]/g, '').trim() : '';
+    const rawQuery = rawUserQuery ? rawUserQuery.slice(0, 200) : defaultQuery;
     const parsedCount = parseInt(q.count, 10);
     const count = Math.max(1, Math.min(Number.isFinite(parsedCount) ? parsedCount : 10, 25));
     const allowedSorts = new Set(['citedby-count', 'relevancy', 'coverDate', '-coverDate', 'pubyear', '-pubyear', 'title']);
@@ -82,6 +90,7 @@ export default async function handler(req, res) {
       openAccess: e['openaccessFlag'] === true || e['openaccess'] === '1'
     }));
 
+    res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     res.status(200).json({
       status: 'success',
       source: 'Elsevier Scopus REST API',
@@ -95,6 +104,7 @@ export default async function handler(req, res) {
     if (err.name === 'AbortError') {
       return res.status(504).json({ status: 'error', code: 'UPSTREAM_TIMEOUT', message: 'Upstream Elsevier Scopus service timed out after 8000ms.' });
     }
-    res.status(500).json({ status: 'error', code: 'INTERNAL_ERROR', message: err.message });
+    console.error('[api/scopus] Internal error:', err);
+    res.status(500).json({ status: 'error', code: 'INTERNAL_ERROR', message: 'An unexpected internal error occurred.' });
   }
 }

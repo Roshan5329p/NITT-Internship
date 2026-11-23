@@ -58,7 +58,7 @@ export default async function handler(req, res) {
       }
     } catch (e) {
       dbStatus = 'offline';
-      dbError = e.name === 'AbortError' ? 'Database query timed out (4000ms)' : e.message;
+      dbError = e.name === 'AbortError' ? 'Database query timed out (4000ms)' : 'Database connection unavailable';
     }
   } else {
     dbStatus = 'unconfigured';

@@ -342,6 +342,7 @@ export default function handler(req, res) {
       }
     });
   } catch (err) {
-    res.status(500).json({ status: 'error', code: 'INTERNAL_ERROR', message: err.message });
+    console.error('[api/bontha] Internal error:', err);
+    res.status(500).json({ status: 'error', code: 'INTERNAL_ERROR', message: 'An unexpected internal error occurred.' });
   }
 }

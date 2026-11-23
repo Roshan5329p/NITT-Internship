@@ -24,12 +24,50 @@ export function setCorsHeaders(req, res) {
   res.setHeader('Access-Control-Max-Age', '86400');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' blob: 'wasm-unsafe-eval' https://cdn.jsdelivr.net; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self'; frame-ancestors 'self';"
+  );
 
   if (req.method === 'OPTIONS') {
     res.status(204).end();
     return true;
   }
   return false;
+}
+
+const _rateBuckets = new Map();
+
+export function getClientIp(req) {
+  const fwd = req?.headers?.['x-forwarded-for'] || req?.headers?.['x-real-ip'];
+  if (typeof fwd === 'string' && fwd.trim()) {
+    return fwd.split(',')[0].trim().slice(0, 64);
+  }
+  return req?.socket?.remoteAddress || 'unknown';
+}
+
+export function checkRateLimit(req, { windowMs = 60000, maxRequests = 60, prefix = 'api' } = {}) {
+  const ip = getClientIp(req);
+  const key = `${prefix}:${ip}`;
+  const now = Date.now();
+  let timestamps = _rateBuckets.get(key) || [];
+  timestamps = timestamps.filter((ts) => now - ts < windowMs);
+  if (timestamps.length >= maxRequests) {
+    _rateBuckets.set(key, timestamps);
+    return false;
+  }
+  timestamps.push(now);
+  _rateBuckets.set(key, timestamps);
+  if (_rateBuckets.size > 2000) {
+    for (const [k, arr] of _rateBuckets.entries()) {
+      if (arr.length === 0 || now - arr[arr.length - 1] >= windowMs) {
+        _rateBuckets.delete(k);
+      }
+    }
+  }
+  return true;
 }
 
 export const PROCESS_LIMITS = {

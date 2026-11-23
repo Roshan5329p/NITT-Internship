@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Stages only public web assets into ./public for Vercel static CDN serving.
- * Keeps private helper files (api/_*.js), backend sources, tests, and DBs out of static output.
+ * Stages only browser-required public web assets into ./public for Vercel static CDN serving.
+ * Keeps private helper files (api/_*.js), internal CSVs, audit logs, docs, reports, backend sources, and tests out of static CDN output.
  */
 import fs from 'fs';
 import path from 'path';
@@ -17,11 +17,11 @@ fs.copyFileSync(
   path.join(OUT_DIR, 'process_windows_dashboard.html')
 );
 
-for (const dir of ['plots', 'data', 'docs', 'report']) {
+for (const dir of ['plots', 'vendor']) {
   const src = path.join(ROOT, dir);
   if (fs.existsSync(src)) {
     fs.cpSync(src, path.join(OUT_DIR, dir), { recursive: true });
   }
 }
 
-console.log('Staged public Vercel output directory cleanly.');
+console.log('Staged minimal public Vercel output directory cleanly (data/, docs/, report/ excluded from CDN).');

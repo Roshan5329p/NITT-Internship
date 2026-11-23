@@ -1,5 +1,16 @@
 import { setCorsHeaders } from './_shared.js';
 
+const ALLOWED_PROCESS_FILTERS = new Map([
+  ['LPBF', { type: 'eq', value: 'LPBF' }],
+  ['SLM', { type: 'eq', value: 'LPBF' }],
+  ['L-DED', { type: 'ded' }],
+  ['DED', { type: 'ded' }],
+  ['WAAM', { type: 'eq', value: 'WAAM' }],
+  ['BINDER JETTING', { type: 'eq', value: 'Binder Jetting' }],
+  ['BINDER-JETTING', { type: 'eq', value: 'Binder Jetting' }],
+  ['BJT', { type: 'eq', value: 'Binder Jetting' }]
+]);
+
 export default async function handler(req, res) {
   if (setCorsHeaders(req, res)) return;
 
@@ -15,6 +26,19 @@ export default async function handler(req, res) {
 
   try {
     const q = req.query || {};
+    const rawProcessFilter = typeof q.process === 'string' ? q.process.trim() : '';
+    let mappedFilter = null;
+    if (rawProcessFilter) {
+      mappedFilter = ALLOWED_PROCESS_FILTERS.get(rawProcessFilter.toUpperCase()) || null;
+      if (!mappedFilter) {
+        return res.status(400).json({
+          status: 'error',
+          code: 'INVALID_PROCESS_FILTER',
+          message: 'Unsupported process filter. Allowed values: LPBF, L-DED, DED, WAAM, Binder Jetting, BJT.'
+        });
+      }
+    }
+
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
@@ -30,16 +54,13 @@ export default async function handler(req, res) {
     const parsedOffset = parseInt(q.offset, 10);
     const limit = Math.max(1, Math.min(Number.isFinite(parsedLimit) ? parsedLimit : 200, 250));
     const offset = Math.max(0, Number.isFinite(parsedOffset) ? parsedOffset : 0);
-    const rawProcessFilter = typeof q.process === 'string' ? q.process.trim() : '';
 
     let endpoint = `${supabaseUrl}/rest/v1/papers?select=*&order=paper_number.asc&limit=${limit}&offset=${offset}`;
-    if (rawProcessFilter) {
-      const sanitizedFilter = rawProcessFilter.replace(/[^a-zA-Z0-9\s\-+/]/g, '').trim();
-      const pf = sanitizedFilter.toUpperCase();
-      if (pf === 'L-DED' || pf === 'DED') {
+    if (mappedFilter) {
+      if (mappedFilter.type === 'ded') {
         endpoint += `&or=(am_process.ilike.*DED*,am_process.ilike.*LMD*,am_process.ilike.*LENS*)`;
-      } else if (pf) {
-        endpoint += `&am_process=ilike.*${encodeURIComponent(sanitizedFilter)}*`;
+      } else {
+        endpoint += `&am_process=ilike.*${encodeURIComponent(mappedFilter.value)}*`;
       }
     }
 
@@ -89,6 +110,7 @@ export default async function handler(req, res) {
     if (err.name === 'AbortError') {
       return res.status(504).json({ status: 'error', code: 'UPSTREAM_TIMEOUT', message: 'Upstream papers database timed out after 8000ms.' });
     }
-    res.status(500).json({ status: 'error', code: 'INTERNAL_ERROR', message: err.message });
+    console.error('[api/papers] Internal error:', err);
+    res.status(500).json({ status: 'error', code: 'INTERNAL_ERROR', message: 'An unexpected internal error occurred.' });
   }
 }

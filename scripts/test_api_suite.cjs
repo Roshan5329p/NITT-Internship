@@ -54,6 +54,8 @@ async function runTests() {
   const statsHandler = (await import('../api/stats.js')).default;
   const predictHandler = (await import('../api/predict.js')).default;
   const materialsHandler = (await import('../api/materials.js')).default;
+  const papersHandler = (await import('../api/papers.js')).default;
+  const scopusHandler = (await import('../api/scopus.js')).default;
 
   // 1. Evaluate API - Physical Input Validation
   await test('api/evaluate.js rejects invalid laser power (50000 W) with HTTP 400', async () => {
@@ -277,6 +279,61 @@ async function runTests() {
         assert.strictEqual(cell.accuracyPct, null);
       }
     }
+  });
+
+  // 11. Security Hardening Checks (Filter Enum, Error Sanitization, Security Headers)
+  await test('api/papers.js rejects unallowlisted process filter payloads with HTTP 400', async () => {
+    const { req, res } = createMockReqRes('GET', { process: 'lpbf),or=(am_process.eq.secret' });
+    await papersHandler(req, res);
+    assert.strictEqual(res.statusCode, 400);
+    assert.strictEqual(res.body.code, 'INVALID_PROCESS_FILTER');
+  });
+
+  await test('api/*.js sanitizes HTTP 500 error responses without leaking internal error strings', async () => {
+    const { res } = createMockReqRes('GET');
+    const throwingReq = {
+      method: 'GET',
+      headers: {},
+      get query() {
+        throw new Error('SECRET_INTERNAL_STACK_PATH_DO_NOT_LEAK');
+      }
+    };
+    const prevErr = console.error;
+    console.error = () => {};
+    try {
+      await papersHandler(throwingReq, res);
+    } finally {
+      console.error = prevErr;
+    }
+    assert.strictEqual(res.statusCode, 500);
+    assert.strictEqual(res.body.code, 'INTERNAL_ERROR');
+    assert(!String(res.body.message).includes('SECRET_INTERNAL_STACK_PATH'));
+    assert.strictEqual(res.body.message, 'An unexpected internal error occurred.');
+  });
+
+  await test('api/_shared.js enforces CSP, Referrer-Policy, and strict origin allowlist', async () => {
+    const { req: okReq, res: okRes } = createMockReqRes('GET', {}, {}, { origin: 'https://nit-titanium-am-platform.vercel.app' });
+    await materialsHandler(okReq, okRes);
+    assert.strictEqual(okRes.headers['Access-Control-Allow-Origin'], 'https://nit-titanium-am-platform.vercel.app');
+    assert(okRes.headers['Content-Security-Policy'] && okRes.headers['Content-Security-Policy'].includes("object-src 'none'"));
+
+    const { req: badReq, res: badRes } = createMockReqRes('GET', {}, {}, { origin: 'https://evil-attacker.example' });
+    await materialsHandler(badReq, badRes);
+    assert.strictEqual(badRes.headers['Access-Control-Allow-Origin'], undefined);
+
+    const { req: scopusReq, res: scopusRes } = createMockReqRes('GET', { query: 'Ti-6Al-4V' });
+    await scopusHandler(scopusReq, scopusRes);
+    assert(scopusRes.statusCode === 503 || scopusRes.statusCode === 200);
+  });
+
+  await test('dashboard HTML removes hardcoded Supabase keys and pins occt-import-js SHA-256 integrity', async () => {
+    const fs = require('fs');
+    const path = require('path');
+    const html = fs.readFileSync(path.join(process.cwd(), 'process_windows_dashboard.html'), 'utf8');
+    assert(!html.includes('SUPABASE_CLOUD_KEY'));
+    assert(!html.includes('SUPABASE_CLOUD_URL'));
+    assert(html.includes('626b2d27e29f079d43e2d30e035a11779dc28208df373bf4cc90e6321e559df5'));
+    assert(html.includes('08201564f0954a19d55f289226c85bbe909a9f1762d5cf4c44ee626d83d8cbee'));
   });
 
   const pct = total > 0 ? ((passed / total) * 100).toFixed(1) : '0.0';

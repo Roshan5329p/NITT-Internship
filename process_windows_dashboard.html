@@ -2896,9 +2896,9 @@
   }
   </style>
 
-  <!-- KaTeX Publication-Grade Mathematical Rendering Engine -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+  <!-- KaTeX Publication-Grade Mathematical Rendering Engine (SRI Pinned) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
   <script>
 // ========================================================
 // UNIVERSAL MATERIAL STATE & PHASE FRACTION SYNCHRONIZER
@@ -5829,13 +5829,23 @@ function applyInverseRecipe(idx) {
 }
 window.applyInverseRecipe = applyInverseRecipe;
 
-function parseLabCouponsCsv(csvText) {
+const MAX_LAB_CSV_FILE_BYTES = 2 * 1024 * 1024;
+const MAX_LAB_CSV_ROWS = 5000;
+
+function parseLabCouponsCsv(csvText, fileSizeBytes) {
+  const effectiveBytes = typeof fileSizeBytes === 'number' ? fileSizeBytes : (csvText ? String(csvText).length : 0);
+  if (effectiveBytes > MAX_LAB_CSV_FILE_BYTES) {
+    return { coupons: [], errors: [{ rowNumber: 0, rawLine: '', reason: 'CSV file exceeds 2 MB maximum size limit.' }], validCount: 0, rejectedCount: 1 };
+  }
   if (!csvText || !String(csvText).trim()) {
     return { coupons: [], errors: [{ rowNumber: 0, rawLine: '', reason: 'CSV content is empty.' }], validCount: 0, rejectedCount: 0 };
   }
   const lines = String(csvText).replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').map(l => l.trim()).filter(Boolean);
   if (lines.length < 2) {
     return { coupons: [], errors: [{ rowNumber: 1, rawLine: lines[0] || '', reason: 'CSV must include header + at least one coupon row.' }], validCount: 0, rejectedCount: 0 };
+  }
+  if (lines.length - 1 > MAX_LAB_CSV_ROWS) {
+    return { coupons: [], errors: [{ rowNumber: MAX_LAB_CSV_ROWS + 1, rawLine: '', reason: `CSV exceeds maximum limit of ${MAX_LAB_CSV_ROWS} coupon rows.` }], validCount: 0, rejectedCount: lines.length - 1 };
   }
   const headers = lines[0].split(',').map(h => h.trim());
   const req = ['sample_id', 'process', 'P_W', 'v_mm_s', 'h_um', 't_um', 'T0_C', 'post_proc'];
@@ -5893,8 +5903,8 @@ function _summarizeLabRes(residuals) {
   return { count: n, mae: Number((sa / n).toFixed(2)), rmse: Number(Math.sqrt(ss / n).toFixed(2)), meanBias, bayesianBiasShift: Number(((n / (n + 4)) * meanBias).toFixed(2)) };
 }
 
-function handleLabCsvText(csvText) {
-  const parsed = parseLabCouponsCsv(csvText);
+function handleLabCsvText(csvText, fileSizeBytes) {
+  const parsed = parseLabCouponsCsv(csvText, fileSizeBytes);
   uploadedLabCoupons = parsed.coupons;
   const alloyId = document.getElementById('alloySelect')?.value || 'ti64_gr5';
   const resHv = [], resYs = [], resUts = [], resEl = [];
@@ -5941,8 +5951,12 @@ window.handleLabCsvText = handleLabCsvText;
 function handleLabCsvFileInput(inputEl) {
   const file = inputEl && inputEl.files && inputEl.files[0];
   if (!file) return;
+  if (file.size > MAX_LAB_CSV_FILE_BYTES) {
+    handleLabCsvText('', file.size);
+    return;
+  }
   const reader = new FileReader();
-  reader.onload = (e) => handleLabCsvText(String(e.target?.result || ''));
+  reader.onload = (e) => handleLabCsvText(String(e.target?.result || ''), file.size);
   reader.readAsText(file);
 }
 window.handleLabCsvFileInput = handleLabCsvFileInput;
@@ -5953,8 +5967,12 @@ function handleLabCsvDrop(e) {
   if (dz) dz.style.borderColor = 'rgba(56,189,248,0.35)';
   const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
   if (!file) return;
+  if (file.size > MAX_LAB_CSV_FILE_BYTES) {
+    handleLabCsvText('', file.size);
+    return;
+  }
   const reader = new FileReader();
-  reader.onload = (ev) => handleLabCsvText(String(ev.target?.result || ''));
+  reader.onload = (ev) => handleLabCsvText(String(ev.target?.result || ''), file.size);
   reader.readAsText(file);
 }
 window.handleLabCsvDrop = handleLabCsvDrop;
@@ -6760,7 +6778,7 @@ window.addEventListener('click', function(e) {
 });
 
 </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
     onload="if (typeof renderMathInElement === 'function') renderMathInElement(document.body);"></script>
 
 </head>
@@ -14220,6 +14238,39 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+function sanitizeExternalHttpUrl(rawUrl) {
+  if (typeof rawUrl !== 'string') return '';
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return '';
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+      return parsed.href;
+    }
+    return '';
+  } catch (_) {
+    return '';
+  }
+}
+window.sanitizeExternalHttpUrl = sanitizeExternalHttpUrl;
+
+function formatSafeCsvCell(val) {
+  if (val === null || val === undefined) return '""';
+  if (typeof val === 'number') {
+    return Number.isFinite(val) ? String(val) : '""';
+  }
+  let str = String(val);
+  if (/^[\s]*[=+\-@\t\r]/.test(str)) {
+    const trimmed = str.trim();
+    const isPlainSignedNum = /^[+-]?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(trimmed) && Number.isFinite(Number(trimmed));
+    if (!isPlainSignedNum) {
+      str = "'" + str;
+    }
+  }
+  return '"' + str.replace(/"/g, '""') + '"';
+}
+window.formatSafeCsvCell = formatSafeCsvCell;
+
 function populatePapersTable(papers) {
   const tbody = document.getElementById('papersTableBody');
   if (!tbody) return;
@@ -14233,11 +14284,13 @@ function populatePapersTable(papers) {
           ? '<span class="res-tag res-tag-ml" title="Numerical / Theoretical Modelling">MOD</span>'
           : '<span class="res-tag" style="background:rgba(148,163,184,0.15); color:#cbd5e1;" title="Techno-Economics / LCA">ECN</span>'));
 
-    const doiLink = p.doi
-      ? '<a href="https://doi.org/' + escapeHtml(p.doi) + '" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline; font-size:11px; font-family:monospace; margin-left:6px;">doi ↗</a>'
+    const safeDoiHref = p.doi ? sanitizeExternalHttpUrl('https://doi.org/' + String(p.doi).trim()) : '';
+    const doiLink = safeDoiHref
+      ? '<a href="' + escapeHtml(safeDoiHref) + '" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline; font-size:11px; font-family:monospace; margin-left:6px;">doi ↗</a>'
       : '';
-    const oaLink = p.oaUrl
-      ? '<a href="' + escapeHtml(p.oaUrl) + '" target="_blank" rel="noopener noreferrer" style="color:#34d399; text-decoration:underline; font-size:10.5px; font-family:monospace; margin-left:6px;">OA PDF ↗</a>'
+    const safeOaHref = sanitizeExternalHttpUrl(p.oaUrl);
+    const oaLink = safeOaHref
+      ? '<a href="' + escapeHtml(safeOaHref) + '" target="_blank" rel="noopener noreferrer" style="color:#34d399; text-decoration:underline; font-size:10.5px; font-family:monospace; margin-left:6px;">OA PDF ↗</a>'
       : '';
     const topicBadge = p.topic
       ? '<span class="brand-badge" style="margin-left:6px; font-size:9.5px; color:#c084fc; border-color:rgba(192,132,252,0.35);">' + escapeHtml(p.topic) + '</span>'
@@ -14283,7 +14336,20 @@ function exportLiteratureCsv() {
     const ysVal = (p.ys === null || p.ys === undefined) ? '' : p.ys;
     const utsVal = (p.uts === null || p.uts === undefined) ? '' : p.uts;
     const elVal = (p.el === null || p.el === undefined) ? '' : p.el;
-    csv += `"${p.id}","${p.author}","${p.type || 'EXP'}","${p.topic || ''}","${p.treatment || 'As-Built'}","${p.process}","${p.doi || ''}","${denVal}",${ysVal},${utsVal},${elVal},"${(p.desc || '').replace(/"/g, '""')}"\n`;
+    csv += [
+      p.id,
+      p.author,
+      p.type || 'EXP',
+      p.topic || '',
+      p.treatment || 'As-Built',
+      p.process,
+      p.doi || '',
+      denVal,
+      ysVal,
+      utsVal,
+      elVal,
+      p.desc || ''
+    ].map(formatSafeCsvCell).join(',') + '\n';
   });
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -16406,9 +16472,6 @@ function renderBonthaProfileTable() {
 
 // 7. INITIALIZATION
 // ==========================================
-const SUPABASE_CLOUD_URL = 'https://iismzfileyuvqgdpivgx.supabase.co';
-const SUPABASE_CLOUD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpc216ZmlsZXl1dnFnZHBpdmd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3ODAwMjYsImV4cCI6MjEwOTM1NjAyNn0.v__OCG79B-NyMKmyb_W7Lp_Lw0xcoWUggEuONMECmGo';
-
 const REMOVED_LITERATURE_IDS = new Set([109, 115, 118, 127, 131, 132, 135, 145, 151, 153, 159, 161, 171, 184, 200]);
 
 function updateLitPaperCountBadges(fetchedCount) {
@@ -16519,7 +16582,7 @@ function deduplicateAndNormalizePapers(rawPapers) {
       process: procStr,
       topic: p.topic || (mTop ? mTop[1].trim() : (curated?.topic || '')),
       doi: p.doi || (curated?.doi || (mDoi ? mDoi[1].trim() : '')),
-      oaUrl: p.oaUrl || (curated?.oaUrl || (mOa ? mOa[1].trim() : '')),
+      oaUrl: sanitizeExternalHttpUrl(p.oaUrl || (curated?.oaUrl || (mOa ? mOa[1].trim() : ''))),
       type: curated?.type || 'EXP',
       treatment: curated?.treatment || (mTop ? `Scopus (${mTop[1].trim()})` : 'Scopus Indexed (Pending Extraction)'),
       desc: curated?.desc || ((p.title || '') + (absStr ? ` — ${absStr.substring(0, 115)}...` : '')),
@@ -16535,9 +16598,9 @@ function deduplicateAndNormalizePapers(rawPapers) {
 async function initSupabaseCloudSync() {
   const badge = document.getElementById('supabaseStatusBadge');
   try {
-    // 1. Prefer backend /api/papers (repairs + joined CSV/Supabase data) when served via Java or Vercel
+    // Route cloud paper sync exclusively through the server proxy /api/papers
     let rawPapers = null;
-    let sourceLabel = 'Supabase Cloud';
+    let sourceLabel = 'API Synced';
     if (window.location.protocol !== 'file:') {
       try {
         const localRes = await fetch('/api/papers?limit=250');
@@ -16546,26 +16609,9 @@ async function initSupabaseCloudSync() {
           const list = Array.isArray(payload) ? payload : (payload.papers || payload.data || []);
           if (Array.isArray(list) && list.length > 0) {
             rawPapers = list;
-            sourceLabel = 'API Synced';
           }
         }
       } catch (_) {}
-    }
-
-    // 2. Fallback to direct Supabase REST without artificial lte.154 cutoff
-    if (!rawPapers) {
-      const res = await fetch(`${SUPABASE_CLOUD_URL}/rest/v1/papers?select=id,paper_number,title,authors,year,am_process,material,abstract&order=paper_number.asc`, {
-        headers: {
-          'apikey': SUPABASE_CLOUD_KEY,
-          'Authorization': `Bearer ${SUPABASE_CLOUD_KEY}`,
-          'Range': '0-299',
-          'Prefer': 'count=exact'
-        }
-      });
-      if (res.ok) {
-        const list = await res.json();
-        if (Array.isArray(list) && list.length > 0) rawPapers = list;
-      }
     }
 
     if (rawPapers && rawPapers.length > 0) {
@@ -17160,12 +17206,13 @@ window.addEventListener('online', updateNetworkTelemetry);
 window.addEventListener('offline', updateNetworkTelemetry);
 
 window.addEventListener('DOMContentLoaded', () => {
-  let savedTheme = 'dark';
+  let rawTheme = 'dark';
   try {
-    savedTheme = localStorage.getItem('snow_theme') || 'dark';
+    rawTheme = localStorage.getItem('snow_theme') || 'dark';
   } catch (e) {
-    savedTheme = 'dark';
+    rawTheme = 'dark';
   }
+  const savedTheme = rawTheme === 'light' ? 'light' : 'dark';
   document.documentElement.className = savedTheme;
   updateThemeIcon();
   updateNetworkTelemetry();
@@ -17595,7 +17642,6 @@ window.evaluateProcessBenchmarkSuite = evaluateProcessBenchmarkSuite;
 
 function exportComparatorBenchmarkCsv() {
   const suite = evaluateProcessBenchmarkSuite(currentProcess, readCurrentDashboardState());
-  const esc = (v) => { const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const lines = ['Paper_ID,Authors,Process,Condition,P_W,v_mm_s,h_um,t_um,sinter_temp_c,Property,Experimental,Active_Pred,Ensemble_Pred,Signed_Delta,APE_Pct,Accuracy_Pct,Within_PI95'];
   for (const r of suite.rows) {
     for (const m of r.metrics) {
@@ -17604,7 +17650,7 @@ function exportComparatorBenchmarkCsv() {
         r.P_W ?? '', r.v_mm_s ?? '', r.h_um ?? '', r.t_um ?? '', r.sinter_temp_c ?? '',
         m.property, m.experimental, m.active_pred, m.ensemble_pred,
         m.delta, m.ape_pct, m.accuracy_pct, m.within_pi95 ?? ''
-      ].map(esc).join(','));
+      ].map(formatSafeCsvCell).join(','));
     }
   }
   const blob = new Blob([lines.join('\n') + '\n'], { type: 'text/csv;charset=utf-8;' });
@@ -19080,6 +19126,8 @@ const CAD_DEFAULT_MACHINES = [
   { id: 'generic-binder-jetting', name: 'Generic Industrial Binder Jet + Vacuum Sinter Cell', vendor: 'Generic Lab', process: 'binder-jetting', envelopeMm: [400, 250, 250], powerRangeW: [50, 250], layerRangeUm: [30, 120], hourlyRateUsd: 65, materialCostPerKgUsd: 195, gasCostPerHourUsd: 0, isCustom: false }
 ];
 
+const ALLOWED_CAD_PROCESSES = ['lpbf', 'ded-laser', 'waam', 'binder-jetting'];
+
 function _loadCadMachines() {
   const map = new Map();
   CAD_DEFAULT_MACHINES.forEach(m => map.set(m.id, JSON.parse(JSON.stringify(m))));
@@ -19087,13 +19135,30 @@ function _loadCadMachines() {
     const raw = localStorage.getItem('nit_am_custom_machines_v1');
     if (raw) {
       const arr = JSON.parse(raw);
-      if (Array.isArray(arr)) arr.forEach(m => { if (m && m.id && m.id !== 'nit-trichy-custom' && Array.isArray(m.envelopeMm)) map.set(m.id, Object.assign({}, m, { isCustom: true })); });
+      if (Array.isArray(arr)) {
+        arr.forEach(m => {
+          if (!m || !m.id || m.id === 'nit-trichy-custom' || !Array.isArray(m.envelopeMm)) return;
+          const procNorm = String(m.process || 'lpbf').toLowerCase().trim();
+          const safeProc = ALLOWED_CAD_PROCESSES.includes(procNorm) ? procNorm : 'lpbf';
+          const safeId = String(m.id).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
+          if (!safeId) return;
+          const safeName = String(m.name || safeId).slice(0, 120);
+          map.set(safeId, Object.assign({}, m, { id: safeId, process: safeProc, name: safeName, isCustom: true }));
+        });
+      }
     }
   } catch (e) {}
   cadMachinesList = Array.from(map.values());
   const sel = document.getElementById('cadMachineSelect');
   if (sel) {
-    sel.innerHTML = cadMachinesList.map(m => `<option value="${m.id}" ${m.id === cadActiveMachineId ? 'selected' : ''}>[${m.process.toUpperCase()}] ${m.name}</option>`).join('');
+    sel.innerHTML = '';
+    cadMachinesList.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.selected = m.id === cadActiveMachineId;
+      opt.textContent = `[${m.process.toUpperCase()}] ${m.name}`;
+      sel.appendChild(opt);
+    });
   }
   selectCadMachine(cadActiveMachineId);
 }
@@ -19582,11 +19647,36 @@ function _renderNativeCadGuideUi(fileName, bytes) {
 
 async function _parseBrepInWorker(buffer, ext, fileName) {
   return new Promise((resolve, reject) => {
+    const OCCT_JS_URL = 'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.22/dist/occt-import-js.js';
+    const OCCT_JS_SHA256 = '626b2d27e29f079d43e2d30e035a11779dc28208df373bf4cc90e6321e559df5';
+    const OCCT_WASM_URL = 'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.22/dist/occt-import-js.wasm';
+    const OCCT_WASM_SHA256 = '08201564f0954a19d55f289226c85bbe909a9f1762d5cf4c44ee626d83d8cbee';
     const workerCode = `
+      async function verifyAndFetchBytes(url, expectedHex, label) {
+        const resp = await fetch(url, { mode: 'cors', credentials: 'omit' });
+        if (!resp.ok) throw new Error(label + ' download failed (HTTP ' + resp.status + ')');
+        const buf = await resp.arrayBuffer();
+        const digest = await crypto.subtle.digest('SHA-256', buf);
+        const actualHex = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+        if (actualHex !== expectedHex) {
+          throw new Error('Integrity check failed for ' + label + ' (SHA-256 mismatch). Execution aborted.');
+        }
+        return buf;
+      }
       self.onmessage = async function(ev) {
+        let jsBlobUrl = null;
+        let wasmBlobUrl = null;
         try {
-          importScripts('https://cdn.jsdelivr.net/npm/occt-import-js@0.0.22/dist/occt-import-js.js');
-          const occt = await self.occtimportjs({ locateFile: f => 'https://cdn.jsdelivr.net/npm/occt-import-js@0.0.22/dist/' + f });
+          const [jsBuf, wasmBuf] = await Promise.all([
+            verifyAndFetchBytes('${OCCT_JS_URL}', '${OCCT_JS_SHA256}', 'occt-import-js.js'),
+            verifyAndFetchBytes('${OCCT_WASM_URL}', '${OCCT_WASM_SHA256}', 'occt-import-js.wasm')
+          ]);
+          jsBlobUrl = URL.createObjectURL(new Blob([jsBuf], { type: 'application/javascript' }));
+          wasmBlobUrl = URL.createObjectURL(new Blob([wasmBuf], { type: 'application/wasm' }));
+          importScripts(jsBlobUrl);
+          URL.revokeObjectURL(jsBlobUrl);
+          jsBlobUrl = null;
+          const occt = await self.occtimportjs({ locateFile: () => wasmBlobUrl });
           const bytes = new Uint8Array(ev.data.buffer);
           const res = ev.data.ext.startsWith('ig') ? occt.ReadIgesFile(bytes, null) : occt.ReadStepFile(bytes, null);
           if (!res || !res.success || !res.meshes || res.meshes.length === 0) throw new Error('STEP/IGES contains no tessellated solid meshes.');
@@ -19611,6 +19701,9 @@ async function _parseBrepInWorker(buffer, ext, fileName) {
           self.postMessage({ ok: true, posBuffer: outPos.buffer }, [outPos.buffer]);
         } catch (err) {
           self.postMessage({ ok: false, error: err && err.message ? err.message : 'STEP/IGES WASM parse failed' });
+        } finally {
+          if (jsBlobUrl) URL.revokeObjectURL(jsBlobUrl);
+          if (wasmBlobUrl) URL.revokeObjectURL(wasmBlobUrl);
         }
       };
     `;
@@ -20438,14 +20531,28 @@ function _renderCadPrintabilityAndOriUi() {
   }
   const rankEl = document.getElementById('cadProcessRankingBody');
   if (rankEl) {
-    rankEl.innerHTML = p.processRanking.map(r => `
-      <tr>
-        <td><strong>${r.label}</strong></td>
-        <td style="font-family:monospace; color:#38bdf8; font-weight:700;">${r.score}</td>
-        <td style="font-size:10px; color:${r.verdict==='Recommended'?'#34d399':(r.verdict==='Not Suitable'?'#fb7185':'#fbbf24')};">${r.verdict}</td>
-        <td><button type="button" class="step-btn" onclick="useCadProcess('${r.processId}')" style="padding:2px 6px; font-size:9.5px;">Use</button></td>
-      </tr>
-    `).join('');
+    rankEl.innerHTML = '';
+    p.processRanking.forEach(r => {
+      const safeProc = ALLOWED_CAD_PROCESSES.includes(r.processId) ? r.processId : 'lpbf';
+      const safeLabel = typeof escapeHtml === 'function' ? escapeHtml(r.label) : String(r.label ?? '');
+      const safeVerdict = typeof escapeHtml === 'function' ? escapeHtml(r.verdict) : String(r.verdict ?? '');
+      const tr = document.createElement('tr');
+      const vColor = r.verdict === 'Recommended' ? '#34d399' : (r.verdict === 'Not Suitable' ? '#fb7185' : '#fbbf24');
+      tr.innerHTML =
+        `<td><strong>${safeLabel}</strong></td>` +
+        `<td style="font-family:monospace; color:#38bdf8; font-weight:700;">${Number(r.score) || 0}</td>` +
+        `<td style="font-size:10px; color:${vColor};">${safeVerdict}</td>` +
+        `<td></td>`;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'step-btn';
+      btn.dataset.process = safeProc;
+      btn.style.cssText = 'padding:2px 6px; font-size:9.5px;';
+      btn.textContent = 'Use';
+      btn.addEventListener('click', () => useCadProcess(safeProc));
+      tr.lastElementChild.appendChild(btn);
+      rankEl.appendChild(tr);
+    });
   }
   const curOriEl = document.getElementById('cadCurrentOriSummary');
   if (curOriEl) {
