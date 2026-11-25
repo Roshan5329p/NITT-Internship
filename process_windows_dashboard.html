@@ -19,6 +19,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
 <script defer src="js/dashboard-data.js"></script>
+<script defer src="js/pinn-cad-showcase.js"></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -3343,6 +3344,171 @@
     padding: 7px 10px;
     font-size: 12px;
   }
+
+  /* PINN CAD Build Showcase & Narrator */
+  .cad-showcase-card {
+    margin-top: 14px;
+    border-radius: 12px;
+    padding: 14px 16px;
+    background: rgba(7, 12, 22, 0.92);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+  }
+  .showcase-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .showcase-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .showcase-stage-rail {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .showcase-stage-pill {
+    appearance: none;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    color: #cbd5e1;
+    border-radius: 8px;
+    padding: 7px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s ease;
+  }
+  .showcase-stage-pill:hover {
+    border-color: #38bdf8;
+    color: #f8fafc;
+  }
+  .showcase-stage-pill.active {
+    background: rgba(56, 189, 248, 0.16);
+    border-color: #38bdf8;
+    color: #7dd3fc;
+    font-weight: 700;
+  }
+  .showcase-ood-banner {
+    display: none;
+    margin-bottom: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    background: rgba(245, 158, 11, 0.14);
+    border: 1px solid rgba(251, 191, 36, 0.45);
+    color: #fde68a;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+  .showcase-compare-banner {
+    display: none;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    color: #bae6fd;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.45;
+  }
+  .showcase-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+  .showcase-narrative-box,
+  .showcase-chain-box {
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .showcase-bullets {
+    margin: 8px 0 10px 18px;
+    padding: 0;
+    font-size: 12px;
+    color: #e2e8f0;
+    line-height: 1.55;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .showcase-geo-callout {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #7dd3fc;
+    background: rgba(56, 189, 248, 0.08);
+    border-left: 3px solid #38bdf8;
+    padding: 6px 10px;
+    border-radius: 4px;
+    line-height: 1.45;
+  }
+  .showcase-hip-preview {
+    display: none;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(52, 211, 153, 0.08);
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .showcase-chain-step {
+    padding: 6px 9px;
+    border-radius: 6px;
+    background: rgba(6, 12, 24, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    font-size: 10.5px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #e2e8f0;
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .showcase-audit-pill {
+    display: inline-block;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: rgba(52, 211, 153, 0.12);
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    color: #6ee7b7;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+  }
+  @media (max-width: 900px) {
+    .cad-top-grid {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+  }
+  @media (max-width: 768px) {
+    .showcase-stage-rail {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .showcase-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    #view_cad-analyzer,
+    #view_cad-analyzer * {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+  }
+  .cad-top-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
   </style>
 
   <!-- KaTeX math styles & scripts are loaded dynamically on demand via ensureKatexLoaded() so initial mobile FCP stays unblocked -->
@@ -3948,7 +4114,11 @@ function evaluateTi64Pinn(input) {
   const thermalEnthalpyResidualPct = Number(_pinnClamp((Math.abs(widthUm - widthRef) / Math.max(30, widthRef)) * 100 * (kEff / 22.6), 0.1, 25.0, 2.5).toFixed(2));
 
   const dW_dLogP = Number(tRes.jacobian[0][0].toFixed(4));
+  const dD_dLogP = Number(tRes.jacobian[1][0].toFixed(4));
   const dW_dLogV = Number(tRes.jacobian[0][1].toFixed(4));
+  const dCool_dT0 = Number(tRes.jacobian[3][4].toFixed(6));
+  const dLogLath_dLogCool = Number(mRes.jacobian[0][0].toFixed(4));
+  const dLogLath_dTht = Number(mRes.jacobian[0][1].toFixed(5));
   const dYs_dO2 = Number((mRes.jacobian[1][2] * 1000).toFixed(1));
   const dElong_dO2 = Number((mRes.jacobian[3][2] * 20).toFixed(1));
 
@@ -3959,7 +4129,7 @@ function evaluateTi64Pinn(input) {
       mode: aspectRatio > 0.80 ? 'Keyhole Vapor Depression (PINN)' : (aspectRatio >= 0.55 ? 'Transition Mode (PINN)' : 'Conduction Mode (PINN)')
     },
     metallurgy: { alphaLathWidthUm, yieldStrengthMpa, utsMpa, elongationPct, predictedHv },
-    derivatives: { dW_dLogP, dW_dLogV, dYs_dO2, dElong_dO2 },
+    derivatives: { dW_dLogP, dD_dLogP, dW_dLogV, dCool_dT0, dLogLath_dLogCool, dLogLath_dTht, dYs_dO2, dElong_dO2 },
     physicsAudit: {
       hallPetchResidualMpa,
       thermalEnthalpyResidualPct,
@@ -10997,9 +11167,9 @@ window.addEventListener('click', function(e) {
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 16px; align-items: start;">
+        <div class="cad-top-grid">
           <!-- Left Control Column -->
-          <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 12px; min-width: 0;">
             <div id="cadDropzone" onclick="document.getElementById('cadFileInput')?.click()" ondragover="event.preventDefault(); this.style.borderColor='#38bdf8';" ondragleave="this.style.borderColor='rgba(56,189,248,0.38)';" ondrop="handleCadFileDrop(event)" style="border: 1.5px dashed rgba(56,189,248,0.38); border-radius: 10px; padding: 16px; text-align: center; background: rgba(4,8,16,0.65); cursor: pointer;">
               <div style="font-size: 13px; font-weight: 700; color: #f1f5f9;">Drop CAD file here or click to browse</div>
               <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace;">.stl (max 1 GB) · .step / .stp / .iges (max 60 MB) · .ipt / .prt (guide)</div>
@@ -11076,7 +11246,7 @@ window.addEventListener('click', function(e) {
           </div>
 
           <!-- Right Interactive 3D CAD WebGL Viewer -->
-          <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; flex-direction: column; gap: 10px; min-width: 0;">
             <div style="position: relative; background: radial-gradient(circle at 50% 35%, #0f172a, #040812); border: 1px solid rgba(56,189,248,0.22); border-radius: 12px; overflow: hidden;">
               <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(7,12,20,0.8);">
                 <button type="button" class="mp-pill-btn" id="btnCadWireframe" onclick="toggleCadViewerOption('wireframe')" title="Toggle wireframe edge overlay">Wireframe</button>
@@ -11089,6 +11259,8 @@ window.addEventListener('click', function(e) {
                   <option value="thickness">Overlay: Wall Thickness (mm)</option>
                   <option value="stress">Overlay: Residual Stress Hotspots</option>
                   <option value="thermal">Overlay: Overheating Zones</option>
+                  <option value="pinn-cooling">Overlay: PINN Cooling Rate (log₁₀ K/s)</option>
+                  <option value="pinn-lath">Overlay: PINN α-Lath &amp; Yield Map</option>
                 </select>
                 <button type="button" class="mp-pill-btn" onclick="resetCadCamera()">Reset Camera</button>
                 <button type="button" class="mp-pill-btn active" id="btnCadFitMode" onclick="toggleCadFitMode()" title="Switch between close-up part framing and full machine build envelope">Fit Part</button>
@@ -11120,6 +11292,75 @@ window.addEventListener('click', function(e) {
             </div>
           </div>
         </div>
+
+        <!-- PINN-Driven LPBF & L-DED Step-by-Step Build Theater & Physics Narrator -->
+        <section id="cadPinnShowcaseCard" class="cad-showcase-card" aria-label="Interactive PINN LPBF and L-DED Build Showcase">
+          <div class="showcase-toolbar">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <strong style="font-size: 13px; color: #f8fafc;">PINN Process Showcase: LPBF &amp; L-DED Build Narrator</strong>
+              <span class="brand-badge" style="font-size: 9.5px; color: #7dd3fc; border-color: rgba(56,189,248,0.4);">Live thermal_net + metallurgy_net</span>
+            </div>
+            <div class="showcase-btn-group">
+              <button type="button" class="mp-pill-btn" id="btnShowcaseModeLpbf" onclick="window.PinnCadShowcase?.setMode('lpbf')">LPBF Build</button>
+              <button type="button" class="mp-pill-btn" id="btnShowcaseModeDed" onclick="window.PinnCadShowcase?.setMode('ded-laser')">L-DED Build</button>
+              <button type="button" class="mp-pill-btn active" id="btnShowcaseModeCompare" onclick="window.PinnCadShowcase?.setMode('compare')">Compare LPBF vs. L-DED</button>
+              <button type="button" class="step-btn" id="btnShowcaseFlipToolhead" onclick="window.PinnCadShowcase?.flipToolhead()" style="color: #fde68a; border-color: rgba(251,191,36,0.45);">3D Toolhead: LPBF (Flip → L-DED)</button>
+            </div>
+          </div>
+
+          <div class="showcase-toolbar" style="margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <div class="showcase-btn-group">
+              <button type="button" class="step-btn" id="btnShowcasePrev" onclick="window.PinnCadShowcase?.prevStage()" aria-label="Previous build stage">⏮ Prev Stage</button>
+              <button type="button" class="primary-hero-cta" id="btnShowcasePlay" onclick="window.PinnCadShowcase?.togglePlayShowcase()" style="font-size: 11.5px; padding: 6px 12px;">▶ Play 6-Stage Build</button>
+              <button type="button" class="step-btn" id="btnShowcaseNext" onclick="window.PinnCadShowcase?.nextStage()" aria-label="Next build stage">⏭ Next Stage</button>
+              <label for="showcaseSpeedSelect" style="font-size: 11px; color: #cbd5e1; margin-left: 6px; display: inline-flex; align-items: center; gap: 5px;">
+                Speed:
+                <select id="showcaseSpeedSelect" aria-label="Showcase playback speed" onchange="window.PinnCadShowcase?.setSpeed(this.value)" style="background: #0b1220; color: #f1f5f9; border: 1px solid rgba(148,163,184,0.35); border-radius: 5px; padding: 3px 6px; font-size: 11px;">
+                  <option value="0.5">0.5×</option>
+                  <option value="1" selected>1×</option>
+                  <option value="2">2×</option>
+                </select>
+              </label>
+            </div>
+            <span style="font-size: 10.5px; color: #94a3b8;">Representative slice vectors synced to active CAD mesh &amp; sidebar parameters</span>
+          </div>
+
+          <div class="showcase-stage-rail" role="tablist" aria-label="6 Manufacturing Process Stages">
+            <button type="button" class="showcase-stage-pill active" role="tab" aria-current="step" onclick="window.PinnCadShowcase?.setStage(0)">1. Setup &amp; O₂</button>
+            <button type="button" class="showcase-stage-pill" role="tab" aria-current="false" onclick="window.PinnCadShowcase?.setStage(1)">2. Feed &amp; Coupling</button>
+            <button type="button" class="showcase-stage-pill" role="tab" aria-current="false" onclick="window.PinnCadShowcase?.setStage(2)">3. Melt Pool</button>
+            <button type="button" class="showcase-stage-pill" role="tab" aria-current="false" onclick="window.PinnCadShowcase?.setStage(3)">4. Solidification</button>
+            <button type="button" class="showcase-stage-pill" role="tab" aria-current="false" onclick="window.PinnCadShowcase?.setStage(4)">5. Thermal Stress</button>
+            <button type="button" class="showcase-stage-pill" role="tab" aria-current="false" onclick="window.PinnCadShowcase?.setStage(5)">6. Post &amp; ASTM</button>
+          </div>
+
+          <div id="cadShowcaseLiveRegion" class="sr-only" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;"></div>
+          <div id="cadShowcaseOodBanner" class="showcase-ood-banner" role="alert"></div>
+          <div id="cadShowcaseCompareSummary" class="showcase-compare-banner"></div>
+
+          <div class="showcase-grid">
+            <div class="showcase-narrative-box">
+              <h3 id="cadShowcaseHeadline" style="margin: 0 0 4px 0; font-size: 14px; font-weight: 800; color: #f8fafc;">Load a CAD Component to Launch the PINN Build Theater</h3>
+              <p id="cadShowcaseSubheadline" style="margin: 0; font-size: 11.5px; color: #cbd5e1; line-height: 1.45;">Click "Load Demo Ti-6Al-4V Bracket" or upload an STL/STEP part to inspect LPBF vs. L-DED thermal and microstructural evolution step by step.</p>
+              <ul id="cadShowcaseBullets" class="showcase-bullets"></ul>
+              <div id="cadShowcaseGeoCallout" class="showcase-geo-callout"></div>
+              <div id="cadShowcaseHipPreview" class="showcase-hip-preview">
+                <strong id="cadShowcaseHipTitle" style="color: #6ee7b7; display: block; margin-bottom: 4px;">Simulated HIP Recovery Preview (920 °C / 100 MPa)</strong>
+                <div id="cadShowcaseHipAsBuilt" style="color: #fca5a5;"></div>
+                <div id="cadShowcaseHipProjected" style="color: #6ee7b7; margin-top: 2px;"></div>
+              </div>
+            </div>
+
+            <div class="showcase-chain-box">
+              <div style="font-size: 11px; font-weight: 700; color: #f1f5f9; margin-bottom: 6px;">Live PINN Causal Chain (Active Slice)</div>
+              <div class="showcase-chain-step"><strong style="color:#94a3b8;">1. Inputs:</strong> <span id="cadShowcaseChainInputs">—</span></div>
+              <div class="showcase-chain-step"><strong style="color:#7dd3fc;">2. thermal_net:</strong> <span id="cadShowcaseChainThermal">—</span></div>
+              <div class="showcase-chain-step"><strong style="color:#6ee7b7;">3. metallurgy_net:</strong> <span id="cadShowcaseChainMet">—</span></div>
+              <div id="cadShowcaseAuditBadges" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;"></div>
+              <canvas id="cadPinnInsetCanvas" width="420" height="148" aria-label="LPBF vs L-DED melt pool and alpha lath scale comparison" style="width: 100%; height: 148px; display: block; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);"></canvas>
+            </div>
+          </div>
+        </section>
 
         <!-- Full-Width Part Telemetry, A(z) Slicing & Multi-Panel Analysis (Utilizes 100% Width) -->
         <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px;">
@@ -11160,7 +11401,7 @@ window.addEventListener('click', function(e) {
           </div>
 
           <!-- Full-Width 2x2 Grid: Printability, 26-Orientation, Part Properties, Build Time & Cost -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(410px, 1fr)); gap: 14px;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 410px), 1fr)); gap: 14px;">
             <div style="border-radius: 10px; padding: 14px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
                 <strong style="font-size: 12.5px; color: #f1f5f9;">Printability &amp; Support Estimate</strong>
@@ -13512,8 +13753,11 @@ function switchTab(tabId, btn) {
     }
     startTwinAnimation();
   }
-  if (tabId === 'cad-analyzer' && typeof initCadAnalyzerTab === 'function') {
-    initCadAnalyzerTab();
+  if (tabId === 'cad-analyzer') {
+    if (typeof initCadAnalyzerTab === 'function') initCadAnalyzerTab();
+    if (typeof PinnCadShowcase !== 'undefined') PinnCadShowcase.syncFromDashboard();
+  } else if (typeof PinnCadShowcase !== 'undefined') {
+    PinnCadShowcase.pauseShowcase();
   }
   if (tabId === 'predictions' && !hadDirtyPreds && typeof renderPredMechCurves === 'function') {
     setTimeout(() => renderPredMechCurves(window.latestPhysicsState), 30);
@@ -20561,6 +20805,9 @@ function _applyCadMesh(mesh, fileName, extraWarnings, fullMetrics) {
   twinNeedsCadAutoFit = true;
   changeCadSourceUnit('mm');
   resetCadCamera();
+  if (typeof PinnCadShowcase !== 'undefined') {
+    PinnCadShowcase.resetOnCadLoad((getActiveCadMachine() && getActiveCadMachine().process) || (typeof currentProcess !== 'undefined' ? currentProcess : 'lpbf'));
+  }
 }
 
 function convertCadInchesToMm() {
@@ -20767,12 +21014,18 @@ function clearLoadedCadPart() {
   const guideCard = document.getElementById('cadNativeGuideCard'); if (guideCard) guideCard.style.display = 'none';
   const st = document.getElementById('cadStatusBadge');
   if (st) { st.innerText = 'Waiting for CAD file'; st.style.color = '#94a3b8'; }
+  if (typeof PinnCadShowcase !== 'undefined') {
+    PinnCadShowcase.pauseShowcase();
+    PinnCadShowcase.syncFromDashboard();
+    PinnCadShowcase.renderShowcaseNarratorUi();
+  }
   _syncCadUiGuards();
   _updateCadMeshSummaryUi();
   _renderCadGeometryUi();
   _renderCadPrintabilityAndOriUi();
   _renderCadPhase4Ui();
   if (typeof _updateCadHeatmapLegend === 'function') _updateCadHeatmapLegend();
+  if (typeof PinnCadShowcase !== 'undefined') PinnCadShowcase.syncFromDashboard();
   renderCadViewer();
   if (typeof calculatePhysics === 'function') calculatePhysics();
   if (typeof updateTwinScaleAndHud === 'function') updateTwinScaleAndHud();
@@ -21038,6 +21291,7 @@ function analyzeCadGeometryUi(mesh, overhangDeg, minWallLimitMm) {
     : Number(proxyOhPct.toFixed(1));
 
   return {
+    boundingBox: bb,
     volumeCm3, massTi64Grams: Number((volumeCm3 * 4.43).toFixed(2)), surfaceAreaCm2,
     isWatertight, boundaryEdgeCount, nonManifoldEdgeCount, windingSign, fastVoxelActive,
     overhangAreaCm2, overhangFractionPct,
@@ -21332,6 +21586,8 @@ var cadSimReport = null;
 var cadEconomicsReport = null;
 var _cadSimPerThermalBuf = null;
 var _cadSimPerStressBuf = null;
+var _cadSimPerCoolingBuf = null;
+var _cadSimPerLathBuf = null;
 
 function simulatePartBuildUi(mesh, geo, printability, mac) {
   const numOr = (val, fb) => (Number.isFinite(val) ? val : fb);
@@ -21391,7 +21647,7 @@ function simulatePartBuildUi(mesh, geo, printability, mac) {
     if (uts < minUts) minUts = uts;
     if (el < minEl) { minEl = el; weakestZ = sl.zMm; }
     hvSum += hv;
-    layers.push({ zMm: sl.zMm, effectivePreheatC: effT0, ys, uts, el, hv, heatSinkRatio: sl.heatSinkRatio });
+    layers.push({ zMm: sl.zMm, effectivePreheatC: effT0, ys, uts, el, hv, heatSinkRatio: sl.heatSinkRatio, coolingRateKs: cool, alphaLathUm: pinn ? pinn.metallurgy.alphaLathWidthUm : met.lath.alphaLathWidthUm });
   }
 
   const minLayerYs = Math.round(minYs), minLayerUts = Math.round(minUts), minLayerEl = Number(minEl.toFixed(1));
@@ -21430,6 +21686,12 @@ function simulatePartBuildUi(mesh, geo, printability, mac) {
   const perStress = (typeof _cadSimPerStressBuf !== 'undefined' && _cadSimPerStressBuf && _cadSimPerStressBuf.length === nTri)
     ? _cadSimPerStressBuf
     : (_cadSimPerStressBuf = new Float32Array(nTri));
+  const perCooling = (typeof _cadSimPerCoolingBuf !== 'undefined' && _cadSimPerCoolingBuf && _cadSimPerCoolingBuf.length === nTri)
+    ? _cadSimPerCoolingBuf
+    : (_cadSimPerCoolingBuf = new Float32Array(nTri));
+  const perLath = (typeof _cadSimPerLathBuf !== 'undefined' && _cadSimPerLathBuf && _cadSimPerLathBuf.length === nTri)
+    ? _cadSimPerLathBuf
+    : (_cadSimPerLathBuf = new Float32Array(nTri));
   for (let t = 0; t < nTri; t++) {
     const i = t * 9, zc = (pos[i+2] + pos[i+5] + pos[i+8]) / 3;
     const zf = Math.max(0, Math.min(1, (zc - zMin) / hSafe));
@@ -21442,6 +21704,9 @@ function simulatePartBuildUi(mesh, geo, printability, mac) {
     const jProx = (lay.heatSinkRatio >= 1.8 || lay.heatSinkRatio <= 0.55) ? 0.42 : 0;
     const nearPl = zf < 0.12 ? 0.38 : 0;
     perStress[t] = Math.max(0.05, Math.min(1, (nearPl + jProx + ohB + (1 - Math.abs(norm[i+2]))*0.2) * Math.max(0.15, Math.min(1, surfStress / 650))));
+    const logCool = Math.log10(Math.max(10, lay.coolingRateKs || 1e4));
+    perCooling[t] = Math.max(0, Math.min(1, (logCool - 2.5) / 4.0));
+    perLath[t] = Math.max(0, Math.min(1, ((lay.alphaLathUm || 1.2) - 0.3) / 2.7));
   }
 
   // Time & Cost Estimate
@@ -21468,7 +21733,7 @@ function simulatePartBuildUi(mesh, geo, printability, mac) {
   const costEach = Number((totCost / batch).toFixed(2));
 
   return {
-    sim: { minLayerYs, minLayerUts, minLayerEl, meanHv: Math.round(hvSum/layers.length), maxT0, weakestZ, maxOod, astmStd, astmPass, astmReason, surfStress, warpScore, deflUm, cutRisk, stressNotes, layers, perThermal, perStress },
+    sim: { minLayerYs, minLayerUts, minLayerEl, meanHv: Math.round(hvSum/layers.length), maxT0, weakestZ, maxOod, astmStd, astmPass, astmReason, surfStress, warpScore, deflUm, cutRisk, stressNotes, layers, perThermal, perStress, perCooling, perLath },
     econ: { totalH, scanH, recoatH, setupH, layerCount, kgUsed, wastePct, costEach, totCost, mCost, matCost, gasCost, postFee, batch, plateCap }
   };
 }
@@ -21520,6 +21785,7 @@ function runCadPhase4Simulation() {
   const out = simulatePartBuildUi(cadActiveMesh, cadGeometryReport, cadPrintabilityReport, mac);
   cadSimReport = out.sim; cadEconomicsReport = out.econ;
   _renderCadPhase4Ui();
+  if (typeof PinnCadShowcase !== 'undefined') PinnCadShowcase.syncFromDashboard();
   renderCadViewer();
 }
 window.runCadPhase4Simulation = runCadPhase4Simulation;
@@ -21544,6 +21810,7 @@ function runCadGeometryAnalysis() {
   _renderCadPrintabilityAndOriUi();
   _renderCadPhase4Ui();
   if (typeof _updateCadHeatmapLegend === 'function') _updateCadHeatmapLegend();
+  if (typeof PinnCadShowcase !== 'undefined') PinnCadShowcase.syncFromDashboard();
   renderCadViewer();
   if (typeof calculatePhysics === 'function') calculatePhysics();
 }
@@ -21718,6 +21985,8 @@ function _getCadViewerColorCache(mesh, mode, zMinMesh, zSpanMesh, czBase) {
   const perThick = geoRef && geoRef.perThick ? geoRef.perThick : null;
   const perStress = simRef && simRef.perStress ? simRef.perStress : null;
   const perThermal = simRef && simRef.perThermal ? simRef.perThermal : null;
+  const perCooling = simRef && simRef.perCooling ? simRef.perCooling : null;
+  const perLath = simRef && simRef.perLath ? simRef.perLath : null;
   const overhangZMin = czBase + 0.01 * zSpanMesh;
 
   for (let t = 0; t < nTri; t++) {
@@ -21747,6 +22016,16 @@ function _getCadViewerColorCache(mesh, mode, zMinMesh, zSpanMesh, czBase) {
       r = Math.round(60 + v * 195);
       g = Math.round(190 - v * 115);
       bl = Math.round(245 - v * 210);
+    } else if (mode === 'pinn-cooling') {
+      const v = perCooling ? perCooling[t] : 0.5;
+      r = Math.round(245 - v * 189);
+      g = Math.round(125 + v * 64);
+      bl = Math.round(45 + v * 203);
+    } else if (mode === 'pinn-lath') {
+      const v = perLath ? perLath[t] : 0.4;
+      r = Math.round(52 + v * 199);
+      g = Math.round(211 - v * 45);
+      bl = Math.round(153 - v * 117);
     } else {
       const isOh = perOverhang ? Boolean(perOverhang[t]) : (norm[b + 2] < -0.707 && avgZ > overhangZMin);
       if (isOh) { r = 220; g = 80; bl = 65; }
@@ -21943,6 +22222,11 @@ function renderCadViewer() {
     }
   }
 
+  // 3B. PINN Interactive Build Showcase Overlay (slice contour, clipped hatch & toolhead)
+  if (cadActiveMesh && typeof cadGeometryReport !== 'undefined' && cadGeometryReport && typeof PinnCadShowcase !== 'undefined') {
+    PinnCadShowcase.renderShowcaseOverlayOnCadCanvas(ctx, proj, W, H, cadActiveMesh, cadGeometryReport, bb, frameRadius);
+  }
+
   // 4. Build Direction (+Z) Arrow (scaled cleanly to active view frameRadius)
   if (cadViewerState.arrow) {
     const ax0 = cx - frameRadius * 0.92, ay0 = cy - frameRadius * 0.72;
@@ -22004,6 +22288,10 @@ function _updateCadHeatmapLegend() {
     el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#38bdf8', 'Low Peel Stress') + sw('#fbbf24', 'Moderate Transition') + sw('#ef4444', 'High Peel / Warping Hotspot (Overhangs / Jumps)');
   } else if (mode === 'thermal') {
     el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#3cbef5', 'Fast Cool (High Sink)') + sw('#c89640', 'Moderate Heat Accum.') + sw('#ff4b23', 'Overheating / Low Heat-Sink Ratio');
+  } else if (mode === 'pinn-cooling') {
+    el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#f57d2d', 'Slower Cool (10³ K/s, L-DED / Heat-Accumulated)') + sw('#38bdf8', 'Rapid Quench (10⁵–10⁶ K/s, α′ Martensite)');
+  } else if (mode === 'pinn-lath') {
+    el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#34d399', 'Fine α′ / Ultra-Fine Lath (High Hall-Petch YS)') + sw('#fbbf24', 'Coarsened α+β Lath (Higher Ductility)');
   } else {
     el.innerHTML = `<span style="color:#94a3b8;">Legend:</span>` + sw('#55afea', `Self-Supporting (&le;${safeDeg}°)`) + sw('#dc5041', `Overhang / Needs Support (&gt;${safeDeg}°)`);
   }
@@ -22027,6 +22315,9 @@ function scrubCadLayer(idx, skipViewerSync) {
     out.style.color = ly.el < 10.0 ? '#fb7185' : '#34d399';
   }
   _renderCadGeometryUi();
+  if (!skipViewerSync && typeof PinnCadShowcase !== 'undefined') {
+    PinnCadShowcase.setSliceIdx(i);
+  }
   if (!skipViewerSync && document.getElementById('chkCadScrubSync3d')?.checked) {
     const pct = Math.max(5, Math.min(100, Math.round(((i + 1) / n) * 100)));
     const zSlider = document.getElementById('cadSectionSlider');

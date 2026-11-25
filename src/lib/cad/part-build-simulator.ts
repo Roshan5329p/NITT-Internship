@@ -8,7 +8,7 @@
 import { evaluateTi64Pinn } from '../ti64-pinn';
 import { evaluateTi64Metallurgy, normalizePostProcessing } from '../ti64-metallurgy';
 import { classifyProcessRegime } from '../regime-classifier';
-import { evaluateOodRisk } from '../ood-detector';
+import { evaluateOodRisk, type OodStatus } from '../ood-detector';
 import type { ParsedCadMesh } from './cad-parser';
 import type { CadGeometryReport } from './geometry-analyzer';
 import type { CadPrintabilityReport } from './printability-rules';
@@ -40,7 +40,40 @@ export interface SimulatedLayerTelemetry {
   elongPct: number;
   hv: number;
   oodDistance: number;
+  oodStatus: OodStatus;
+  piMultiplier: number;
   regimeName: string;
+  meltPoolWidthUm: number;
+  meltPoolDepthUm: number;
+  meltPoolLengthUm: number;
+  aspectRatio: number;
+  peakTempC: number;
+  meltMode: string;
+  absorptivityEta: number;
+  vedJmm3: number;
+  heatInputJmm: number;
+  heatSinkRatio: number;
+  hallPetchResidualMpa: number;
+  thermalEnthalpyResidualPct: number;
+  dW_dLogP: number;
+  dD_dLogP: number;
+  dW_dLogV: number;
+  dCool_dT0: number;
+  dLogLath_dLogCool: number;
+  dLogLath_dTht: number;
+  dYs_dO2: number;
+  dElong_dO2: number;
+  asBuiltAlphaLathUm: number;
+  asBuiltYsMpa: number;
+  asBuiltUtsMpa: number;
+  asBuiltElongPct: number;
+  asBuiltHv: number;
+  hipPreviewAlphaLathUm: number;
+  hipPreviewYsMpa: number;
+  hipPreviewUtsMpa: number;
+  hipPreviewElongPct: number;
+  hipPreviewHv: number;
+  hipPreviewAstmPass: boolean;
 }
 
 export interface DistortionStressScreening {
@@ -74,6 +107,8 @@ export interface PartBuildSimulationReport {
   distortionAndStress: DistortionStressScreening;
   perTriangleThermalHotspot: Float32Array; // Normalized 0..1 overheating risk
   perTriangleStressHotspot: Float32Array;  // Normalized 0..1 stress/distortion hotspot
+  perTriangleCoolingRate: Float32Array;    // Normalized 0..1 over log10(coolingRateKs) in [2.5, 6.5]
+  perTriangleAlphaLath: Float32Array;      // Normalized 0..1 over alphaLathUm in [0.3, 3.0]
 }
 
 function clampFinite(v: number, min: number, max: number, fallback: number): number {
@@ -121,6 +156,13 @@ export function simulatePartBuild(
   let anyOod = false;
 
   const t0Safe = Math.max(20, Math.min(500, baseT0));
+  const absorptivityEta = proc === 'waam' ? 0.78 : (proc === 'ded-laser' ? 0.38 : 0.42);
+  const densityEst = Number(Math.max(92, 99.7 - geo.overhangFractionPct * 0.015).toFixed(2));
+  const minYsReq = alloyId === 'ti64_eli' ? 795 : 825;
+  const minUtsReq = alloyId === 'ti64_eli' ? 860 : 895;
+  const minElReq = 10.0;
+  const o2Max = alloyId === 'ti64_eli' ? 0.13 : 0.20;
+  const o2Ok = o2 <= o2Max;
 
   for (let idx = 0; idx < slices.length; idx++) {
     const sl = slices[idx];
@@ -140,7 +182,7 @@ export function simulatePartBuild(
     const pinn = evaluateTi64Pinn({
       processId: proc, P, v, h, t: tUm, T0: effPreheatC, db,
       postProcessing: post, oxygenWtPct: o2,
-      densityPct: Math.max(92, 99.7 - (geo.overhangFractionPct * 0.015)),
+      densityPct: densityEst,
       buildOrientationDeg: oriDeg
     });
 
@@ -154,12 +196,70 @@ export function simulatePartBuild(
       densityPct: 99.6
     });
 
+    const elongKnock = sl.heatSinkRatio >= 2.0 ? 0.94 : 1.0;
+
+    // Counterfactual As-Built ('None') & HIP Preview passes on the same thermal state
+    const pinnAsBuilt = post === 'None'
+      ? pinn
+      : evaluateTi64Pinn({
+          processId: proc, P, v, h, t: tUm, T0: effPreheatC, db,
+          postProcessing: 'None', oxygenWtPct: o2,
+          densityPct: densityEst,
+          buildOrientationDeg: oriDeg
+        });
+    const metAsBuilt = post === 'None'
+      ? met
+      : evaluateTi64Metallurgy({
+          alloyId, processId: proc,
+          coolingRateKs: pinn.meltPool.coolingRateKs,
+          postProcessing: 'None',
+          oxygenWtPct: o2,
+          buildOrientationDeg: oriDeg,
+          scanRotationDeg: scanRot,
+          densityPct: densityEst
+        });
+
+    const pinnHip = post === 'HIP'
+      ? pinn
+      : evaluateTi64Pinn({
+          processId: proc, P, v, h, t: tUm, T0: effPreheatC, db,
+          postProcessing: 'HIP', oxygenWtPct: o2,
+          densityPct: Math.max(99.6, densityEst),
+          buildOrientationDeg: oriDeg
+        });
+    const metHip = post === 'HIP'
+      ? met
+      : evaluateTi64Metallurgy({
+          alloyId, processId: proc,
+          coolingRateKs: pinn.meltPool.coolingRateKs,
+          postProcessing: 'HIP',
+          oxygenWtPct: o2,
+          buildOrientationDeg: oriDeg,
+          scanRotationDeg: scanRot,
+          densityPct: Math.max(99.6, densityEst)
+        });
+
     // Blend PINN microstructure prediction with Hall-Petch metallurgy for robust part response
     const ysMpa = Math.round(0.5 * pinn.metallurgy.yieldStrengthMpa + 0.5 * met.hallPetchYieldStrengthMpa);
     const utsMpa = Math.round(0.5 * pinn.metallurgy.utsMpa + 0.5 * met.predictedUtsMpa);
     const hv = Math.round(0.5 * pinn.metallurgy.predictedHv + 0.5 * met.predictedHv);
-    const elongKnock = sl.heatSinkRatio >= 2.0 ? 0.94 : 1.0;
     const elongPct = Number(Math.max(1.5, Math.min(22.0, pinn.metallurgy.elongationPct * met.anisotropy.elongationFactor * elongKnock)).toFixed(1));
+
+    const asBuiltYsMpa = Math.round(0.5 * pinnAsBuilt.metallurgy.yieldStrengthMpa + 0.5 * metAsBuilt.hallPetchYieldStrengthMpa);
+    const asBuiltUtsMpa = Math.round(0.5 * pinnAsBuilt.metallurgy.utsMpa + 0.5 * metAsBuilt.predictedUtsMpa);
+    const asBuiltHv = Math.round(0.5 * pinnAsBuilt.metallurgy.predictedHv + 0.5 * metAsBuilt.predictedHv);
+    const asBuiltElongPct = Number(Math.max(1.5, Math.min(22.0, pinnAsBuilt.metallurgy.elongationPct * metAsBuilt.anisotropy.elongationFactor * elongKnock)).toFixed(1));
+
+    const hipPreviewYsMpa = Math.round(0.5 * pinnHip.metallurgy.yieldStrengthMpa + 0.5 * metHip.hallPetchYieldStrengthMpa);
+    const hipPreviewUtsMpa = Math.round(0.5 * pinnHip.metallurgy.utsMpa + 0.5 * metHip.predictedUtsMpa);
+    const hipPreviewHv = Math.round(0.5 * pinnHip.metallurgy.predictedHv + 0.5 * metHip.predictedHv);
+    const hipPreviewElongPct = Number(Math.max(1.5, Math.min(22.0, pinnHip.metallurgy.elongationPct * metHip.anisotropy.elongationFactor * elongKnock)).toFixed(1));
+    const hipPreviewAstmPass =
+      hipPreviewYsMpa >= minYsReq &&
+      hipPreviewUtsMpa >= minUtsReq &&
+      hipPreviewElongPct >= minElReq &&
+      o2Ok &&
+      printability.wallCheckStatus !== 'Fail';
 
     const reg = classifyProcessRegime(proc, { P, v, h, t: tUm, T0: effPreheatC, db }, { ved, heatInput: heatInputJmm });
     const ood = evaluateOodRisk({ P, v, h, t: tUm, T0: effPreheatC, ved }, proc);
@@ -183,7 +283,40 @@ export function simulatePartBuild(
       elongPct,
       hv,
       oodDistance: Number(ood.mahalanobisDistance.toFixed(2)),
-      regimeName: reg.kpiBadgeLabel
+      oodStatus: ood.status,
+      piMultiplier: Number(ood.piMultiplier.toFixed(2)),
+      regimeName: reg.kpiBadgeLabel,
+      meltPoolWidthUm: pinn.meltPool.widthUm,
+      meltPoolDepthUm: pinn.meltPool.depthUm,
+      meltPoolLengthUm: pinn.meltPool.lengthUm,
+      aspectRatio: pinn.meltPool.aspectRatio,
+      peakTempC: pinn.meltPool.peakTempC,
+      meltMode: pinn.meltPool.mode,
+      absorptivityEta,
+      vedJmm3: Number(ved.toFixed(1)),
+      heatInputJmm: Number(heatInputJmm.toFixed(2)),
+      heatSinkRatio: Number(sl.heatSinkRatio.toFixed(2)),
+      hallPetchResidualMpa: pinn.physicsAudit.hallPetchResidualMpa,
+      thermalEnthalpyResidualPct: pinn.physicsAudit.thermalEnthalpyResidualPct,
+      dW_dLogP: pinn.derivatives.dW_dLogP,
+      dD_dLogP: pinn.derivatives.dD_dLogP,
+      dW_dLogV: pinn.derivatives.dW_dLogV,
+      dCool_dT0: pinn.derivatives.dCool_dT0,
+      dLogLath_dLogCool: pinn.derivatives.dLogLath_dLogCool,
+      dLogLath_dTht: pinn.derivatives.dLogLath_dTht,
+      dYs_dO2: pinn.derivatives.dYs_dO2,
+      dElong_dO2: pinn.derivatives.dElong_dO2,
+      asBuiltAlphaLathUm: Number(pinnAsBuilt.metallurgy.alphaLathWidthUm.toFixed(2)),
+      asBuiltYsMpa,
+      asBuiltUtsMpa,
+      asBuiltElongPct,
+      asBuiltHv,
+      hipPreviewAlphaLathUm: Number(pinnHip.metallurgy.alphaLathWidthUm.toFixed(2)),
+      hipPreviewYsMpa,
+      hipPreviewUtsMpa,
+      hipPreviewElongPct,
+      hipPreviewHv,
+      hipPreviewAstmPass
     });
   }
 
@@ -195,11 +328,6 @@ export function simulatePartBuild(
   // ASTM standard mapping & part-level verdict
   const astmStandard: PartBuildSimulationReport['astmStandard'] =
     proc === 'waam' || proc === 'ded-laser' ? 'ASTM F3187' : (alloyId === 'ti64_eli' ? 'ASTM F3001' : 'ASTM F2924');
-  const minYsReq = alloyId === 'ti64_eli' ? 795 : 825;
-  const minUtsReq = alloyId === 'ti64_eli' ? 860 : 895;
-  const minElReq = 10.0;
-  const o2Max = alloyId === 'ti64_eli' ? 0.13 : 0.20;
-  const o2Ok = o2 <= o2Max;
 
   const astmPass = minLayerYsMpa >= minYsReq && minLayerUtsMpa >= minUtsReq && minLayerElongPct >= minElReq && o2Ok && printability.wallCheckStatus !== 'Fail';
   const astmReason = astmPass
@@ -251,6 +379,8 @@ export function simulatePartBuild(
   const hSafe = Math.max(0.1, geo.boundingBox.size[2]);
   const perTriangleThermalHotspot = new Float32Array(nTri);
   const perTriangleStressHotspot = new Float32Array(nTri);
+  const perTriangleCoolingRate = new Float32Array(nTri);
+  const perTriangleAlphaLath = new Float32Array(nTri);
 
   for (let t = 0; t < nTri; t++) {
     const i = t * 9;
@@ -270,6 +400,10 @@ export function simulatePartBuild(
     const stressScale = clampFinite(surfaceResidualStressMpa / 650.0, 0.15, 1.0, 0.3);
     const nzMag = Math.abs(norm[i + 2]);
     perTriangleStressHotspot[t] = clampFinite((nearPlatePeak + jumpProximity + ohBoost + (1 - nzMag) * 0.2) * stressScale, 0.05, 1.0, 0.2);
+
+    const logCool = Math.log10(Math.max(10, lay.coolingRateKs));
+    perTriangleCoolingRate[t] = clampFinite((logCool - 2.5) / 4.0, 0, 1, 0.5);
+    perTriangleAlphaLath[t] = clampFinite((lay.alphaLathUm - 0.3) / 2.7, 0, 1, 0.4);
   }
 
   return {
@@ -300,6 +434,8 @@ export function simulatePartBuild(
       mitigations
     },
     perTriangleThermalHotspot,
-    perTriangleStressHotspot
+    perTriangleStressHotspot,
+    perTriangleCoolingRate,
+    perTriangleAlphaLath
   };
 }
