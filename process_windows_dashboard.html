@@ -11658,7 +11658,7 @@ function computeDashboardModelPredictions(opts = {}) {
   const utsToYsRatio = utsTabor / Math.max(1, yieldStrength);
 
   return {
-    processId: proc, alloyId, alloy, isWaam, isDed, isBinderJetting: false, isColdState: false, isCalibrated,
+    processId: proc, alloyId, alloy, isWaam, isDed, isBinderJetting: false, isColdState: false, isCalibrated: false,
     p, v, h, t, spot, preheat, effPreheat, post, stateKey,
     ved, heatInputJmm, intensityWcm2, widthEst, meltPoolWidth, meltPoolDepth, meltPoolLength,
     coolingRate, thermalGradientG, solidVelocityR, grRatio, bonthaR, bonthaG, bonthaMorphRaw, bonthaMorphLabel, bonthaMorphShort, lathSpacing,
@@ -11837,7 +11837,10 @@ function calculatePhysics() {
     _lastCalcSnapshot = { process: currentProcess, p, v, h, t, spot, preheat, primaryHv: primaryHv, isExtrap: false, isBinderJetting: true };
     if (isTabActive('qualification')) { if (typeof updateAstmAuditor === 'function') updateAstmAuditor(); } else { dirtyTabs.add('qualification'); }
     if (isTabActive('digital-twin')) { if (typeof updateTwinScaleAndHud === 'function') updateTwinScaleAndHud(); } else { dirtyTabs.add('digital-twin'); }
-    if (isTabActive('predictions')) { if (typeof renderTi64Phase3Curves === 'function') renderTi64Phase3Curves(window.latestPhysicsState); } else { dirtyTabs.add('predictions'); }
+    if (isTabActive('predictions')) {
+      if (typeof renderTi64Phase3Curves === 'function') renderTi64Phase3Curves(window.latestPhysicsState);
+      if (typeof updateShapAttribution === 'function') updateShapAttribution(p, v, h, t, spot, preheat);
+    } else { dirtyTabs.add('predictions'); }
     if (isTabActive('defect-map')) { updateDefectMapSvg(currentProcess, p, v); } else { dirtyTabs.add('defect-map'); }
     if (isTabActive('melt-pool')) {
       updateMeltPoolAndThermal();
