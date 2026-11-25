@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Physics &amp; LOPO-CV Methodology | MatSci Navigator</title>
+  <meta name="description" content="Scientific methodology for MatSci Navigator Ti-6Al-4V additive manufacturing predictions: Rosenthal thermal kinetics, KU Leuven melt pool, Bontha CET, and LOPO-CV validation.">
+  <link rel="canonical" href="https://nit-titanium-am-platform.vercel.app/methodology.html">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #141416;
+      color: #f8fafc;
+      line-height: 1.6;
+      padding: 28px 18px;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+    nav.crumb { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; font-size: 13px; }
+    nav.crumb a { color: #7dd3fc; text-decoration: none; font-weight: 600; }
+    nav.crumb a:hover { text-decoration: underline; }
+    h1 { font-size: 26px; font-weight: 800; line-height: 1.25; margin-bottom: 8px; }
+    .sub { color: #cbd5e1; font-size: 14px; }
+    h2 { font-size: 18px; font-weight: 700; color: #7dd3fc; margin: 22px 0 8px 0; }
+    section { background: #1c1c1e; border: 1px solid rgba(255,255,255,0.10); border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; }
+    p, li { color: #cbd5e1; font-size: 14px; }
+    ul { margin: 8px 0 4px 20px; }
+    li { margin-bottom: 6px; }
+    .links-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .pill-link {
+      display: inline-block;
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.38);
+      color: #7dd3fc;
+      text-decoration: none;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .pill-link:hover { background: rgba(56, 189, 248, 0.24); }
+    footer { margin-top: 26px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.10); color: #9ca3af; font-size: 12.5px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <nav class="crumb" aria-label="Navigation">
+        <a href="/">← Back to Live Predictor</a>
+        <a href="/?proc=lpbf">LPBF Preset</a>
+        <a href="/?proc=ded-laser">L-DED Preset</a>
+        <a href="/?proc=waam">WAAM Preset</a>
+        <a href="/?proc=binder-jetting">Binder Jetting Preset</a>
+      </nav>
+      <h1>Ti-6Al-4V Additive Manufacturing Physics &amp; Validation Methodology</h1>
+      <p class="sub">Traceable thermal physics, Bontha solidification mapping, Leave-One-Paper-Out (LOPO-CV) calibration, and ASTM F2924 / F3001 qualification guardrails.</p>
+    </header>
+
+    <section>
+      <h2>1. Analytical &amp; Hybrid Melt Pool Kinematics</h2>
+      <p>Melt pool geometry, solidus cooling rates (∂T/∂t), and keyhole thresholds combine Rosenthal (1946) point-source heat conduction with the KU Leuven hybrid formulation (Coen et al., 2022) and King et al. (2014) normalized enthalpy criterion (ΔH/h<sub>s</sub>).</p>
+      <ul>
+        <li><strong>LPBF &amp; L-DED Regimes:</strong> Separates lack-of-fusion, conduction mode, and keyhole depression by volumetric energy density (VED), beam spot diameter, and melt pool aspect ratio (d/W).</li>
+        <li><strong>WAAM &amp; Binder Jetting:</strong> Evaluates linear heat input (J/mm) and coarse prior-β overheating for arc deposition, and binder saturation + vacuum sintering density for Binder Jetting.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>2. Bontha 2D/3D Solidification Microstructure Mapping</h2>
+      <p>Thermal gradient <em>G</em> (K/cm) and solidification growth velocity <em>R</em> (cm/s) are solved from surface (z = 0) to melt pool root (z = z<sub>m</sub>) across 2D thin-wall and 3D bulky half-space formulations (Bontha et al., 2006, 2009), classifying columnar, mixed, and equiaxed prior-β grain growth via Hunt's CET boundaries.</p>
+    </section>
+
+    <section>
+      <h2>3. LOPO-CV Machine Learning &amp; PINN Calibration</h2>
+      <p>All predictions are validated using strict Leave-One-Paper-Out Cross-Validation (LOPO-CV) across 39 verified bulk Ti-6Al-4V studies extracted from 199 indexed publications, with calibrated 95% empirical prediction intervals and Mahalanobis Out-of-Distribution (OOD) interval widening.</p>
+      <ul>
+        <li><strong>LPBF Benchmark Accuracy:</strong> 97.7%–98.5% accuracy on strength and Vickers hardness, 0.57 percentage points MAE on elongation, and physics-regularized Hall-Petch + autograd PINN residuals.</li>
+        <li><strong>ASTM Qualification Guardrails:</strong> Evaluates Rp0.2 yield strength, UTS, ductility elongation, relative density, interstitial oxygen (Grade 5 vs. Grade 23 ELI), and residual stress against ASTM F2924, ASTM F3001, AMS 4999, and ISO 5832-3.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. Launch Process-Specific Live Predictors</h2>
+      <div class="links-grid">
+        <a class="pill-link" href="/?proc=lpbf">LPBF Ti-6Al-4V Predictor</a>
+        <a class="pill-link" href="/?proc=ded-laser">L-DED Laser Predictor</a>
+        <a class="pill-link" href="/?proc=waam">WAAM Wire-Arc Predictor</a>
+        <a class="pill-link" href="/?proc=binder-jetting">Binder Jetting Predictor</a>
+      </div>
+    </section>
+
+    <footer>
+      MatSci Navigator • NIT Tiruchirappalli Additive Manufacturing Division • Free Open-Access Engineering Tool
+    </footer>
+  </div>
+</body>
+</html>

@@ -12,11 +12,13 @@ const htmlPath = path.join(__dirname, '..', 'process_windows_dashboard.html');
 const html = fs.readFileSync(htmlPath, 'utf8');
 
 const scriptBlocks = [];
-const scriptRegex = /<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi;
+const scriptRegex = /<script(?![^>]*src=)(?![^>]*application\/ld\+json)[^>]*>([\s\S]*?)<\/script>/gi;
 let match;
 while ((match = scriptRegex.exec(html)) !== null) {
   scriptBlocks.push(match[1]);
 }
+const dashboardDataPath = path.join(__dirname, '..', 'js', 'dashboard-data.js');
+const dashboardDataCode = fs.existsSync(dashboardDataPath) ? fs.readFileSync(dashboardDataPath, 'utf8') : '';
 
 const elements = {};
 function getEl(id) {
@@ -107,10 +109,9 @@ global.window.addEventListener = () => {};
 global.window.location = { protocol: 'http:', pathname: '/', search: '', hash: '', href: 'http://localhost:3000/' };
 global.window.history = { replaceState() {} };
 
-// Evaluate script block 0 (solvers & helpers) in global scope
+// Evaluate extracted static data + script block 0 + script block 1 in global scope
+if (dashboardDataCode) (0, eval)(dashboardDataCode);
 (0, eval)(scriptBlocks[0]);
-// Evaluate script block 1 (dashboard & 3D twin engine) in global scope
-// Stop before init calls at very end or run cleanly since DOM mocks exist
 (0, eval)(scriptBlocks[1]);
 
 // 1. Verify Solid ASTM E8 Round Tensile Proportions

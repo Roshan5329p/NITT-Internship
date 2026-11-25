@@ -17,14 +17,14 @@ fs.copyFileSync(
   path.join(OUT_DIR, 'process_windows_dashboard.html')
 );
 
-for (const rootFile of ['robots.txt', 'sitemap.xml']) {
+for (const rootFile of ['robots.txt', 'sitemap.xml', 'methodology.html']) {
   const srcFile = path.join(ROOT, rootFile);
   if (fs.existsSync(srcFile)) {
     fs.copyFileSync(srcFile, path.join(OUT_DIR, rootFile));
   }
 }
 
-for (const dir of ['plots', 'vendor']) {
+for (const dir of ['plots', 'vendor', 'js']) {
   const src = path.join(ROOT, dir);
   if (fs.existsSync(src)) {
     fs.cpSync(src, path.join(OUT_DIR, dir), { recursive: true });

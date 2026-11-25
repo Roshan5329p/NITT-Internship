@@ -14,11 +14,13 @@ const html = fs.readFileSync(htmlPath, 'utf8');
 
 // Extract inline scripts to evaluate the helpers in a controlled sandbox
 const scriptBlocks = [];
-const scriptRegex = /<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi;
+const scriptRegex = /<script(?![^>]*src=)(?![^>]*application\/ld\+json)[^>]*>([\s\S]*?)<\/script>/gi;
 let match;
 while ((match = scriptRegex.exec(html)) !== null) {
   scriptBlocks.push(match[1]);
 }
+const dashboardDataPath = path.join(__dirname, '..', 'js', 'dashboard-data.js');
+const dashboardDataCode = fs.existsSync(dashboardDataPath) ? fs.readFileSync(dashboardDataPath, 'utf8') : '';
 
 // Create minimal DOM mock
 const elements = {};
@@ -90,7 +92,8 @@ global.window.location = {
 };
 global.window.history = { replaceState() {} };
 
-// Evaluate script block 0 (contains classifyProcessRegime, formatRosenthalAspectCallout, etc.)
+// Evaluate extracted static data + script block 0 (contains classifyProcessRegime, formatRosenthalAspectCallout, etc.)
+if (dashboardDataCode) (0, eval)(dashboardDataCode);
 eval(scriptBlocks[0]);
 
 // 1. Test WAAM Regime Classification (HI < 120, 120-600, > 600 J/mm)

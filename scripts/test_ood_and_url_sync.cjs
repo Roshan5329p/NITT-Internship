@@ -10,8 +10,14 @@ const fs = require('fs');
 const assert = require('assert');
 
 const html = fs.readFileSync('process_windows_dashboard.html', 'utf8');
-const scripts = html.match(/<script[\s\S]*?<\/script>/gi) || [];
-const script1 = scripts[1].replace(/<script[\s\S]*?>/i, '').replace(/<\/script>/i, '');
+const scripts = [];
+for (const m of html.matchAll(/<script(?:\s([^>]*))?>([\s\S]*?)<\/script>/gi)) {
+  const attrs = m[1] || '';
+  if (/\bsrc\s*=/i.test(attrs) || /application\/ld\+json/i.test(attrs)) continue;
+  if (m[2].trim()) scripts.push(m[2]);
+}
+const script1 = scripts[0];
+const dashboardDataCode = fs.existsSync('js/dashboard-data.js') ? fs.readFileSync('js/dashboard-data.js', 'utf8') : '';
 
 const elements = {};
 function getEl(id) {
@@ -77,7 +83,8 @@ const clipboardMock = {
 };
 Object.defineProperty(global.navigator, 'clipboard', { value: clipboardMock, configurable: true });
 
-eval(script1);
+if (dashboardDataCode) (0, eval)(dashboardDataCode);
+(0, eval)(script1);
 
 console.log('🧪 Running OOD Extrapolation & URL State Sync Verification Suite...\n');
 
