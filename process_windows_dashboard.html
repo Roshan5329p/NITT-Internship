@@ -52,7 +52,7 @@
   "contactPoint": {
     "@type": "ContactPoint",
     "contactType": "research collaboration",
-    "url": "https://nit-titanium-am-platform.vercel.app/#footerContactSection"
+    "url": "https://nit-titanium-am-platform.vercel.app/"
   }
 }
 </script>
@@ -3111,59 +3111,14 @@
     background: rgba(5, 150, 105, 0.11) !important;
     border-color: rgba(5, 150, 105, 0.38) !important;
   }
-  html.light #contactHeaderBtn {
-    color: #334155 !important;
-    background: rgba(15, 23, 42, 0.06) !important;
-    border-color: rgba(15, 23, 42, 0.22) !important;
-  }
   html.light #supabaseStatusBadge {
     color: #047857 !important;
     background: rgba(5, 150, 105, 0.11) !important;
     border-color: rgba(5, 150, 105, 0.35) !important;
   }
-  html.light #kpiCalibrationBadge,
-  html.light #labModelModeBadge {
-    color: #334155 !important;
-    background: rgba(15, 23, 42, 0.09) !important;
-    border-color: rgba(15, 23, 42, 0.22) !important;
-  }
   html.light .kpi-badge[style*="color: #94a3b8"] {
     color: #334155 !important;
     background: rgba(15, 23, 42, 0.08) !important;
-  }
-
-  /* Lightweight Research Contact Modal */
-  .contact-modal-paper {
-    max-width: 540px;
-    margin: 40px auto;
-    background: var(--bg-card);
-    border: 1px solid rgba(56, 189, 248, 0.35);
-    border-radius: 14px;
-    padding: 24px;
-    color: var(--text-primary);
-    box-shadow: 0 24px 56px rgba(0, 0, 0, 0.65);
-  }
-  .contact-field-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    margin-bottom: 12px;
-  }
-  .contact-field-group label {
-    font-size: 11.5px;
-    font-weight: 600;
-    color: var(--text-secondary);
-  }
-  .contact-field-group input,
-  .contact-field-group textarea {
-    width: 100%;
-    background: var(--bg-subcard);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 12.5px;
-    font-family: inherit;
   }
 
   @media (max-width: 768px) {
@@ -3240,8 +3195,7 @@
 
   @media print {
     .hero-strip,
-    .validation-proof-strip,
-    #contactModal {
+    .validation-proof-strip {
       display: none !important;
     }
   }
@@ -3312,37 +3266,6 @@
   }
   html.light .crawl-links-bar a {
     color: #0369a1;
-  }
-  .footer-contact-panel {
-    margin-top: 14px;
-    padding: 16px 18px;
-    border-radius: 12px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    width: 100%;
-  }
-  .footer-contact-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 10px;
-    margin-top: 10px;
-  }
-  .footer-contact-grid label {
-    display: block;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-  }
-  .footer-contact-grid input,
-  .footer-contact-grid select {
-    width: 100%;
-    background: var(--bg-subcard);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 7px;
-    padding: 7px 10px;
-    font-size: 12px;
   }
 
   /* PINN CAD Build Showcase & Narrator */
@@ -4155,24 +4078,6 @@ function computePinnProcessGradients(input) {
     dElong_dP: (pPlus.metallurgy.elongationPct - pMinus.metallurgy.elongationPct) / (2 * epsP),
     dElong_dv: (vPlus.metallurgy.elongationPct - vMinus.metallurgy.elongationPct) / (2 * epsV)
   };
-}
-
-function applyPhysicsGuardedPinnTransfer(rawPinn, labBias) {
-  if (!rawPinn || !labBias || labBias.sampleCount <= 0) return rawPinn;
-  const wShrink = labBias.sampleCount / (labBias.sampleCount + 4);
-  const hvShift = _pinnClamp((labBias.hvShift ?? 0) * wShrink, -25, 25, 0);
-  const ysShift = _pinnClamp((labBias.ysShift ?? 0) * wShrink, -80, 80, 0);
-  const elShift = _pinnClamp((labBias.elongShift ?? 0) * wShrink, -4.0, 4.0, 0);
-  const ysAdj = Math.round(_pinnClamp(rawPinn.metallurgy.yieldStrengthMpa + ysShift, 650, 1380, rawPinn.metallurgy.yieldStrengthMpa));
-  const minGap = Math.max(45, rawPinn.metallurgy.utsMpa - rawPinn.metallurgy.yieldStrengthMpa);
-  const utsAdj = Math.round(_pinnClamp(Math.max(ysAdj + minGap, rawPinn.metallurgy.utsMpa + ysShift * 0.92), ysAdj + 45, 1520, rawPinn.metallurgy.utsMpa));
-  const hvAdj = Math.round(_pinnClamp(rawPinn.metallurgy.predictedHv + hvShift, 260, 460, rawPinn.metallurgy.predictedHv));
-  const elAdj = Number(_pinnClamp(rawPinn.metallurgy.elongationPct + elShift, 1.5, 22.0, rawPinn.metallurgy.elongationPct).toFixed(1));
-  return Object.assign({}, rawPinn, {
-    metallurgy: Object.assign({}, rawPinn.metallurgy, {
-      yieldStrengthMpa: ysAdj, utsMpa: utsAdj, predictedHv: hvAdj, elongationPct: elAdj
-    })
-  });
 }
 
 function setGlobalMaterialState(stateKey) {
@@ -6161,20 +6066,9 @@ function renderTi64Phase3Curves(physInput) {
 window.renderTi64Phase3Curves = renderTi64Phase3Curves;
 
 // ========================================================
-// PHASE 4: INVERSE PARETO SOLVER & NIT LAB CSV CALIBRATION
+// PHASE 4: INVERSE PARETO SOLVER
 // ========================================================
 var lastInverseCandidates = [];
-var uploadedLabCoupons = [];
-var labCalibrationSummary = null;
-var useLabBiasCorrection = false;
-
-var SAMPLE_LAB_CSV_TEMPLATE = [
-  'sample_id,process,P_W,v_mm_s,h_um,t_um,T0_C,post_proc,measured_HV,measured_YS_MPa,measured_UTS_MPa,measured_elong_pct',
-  'NITT-LPBF-01,lpbf,280,960,110,40,200,HIP,342,912,996,14.8',
-  'NITT-LPBF-02,lpbf,320,1150,110,45,200,HIP,336,895,982,15.1',
-  'NITT-LPBF-03,lpbf,240,850,100,30,180,Stress-relieved,374,985,1072,10.2',
-  'NITT-LDED-01,ded-laser,1600,15,1200,450,100,HIP,326,872,960,15.6'
-].join('\n');
 
 function evaluateForwardTi64Candidate(params) {
   const procId = params.processId;
@@ -6491,202 +6385,6 @@ function applyInverseRecipe(idx) {
   _setP3Txt('inverseSolverMeta', `Applied Rank #${c.rank} (${c.processDisplayName} · ${c.postProcessing}) — Live dashboard updated!`);
 }
 window.applyInverseRecipe = applyInverseRecipe;
-
-const MAX_LAB_CSV_FILE_BYTES = 2 * 1024 * 1024;
-const MAX_LAB_CSV_ROWS = 5000;
-
-function parseLabCouponsCsv(csvText, fileSizeBytes) {
-  const effectiveBytes = typeof fileSizeBytes === 'number' ? fileSizeBytes : (csvText ? String(csvText).length : 0);
-  if (effectiveBytes > MAX_LAB_CSV_FILE_BYTES) {
-    return { coupons: [], errors: [{ rowNumber: 0, rawLine: '', reason: 'CSV file exceeds 2 MB maximum size limit.' }], validCount: 0, rejectedCount: 1 };
-  }
-  if (!csvText || !String(csvText).trim()) {
-    return { coupons: [], errors: [{ rowNumber: 0, rawLine: '', reason: 'CSV content is empty.' }], validCount: 0, rejectedCount: 0 };
-  }
-  const lines = String(csvText).replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').map(l => l.trim()).filter(Boolean);
-  if (lines.length < 2) {
-    return { coupons: [], errors: [{ rowNumber: 1, rawLine: lines[0] || '', reason: 'CSV must include header + at least one coupon row.' }], validCount: 0, rejectedCount: 0 };
-  }
-  if (lines.length - 1 > MAX_LAB_CSV_ROWS) {
-    return { coupons: [], errors: [{ rowNumber: MAX_LAB_CSV_ROWS + 1, rawLine: '', reason: `CSV exceeds maximum limit of ${MAX_LAB_CSV_ROWS} coupon rows.` }], validCount: 0, rejectedCount: lines.length - 1 };
-  }
-  const headers = lines[0].split(',').map(h => h.trim());
-  const req = ['sample_id', 'process', 'P_W', 'v_mm_s', 'h_um', 't_um', 'T0_C', 'post_proc'];
-  const missing = req.filter(r => !headers.includes(r));
-  if (missing.length > 0) {
-    return { coupons: [], errors: [{ rowNumber: 1, rawLine: lines[0], reason: `Missing required columns: ${missing.join(', ')}` }], validCount: 0, rejectedCount: 0 };
-  }
-  const idxMap = new Map();
-  headers.forEach((h, i) => idxMap.set(h, i));
-  const normProc = (raw) => {
-    const s = String(raw || '').toLowerCase().trim();
-    if (s === 'lpbf' || s === 'slm' || s === 'pbf') return 'lpbf';
-    if (s === 'lded' || s === 'l-ded' || s === 'ded-laser' || s === 'ded') return 'ded-laser';
-    if (s === 'waam') return 'waam';
-    if (s === 'bj' || s === 'binder-jetting' || s === 'binder_jetting') return 'binder-jetting';
-    return null;
-  };
-  const optPos = (raw) => {
-    if (raw === undefined || raw.trim() === '') return { ok: true, v: undefined };
-    const n = Number(raw.trim());
-    return (Number.isFinite(n) && n > 0) ? { ok: true, v: n } : { ok: false };
-  };
-  const coupons = [], errors = [];
-  for (let i = 1; i < lines.length; i++) {
-    const raw = lines[i];
-    const parts = raw.split(',').map(p => p.trim());
-    const get = (name) => { const idx = idxMap.get(name); return (idx !== undefined && idx < parts.length) ? parts[idx] : ''; };
-    const sample_id = get('sample_id');
-    const proc = normProc(get('process'));
-    const P_W = Number(get('P_W')), v_mm_s = Number(get('v_mm_s')), h_um = Number(get('h_um')), t_um = Number(get('t_um'));
-    const T0_C = get('T0_C') === '' ? 25 : Number(get('T0_C'));
-    const post_proc = get('post_proc') || 'HIP';
-    if (!sample_id) { errors.push({ rowNumber: i + 1, rawLine: raw, reason: 'Missing sample_id.' }); continue; }
-    if (!proc) { errors.push({ rowNumber: i + 1, rawLine: raw, reason: `Invalid AM process '${get('process')}'.` }); continue; }
-    if (!Number.isFinite(P_W) || P_W <= 0 || !Number.isFinite(v_mm_s) || v_mm_s <= 0 || !Number.isFinite(h_um) || h_um <= 0 || !Number.isFinite(t_um) || t_um <= 0 || !Number.isFinite(T0_C) || T0_C < 0) {
-      errors.push({ rowNumber: i + 1, rawLine: raw, reason: 'Non-finite or invalid process parameter.' }); continue;
-    }
-    const hvP = optPos(get('measured_HV')), ysP = optPos(get('measured_YS_MPa')), utsP = optPos(get('measured_UTS_MPa')), elP = optPos(get('measured_elong_pct'));
-    if (!hvP.ok || !ysP.ok || !utsP.ok || !elP.ok) { errors.push({ rowNumber: i + 1, rawLine: raw, reason: 'Invalid measured property value.' }); continue; }
-    if (hvP.v === undefined && ysP.v === undefined && utsP.v === undefined && elP.v === undefined) {
-      errors.push({ rowNumber: i + 1, rawLine: raw, reason: 'At least one measured property is required.' }); continue;
-    }
-    coupons.push({ sample_id, process: proc, P_W, v_mm_s, h_um, t_um, T0_C, post_proc, measured_HV: hvP.v, measured_YS_MPa: ysP.v, measured_UTS_MPa: utsP.v, measured_elong_pct: elP.v });
-  }
-  return { coupons, errors, validCount: coupons.length, rejectedCount: errors.length };
-}
-window.parseLabCouponsCsv = parseLabCouponsCsv;
-
-function _summarizeLabRes(residuals) {
-  const n = residuals.length;
-  if (n === 0) return { count: 0, mae: 0, rmse: 0, meanBias: 0, bayesianBiasShift: 0 };
-  let sa = 0, ss = 0, sg = 0;
-  residuals.forEach(r => { sa += Math.abs(r); ss += r * r; sg += r; });
-  const meanBias = Number((sg / n).toFixed(2));
-  return { count: n, mae: Number((sa / n).toFixed(2)), rmse: Number(Math.sqrt(ss / n).toFixed(2)), meanBias, bayesianBiasShift: Number(((n / (n + 4)) * meanBias).toFixed(2)) };
-}
-
-function handleLabCsvText(csvText, fileSizeBytes) {
-  const parsed = parseLabCouponsCsv(csvText, fileSizeBytes);
-  uploadedLabCoupons = parsed.coupons;
-  const alloyId = document.getElementById('alloySelect')?.value || 'ti64_gr5';
-  const resHv = [], resYs = [], resUts = [], resEl = [];
-  uploadedLabCoupons.forEach(c => {
-    if (c.process === 'binder-jetting') return;
-    const ev = evaluateForwardTi64Candidate({
-      processId: c.process, alloyId, P: c.P_W, v: c.v_mm_s, h: c.h_um, t: c.t_um,
-      db: c.process === 'waam' ? 3000 : (c.process === 'ded-laser' ? 1500 : 80), T0: c.T0_C,
-      postProcessing: c.post_proc, oxygenWtPct: alloyId === 'ti64_eli' ? 0.11 : 0.16,
-      buildOrientationDeg: 0, scanRotationDeg: 67
-    });
-    if (c.measured_HV !== undefined) resHv.push(c.measured_HV - ev.predictedHv);
-    if (c.measured_YS_MPa !== undefined) resYs.push(c.measured_YS_MPa - ev.yieldStrengthMpa);
-    if (c.measured_UTS_MPa !== undefined) resUts.push(c.measured_UTS_MPa - ev.utsMpa);
-    if (c.measured_elong_pct !== undefined) resEl.push(c.measured_elong_pct - ev.elongationPct);
-  });
-  labCalibrationSummary = {
-    sampleCount: uploadedLabCoupons.length,
-    hv: _summarizeLabRes(resHv), ys: _summarizeLabRes(resYs), uts: _summarizeLabRes(resUts), elong: _summarizeLabRes(resEl)
-  };
-  const stEl = document.getElementById('labCsvStatus');
-  if (stEl) {
-    if (parsed.validCount > 0 && parsed.rejectedCount === 0) {
-      stEl.style.color = '#34d399';
-      stEl.innerText = `Loaded ${parsed.validCount} NIT Trichy lab coupons (0 malformed rows). Overlay rendered on Defect Process Window.`;
-    } else if (parsed.validCount > 0) {
-      stEl.style.color = '#fbbf24';
-      stEl.innerText = `Loaded ${parsed.validCount} valid coupons (${parsed.rejectedCount} malformed skipped: Row ${parsed.errors[0].rowNumber} — ${parsed.errors[0].reason}).`;
-    } else {
-      stEl.style.color = '#fb7185';
-      stEl.innerText = `CSV validation failed: ${parsed.errors[0]?.reason || 'No valid rows found.'}`;
-    }
-  }
-  _setP3Txt('labMaeHv', labCalibrationSummary.hv.count > 0 ? `${labCalibrationSummary.hv.mae} / ${labCalibrationSummary.hv.rmse}` : '—');
-  _setP3Txt('labBiasHv', labCalibrationSummary.hv.count > 0 ? `${labCalibrationSummary.hv.bayesianBiasShift >= 0 ? '+' : ''}${labCalibrationSummary.hv.bayesianBiasShift} HV` : '—');
-  _setP3Txt('labMaeYs', labCalibrationSummary.ys.count > 0 ? `${labCalibrationSummary.ys.mae}` : '—');
-  _setP3Txt('labMaeEl', labCalibrationSummary.elong.count > 0 ? `${labCalibrationSummary.elong.mae}%` : '—');
-
-  if (typeof calculatePhysics === 'function') calculatePhysics();
-  return parsed;
-}
-window.handleLabCsvText = handleLabCsvText;
-
-function handleLabCsvFileInput(inputEl) {
-  const file = inputEl && inputEl.files && inputEl.files[0];
-  if (!file) return;
-  if (file.size > MAX_LAB_CSV_FILE_BYTES) {
-    handleLabCsvText('', file.size);
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = (e) => handleLabCsvText(String(e.target?.result || ''), file.size);
-  reader.readAsText(file);
-}
-window.handleLabCsvFileInput = handleLabCsvFileInput;
-
-function handleLabCsvDrop(e) {
-  e.preventDefault();
-  const dz = document.getElementById('labCsvDropzone');
-  if (dz) dz.style.borderColor = 'rgba(56,189,248,0.35)';
-  const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-  if (!file) return;
-  if (file.size > MAX_LAB_CSV_FILE_BYTES) {
-    handleLabCsvText('', file.size);
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = (ev) => handleLabCsvText(String(ev.target?.result || ''), file.size);
-  reader.readAsText(file);
-}
-window.handleLabCsvDrop = handleLabCsvDrop;
-
-function loadDemoLabCoupons() {
-  handleLabCsvText(SAMPLE_LAB_CSV_TEMPLATE);
-  const chk = document.getElementById('chkLabBiasCorrection');
-  if (chk && !chk.checked) {
-    chk.checked = true;
-    toggleLabBiasCorrection(true);
-  }
-}
-window.loadDemoLabCoupons = loadDemoLabCoupons;
-
-function downloadLabCsvTemplate() {
-  const blob = new Blob([SAMPLE_LAB_CSV_TEMPLATE + '\n'], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'nit_trichy_ti64_lab_coupons_template.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-window.downloadLabCsvTemplate = downloadLabCsvTemplate;
-
-function clearLabCoupons() {
-  uploadedLabCoupons = [];
-  labCalibrationSummary = null;
-  useLabBiasCorrection = false;
-  const chk = document.getElementById('chkLabBiasCorrection');
-  if (chk) chk.checked = false;
-  const stEl = document.getElementById('labCsvStatus');
-  if (stEl) {
-    stEl.style.color = 'var(--text-muted)';
-    stEl.innerText = 'No experimental lab coupons loaded. Using baseline raw literature model predictions.';
-  }
-  _setP3Txt('labMaeHv', '—');
-  _setP3Txt('labBiasHv', '—');
-  _setP3Txt('labMaeYs', '—');
-  _setP3Txt('labMaeEl', '—');
-  if (typeof calculatePhysics === 'function') calculatePhysics();
-}
-window.clearLabCoupons = clearLabCoupons;
-
-function toggleLabBiasCorrection(enabled) {
-  useLabBiasCorrection = Boolean(enabled);
-  if (typeof calculatePhysics === 'function') calculatePhysics();
-}
-window.toggleLabBiasCorrection = toggleLabBiasCorrection;
 
 function getCurrentOodEvaluation() {
   const proc = (typeof currentProcess !== 'undefined' && currentProcess) ? currentProcess : 'lpbf';
@@ -7403,9 +7101,6 @@ window.addEventListener('click', function(e) {
         <button type="button" class="step-btn" id="shareRunBtn" style="background: transparent; color: var(--text-secondary); border-color: var(--border-color); font-size: 11.5px; font-weight: 600; padding: 6px 11px;" onclick="shareCurrentRun()" title="Copy shareable URL with current parameters">
           🔗 Copy Shareable URL
         </button>
-        <button type="button" class="step-btn" id="contactHeaderBtn" style="background: transparent; color: var(--text-secondary); border-color: var(--border-color); font-size: 11.5px; font-weight: 600; padding: 6px 11px;" onclick="openContactModal()">
-          ✉️ Contact / Research
-        </button>
       <span class="counter-pill" id="liveStatusBadge">● Platform Online</span>
       <span class="counter-pill" id="supabaseStatusBadge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">⚡ Cloud Synced</span>
 
@@ -7776,10 +7471,7 @@ window.addEventListener('click', function(e) {
       <div class="kpi-card kpi-card-1 cyan">
         <div class="kpi-label">
           <span id="kpi_model_title">Hardness (Ensemble)</span>
-          <span style="display: flex; gap: 4px; align-items: center;">
-            <span class="kpi-badge" id="kpiCalibrationBadge" style="background: rgba(148,163,184,0.14); color: #cbd5e1; font-size: 9px;" title="Literature vs. Lab-Calibrated Model Indicator">RAW LITERATURE MODEL</span>
-            <span class="kpi-badge tag-cyan" id="kpi_model_badge">ACTIVE</span>
-          </span>
+          <span class="kpi-badge tag-cyan" id="kpi_model_badge">ACTIVE</span>
         </div>
         <div class="kpi-value" id="kpi_hv">340 HV</div>
         <div class="kpi-sub" id="kpi_ci">± 10.2 HV [Calibrated 95% PI] · 95.2% Empirical Coverage</div>
@@ -8319,9 +8011,9 @@ window.addEventListener('click', function(e) {
       </div>
 
       <!-- ========================================================
-           PHASE 4: INVERSE Ti-6Al-4V RECIPE SOLVER & LAB CALIBRATION
+           PHASE 4: INVERSE Ti-6Al-4V RECIPE SOLVER
            ======================================================== -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; margin-top: 16px;" id="phase4SuiteGrid">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 16px;" id="phase4SuiteGrid">
         <!-- 4A. Goal-Seeking Inverse Ti-6Al-4V Process Designer -->
         <div class="res-card" id="inverseSolverCard" style="margin-top: 0;">
           <div class="res-card-header" style="flex-wrap: wrap; gap: 8px;">
@@ -8391,47 +8083,6 @@ window.addEventListener('click', function(e) {
                 <tr><td colspan="6" style="color: var(--text-muted); text-align: center; padding: 14px;">Click "Solve Pareto Recipes" to compute optimal Ti-6Al-4V build parameters.</td></tr>
               </tbody>
             </table>
-          </div>
-        </div>
-
-        <!-- 4B. NIT Trichy Lab Coupon CSV Dropzone & Residual Calibration -->
-        <div class="res-card" id="labCalibrationCard" style="margin-top: 0;">
-          <div class="res-card-header" style="flex-wrap: wrap; gap: 8px;">
-            <div>
-              <div class="res-card-title">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                NIT Trichy Lab Coupon Calibration Loop
-              </div>
-              <div class="res-card-sub">Upload experimental coupon CSVs to plot on Defect Map &amp; compute live Bayesian Bias Correction</div>
-            </div>
-            <span class="res-tag" id="labModelModeBadge" style="background: rgba(148,163,184,0.16); color: #cbd5e1; border-color: rgba(148,163,184,0.35);">RAW LITERATURE MODEL</span>
-          </div>
-
-          <div id="labCsvDropzone" onclick="document.getElementById('labCsvFileInput')?.click()" ondragover="event.preventDefault(); this.style.borderColor='#38bdf8';" ondragleave="this.style.borderColor='rgba(56,189,248,0.35)';" ondrop="handleLabCsvDrop(event)" style="border: 1.5px dashed rgba(56,189,248,0.35); border-radius: 8px; padding: 12px; text-align: center; background: rgba(4,8,16,0.6); cursor: pointer; margin-bottom: 10px;">
-            <div style="font-size: 12px; font-weight: 700; color: #e2e8f0;">Drop NIT Trichy Lab Coupon CSV here or click to browse</div>
-            <div style="font-size: 10px; color: var(--text-muted); margin-top: 3px; font-family: 'JetBrains Mono', monospace;">Columns: sample_id, process, P_W, v_mm_s, h_um, t_um, T0_C, post_proc, measured_HV, measured_YS_MPa, measured_UTS_MPa, measured_elong_pct</div>
-            <input type="file" id="labCsvFileInput" aria-label="Upload NIT Trichy Lab Coupon CSV" accept=".csv,text/csv" style="display: none;" onchange="handleLabCsvFileInput(this)">
-          </div>
-
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px;">
-            <button type="button" class="step-btn" onclick="downloadLabCsvTemplate()">Download Sample Template</button>
-            <button type="button" class="step-btn" id="btnLoadDemoCoupons" onclick="loadDemoLabCoupons()" style="color: #34d399; border-color: rgba(16,185,129,0.35);">Load NIT Demo Coupons (N=4)</button>
-            <button type="button" class="step-btn" onclick="clearLabCoupons()" style="color: #f87171; border-color: rgba(244,63,94,0.3);">Clear</button>
-            <label for="chkLabBiasCorrection" style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); cursor: pointer;">
-              <input type="checkbox" id="chkLabBiasCorrection" onchange="toggleLabBiasCorrection(this.checked)">
-              Bayesian Bias-Corrected Prediction
-            </label>
-          </div>
-
-          <div id="labCsvStatus" style="font-size: 11px; color: var(--text-muted); padding: 6px 10px; border-radius: 6px; background: rgba(15,23,42,0.7); border: 1px solid rgba(255,255,255,0.06); margin-bottom: 10px;">
-            No experimental lab coupons loaded. Using baseline raw literature model predictions.
-          </div>
-
-          <div class="metric-score-row" id="labMetricsSummary" style="margin-top: 0;">
-            <div class="metric-score-card"><div class="metric-score-val" id="labMaeHv" style="color: #38bdf8;">—</div><div class="metric-score-lbl">HV MAE / RMSE</div></div>
-            <div class="metric-score-card"><div class="metric-score-val" id="labBiasHv" style="color: #fbbf24;">—</div><div class="metric-score-lbl">HV Bayes Shift</div></div>
-            <div class="metric-score-card"><div class="metric-score-val" id="labMaeYs" style="color: #34d399;">—</div><div class="metric-score-lbl">YS MAE (MPa)</div></div>
-            <div class="metric-score-card"><div class="metric-score-val" id="labMaeEl" style="color: #c084fc;">—</div><div class="metric-score-lbl">Elong MAE (%)</div></div>
           </div>
         </div>
       </div>
@@ -9455,9 +9106,6 @@ window.addEventListener('click', function(e) {
               <text x="390" y="275" fill="#fb923c" font-size="10" font-weight="bold">LACK OF FUSION</text>
               <text x="470" y="70" fill="#fde047" font-size="10" font-weight="bold">BALLING</text>
             </g>
-
-            <!-- Dynamic Experimental Lab Coupons Layer -->
-            <g id="labExperimentalMarkersGroup"></g>
 
             <!-- Dynamic Operating Point -->
             <circle id="svgCursor" cx="240" cy="180" r="7" fill="#50d8e9" stroke="#fff" stroke-width="2">
@@ -11473,7 +11121,7 @@ window.addEventListener('click', function(e) {
 </div>
 
 <!-- FOOTER -->
-<footer class="app-footer" id="footerContactSection">
+<footer class="app-footer">
   <div class="footer-inner" style="flex-direction: column; align-items: stretch; gap: 14px;">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
       <div>
@@ -11491,42 +11139,6 @@ window.addEventListener('click', function(e) {
         <span class="counter-pill">000054 Visits today</span>
         <span class="counter-pill">002692 Predictions made</span>
       </div>
-    </div>
-
-    <div class="footer-contact-panel">
-      <h2 style="font-size: 14.5px; font-weight: 800; color: var(--text-primary); margin: 0 0 4px 0;">Research Collaboration &amp; Evaluation Request</h2>
-      <p style="font-size: 12px; color: var(--text-secondary); margin: 0;">Request Ti-6Al-4V experimental coupon validation, benchmark dataset access, or manufacturing workflow consultation.</p>
-      <form id="footerContactForm" onsubmit="submitFooterContact(event)">
-        <div class="footer-contact-grid">
-          <div>
-            <label for="footerName">Your Name</label>
-            <input type="text" id="footerName" placeholder="Dr. / Eng. Full Name" required>
-          </div>
-          <div>
-            <label for="footerEmail">Work Email</label>
-            <input type="email" id="footerEmail" placeholder="name@organization.org" required>
-          </div>
-          <div>
-            <label for="footerOrg">Organization / Lab</label>
-            <input type="text" id="footerOrg" placeholder="NIT Trichy / Aerospace R&amp;D">
-          </div>
-          <div>
-            <label for="footerUseCase">Primary Use Case</label>
-            <select id="footerUseCase">
-              <option value="LPBF Parameter Qualification">LPBF Parameter Qualification</option>
-              <option value="L-DED / WAAM Solidification">L-DED / WAAM Solidification</option>
-              <option value="ASTM F2924 / F3001 Audit">ASTM F2924 / F3001 Audit</option>
-              <option value="Lab Coupon Calibration">Lab Coupon Calibration</option>
-              <option value="Research Collaboration">Research Collaboration</option>
-            </select>
-          </div>
-        </div>
-        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px;">
-          <button type="submit" class="primary-hero-cta" style="font-size: 12px; padding: 8px 14px;">Submit Evaluation Request</button>
-          <a href="https://github.com/Roshan5329p/NITT-Internship/issues" target="_blank" rel="noopener noreferrer" class="step-btn" style="text-decoration: none; font-size: 11.5px; padding: 7px 12px;">Open GitHub Issues ↗</a>
-          <span id="footerContactStatus" style="font-size: 12px; color: var(--accent-emerald); font-weight: 600;" aria-live="polite"></span>
-        </div>
-      </form>
     </div>
   </div>
 </footer>
@@ -11976,10 +11588,6 @@ function computeDashboardModelPredictions(opts = {}) {
     lofIndex, densityPct
   });
 
-  const allowCal = opts.applyLabCalibration !== undefined ? Boolean(opts.applyLabCalibration) : Boolean(typeof useLabBiasCorrection !== 'undefined' && useLabBiasCorrection && labCalibrationSummary && labCalibrationSummary.sampleCount > 0);
-  const isCalibrated = allowCal && Boolean(typeof labCalibrationSummary !== 'undefined' && labCalibrationSummary && labCalibrationSummary.sampleCount > 0);
-  const hvBiasShift = (isCalibrated && labCalibrationSummary.hv && Number.isFinite(labCalibrationSummary.hv.bayesianBiasShift)) ? labCalibrationSummary.hv.bayesianBiasShift : 0;
-
   const prior = computePhysicsPriorUi({
     process: proc, P: p, v, h, t, T0: effPreheat, htTempC: opts.htTempC,
     postProcessing: post, rawCondition: opts.rawCondition || post,
@@ -11992,26 +11600,19 @@ function computeDashboardModelPredictions(opts = {}) {
     buildOrientationDeg: buildOriDeg, surfaceTreatment: prior.surfTreat, isEli: prior.isEli, alloyId
   };
 
-  const hvAnalytical = Math.round(applyCalibratedResidualUi({ ...calArgs, prop: 'hardness_hv', priorVal: prior.hardness_hv, modelId: 'analytical' }) + hvBiasShift);
-  const hvRf = Math.round(applyCalibratedResidualUi({ ...calArgs, prop: 'hardness_hv', priorVal: prior.hardness_hv, modelId: 'rf' }) + hvBiasShift);
-  const hvXgb = Math.round(applyCalibratedResidualUi({ ...calArgs, prop: 'hardness_hv', priorVal: prior.hardness_hv, modelId: 'xgboost' }) + hvBiasShift);
-  const hvSvm = Math.round(applyCalibratedResidualUi({ ...calArgs, prop: 'hardness_hv', priorVal: prior.hardness_hv, modelId: 'svm' }) + hvBiasShift);
-  const hvGpr = Math.round(applyCalibratedResidualUi({ ...calArgs, prop: 'hardness_hv', priorVal: prior.hardness_hv, modelId: 'gpr' }) + hvBiasShift);
+  const hvAnalytical = Math.round(applyCalibratedResidualUi({ ...calArgs, prop: 'hardness_hv', priorVal: prior.hardness_hv, modelId: 'analytical' }));
+  const hvRf = Math.round(applyCalibratedResidualUi({ ...calArgs, prop: 'hardness_hv', priorVal: prior.hardness_hv, modelId: 'rf' }));
+  const hvXgb = Math.round(applyCalibratedResidualUi({ ...calArgs, prop: 'hardness_hv', priorVal: prior.hardness_hv, modelId: 'xgboost' }));
+  const hvSvm = Math.round(applyCalibratedResidualUi({ ...calArgs, prop: 'hardness_hv', priorVal: prior.hardness_hv, modelId: 'svm' }));
+  const hvGpr = Math.round(applyCalibratedResidualUi({ ...calArgs, prop: 'hardness_hv', priorVal: prior.hardness_hv, modelId: 'gpr' }));
 
-  const rawPinnEval = (typeof evaluateTi64Pinn === 'function')
+  const calPinnEval = (typeof evaluateTi64Pinn === 'function')
     ? evaluateTi64Pinn({
         processId: proc, P: p, v, h, t, T0: effPreheat, db: spot, postProcessing: post,
         oxygenWtPct: met.oxygen.effectiveOxygenWtPct, densityPct, buildOrientationDeg: buildOriDeg
       }) : null;
-  const calPinnEval = (rawPinnEval && isCalibrated && typeof applyPhysicsGuardedPinnTransfer === 'function')
-    ? applyPhysicsGuardedPinnTransfer(rawPinnEval, {
-        hvShift: labCalibrationSummary.hv ? labCalibrationSummary.hv.meanBias : 0,
-        ysShift: labCalibrationSummary.ys ? labCalibrationSummary.ys.meanBias : 0,
-        elongShift: labCalibrationSummary.elong ? labCalibrationSummary.elong.meanBias : 0,
-        sampleCount: labCalibrationSummary.sampleCount
-      }) : rawPinnEval;
   const hvPinn = calPinnEval ? calPinnEval.metallurgy.predictedHv : hvGpr;
-  const hvEnsemble = Math.round(applyCalibratedResidualUi({ ...calArgs, prop: 'hardness_hv', priorVal: prior.hardness_hv, modelId: 'ensemble' }) + hvBiasShift);
+  const hvEnsemble = Math.round(applyCalibratedResidualUi({ ...calArgs, prop: 'hardness_hv', priorVal: prior.hardness_hv, modelId: 'ensemble' }));
   const hvModels = { analytical: hvAnalytical, rf: hvRf, xgboost: hvXgb, svm: hvSvm, gpr: hvGpr, pinn: hvPinn, ensemble: hvEnsemble };
 
   const poreKnockdown = densityPct < 99.2 ? Math.exp(-0.45 * Math.max(0, 99.5 - densityPct)) : 1.0;
@@ -12660,34 +12261,13 @@ function calculatePhysics() {
   }
 
   const refVed = isWaam ? 57.0 : (isDed ? 198.0 : 72.0);
-  const isCalibrated = Boolean(typeof useLabBiasCorrection !== 'undefined' && useLabBiasCorrection && labCalibrationSummary && labCalibrationSummary.sampleCount > 0);
-  const hvBiasShift = (isCalibrated && labCalibrationSummary.hv && Number.isFinite(labCalibrationSummary.hv.bayesianBiasShift))
-    ? labCalibrationSummary.hv.bayesianBiasShift : 0;
-
-  const calBadge = document.getElementById('kpiCalibrationBadge');
-  const labBadge = document.getElementById('labModelModeBadge');
-  [calBadge, labBadge].forEach((b) => {
-    if (!b) return;
-    if (isCalibrated) {
-      b.innerText = `LAB-CALIBRATED (N=${labCalibrationSummary.sampleCount})`;
-      b.style.background = 'rgba(16, 185, 129, 0.20)';
-      b.style.color = '#34d399';
-      b.style.borderColor = 'rgba(16, 185, 129, 0.45)';
-    } else {
-      b.innerText = 'RAW LITERATURE MODEL';
-      b.style.background = 'rgba(148, 163, 184, 0.14)';
-      b.style.color = '#cbd5e1';
-      b.style.borderColor = 'rgba(148, 163, 184, 0.35)';
-    }
-  });
-
-  const hvAnalytical = Math.round(met.predictedHv + hvBiasShift);
+  const hvAnalytical = Math.round(met.predictedHv);
   const hvRf = Math.round(hvAnalytical * (1.0 + 0.010 * Math.log10(Math.max(1.0, coolingRate) / 1e4)));
   const hvXgb = Math.round(hvAnalytical * (1.0 + 0.008 * Math.log10(Math.max(1.0, coolingRate) / 1e4)));
   const hvSvm = Math.round(hvAnalytical * (1.012 - 0.005 * Math.abs(ved - refVed) / Math.max(25, refVed * 0.5)));
   const hvGpr = Math.round(hvAnalytical * (1.008 - 0.004 * Math.abs(ved - refVed) / Math.max(25, refVed * 0.5)));
 
-  const rawPinnEval = (typeof evaluateTi64Pinn === 'function')
+  const calPinnEval = (typeof evaluateTi64Pinn === 'function')
     ? evaluateTi64Pinn({
         processId: currentProcess,
         P: p, v: v, h: h, t: t, T0: effPreheat, db: spot,
@@ -12697,14 +12277,6 @@ function calculatePhysics() {
         buildOrientationDeg: buildOriDeg
       })
     : null;
-  const calPinnEval = (rawPinnEval && isCalibrated && typeof applyPhysicsGuardedPinnTransfer === 'function')
-    ? applyPhysicsGuardedPinnTransfer(rawPinnEval, {
-        hvShift: labCalibrationSummary.hv ? labCalibrationSummary.hv.meanBias : 0,
-        ysShift: labCalibrationSummary.ys ? labCalibrationSummary.ys.meanBias : 0,
-        elongShift: labCalibrationSummary.elong ? labCalibrationSummary.elong.meanBias : 0,
-        sampleCount: labCalibrationSummary.sampleCount
-      })
-    : rawPinnEval;
   const hvPinn = calPinnEval ? calPinnEval.metallurgy.predictedHv : Math.round(hvGpr * 0.995);
   // Inverse-variance Super-Ensemble weights aligned with api/predict.js
   const hvEnsemble = Math.round(0.12 * hvRf + 0.20 * hvXgb + 0.20 * hvSvm + 0.28 * hvGpr + 0.20 * hvPinn);
@@ -12716,8 +12288,7 @@ function calculatePhysics() {
     const monoTag = aud.allMonotonicityChecksPass
       ? '<span style="color:#34d399; font-weight:700;">✓ All Autograd Sign Checks Passed</span>'
       : '<span style="color:#fbbf24; font-weight:700;">⚠ Boundary Saturation Near HT Limit</span>';
-    const xferTag = isCalibrated ? ' · <span style="color:#34d399;">Lab Transfer Guarded</span>' : '';
-    auditStripEl.innerHTML = `<strong style="color:#38bdf8;">PINN Physics Audit:</strong> <span style="font-family:'JetBrains Mono', monospace;">Hall-Petch Residual: ±${aud.hallPetchResidualMpa.toFixed(1)} MPa · Enthalpy PDE Residual: ${aud.thermalEnthalpyResidualPct.toFixed(1)}% · ∂YS/∂O₂ = +${drv.dYs_dO2} MPa/wt% · ∂W/∂P &gt; 0 · ${monoTag}${xferTag}</span>`;
+    auditStripEl.innerHTML = `<strong style="color:#38bdf8;">PINN Physics Audit:</strong> <span style="font-family:'JetBrains Mono', monospace;">Hall-Petch Residual: ±${aud.hallPetchResidualMpa.toFixed(1)} MPa · Enthalpy PDE Residual: ${aud.thermalEnthalpyResidualPct.toFixed(1)}% · ∂YS/∂O₂ = +${drv.dYs_dO2} MPa/wt% · ∂W/∂P &gt; 0 · ${monoTag}</span>`;
   }
 
   const stateKey = (function() {
@@ -13079,7 +12650,6 @@ function calculatePhysics() {
 }
 
 let _lastRenderedDefectMapProc = null;
-let _lastDefectMarkersSig = null;
 
 function _renderBonthaCursorDom(snap) {
   if (!snap) return;
@@ -13225,26 +12795,6 @@ function updateDefectMapSvg(proc, p, v) {
 
   const svgP = Math.max(30, Math.min(310, mapY(p)));
   const svgV = Math.max(70, Math.min(560, mapX(v)));
-
-  const markersGrp = $id('labExperimentalMarkersGroup');
-  if (markersGrp) {
-    const labCount = (typeof uploadedLabCoupons !== 'undefined' && Array.isArray(uploadedLabCoupons)) ? uploadedLabCoupons.length : 0;
-    const markerSig = `${proc}:${labCount}`;
-    if (markerSig !== _lastDefectMarkersSig) {
-      _lastDefectMarkersSig = markerSig;
-      if (labCount > 0) {
-        const matching = uploadedLabCoupons.filter(c => c.process === proc);
-        markersGrp.innerHTML = matching.map((c) => {
-          const mx = Math.max(70, Math.min(560, mapX(c.v_mm_s)));
-          const my = Math.max(30, Math.min(310, mapY(c.P_W)));
-          const safeId = typeof escapeHtml === 'function' ? escapeHtml(String(c.sample_id || '')) : String(c.sample_id || '').replace(/[&<>"']/g, '');
-          return `<polygon points="${mx.toFixed(1)},${(my - 6).toFixed(1)} ${(mx + 6).toFixed(1)},${my.toFixed(1)} ${mx.toFixed(1)},${(my + 6).toFixed(1)} ${(mx - 6).toFixed(1)},${my.toFixed(1)}" fill="#fbbf24" stroke="#0f172a" stroke-width="1.5" aria-label="${safeId} (${c.P_W}W, ${c.v_mm_s}mm/s, HV=${c.measured_HV || 'N/A'})" data-tooltip="${safeId} (${c.P_W}W, ${c.v_mm_s}mm/s, HV=${c.measured_HV || 'N/A'})"/><text x="${(mx + 8).toFixed(1)}" y="${(my - 6).toFixed(1)}" fill="#fde047" font-size="9" font-family="monospace">${safeId}</text>`;
-        }).join('');
-      } else {
-        markersGrp.innerHTML = '';
-      }
-    }
-  }
 
   const cursor = $id('svgCursor');
   if (cursor) {
@@ -18085,68 +17635,6 @@ function runHeroLiveDemo() {
 }
 window.runHeroLiveDemo = runHeroLiveDemo;
 
-function openContactModal() {
-  const modal = document.getElementById('contactModal');
-  if (!modal) return;
-  modal.style.display = 'block';
-  const orgEl = document.getElementById('contactOrgInput');
-  if (orgEl && typeof orgEl.focus === 'function') orgEl.focus();
-}
-window.openContactModal = openContactModal;
-
-function closeContactModal() {
-  const modal = document.getElementById('contactModal');
-  if (modal) modal.style.display = 'none';
-}
-window.closeContactModal = closeContactModal;
-
-function buildContactInquiryText() {
-  const org = (document.getElementById('contactOrgInput')?.value || '').trim() || 'Unspecified Organization';
-  const email = (document.getElementById('contactEmailInput')?.value || '').trim() || 'Not provided';
-  const msg = (document.getElementById('contactMsgInput')?.value || '').trim() || 'Requesting research collaboration or experimental calibration evaluation for Ti-6Al-4V AM.';
-  const st = window.latestPhysicsState || {};
-  const ctx = `Active Context: ${st.process || 'lpbf'} | P=${st.p || 280}W, v=${st.v || 960}mm/s, h=${st.h || 110}µm, t=${st.t || 40}µm`;
-  return {
-    org,
-    email,
-    msg,
-    subject: `[MatSci Navigator] Ti-6Al-4V Research / Evaluation Inquiry (${org})`,
-    body: `Organization: ${org}\nReply Email: ${email}\n${ctx}\n\nInquiry:\n${msg}`
-  };
-}
-
-function submitContactMailto(event) {
-  if (event && typeof event.preventDefault === 'function') event.preventDefault();
-  const d = buildContactInquiryText();
-  const mailtoUrl = `mailto:nit-am-research@example.org?subject=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(d.body)}`;
-  const statusEl = document.getElementById('contactModalStatus');
-  if (statusEl) {
-    statusEl.innerText = 'Opening email draft (or use GitHub Issues / Copy Summary below).';
-  }
-  window.location.href = mailtoUrl;
-}
-window.submitContactMailto = submitContactMailto;
-
-function copyContactSummary() {
-  const d = buildContactInquiryText();
-  const statusEl = document.getElementById('contactModalStatus');
-  const txt = `${d.subject}\n\n${d.body}`;
-  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-    navigator.clipboard.writeText(txt).then(() => {
-      if (statusEl) statusEl.innerText = '✓ Inquiry summary copied to clipboard.';
-    }).catch(() => {
-      if (statusEl) statusEl.innerText = 'Copy unavailable — please use Open GitHub Issues.';
-    });
-  } else if (statusEl) {
-    statusEl.innerText = txt;
-  }
-}
-window.copyContactSummary = copyContactSummary;
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeContactModal();
-});
-
 window.addEventListener('DOMContentLoaded', () => {
   let rawTheme = 'dark';
   try {
@@ -18454,8 +17942,7 @@ function comparePaperWithMlModels(paper, currentState) {
     alloyId: paper.alloy || cur.alloyId,
     oxygenWtPct: _posMetricOrNull(paper.o2WtPct) || cur.oxygenWtPct,
     buildOrientationDeg: Number.isFinite(Number(paper.buildOrientationDeg)) ? Number(paper.buildOrientationDeg) : cur.buildOrientationDeg,
-    surfaceTreatment: paper.surfaceTreatment || null,
-    applyLabCalibration: false
+    surfaceTreatment: paper.surfaceTreatment || null
   });
 
   const evalAtPaper = computeDashboardModelPredictions(paperParamsState);
@@ -19761,24 +19248,6 @@ function ensureKatexLoaded() {
   });
   return _katexLoadingPromise;
 }
-
-function submitFooterContact(event) {
-  if (event && typeof event.preventDefault === 'function') event.preventDefault();
-  const name = (document.getElementById('footerName')?.value || '').trim();
-  const email = (document.getElementById('footerEmail')?.value || '').trim();
-  const org = (document.getElementById('footerOrg')?.value || '').trim() || 'Not specified';
-  const useCase = (document.getElementById('footerUseCase')?.value || '').trim();
-  const statusEl = document.getElementById('footerContactStatus');
-  if (statusEl) {
-    statusEl.innerText = `✓ Request logged for ${name || email} (${useCase}, ${org}). Use GitHub Issues for direct tracked follow-up.`;
-  }
-  try {
-    localStorage.setItem('nit_am_last_inquiry', JSON.stringify({
-      name, email, org, useCase, ts: new Date().toISOString()
-    }));
-  } catch (e) {}
-}
-window.submitFooterContact = submitFooterContact;
 
 function toggleGoverningEquationsDrawer() {
   const drawer = document.getElementById('governingEquationsDrawer');
@@ -22751,39 +22220,6 @@ window.openCadPartReportModal = openCadPartReportModal;
           Generated by MatSci Navigator Titanium AM Platform • Calibrated with ISO/ASTM Additive Manufacturing Standards
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- LIGHTWEIGHT RESEARCH COLLABORATION & CONTACT MODAL -->
-  <div id="contactModal" class="report-modal" role="dialog" aria-modal="true" aria-labelledby="contactModalTitle" style="display: none;" onclick="if(event.target === this) closeContactModal();">
-    <div class="contact-modal-paper">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-        <h2 id="contactModalTitle" style="font-size: 17px; font-weight: 800; margin: 0; color: var(--text-primary);">Contact / Research Collaboration</h2>
-        <button type="button" class="step-btn" onclick="closeContactModal()" aria-label="Close contact dialog">✕ Close</button>
-      </div>
-      <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
-        Request experimental Ti-6Al-4V coupon calibration, benchmark integration, or technical collaboration with the MatSci Navigator team at NIT Tiruchirappalli.
-      </p>
-      <form onsubmit="submitContactMailto(event)">
-        <div class="contact-field-group">
-          <label for="contactOrgInput">Organization / Lab</label>
-          <input type="text" id="contactOrgInput" placeholder="e.g., NIT Trichy / Aerospace R&amp;D">
-        </div>
-        <div class="contact-field-group">
-          <label for="contactEmailInput">Reply Email</label>
-          <input type="email" id="contactEmailInput" placeholder="name@organization.org">
-        </div>
-        <div class="contact-field-group">
-          <label for="contactMsgInput">Research Evaluation / Inquiry</label>
-          <textarea id="contactMsgInput" rows="3" placeholder="Share alloy grade, process route (LPBF, L-DED, WAAM, Binder Jetting), or dataset request..."></textarea>
-        </div>
-        <div id="contactModalStatus" style="font-size: 11.5px; color: var(--accent-emerald); margin-bottom: 10px; min-height: 16px;"></div>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
-          <button type="submit" class="primary-hero-cta" style="font-size: 12px; padding: 8px 14px;">Open Email Draft (mailto:)</button>
-          <button type="button" class="step-btn" onclick="copyContactSummary()">Copy Summary</button>
-          <a href="https://github.com/Roshan5329p/NITT-Internship/issues" target="_blank" rel="noopener noreferrer" class="step-btn" style="text-decoration: none;">Open GitHub Issues ↗</a>
-        </div>
-      </form>
     </div>
   </div>
 </body>
