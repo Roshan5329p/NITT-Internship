@@ -3,23 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MatSci Navigator - Titanium Additive Manufacturing Database & Physics Predictor</title>
-<meta name="description" content="Unified Pure Java Ti-6Al-4V Additive Manufacturing Platform — Literature Data (54 Papers), Process Maps, 3D Digital Twin, King's Enthalpy Criterion, and ASTM F2924 / F3001 Qualification.">
+<title>MatSci Navigator | Ti-6Al-4V AM Physics &amp; ML Predictor</title>
+<meta name="description" content="Ti-6Al-4V additive manufacturing physics and ML predictor for LPBF, L-DED, WAAM, and Binder Jetting with 3D Digital Twin and ASTM F2924/F3001 qualification.">
+<link rel="canonical" href="https://nit-titanium-am-platform.vercel.app/">
+<meta property="og:title" content="MatSci Navigator | Ti-6Al-4V AM Physics &amp; ML Predictor">
+<meta property="og:description" content="Ti-6Al-4V additive manufacturing physics and ML predictor for LPBF, L-DED, WAAM, and Binder Jetting with 3D Digital Twin and ASTM F2924/F3001 qualification.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://nit-titanium-am-platform.vercel.app/">
+<meta property="og:site_name" content="MatSci Navigator">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MatSci Navigator | Ti-6Al-4V AM Physics &amp; ML Predictor">
+<meta name="twitter:description" content="Ti-6Al-4V additive manufacturing physics and ML predictor for LPBF, L-DED, WAAM, and Binder Jetting with 3D Digital Twin and ASTM F2924/F3001 qualification.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root, html.dark {
     --bg-base: #141416;
     --bg-card: #1c1c1e;
     --bg-subcard: #232326;
     --bg-card-hover: #2a2a2e;
-    --border-color: rgba(255, 255, 255, 0.08);
-    --border-subtle: rgba(255, 255, 255, 0.04);
+    --border-color: rgba(255, 255, 255, 0.10);
+    --border-subtle: rgba(255, 255, 255, 0.05);
     --border-focus: #95a4fc;
     --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.72);
-    --text-muted: rgba(255, 255, 255, 0.45);
+    --text-secondary: #cbd5e1;
+    --text-muted: #9ca3af;
     --accent-cyan: #50d8e9;
     --accent-blue: #1886fe;
     --accent-indigo: #95a4fc;
@@ -60,8 +69,8 @@
     --border-subtle: rgba(0, 0, 0, 0.04);
     --border-focus: #1886fe;
     --text-primary: #1c1c1c;
-    --text-secondary: rgba(28, 28, 28, 0.7);
-    --text-muted: rgba(28, 28, 28, 0.48);
+    --text-secondary: #334155;
+    --text-muted: #475569;
     --accent-cyan: #0284c7;
     --accent-blue: #1886fe;
     --accent-indigo: #6366f1;
@@ -162,14 +171,19 @@
     font-weight: 600;
   }
   .brand-badge {
-    background: rgba(24, 134, 254, 0.12);
-    color: var(--accent-blue);
-    border: 1px solid rgba(24, 134, 254, 0.3);
+    background: rgba(56, 189, 248, 0.14);
+    color: #7dd3fc;
+    border: 1px solid rgba(56, 189, 248, 0.38);
     font-size: 10px;
     font-weight: 700;
     padding: 2px 7px;
     border-radius: 6px;
     font-family: 'JetBrains Mono', monospace;
+  }
+  html.light .brand-badge {
+    background: rgba(2, 132, 199, 0.12);
+    color: #0369a1;
+    border-color: rgba(2, 132, 199, 0.36);
   }
   .brand-sub {
     font-size: 11px;
@@ -1371,7 +1385,7 @@
     display: flex;
     justify-content: space-between;
     font-size: 9.5px;
-    color: #64748b;
+    color: #94a3b8;
     margin-top: 6px;
     letter-spacing: -0.1px;
   }
@@ -2566,7 +2580,7 @@
   }
   .math-paren {
     font-size: 1.45em;
-    color: #64748b;
+    color: #94a3b8;
     font-weight: 300;
     line-height: 1;
     padding: 0 2px;
@@ -2892,6 +2906,272 @@
     canvas, svg, table, .table-wrap {
       page-break-inside: avoid !important;
       break-inside: avoid !important;
+    }
+  }
+
+  /* =========================================================================
+     STACKRA AUDIT REMEDIATION: HERO, PROOF STRIP, CONTRAST, MOBILE & TABLES
+     ========================================================================= */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+  main.main-content,
+  aside.sidebar,
+  .side-card,
+  .model-card,
+  .kpi-card,
+  .defect-svg-container,
+  .audit-panel,
+  .mat-state-banner,
+  .lit-strip,
+  .regime-banner,
+  .validation-proof-strip {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  canvas, svg, img {
+    max-width: 100%;
+  }
+  .table-responsive,
+  .table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hero H1 & Primary CTA Strip */
+  .hero-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(99, 102, 241, 0.06));
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+  }
+  html.light .hero-strip {
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.07), rgba(79, 70, 229, 0.05));
+    border-color: rgba(2, 132, 199, 0.25);
+  }
+  .hero-h1 {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin: 0;
+  }
+  .hero-subtitle {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    line-height: 1.45;
+  }
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .primary-hero-cta {
+    background: linear-gradient(135deg, #38bdf8, #10b981);
+    color: #04101d;
+    border: none;
+    border-radius: 9px;
+    padding: 9px 16px;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.28);
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  .primary-hero-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(56, 189, 248, 0.38);
+  }
+
+  /* Compact Validation Proof Strip */
+  .validation-proof-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 11px;
+    padding: 9px 14px;
+    margin-bottom: 16px;
+    font-size: 11.5px;
+    color: var(--text-secondary);
+  }
+  .proof-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .proof-item strong {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+  .proof-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-emerald);
+    flex-shrink: 0;
+  }
+
+  /* Light Mode Contrast Refinements for Header Pills & KPI Badges */
+  html.light .snow-header-actions .step-btn[onclick*="openEngineeringReportModal"] {
+    color: #0369a1 !important;
+    background: rgba(2, 132, 199, 0.11) !important;
+    border-color: rgba(2, 132, 199, 0.38) !important;
+  }
+  html.light #shareRunBtn {
+    color: #047857 !important;
+    background: rgba(5, 150, 105, 0.11) !important;
+    border-color: rgba(5, 150, 105, 0.38) !important;
+  }
+  html.light #contactHeaderBtn {
+    color: #334155 !important;
+    background: rgba(15, 23, 42, 0.06) !important;
+    border-color: rgba(15, 23, 42, 0.22) !important;
+  }
+  html.light #supabaseStatusBadge {
+    color: #047857 !important;
+    background: rgba(5, 150, 105, 0.11) !important;
+    border-color: rgba(5, 150, 105, 0.35) !important;
+  }
+  html.light #kpiCalibrationBadge,
+  html.light #labModelModeBadge {
+    color: #334155 !important;
+    background: rgba(15, 23, 42, 0.09) !important;
+    border-color: rgba(15, 23, 42, 0.22) !important;
+  }
+  html.light .kpi-badge[style*="color: #94a3b8"] {
+    color: #334155 !important;
+    background: rgba(15, 23, 42, 0.08) !important;
+  }
+
+  /* Lightweight Research Contact Modal */
+  .contact-modal-paper {
+    max-width: 540px;
+    margin: 40px auto;
+    background: var(--bg-card);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 14px;
+    padding: 24px;
+    color: var(--text-primary);
+    box-shadow: 0 24px 56px rgba(0, 0, 0, 0.65);
+  }
+  .contact-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 12px;
+  }
+  .contact-field-group label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .contact-field-group input,
+  .contact-field-group textarea {
+    width: 100%;
+    background: var(--bg-subcard);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12.5px;
+    font-family: inherit;
+  }
+
+  @media (max-width: 768px) {
+    .header-inner {
+      padding: 10px 14px;
+      gap: 10px;
+    }
+    .snow-search-box {
+      width: 100% !important;
+      max-width: 100% !important;
+      order: 3;
+    }
+    .snow-header-actions {
+      width: 100%;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tabs-bar {
+      padding: 0 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .main-container {
+      padding: 12px;
+      gap: 14px;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .kpi-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .grid-two-col {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+    #view_process-map [style*="grid-template-columns: 1fr 1fr"],
+    #microstructureExplorerCard [style*="grid-template-columns: 340px 1fr"],
+    #view_cad-analyzer [style*="minmax(300px, 380px)"],
+    #view_cad-analyzer [style*="minmax(410px, 1fr)"],
+    #view_digital-twin [style*="grid-template-columns"] {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+    .mat-state-banner,
+    .lit-strip,
+    .regime-banner,
+    .hero-strip,
+    .validation-proof-strip {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .proof-item {
+      white-space: normal;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .kpi-row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .snow-breadcrumbs {
+      flex-wrap: wrap;
+      font-size: 12px;
+    }
+    .hero-h1 {
+      font-size: 17.5px;
+    }
+    .side-card,
+    .model-card,
+    .defect-svg-container,
+    .audit-panel,
+    .res-card {
+      padding: 14px 12px;
+    }
+  }
+
+  @media print {
+    .hero-strip,
+    .validation-proof-strip,
+    #contactModal {
+      display: none !important;
     }
   }
   </style>
@@ -6378,7 +6658,7 @@ function shareCurrentRun() {
     btn.style.color = '#ffffff';
     btn.style.borderColor = '#10b981';
     _shareBtnResetTimer = setTimeout(function() {
-      btn.innerText = '🔗 Share Run';
+      btn.innerText = '🔗 Copy Shareable URL';
       btn.style.background = 'rgba(16,185,129,0.15)';
       btn.style.color = '#34d399';
       btn.style.borderColor = 'rgba(16,185,129,0.35)';
@@ -6771,7 +7051,7 @@ window.addEventListener('click', function(e) {
           <span class="bc-crumb">Ti-6Al-4V Additive Manufacturing</span>
           <span class="bc-divider">/</span>
           <span class="bc-active">Physics Predictor</span>
-          <span class="brand-badge">NIT v2.5</span>
+          <span class="brand-badge">NIT v3.0</span>
         </div>
         <div class="brand-sub">Analytical Rosenthal · KU Leuven Hybrid Melt Pool · Bontha Solidification CET · ASTM F2924</div>
       </div>
@@ -6779,17 +7059,20 @@ window.addEventListener('click', function(e) {
 
     <!-- SnowUI Center Search Bar -->
     <div class="snow-search-box" onclick="document.getElementById('globalSearchInput')?.focus()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" class="snow-search-input" placeholder="Search parameters, papers, models..." id="globalSearchInput" onkeydown="handleSearchKeydown(event)" oninput="handleGlobalSearch(this.value)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" class="snow-search-input" aria-label="Search parameters, papers, and models" placeholder="Search parameters, papers, models..." id="globalSearchInput" onkeydown="handleSearchKeydown(event)" oninput="handleGlobalSearch(this.value)">
     </div>
 
     <!-- SnowUI Header Actions -->
     <div class="snow-header-actions">
         <button type="button" class="step-btn" style="background: rgba(56,189,248,0.15); color: #38bdf8; border-color: rgba(56,189,248,0.3); font-size: 11.5px; font-weight: 700; padding: 6px 12px;" onclick="openEngineeringReportModal()">
-          📄 Export Technical Report
+          📄 Export Technical Report (PDF)
         </button>
         <button type="button" class="step-btn" id="shareRunBtn" style="background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.35); font-size: 11.5px; font-weight: 700; padding: 6px 12px;" onclick="shareCurrentRun()" title="Copy shareable URL with current parameters">
-          🔗 Share Run
+          🔗 Copy Shareable URL
+        </button>
+        <button type="button" class="step-btn" id="contactHeaderBtn" style="background: rgba(148,163,184,0.14); color: #cbd5e1; border-color: rgba(148,163,184,0.32); font-size: 11.5px; font-weight: 700; padding: 6px 12px;" onclick="openContactModal()">
+          ✉️ Contact / Research
         </button>
       <span class="counter-pill" id="liveStatusBadge">● Platform Online</span>
       <span class="counter-pill" id="supabaseStatusBadge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">⚡ Cloud Synced</span>
@@ -6892,7 +7175,7 @@ window.addEventListener('click', function(e) {
     <!-- 2. TITANIUM ALLOY SELECTOR & INTERSTITIAL OXYGEN / POWDER REUSE -->
     <div class="side-card">
       <div class="side-header">
-        <span>Ti-6Al-4V Grade &amp; O₂</span>
+        <label for="alloySelect" style="cursor: pointer;">Ti-6Al-4V Grade &amp; O₂</label>
         <span class="brand-badge" id="chemistryCompliancePill" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); border-color: rgba(16, 185, 129, 0.4); font-size: 9.5px;">ASTM F2924 PASS</span>
       </div>
       <select class="dark-select" id="alloySelect" onchange="onAlloyGradeChange()">
@@ -6902,7 +7185,7 @@ window.addEventListener('click', function(e) {
 
       <div class="slider-item" style="margin-top: 12px;">
         <div class="slider-header">
-          <span class="slider-label">Interstitial Oxygen (wt% O)</span>
+          <label class="slider-label" for="sl_oxygen">Interstitial Oxygen (wt% O)</label>
           <span class="slider-val" id="val_oxygen">0.160 wt%</span>
         </div>
         <input type="range" id="sl_oxygen" min="0.08" max="0.22" step="0.005" value="0.160" oninput="onOxygenSliderChange()">
@@ -6914,12 +7197,12 @@ window.addEventListener('click', function(e) {
 
       <div class="slider-item" style="margin-top: 10px; margin-bottom: 6px;">
         <div class="slider-header">
-          <span class="slider-label">Powder Reuse Cycles</span>
+          <label class="slider-label" for="sl_reuse">Powder Reuse Cycles</label>
           <span class="slider-val" id="val_reuse">0 cycles</span>
         </div>
         <input type="range" id="sl_reuse" min="0" max="30" step="1" value="0" oninput="onReuseSliderChange()">
       </div>
-      <label style="display: flex; align-items: center; gap: 7px; font-size: 10.5px; color: var(--text-secondary); cursor: pointer;">
+      <label for="chk_auto_reuse" style="display: flex; align-items: center; gap: 7px; font-size: 10.5px; color: var(--text-secondary); cursor: pointer;">
         <input type="checkbox" id="chk_auto_reuse" checked onchange="onReuseSliderChange()">
         Auto-couple powder O₂ pickup per reuse cycle
       </label>
@@ -6949,7 +7232,7 @@ window.addEventListener('click', function(e) {
         <div class="ved-desc" id="vedSolverDesc">Input target VED (J/mm³) to derive Laser Power <i>P</i>, Scan Speed <i>v</i>, Hatch Spacing <i>h</i>, and Layer Thickness <i>t</i> avoiding lack-of-fusion and keyhole.</div>
 
         <div class="ved-target-row">
-          <span style="font-size: 11.5px; color: var(--text-secondary);" id="vedTargetLabel">Target VED <i>E<sub>v</sub></i>:</span>
+          <label for="targetVedSlider" style="font-size: 11.5px; color: var(--text-secondary);" id="vedTargetLabel">Target VED <i>E<sub>v</sub></i>:</label>
           <span class="ved-target-val" id="targetVedDisplay">66.3 J/mm³</span>
           <div class="ved-steppers">
             <button class="step-btn" onclick="adjustTargetVed(-5)">-5%</button>
@@ -7004,7 +7287,7 @@ window.addEventListener('click', function(e) {
           <button class="apply-solved-btn" onclick="applySolvedToSliders()">Apply Solved (P, v, h, t) to Sliders</button>
         </div>
 
-        <label style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); cursor: pointer;">
+        <label for="autoSyncCheckbox" style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); cursor: pointer;">
           <input type="checkbox" id="autoSyncCheckbox" checked onchange="autoSync = this.checked">
           Auto-sync sliders when VED changes
         </label>
@@ -7013,7 +7296,7 @@ window.addEventListener('click', function(e) {
       <!-- Process Sliders -->
       <div class="slider-item">
         <div class="slider-header">
-          <span class="slider-label" id="lbl_p">Laser Power <i>P</i></span>
+          <label class="slider-label" for="sl_p" id="lbl_p">Laser Power <i>P</i></label>
           <span class="slider-val" id="val_p">280 W</span>
         </div>
         <input type="range" id="sl_p" min="80" max="450" step="5" value="280" oninput="onSliderChange()">
@@ -7021,7 +7304,7 @@ window.addEventListener('click', function(e) {
 
       <div class="slider-item">
         <div class="slider-header">
-          <span class="slider-label" id="lbl_v">Scan Speed <i>v</i></span>
+          <label class="slider-label" for="sl_v" id="lbl_v">Scan Speed <i>v</i></label>
           <span class="slider-val" id="val_v">960 mm/s</span>
         </div>
         <input type="range" id="sl_v" min="300" max="2200" step="20" value="960" oninput="onSliderChange()">
@@ -7029,7 +7312,7 @@ window.addEventListener('click', function(e) {
 
       <div class="slider-item">
         <div class="slider-header">
-          <span class="slider-label" id="lbl_h">Hatch Spacing <i>h</i></span>
+          <label class="slider-label" for="sl_h" id="lbl_h">Hatch Spacing <i>h</i></label>
           <span class="slider-val" id="val_h">110 µm</span>
         </div>
         <input type="range" id="sl_h" min="50" max="180" step="5" value="110" oninput="onSliderChange()">
@@ -7037,7 +7320,7 @@ window.addEventListener('click', function(e) {
 
       <div class="slider-item">
         <div class="slider-header">
-          <span class="slider-label" id="lbl_t">Layer Thickness <i>t</i></span>
+          <label class="slider-label" for="sl_t" id="lbl_t">Layer Thickness <i>t</i></label>
           <span class="slider-val" id="val_t">40 µm</span>
         </div>
         <input type="range" id="sl_t" min="20" max="90" step="5" value="40" oninput="onSliderChange()">
@@ -7045,7 +7328,7 @@ window.addEventListener('click', function(e) {
 
       <div class="slider-item">
         <div class="slider-header">
-          <span class="slider-label" id="lbl_spot">Beam Spot Diameter <i>d<sub>b</sub></i></span>
+          <label class="slider-label" for="sl_spot" id="lbl_spot">Beam Spot Diameter <i>d<sub>b</sub></i></label>
           <span class="slider-val" id="val_spot">80 µm</span>
         </div>
         <input type="range" id="sl_spot" min="40" max="150" step="5" value="80" oninput="onSliderChange()">
@@ -7053,7 +7336,7 @@ window.addEventListener('click', function(e) {
 
       <div class="slider-item">
         <div class="slider-header">
-          <span class="slider-label" id="lbl_preheat">Build Plate Preheat <i>T<sub>0</sub></i></span>
+          <label class="slider-label" for="sl_preheat" id="lbl_preheat">Build Plate Preheat <i>T<sub>0</sub></i></label>
           <span class="slider-val" id="val_preheat">200 °C</span>
         </div>
         <input type="range" id="sl_preheat" min="25" max="650" step="25" value="200" oninput="onSliderChange()">
@@ -7063,7 +7346,7 @@ window.addEventListener('click', function(e) {
     <!-- 4. POST-PROCESSING REGIME -->
     <div class="side-card">
       <div class="side-header">
-        <span>Post-Processing</span>
+        <label for="postProcessingSelect" style="cursor: pointer;">Post-Processing</label>
         <span class="brand-badge" id="postStatusBadge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); border-color: rgba(16, 185, 129, 0.4);">ASTM F2924 QUALIFIED (CLASS 1)</span>
       </div>
       <select class="dark-select" id="postProcessingSelect" onchange="updateAll()">
@@ -7085,7 +7368,7 @@ window.addEventListener('click', function(e) {
         <span style="color: var(--accent-cyan); font-family: monospace; font-size: 10px;" id="lbl_aniso_badge">⟨001⟩β Coupled</span>
       </div>
       <div style="margin-bottom: 8px;">
-        <div style="font-size: 10.5px; color: var(--text-secondary); margin-bottom: 4px;">Build Orientation (Test Axis)</div>
+        <label for="buildOrientationSelect" style="display: block; font-size: 10.5px; color: var(--text-secondary); margin-bottom: 4px;">Build Orientation (Test Axis)</label>
         <select class="dark-select" id="buildOrientationSelect" onchange="updateAll()">
           <option value="0" selected>0° (Horizontal XY · Transverse to ⟨001⟩β)</option>
           <option value="45">45° (Diagonal · Max Prior-β Shear)</option>
@@ -7093,7 +7376,7 @@ window.addEventListener('click', function(e) {
         </select>
       </div>
       <div>
-        <div style="font-size: 10.5px; color: var(--text-secondary); margin-bottom: 4px;">Inter-Layer Scan Rotation</div>
+        <label for="scanRotationSelect" style="display: block; font-size: 10.5px; color: var(--text-secondary); margin-bottom: 4px;">Inter-Layer Scan Rotation</label>
         <select class="dark-select" id="scanRotationSelect" onchange="updateAll()">
           <option value="67" selected>67° Alternating (Low Anisotropy / Stress)</option>
           <option value="90">90° Orthogonal (Stronger Fiber Texture)</option>
@@ -7104,7 +7387,7 @@ window.addEventListener('click', function(e) {
     <!-- 5. TARGET HARDNESS -->
     <div class="side-card">
       <div class="side-header">
-        <span>Target Hardness (HV)</span>
+        <label for="targetHvInput" style="cursor: pointer;">Target Hardness (HV)</label>
         <span style="color: var(--accent-cyan); font-family: monospace;">HV 0.3</span>
       </div>
       <div style="display: flex; gap: 8px; align-items: center;">
@@ -7118,6 +7401,26 @@ window.addEventListener('click', function(e) {
 
   <!-- RIGHT MAIN CONTENT AREA -->
   <main class="main-content">
+
+    <!-- HERO H1 & PRIMARY ACTION STRIP -->
+    <section class="hero-strip" aria-label="Platform Overview">
+      <div>
+        <h1 class="hero-h1">MatSci Navigator — Ti-6Al-4V Additive Manufacturing Physics &amp; ML Predictor</h1>
+        <p class="hero-subtitle">Real-time Rosenthal thermal kinetics, hybrid melt pool &amp; Bontha CET solidification, 3D residual stress digital twin, and ASTM F2924/F3001 compliance across LPBF, L-DED, WAAM, and Binder Jetting.</p>
+      </div>
+      <div class="hero-actions">
+        <button type="button" class="primary-hero-cta" onclick="runHeroLiveDemo()">⚡ Run Live Ti-6Al-4V Prediction</button>
+        <button type="button" class="step-btn" onclick="openEvidenceHub()" style="padding: 9px 14px; font-size: 12px; font-weight: 700;">Compare Literature Papers →</button>
+      </div>
+    </section>
+
+    <!-- COMPACT VALIDATION PROOF STRIP -->
+    <div class="validation-proof-strip" aria-label="Verified Scientific Validation Summary">
+      <span class="proof-item"><span class="proof-dot" aria-hidden="true"></span><strong>97.7%–98.5% LOPO-CV Accuracy</strong> on LPBF Strength &amp; Hardness</span>
+      <span class="proof-item"><span class="proof-dot" style="background: var(--accent-cyan);" aria-hidden="true"></span><strong>199 Indexed Studies</strong> / 39 Verified Bulk Benchmarks</span>
+      <span class="proof-item"><span class="proof-dot" style="background: var(--accent-indigo);" aria-hidden="true"></span><strong>ASTM F2924 &amp; F3001</strong> Guardrails</span>
+      <span class="proof-item"><span class="proof-dot" style="background: var(--accent-amber);" aria-hidden="true"></span><strong>Zero-Upload Browser CAD</strong> Engine</span>
+    </div>
 
     <!-- 1. TOP 5 KPI CARDS -->
     <div class="kpi-row">
@@ -7191,7 +7494,7 @@ window.addEventListener('click', function(e) {
           <div class="lit-strip-sub">Explore indexed publications, parameter envelopes, reported properties, and ASTM qualification compliance.</div>
         </div>
       </div>
-      <button class="lit-strip-btn" onclick="openEvidenceHub()">Open Evidence & Gaps Hub →</button>
+      <button class="lit-strip-btn" onclick="openEvidenceHub()">Compare Literature Papers →</button>
     </div>
 
     <!-- TAB 1: PREDICTIONS VIEW (DEFAULT) -->
@@ -7206,7 +7509,7 @@ window.addEventListener('click', function(e) {
         <div id="cadCouplingDetails" style="font-size: 11px; color: #bae6fd; margin-top: 3px; font-family: 'JetBrains Mono', monospace;"></div>
       </div>
       <div style="display: flex; align-items: center; gap: 12px;">
-        <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #e2e8f0; cursor: pointer;">
+        <label for="chkCadPredictionCoupling" style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #e2e8f0; cursor: pointer;">
           <input type="checkbox" id="chkCadPredictionCoupling" checked onchange="cadCouplingEnabled = Boolean(this.checked); calculatePhysics();">
           Couple Predictions to CAD File
         </label>
@@ -7240,7 +7543,7 @@ window.addEventListener('click', function(e) {
         <div class="model-card">
           <div class="model-card-header">
             <div>
-              <div class="model-card-title">Hardness from Each Model</div>
+              <h2 class="model-card-title">Hardness from Each Model</h2>
               <div class="model-card-sub" id="modelTableSubtitle">Calibrated against 54 Leave-One-Out (LOO) Benchmark Papers across 199 Indexed Studies &amp; 289 Variants</div>
             </div>
             <button class="step-btn" onclick="exportPredictionsCsv()">📥 Download CSV</button>
@@ -7264,6 +7567,7 @@ window.addEventListener('click', function(e) {
           </div>
 
           <!-- Comparison Table -->
+          <div class="table-responsive">
           <table class="custom-table">
             <thead>
               <tr>
@@ -7342,6 +7646,7 @@ window.addEventListener('click', function(e) {
               </tr>
             </tbody>
           </table>
+          </div>
 
           <div id="pinnPhysicsAuditStrip" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 11px; color: #bae6fd; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px;">
             <strong style="color: #38bdf8;">PINN Physics Audit:</strong>
@@ -7683,30 +7988,30 @@ window.addEventListener('click', function(e) {
 
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; font-size: 11px;">
             <div>
-              <label style="color: var(--text-muted); font-size: 10px;">Min Rp0.2 YS (MPa)</label>
+              <label for="invMinYs" style="color: var(--text-muted); font-size: 10px;">Min Rp0.2 YS (MPa)</label>
               <input type="number" id="invMinYs" value="850" min="500" max="1300" step="10" class="dark-select" style="padding: 6px 8px; margin-top: 2px;">
             </div>
             <div>
-              <label style="color: var(--text-muted); font-size: 10px;">Min Elongation (%)</label>
+              <label for="invMinElong" style="color: var(--text-muted); font-size: 10px;">Min Elongation (%)</label>
               <input type="number" id="invMinElong" value="12.0" min="2" max="20" step="0.5" class="dark-select" style="padding: 6px 8px; margin-top: 2px;">
             </div>
             <div>
-              <label style="color: var(--text-muted); font-size: 10px;">Max Res. Stress (MPa)</label>
+              <label for="invMaxStress" style="color: var(--text-muted); font-size: 10px;">Max Res. Stress (MPa)</label>
               <input type="number" id="invMaxStress" value="60" min="15" max="800" step="5" class="dark-select" style="padding: 6px 8px; margin-top: 2px;">
             </div>
             <div>
-              <label style="color: var(--text-muted); font-size: 10px;">Min Build Rate (cm³/h)</label>
+              <label for="invMinRate" style="color: var(--text-muted); font-size: 10px;">Min Build Rate (cm³/h)</label>
               <input type="number" id="invMinRate" value="20.0" min="1" max="500" step="1" class="dark-select" style="padding: 6px 8px; margin-top: 2px;">
             </div>
             <div>
-              <label style="color: var(--text-muted); font-size: 10px;">ASTM Standard</label>
+              <label for="invAstmStd" style="color: var(--text-muted); font-size: 10px;">ASTM Standard</label>
               <select id="invAstmStd" class="dark-select" style="padding: 6px 8px; margin-top: 2px;">
                 <option value="F2924" selected>ASTM F2924 (Gr5)</option>
                 <option value="F3001">ASTM F3001 (ELI)</option>
               </select>
             </div>
             <div>
-              <label style="color: var(--text-muted); font-size: 10px;">Process Scope</label>
+              <label for="invProcScope" style="color: var(--text-muted); font-size: 10px;">Process Scope</label>
               <select id="invProcScope" class="dark-select" style="padding: 6px 8px; margin-top: 2px;">
                 <option value="all" selected>All (LPBF / L-DED / WAAM)</option>
                 <option value="lpbf">LPBF Only</option>
@@ -7756,14 +8061,14 @@ window.addEventListener('click', function(e) {
           <div id="labCsvDropzone" onclick="document.getElementById('labCsvFileInput')?.click()" ondragover="event.preventDefault(); this.style.borderColor='#38bdf8';" ondragleave="this.style.borderColor='rgba(56,189,248,0.35)';" ondrop="handleLabCsvDrop(event)" style="border: 1.5px dashed rgba(56,189,248,0.35); border-radius: 8px; padding: 12px; text-align: center; background: rgba(4,8,16,0.6); cursor: pointer; margin-bottom: 10px;">
             <div style="font-size: 12px; font-weight: 700; color: #e2e8f0;">Drop NIT Trichy Lab Coupon CSV here or click to browse</div>
             <div style="font-size: 10px; color: var(--text-muted); margin-top: 3px; font-family: 'JetBrains Mono', monospace;">Columns: sample_id, process, P_W, v_mm_s, h_um, t_um, T0_C, post_proc, measured_HV, measured_YS_MPa, measured_UTS_MPa, measured_elong_pct</div>
-            <input type="file" id="labCsvFileInput" accept=".csv,text/csv" style="display: none;" onchange="handleLabCsvFileInput(this)">
+            <input type="file" id="labCsvFileInput" aria-label="Upload NIT Trichy Lab Coupon CSV" accept=".csv,text/csv" style="display: none;" onchange="handleLabCsvFileInput(this)">
           </div>
 
           <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px;">
             <button type="button" class="step-btn" onclick="downloadLabCsvTemplate()">Download Sample Template</button>
             <button type="button" class="step-btn" id="btnLoadDemoCoupons" onclick="loadDemoLabCoupons()" style="color: #34d399; border-color: rgba(16,185,129,0.35);">Load NIT Demo Coupons (N=4)</button>
             <button type="button" class="step-btn" onclick="clearLabCoupons()" style="color: #f87171; border-color: rgba(244,63,94,0.3);">Clear</button>
-            <label style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); cursor: pointer;">
+            <label for="chkLabBiasCorrection" style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); cursor: pointer;">
               <input type="checkbox" id="chkLabBiasCorrection" onchange="toggleLabBiasCorrection(this.checked)">
               Bayesian Bias-Corrected Prediction
             </label>
@@ -7969,6 +8274,7 @@ window.addEventListener('click', function(e) {
           <button class="step-btn" id="browseAllPapersBtn" onclick="openEvidenceHub()">Browse All 199 Papers →</button>
         </div>
 
+        <div class="table-responsive">
         <table class="knn-table">
           <thead>
             <tr>
@@ -7985,6 +8291,7 @@ window.addEventListener('click', function(e) {
             <!-- Dynamically populated by updateLiteratureTraceability() -->
           </tbody>
         </table>
+        </div>
         <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 8px;">
           Note: Every record is strictly verified against raw laboratory microhardness measurements (Vickers HV₀.₃) under calibrated indent conditions according to ASTM E384.
         </div>
@@ -8593,6 +8900,7 @@ window.addEventListener('click', function(e) {
         </div>
 
         <!-- Delta Comparison Table -->
+        <div class="table-responsive">
         <table class="knn-table" style="margin-top: 12px;">
           <thead>
             <tr>
@@ -8607,6 +8915,7 @@ window.addEventListener('click', function(e) {
             <!-- Dynamically populated by updateScenarioComparison() -->
           </tbody>
         </table>
+        </div>
       </div>
 
     </div>
@@ -8616,18 +8925,24 @@ window.addEventListener('click', function(e) {
       <div class="model-card">
         <div class="model-card-header">
           <div>
-            <div class="model-card-title">2D Operational Process Maps</div>
+            <h2 class="model-card-title">2D Operational Process Maps</h2>
             <div class="model-card-sub">Laser Power (P) vs. Scan Speed (v) • Linear Heat Input • Ashby Property Chart</div>
           </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
           <div style="background: #080d14; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;">
             <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 8px;">LPBF Defect Process Window (P vs. v)</div>
-            <img src="plots/ti64_lpbf_defect_processing_window.png" style="width: 100%; border-radius: 6px; border: 1px solid var(--border-color);" alt="LPBF Process Map">
+            <picture>
+              <source srcset="plots/ti64_lpbf_defect_processing_window.webp" type="image/webp">
+              <img src="plots/ti64_lpbf_defect_processing_window.png" width="1800" height="1200" loading="lazy" decoding="async" style="width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--border-color);" alt="LPBF Defect Process Window (Laser Power vs Scan Speed)">
+            </picture>
           </div>
           <div style="background: #080d14; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;">
             <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 8px;">DED & WAAM Linear Heat Input Window</div>
-            <img src="plots/ti64_ded_waam_process_window.png" style="width: 100%; border-radius: 6px; border: 1px solid var(--border-color);" alt="DED WAAM Window">
+            <picture>
+              <source srcset="plots/ti64_ded_waam_process_window.webp" type="image/webp">
+              <img src="plots/ti64_ded_waam_process_window.png" width="1800" height="1200" loading="lazy" decoding="async" style="width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--border-color);" alt="DED and WAAM Linear Heat Input Process Window">
+            </picture>
           </div>
         </div>
         <!-- Bontha Solidification Map (Bontha et al. 2006, 2009) -->
@@ -8744,7 +9059,7 @@ window.addEventListener('click', function(e) {
       <div class="defect-svg-container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
           <div>
-            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary);" id="defectMapTitle">2D Defect Process Window (King's Enthalpy Criterion)</h3>
+            <h2 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0;" id="defectMapTitle">2D Defect Process Window (King's Enthalpy Criterion)</h2>
             <p style="font-size: 11.5px; color: var(--text-muted);" id="defectMapSubtitle">Melt pool depth-to-width ratio & normalized enthalpy ΔH/h_s mapped across Laser Power P and Scan Speed v.</p>
           </div>
           <button class="step-btn" style="background: var(--accent-cyan); color: #070b10; font-weight: bold; padding: 6px 14px;" onclick="autoTuneSafeWindow()">Auto-Tune to Safe Window</button>
@@ -8820,7 +9135,7 @@ window.addEventListener('click', function(e) {
           <div>
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
               <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-weight: 800; font-size: 17px; font-family: 'JetBrains Mono', monospace;">$</div>
-              <div class="model-card-title" style="font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: -0.2px;">Industrial Economics &amp; ESG Telemetry Engine</div>
+              <h2 class="model-card-title" style="font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.2px; margin: 0;">Industrial Economics &amp; ESG Telemetry Engine</h2>
               <span style="border: 1px solid rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.12); color: #34d399; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 9999px;">Tier-3 Standard</span>
             </div>
             <div class="model-card-sub" style="font-size: 12.5px; color: #94a3b8; margin-top: 6px; line-height: 1.5; max-width: 820px;">
@@ -8899,7 +9214,7 @@ window.addEventListener('click', function(e) {
             <!-- Slider 1: Part Finished Volume -->
             <div class="econ-slider-group">
               <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-                <span style="font-size: 12px; color: #94a3b8;">Part Finished Volume:</span>
+                <label for="slEconVol" style="font-size: 12px; color: #94a3b8;">Part Finished Volume:</label>
                 <span id="lblEconVol" style="font-size: 12.5px; font-weight: 700; color: #38bdf8; font-family: 'JetBrains Mono', monospace;">65 cm³</span>
               </div>
               <input type="range" id="slEconVol" min="10" max="400" step="5" value="65" oninput="updateIndustrialEconomics()" class="twin-slider" style="width: 100%;">
@@ -8913,7 +9228,7 @@ window.addEventListener('click', function(e) {
             <!-- Slider 2: Component Z-Height -->
             <div class="econ-slider-group">
               <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-                <span style="font-size: 12px; color: #94a3b8;">Component Z-Height:</span>
+                <label for="slEconHeight" style="font-size: 12px; color: #94a3b8;">Component Z-Height:</label>
                 <span id="lblEconHeight" style="font-size: 12.5px; font-weight: 700; color: #38bdf8; font-family: 'JetBrains Mono', monospace;">110 mm</span>
               </div>
               <input type="range" id="slEconHeight" min="20" max="350" step="5" value="110" oninput="updateIndustrialEconomics()" class="twin-slider" style="width: 100%;">
@@ -8927,7 +9242,7 @@ window.addEventListener('click', function(e) {
             <!-- Slider 3: Parts per Build Plate -->
             <div class="econ-slider-group">
               <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-                <span style="font-size: 12px; color: #94a3b8;">Parts per Build Plate:</span>
+                <label for="slEconQty" style="font-size: 12px; color: #94a3b8;">Parts per Build Plate:</label>
                 <span id="lblEconQty" style="font-size: 12.5px; font-weight: 700; color: #38bdf8; font-family: 'JetBrains Mono', monospace;">4 parts</span>
               </div>
               <input type="range" id="slEconQty" min="1" max="24" step="1" value="4" oninput="updateIndustrialEconomics()" class="twin-slider" style="width: 100%;">
@@ -8941,7 +9256,7 @@ window.addEventListener('click', function(e) {
             <!-- Slider 4: Powder Recycling Efficiency -->
             <div class="econ-slider-group" style="margin-bottom: 22px;">
               <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-                <span style="font-size: 12px; color: #94a3b8;">Powder Recycling Efficiency:</span>
+                <label for="slEconRecycle" style="font-size: 12px; color: #94a3b8;">Powder Recycling Efficiency:</label>
                 <span id="lblEconRecycle" style="font-size: 12.5px; font-weight: 700; color: #10b981; font-family: 'JetBrains Mono', monospace;">85%</span>
               </div>
               <input type="range" id="slEconRecycle" min="50" max="95" step="5" value="85" oninput="updateIndustrialEconomics()" class="twin-slider" style="width: 100%;">
@@ -8988,17 +9303,17 @@ window.addEventListener('click', function(e) {
                 <div class="econ-sub-metric-card">
                   <div style="font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;">Cost Per Scrapped Build</div>
                   <div style="font-size: 20px; font-weight: 800; color: #ef4444; margin: 4px 0; font-family: 'JetBrains Mono', monospace;" id="econ_cost_scrapped">$4,850</div>
-                  <div style="font-size: 10.5px; color: #64748b;">Machine time + powder + prep</div>
+                  <div style="font-size: 10.5px; color: #94a3b8;">Machine time + powder + prep</div>
                 </div>
                 <div class="econ-sub-metric-card">
                   <div style="font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;">Test Cycles Avoided</div>
                   <div style="font-size: 20px; font-weight: 800; color: #10b981; margin: 4px 0; font-family: 'JetBrains Mono', monospace;" id="econ_cycles_avoided">3 Iterations</div>
-                  <div style="font-size: 10.5px; color: #64748b;">Replaced by calibrated physics</div>
+                  <div style="font-size: 10.5px; color: #94a3b8;">Replaced by calibrated physics</div>
                 </div>
                 <div class="econ-sub-metric-card">
                   <div style="font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;">Machine Hours Saved</div>
                   <div style="font-size: 20px; font-weight: 800; color: #38bdf8; margin: 4px 0; font-family: 'JetBrains Mono', monospace;" id="econ_hours_saved">116 Hours</div>
-                  <div style="font-size: 10.5px; color: #64748b;">Direct chamber capacity freed</div>
+                  <div style="font-size: 10.5px; color: #94a3b8;">Direct chamber capacity freed</div>
                 </div>
               </div>
 
@@ -9034,7 +9349,7 @@ window.addEventListener('click', function(e) {
                     <span>Powder Material</span>
                   </div>
                   <div style="font-size: 16px; font-weight: 800; color: #f8fafc; margin: 4px 0; font-family: 'JetBrains Mono', monospace;" id="econ_cost_powder">$70</div>
-                  <div style="font-size: 10px; color: #64748b;" id="econ_pct_powder">2% of batch total</div>
+                  <div style="font-size: 10px; color: #94a3b8;" id="econ_pct_powder">2% of batch total</div>
                 </div>
 
                 <div class="econ-sub-metric-card" style="padding: 10px 12px;">
@@ -9043,7 +9358,7 @@ window.addEventListener('click', function(e) {
                     <span>Machine Rate</span>
                   </div>
                   <div style="font-size: 16px; font-weight: 800; color: #f8fafc; margin: 4px 0; font-family: 'JetBrains Mono', monospace;" id="econ_cost_machine">$2,890</div>
-                  <div style="font-size: 10px; color: #64748b;" id="econ_pct_machine">67% of batch total</div>
+                  <div style="font-size: 10px; color: #94a3b8;" id="econ_pct_machine">67% of batch total</div>
                 </div>
 
                 <div class="econ-sub-metric-card" style="padding: 10px 12px;">
@@ -9052,7 +9367,7 @@ window.addEventListener('click', function(e) {
                     <span>Argon Shielding</span>
                   </div>
                   <div style="font-size: 16px; font-weight: 800; color: #f8fafc; margin: 4px 0; font-family: 'JetBrains Mono', monospace;" id="econ_cost_argon">$1,325</div>
-                  <div style="font-size: 10px; color: #64748b;" id="econ_pct_argon">31% of batch total</div>
+                  <div style="font-size: 10px; color: #94a3b8;" id="econ_pct_argon">31% of batch total</div>
                 </div>
 
                 <div class="econ-sub-metric-card" style="padding: 10px 12px;">
@@ -9061,7 +9376,7 @@ window.addEventListener('click', function(e) {
                     <span>Electricity (kWh)</span>
                   </div>
                   <div style="font-size: 16px; font-weight: 800; color: #f8fafc; margin: 4px 0; font-family: 'JetBrains Mono', monospace;" id="econ_cost_elec">$24</div>
-                  <div style="font-size: 10px; color: #64748b;" id="econ_pct_elec">1% (150 kWh)</div>
+                  <div style="font-size: 10px; color: #94a3b8;" id="econ_pct_elec">1% (150 kWh)</div>
                 </div>
               </div>
             </div>
@@ -9096,7 +9411,7 @@ window.addEventListener('click', function(e) {
           <div>
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-              <div class="model-card-title" style="font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: -0.2px;">3D Digital Twin &amp; Stress Tensor Heatmap</div>
+              <h2 class="model-card-title" style="font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.2px; margin: 0;">3D Digital Twin &amp; Stress Tensor Heatmap</h2>
               <span id="twinCardBadge" style="border: 1px solid rgba(56, 189, 248, 0.45); background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 9999px;">Interactive WebGL Specimen</span>
             </div>
             <div class="model-card-sub" id="twinCardSub" style="font-size: 12.5px; color: #94a3b8; margin-top: 6px; line-height: 1.5; max-width: 820px; white-space: normal; overflow-wrap: anywhere; word-break: break-word;">
@@ -9168,11 +9483,11 @@ window.addEventListener('click', function(e) {
               <!-- Control 1: Slice Penetration Depth -->
               <div style="margin-bottom: 18px;">
                 <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-                  <span style="font-size: 12px; color: #94a3b8;">Slice Penetration Depth:</span>
+                  <label for="slTwinSlice" style="font-size: 12px; color: #94a3b8;">Slice Penetration Depth:</label>
                   <span id="lblSliceDepth" style="font-size: 12.5px; font-weight: 700; color: #38bdf8; font-family: 'JetBrains Mono', monospace;">100%</span>
                 </div>
                 <input type="range" id="slTwinSlice" min="10" max="100" value="100" oninput="setSliceDepth(this.value)" class="twin-slider" style="width: 100%;">
-                <div style="display: flex; justify-content: space-between; font-size: 10px; color: #64748b; margin-top: 4px; font-family: 'JetBrains Mono', monospace;">
+                <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px; font-family: 'JetBrains Mono', monospace;">
                   <span>10% (Core Reveal)</span>
                   <span>Sub-Surface Stress</span>
                   <span>100% (Full Geometry)</span>
@@ -9182,7 +9497,7 @@ window.addEventListener('click', function(e) {
               <!-- Control 2: Camera Zoom Level -->
               <div>
                 <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-                  <span style="font-size: 12px; color: #94a3b8;">Camera Zoom Level:</span>
+                  <label for="slTwinZoom" style="font-size: 12px; color: #94a3b8;">Camera Zoom Level:</label>
                   <span id="lblZoomLevel" style="font-size: 12.5px; font-weight: 700; color: #f8fafc; font-family: 'JetBrains Mono', monospace;">1.15x</span>
                 </div>
                 <input type="range" id="slTwinZoom" min="0.65" max="2.2" step="0.05" value="1.15" oninput="setZoomLevel(this.value)" class="twin-slider" style="width: 100%;">
@@ -9201,12 +9516,12 @@ window.addEventListener('click', function(e) {
                 <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px;">
                   <div style="font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;" id="lblPeakStressTitle">Peak Surface Stress</div>
                   <div style="font-size: 20px; font-weight: 800; color: #ff4747; margin: 4px 0; font-family: 'JetBrains Mono', monospace;" id="valPeakStress">+1085 MPa</div>
-                  <div style="font-size: 11px; color: #64748b;" id="lblPeakStressSub">Von Mises Tensile</div>
+                  <div style="font-size: 11px; color: #94a3b8;" id="lblPeakStressSub">Von Mises Tensile</div>
                 </div>
                 <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px;">
                   <div style="font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;" id="lblCoreStressTitle">Core Neutralization</div>
                   <div style="font-size: 20px; font-weight: 800; color: #38bdf8; margin: 4px 0; font-family: 'JetBrains Mono', monospace;" id="valCoreStress">-145 MPa</div>
-                  <div style="font-size: 11px; color: #64748b;" id="lblCoreStressSub">Compressive Core</div>
+                  <div style="font-size: 11px; color: #94a3b8;" id="lblCoreStressSub">Compressive Core</div>
                 </div>
               </div>
 
@@ -9233,7 +9548,7 @@ window.addEventListener('click', function(e) {
               <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); display: flex; align-items: center; justify-content: center; color: #38bdf8; flex-shrink: 0;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
               </div>
-              <div class="model-card-title" style="font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: -0.2px;">Aerospace &amp; Medical Qualification Audit Engine</div>
+              <h2 class="model-card-title" style="font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.2px; margin: 0;">Aerospace &amp; Medical Qualification Audit Engine</h2>
               <span id="astmOverallPillBadge" style="border: 1px solid rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.12); color: #34d399; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 9999px;">COMPLIANT</span>
             </div>
             <div class="model-card-sub" style="font-size: 12.5px; color: #94a3b8; margin-top: 6px; line-height: 1.5; max-width: 820px;">
@@ -9257,15 +9572,15 @@ window.addEventListener('click', function(e) {
           </div>
           <div class="audit-std-tab" id="tabStdF3001" onclick="selectAuditStandard('F3001')">
             <div class="audit-std-title" style="font-size: 12.5px; font-weight: 600; color: #cbd5e1;">ASTM F3001</div>
-            <div class="audit-std-sub" style="font-size: 11px; color: #64748b; margin-top: 2px;">Medical Implants</div>
+            <div class="audit-std-sub" style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Medical Implants</div>
           </div>
           <div class="audit-std-tab" id="tabStdAMS4999" onclick="selectAuditStandard('AMS4999')">
             <div class="audit-std-title" style="font-size: 12.5px; font-weight: 600; color: #cbd5e1;">AMS 4999</div>
-            <div class="audit-std-sub" style="font-size: 11px; color: #64748b; margin-top: 2px;">Aerospace DED</div>
+            <div class="audit-std-sub" style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Aerospace DED</div>
           </div>
           <div class="audit-std-tab" id="tabStdISO5832" onclick="selectAuditStandard('ISO5832')">
             <div class="audit-std-title" style="font-size: 12.5px; font-weight: 600; color: #cbd5e1;">ISO 5832-3</div>
-            <div class="audit-std-sub" style="font-size: 11px; color: #64748b; margin-top: 2px;">Surgical Wrought</div>
+            <div class="audit-std-sub" style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Surgical Wrought</div>
           </div>
         </div>
 
@@ -9296,10 +9611,10 @@ window.addEventListener('click', function(e) {
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <div style="text-align: right;">
-                    <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
+                    <div style="font-size: 9.5px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
                     <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
                       <span style="color: #38bdf8; font-weight: 700;" id="aud_ys_val">865 MPa</span>
-                      <span style="color: #475569; margin: 0 4px;">|</span>
+                      <span style="color: #94a3b8; margin: 0 4px;">|</span>
                       <span style="color: #94a3b8;" id="aud_ys_thresh">≥ 825 MPa</span>
                     </div>
                   </div>
@@ -9318,10 +9633,10 @@ window.addEventListener('click', function(e) {
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <div style="text-align: right;">
-                    <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
+                    <div style="font-size: 9.5px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
                     <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
                       <span style="color: #38bdf8; font-weight: 700;" id="aud_uts_val">950 MPa</span>
-                      <span style="color: #475569; margin: 0 4px;">|</span>
+                      <span style="color: #94a3b8; margin: 0 4px;">|</span>
                       <span style="color: #94a3b8;" id="aud_uts_thresh">≥ 895 MPa</span>
                     </div>
                   </div>
@@ -9340,10 +9655,10 @@ window.addEventListener('click', function(e) {
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <div style="text-align: right;">
-                    <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
+                    <div style="font-size: 9.5px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
                     <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
                       <span style="color: #38bdf8; font-weight: 700;" id="aud_el_val">14.5 %</span>
-                      <span style="color: #475569; margin: 0 4px;">|</span>
+                      <span style="color: #94a3b8; margin: 0 4px;">|</span>
                       <span style="color: #94a3b8;" id="aud_el_thresh">≥ 10 %</span>
                     </div>
                   </div>
@@ -9362,10 +9677,10 @@ window.addEventListener('click', function(e) {
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <div style="text-align: right;">
-                    <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
+                    <div style="font-size: 9.5px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
                     <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
                       <span style="color: #38bdf8; font-weight: 700;" id="aud_den_val">99.98 %</span>
-                      <span style="color: #475569; margin: 0 4px;">|</span>
+                      <span style="color: #94a3b8; margin: 0 4px;">|</span>
                       <span style="color: #94a3b8;" id="aud_den_thresh">≥ 99.5 %</span>
                     </div>
                   </div>
@@ -9384,10 +9699,10 @@ window.addEventListener('click', function(e) {
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <div style="text-align: right;">
-                    <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
+                    <div style="font-size: 9.5px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
                     <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
                       <span style="color: #38bdf8; font-weight: 700;" id="aud_stress_val">15 MPa</span>
-                      <span style="color: #475569; margin: 0 4px;">|</span>
+                      <span style="color: #94a3b8; margin: 0 4px;">|</span>
                       <span style="color: #94a3b8;" id="aud_stress_thresh">≤ 60 MPa</span>
                     </div>
                   </div>
@@ -9406,10 +9721,10 @@ window.addEventListener('click', function(e) {
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <div style="text-align: right;">
-                    <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
+                    <div style="font-size: 9.5px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
                     <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
                       <span style="color: #38bdf8; font-weight: 700;" id="aud_fatigue_val">675 MPa</span>
-                      <span style="color: #475569; margin: 0 4px;">|</span>
+                      <span style="color: #94a3b8; margin: 0 4px;">|</span>
                       <span style="color: #94a3b8;" id="aud_fatigue_thresh">≥ 520 MPa</span>
                     </div>
                   </div>
@@ -9428,10 +9743,10 @@ window.addEventListener('click', function(e) {
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <div style="text-align: right;">
-                    <div style="font-size: 9.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
+                    <div style="font-size: 9.5px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;">MEASURED / THRESHOLD</div>
                     <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
                       <span style="color: #38bdf8; font-weight: 700;" id="aud_o2_val">0.160 wt%</span>
-                      <span style="color: #475569; margin: 0 4px;">|</span>
+                      <span style="color: #94a3b8; margin: 0 4px;">|</span>
                       <span style="color: #94a3b8;" id="aud_o2_thresh">≤ 0.200 wt%</span>
                     </div>
                   </div>
@@ -9455,7 +9770,7 @@ window.addEventListener('click', function(e) {
 
               <!-- Inner Hash Box -->
               <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
-                <div style="font-size: 10px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">VERIFICATION HASH</div>
+                <div style="font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase;">VERIFICATION HASH</div>
                 <div id="aud_cert_hash" style="font-family: 'JetBrains Mono', monospace; color: #38bdf8; font-weight: 700; font-size: 11px; margin: 4px 0 8px 0; word-break: break-all;">SHA256-00002DA3375A-1A1E81B5608</div>
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 8px;">
                   <span id="aud_cert_timestamp" style="color: #94a3b8;">Audited: Nov 17, 2026, 11:34 AM</span>
@@ -9516,8 +9831,8 @@ window.addEventListener('click', function(e) {
         <div class="model-card-header" style="flex-wrap: wrap; gap: 12px;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-              <span class="model-card-title" id="mpTitle">KU Leuven Hybrid Melt Pool (Coen et al. 2022)</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2" aria-hidden="true"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+              <h2 class="model-card-title" id="mpTitle" style="margin: 0;">KU Leuven Hybrid Melt Pool (Coen et al. 2022)</h2>
               <span class="brand-badge" id="mpBadge">JMPT 304: 117547</span>
               <span class="brand-badge" id="mpCoupledBadge" style="background: rgba(80, 216, 233, 0.15); color: var(--accent-cyan); border-color: rgba(80, 216, 233, 0.4); margin-left: 6px;">🔗 Synced with Solidification Physics</span>
             </div>
@@ -9861,7 +10176,7 @@ window.addEventListener('click', function(e) {
 
             <!-- Paper Preset Dropdown -->
             <div style="display: inline-flex; align-items: center; gap: 6px;">
-              <span style="font-size: 10.5px; color: #7893af; font-family: monospace;">Paper Preset:</span>
+              <label for="bonthaPresetSelect" style="font-size: 10.5px; color: #94a3b8; font-family: monospace;">Paper Preset:</label>
               <select id="bonthaPresetSelect" class="dark-select" style="padding: 4px 8px; font-size: 11px; width: auto;" onchange="applyBonthaPreset(this.value)">
                 <option value="custom" selected>Custom Live Parameters (Coupled to Process Sliders)</option>
                 <optgroup label="Thin-Wall 2D LENS™ (Bontha 2006 JMPT)">
@@ -9903,27 +10218,27 @@ window.addEventListener('click', function(e) {
           <div class="mp-metric-card">
             <div class="mp-metric-label">Solidification Rate <i>R</i></div>
             <div class="mp-metric-val" id="bnCardR" style="color: var(--accent-cyan);">95 cm/s</div>
-            <div class="mp-metric-sub" id="bnCardRSub" style="color: #5e7792;">Surface: 950.0 mm/s | Root: 0.01 cm/s</div>
+            <div class="mp-metric-sub" id="bnCardRSub" style="color: #94a3b8;">Surface: 950.0 mm/s | Root: 0.01 cm/s</div>
           </div>
           <div class="mp-metric-card">
             <div class="mp-metric-label">Thermal Gradient <i>G</i></div>
             <div class="mp-metric-val" id="bnCardG">51,451 K/cm</div>
-            <div class="mp-metric-sub" id="bnCardGSub" style="color: #5e7792;">Root peak: 416,153 K/cm</div>
+            <div class="mp-metric-sub" id="bnCardGSub" style="color: #94a3b8;">Root peak: 416,153 K/cm</div>
           </div>
           <div class="mp-metric-card">
             <div class="mp-metric-label">Cooling Rate ∂<i>T</i>/∂<i>t</i></div>
             <div class="mp-metric-val" id="bnCardCooling" style="color: var(--accent-amber);">4,887,805 K/s</div>
-            <div class="mp-metric-sub" id="bnCardCoolingSub" style="color: #5e7792;">Root: 5,352 K/s (0.1% of surface)</div>
+            <div class="mp-metric-sub" id="bnCardCoolingSub" style="color: #94a3b8;">Root: 5,352 K/s (0.1% of surface)</div>
           </div>
           <div class="mp-metric-card">
             <div class="mp-metric-label">Norm. Temp <i>T̄</i><sub>m</sub></div>
             <div class="mp-metric-val" id="bnCardNorm" style="color: var(--accent-emerald);">0.039</div>
-            <div class="mp-metric-sub" id="bnCardNormSub" style="color: #5e7792;">3D: (Tm-T0)/Tc(Q,V)</div>
+            <div class="mp-metric-sub" id="bnCardNormSub" style="color: #94a3b8;">3D: (Tm-T0)/Tc(Q,V)</div>
           </div>
           <div class="mp-metric-card">
             <div class="mp-metric-label">Microstructural Grading</div>
             <div class="mp-metric-val" id="bnCardMorph" style="font-size: 13.5px; color: #60a5fa;">● Columnar Grain Growth</div>
-            <div class="mp-metric-sub" style="color: #5e7792;">Uniform Columnar grain growth throughout...</div>
+            <div class="mp-metric-sub" style="color: #94a3b8;">Uniform Columnar grain growth throughout...</div>
           </div>
         </div>
 
@@ -9961,7 +10276,7 @@ window.addEventListener('click', function(e) {
                 <span style="width: 8px; height: 8px; transform: rotate(45deg); background: #f43f5e; display: inline-block;"></span>
                 <strong>Root (z = zm)</strong>
               </span>
-              <label style="display: flex; align-items: center; gap: 5px; color: #c084fc; cursor: pointer;">
+              <label for="chk3dFem" style="display: flex; align-items: center; gap: 5px; color: #c084fc; cursor: pointer;">
                 <input type="checkbox" id="chk3dFem" checked onchange="toggleBonthaFemOverlay(this.checked)" style="accent-color: #c084fc;">
                 <strong>3D FEM Overlay (Figs. 6 & 7)</strong>
               </label>
@@ -10353,7 +10668,7 @@ window.addEventListener('click', function(e) {
         <div class="model-card-header" style="flex-wrap: wrap; gap: 10px;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <span class="model-card-title" id="litTopicTitle">Ti-6Al-4V Mechanical Behavior Curves &amp; Scopus Topics</span>
+              <h2 class="model-card-title" id="litTopicTitle" style="margin: 0;">Ti-6Al-4V Mechanical Behavior Curves &amp; Scopus Topics</h2>
               <span class="brand-badge" style="color: #38bdf8; border-color: rgba(56,189,248,0.4);">Synced with Supabase + Local CSVs</span>
             </div>
             <div class="model-card-sub" id="litTopicSubtitle">Select a characterization topic below to inspect constitutive reference graphs and filter matching peer-reviewed papers in the database.</div>
@@ -10391,7 +10706,7 @@ window.addEventListener('click', function(e) {
               <button type="button" class="mp-toggle-btn" id="btnFilterBj" onclick="filterByProcess('BINDER', this)">Binder Jetting</button>
             </div>
             <!-- Type Filter -->
-            <select class="dark-select" id="paperTypeFilter" onchange="filterPapersTable()" style="padding: 4px 8px; font-size: 11px;">
+            <select class="dark-select" id="paperTypeFilter" aria-label="Filter literature by publication type" onchange="filterPapersTable()" style="padding: 4px 8px; font-size: 11px;">
               <option value="ALL">All Publication Types</option>
               <option value="EXP">Original Experimental Only [EXP]</option>
               <option value="REV">Literature Reviews [REV]</option>
@@ -10402,12 +10717,13 @@ window.addEventListener('click', function(e) {
               📥 Export Filtered CSV
             </button>
             <div class="snow-search-box" style="width: 290px; height: 34px; padding: 0 12px; border-radius: 10px;" onclick="document.getElementById('paperSearchInput')?.focus()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color: var(--text-muted); flex-shrink: 0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-              <input type="text" id="paperSearchInput" class="snow-search-input" placeholder="Search author, process, or title..." oninput="filterPapersTable()" style="font-size: 12px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color: var(--text-muted); flex-shrink: 0;" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="paperSearchInput" aria-label="Search literature publications by author, process, or title" class="snow-search-input" placeholder="Search author, process, or title..." oninput="filterPapersTable()" style="font-size: 12px;">
             </div>
           </div>
         </div>
 
+        <div class="table-responsive">
         <table class="custom-table">
           <thead>
             <tr>
@@ -10477,6 +10793,7 @@ window.addEventListener('click', function(e) {
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 
@@ -10486,7 +10803,7 @@ window.addEventListener('click', function(e) {
         <div class="model-card-header" style="flex-wrap: wrap; gap: 10px;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <span class="model-card-title">Ti-6Al-4V CAD Part Analyzer</span>
+              <h2 class="model-card-title" style="margin: 0;">Ti-6Al-4V CAD Part Analyzer</h2>
               <span class="brand-badge" style="color: #38bdf8; border-color: rgba(56,189,248,0.4);">100% Browser-Local (Zero Upload)</span>
               <span class="brand-badge" id="cadStatusBadge" style="color: #94a3b8; border-color: rgba(148,163,184,0.35);">Waiting for CAD file</span>
             </div>
@@ -10507,10 +10824,10 @@ window.addEventListener('click', function(e) {
             <div id="cadDropzone" onclick="document.getElementById('cadFileInput')?.click()" ondragover="event.preventDefault(); this.style.borderColor='#38bdf8';" ondragleave="this.style.borderColor='rgba(56,189,248,0.38)';" ondrop="handleCadFileDrop(event)" style="border: 1.5px dashed rgba(56,189,248,0.38); border-radius: 10px; padding: 16px; text-align: center; background: rgba(4,8,16,0.65); cursor: pointer;">
               <div style="font-size: 13px; font-weight: 700; color: #f1f5f9;">Drop CAD file here or click to browse</div>
               <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace;">.stl (max 1 GB) · .step / .stp / .iges (max 60 MB) · .ipt / .prt (guide)</div>
-              <input type="file" id="cadFileInput" accept=".stl,.step,.stp,.iges,.igs,.ipt,.prt" style="display: none;" onchange="handleCadFileInput(this)">
+              <input type="file" id="cadFileInput" aria-label="Upload CAD geometry file (.stl, .step, .stp, .iges)" accept=".stl,.step,.stp,.iges,.igs,.ipt,.prt" style="display: none;" onchange="handleCadFileInput(this)">
             </div>
 
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); cursor: pointer;">
+            <label for="chkCadForceLoad" style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); cursor: pointer;">
               <input type="checkbox" id="chkCadForceLoad" onchange="cadForceLoadAnyway = Boolean(this.checked);">
               Force Load Anyway (High-RAM Workstation override above 1 GB / 60 MB caps)
             </label>
@@ -10531,10 +10848,10 @@ window.addEventListener('click', function(e) {
 
             <!-- Unit Selector Row -->
             <div id="cadUnitRow" style="display: none; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 8px 10px; border-radius: 8px; background: rgba(15,23,42,0.75); border: 1px solid rgba(255,255,255,0.08);">
-              <span style="font-size: 11px; color: var(--text-secondary);">Source CAD Units:</span>
+              <label for="cadSourceUnitSelect" style="font-size: 11px; color: var(--text-secondary);">Source CAD Units:</label>
               <div style="display: flex; align-items: center; gap: 6px; margin-left: auto;">
                 <button type="button" id="btnCadConvertInchMm" onclick="convertCadInchesToMm()" class="step-btn" style="display: none; font-size: 10px; padding: 3px 7px; color: #fbbf24; border-color: rgba(251,191,36,0.45);">Convert Inches → mm</button>
-                <select id="cadSourceUnitSelect" onchange="changeCadSourceUnit(this.value)" style="background: #0b1220; color: #e2e8f0; border: 1px solid rgba(148,163,184,0.35); border-radius: 6px; padding: 4px 8px; font-size: 11px;">
+                <select id="cadSourceUnitSelect" aria-label="Select source CAD length units" onchange="changeCadSourceUnit(this.value)" style="background: #0b1220; color: #e2e8f0; border: 1px solid rgba(148,163,184,0.35); border-radius: 6px; padding: 4px 8px; font-size: 11px;">
                   <option value="mm" selected>Millimeters (mm, ×1)</option>
                   <option value="inch">Inches (in, ×25.4)</option>
                   <option value="m">Meters (m, ×1000)</option>
@@ -10555,21 +10872,21 @@ window.addEventListener('click', function(e) {
             <!-- Machine Library Preset Card (Editable Placeholder Rates) -->
             <div style="border-radius: 10px; padding: 12px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <strong style="font-size: 12px; color: #f1f5f9;">AM Machine Preset</strong>
+                <label for="cadMachineSelect" style="font-size: 12px; font-weight: 700; color: #f1f5f9;">AM Machine Preset</label>
                 <span class="brand-badge" style="font-size: 9px; color: #fbbf24; border-color: rgba(251,191,36,0.35);">Editable Placeholders</span>
               </div>
-              <select id="cadMachineSelect" onchange="selectCadMachine(this.value)" style="width: 100%; background: #0b1220; color: #e2e8f0; border: 1px solid rgba(56,189,248,0.35); border-radius: 6px; padding: 6px 8px; font-size: 11.5px; margin-bottom: 8px;"></select>
+              <select id="cadMachineSelect" aria-label="Select AM Machine Preset" onchange="selectCadMachine(this.value)" style="width: 100%; background: #0b1220; color: #e2e8f0; border: 1px solid rgba(56,189,248,0.35); border-radius: 6px; padding: 6px 8px; font-size: 11.5px; margin-bottom: 8px;"></select>
               <div id="cadMachineMeta" style="font-size: 10.5px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; line-height: 1.5; margin-bottom: 8px;"></div>
 
               <details style="font-size: 11px; color: var(--text-secondary);">
                 <summary style="cursor: pointer; color: #38bdf8; font-weight: 600;">Edit Machine Specs &amp; Cost Rates (localStorage)</summary>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;">
-                  <label style="font-size: 10px;">Env X (mm)<input type="number" id="cadMacEnvX" min="10" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
-                  <label style="font-size: 10px;">Env Y (mm)<input type="number" id="cadMacEnvY" min="10" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
-                  <label style="font-size: 10px;">Env Z (mm)<input type="number" id="cadMacEnvZ" min="10" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
-                  <label style="font-size: 10px;">Hourly Rate ($/h)<input type="number" id="cadMacRate" min="1" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
-                  <label style="font-size: 10px;">Material ($/kg)<input type="number" id="cadMacMatCost" min="10" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
-                  <label style="font-size: 10px;">Gas ($/h)<input type="number" id="cadMacGasCost" min="0" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
+                  <label for="cadMacEnvX" style="font-size: 10px;">Env X (mm)<input type="number" id="cadMacEnvX" min="10" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
+                  <label for="cadMacEnvY" style="font-size: 10px;">Env Y (mm)<input type="number" id="cadMacEnvY" min="10" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
+                  <label for="cadMacEnvZ" style="font-size: 10px;">Env Z (mm)<input type="number" id="cadMacEnvZ" min="10" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
+                  <label for="cadMacRate" style="font-size: 10px;">Hourly Rate ($/h)<input type="number" id="cadMacRate" min="1" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
+                  <label for="cadMacMatCost" style="font-size: 10px;">Material ($/kg)<input type="number" id="cadMacMatCost" min="10" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
+                  <label for="cadMacGasCost" style="font-size: 10px;">Gas ($/h)<input type="number" id="cadMacGasCost" min="0" style="width:100%; background:#070c14; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:3px 5px;"></label>
                 </div>
                 <div style="display: flex; gap: 6px; margin-top: 8px;">
                   <button type="button" class="step-btn" onclick="saveCadMachineEdits()" style="color: #34d399; border-color: rgba(16,185,129,0.4);">Save Preset</button>
@@ -10586,7 +10903,7 @@ window.addEventListener('click', function(e) {
                 <button type="button" class="mp-pill-btn" id="btnCadWireframe" onclick="toggleCadViewerOption('wireframe')" title="Toggle wireframe edge overlay">Wireframe</button>
                 <button type="button" class="mp-pill-btn active" id="btnCadEnvelope" onclick="toggleCadViewerOption('envelope')">Machine Envelope</button>
                 <button type="button" class="mp-pill-btn active" id="btnCadArrow" onclick="toggleCadViewerOption('arrow')">Build Dir (+Z)</button>
-                <select id="cadOverlayModeSelect" onchange="setCadOverlayMode(this.value)" style="background: #0b1220; color: #38bdf8; border: 1px solid rgba(56,189,248,0.35); border-radius: 6px; padding: 3px 6px; font-size: 10.5px;">
+                <select id="cadOverlayModeSelect" aria-label="Select 3D CAD viewer heatmap overlay mode" onchange="setCadOverlayMode(this.value)" style="background: #0b1220; color: #38bdf8; border: 1px solid rgba(56,189,248,0.35); border-radius: 6px; padding: 3px 6px; font-size: 10.5px;">
                   <option value="overhang" selected>Overlay: Overhangs (&gt;θ)</option>
                   <option value="zheight">Overlay: Z-Height</option>
                   <option value="solid">Overlay: Uniform Metallic</option>
@@ -10597,9 +10914,9 @@ window.addEventListener('click', function(e) {
                 <button type="button" class="mp-pill-btn" onclick="resetCadCamera()">Reset Camera</button>
                 <button type="button" class="mp-pill-btn active" id="btnCadFitMode" onclick="toggleCadFitMode()" title="Switch between close-up part framing and full machine build envelope">Fit Part</button>
                 <div style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--text-secondary);">
-                  <span>Overhang θ:</span>
+                  <label for="cadOverhangThreshInput">Overhang θ:</label>
                   <input type="number" id="cadOverhangThreshInput" min="20" max="75" step="1" value="45" onchange="runCadGeometryAnalysis()" style="width: 44px; background: #070c14; color: #fff; border: 1px solid rgba(255,255,255,0.18); border-radius: 4px; padding: 2px 4px; font-size: 10.5px;">
-                  <span>Z-Cut:</span>
+                  <label for="cadSectionSlider">Z-Cut:</label>
                   <input type="range" id="cadSectionSlider" min="5" max="100" value="100" oninput="setCadSectionPct(this.value)" style="width: 78px; accent-color: #38bdf8;">
                   <span id="cadSectionVal" style="font-family: monospace; width: 34px;">100%</span>
                 </div>
@@ -10617,8 +10934,8 @@ window.addEventListener('click', function(e) {
                 <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#dc5041;vertical-align:middle;margin-right:4px;"></span>Overhang / Needs Support (&gt;45°)</span>
               </div>
               <canvas id="cadViewerCanvas" width="760" height="400" style="width: 100%; height: 400px; display: block; cursor: grab;"></canvas>
-              <div id="cadViewerEmptyHint" style="position: absolute; inset: 72px 0 0 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; color: #64748b; text-align: center; padding: 20px;">
-                <div style="font-size: 14px; font-weight: 700; color: #94a3b8;">No CAD Mesh Loaded Yet</div>
+              <div id="cadViewerEmptyHint" style="position: absolute; inset: 72px 0 0 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; color: #94a3b8; text-align: center; padding: 20px;">
+                <div style="font-size: 14px; font-weight: 700; color: #cbd5e1;">No CAD Mesh Loaded Yet</div>
                 <div style="font-size: 11px; margin-top: 4px;">Drop a .stl / .step / .iges file on the left, or click <strong>Load Demo Ti-6Al-4V Bracket</strong>.</div>
               </div>
             </div>
@@ -10651,11 +10968,11 @@ window.addEventListener('click', function(e) {
             </div>
             <canvas id="cadLayerAreaCanvas" style="width: 100%; height: 170px; display: block;"></canvas>
             <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
-              <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #38bdf8; font-weight: 600;">
+              <label for="cadLayerScrubber" style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #38bdf8; font-weight: 600;">
                 <span>Z Layer Scrubber:</span>
                 <input type="range" id="cadLayerScrubber" min="0" max="15" value="0" oninput="scrubCadLayer(this.value)" style="width: 160px; accent-color: #38bdf8;">
               </label>
-              <label style="display: flex; align-items: center; gap: 4px; font-size: 10.5px; color: #94a3b8; cursor: pointer;">
+              <label for="chkCadScrubSync3d" style="display: flex; align-items: center; gap: 4px; font-size: 10.5px; color: #94a3b8; cursor: pointer;">
                 <input type="checkbox" id="chkCadScrubSync3d" onchange="if(this.checked) scrubCadLayer(document.getElementById('cadLayerScrubber')?.value || 0);">
                 Sync 3D Z-Cut
               </label>
@@ -10672,10 +10989,12 @@ window.addEventListener('click', function(e) {
               </div>
               <div id="cadSupportSummary" style="font-size: 11px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 8px;">Load a CAD mesh to evaluate envelope fit, thin walls, support volume, and trapped powder risks.</div>
               <ul id="cadPrintabilityNotes" style="margin: 0 0 10px 16px; padding: 0; font-size: 10.5px; color: #fde68a; line-height: 1.45;"></ul>
+              <div class="table-responsive">
               <table class="custom-table" style="font-size: 10.5px;">
                 <thead><tr><th>Process</th><th>Score</th><th>Verdict</th><th>Action</th></tr></thead>
                 <tbody id="cadProcessRankingBody"><tr><td colspan="4" style="color:var(--text-muted); text-align:center;">—</td></tr></tbody>
               </table>
+              </div>
             </div>
 
             <div style="border-radius: 10px; padding: 14px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
@@ -10684,10 +11003,12 @@ window.addEventListener('click', function(e) {
                 <span class="brand-badge" id="cadOrientationBadge" style="font-size: 9.5px; color: #38bdf8; border-color: rgba(56,189,248,0.35);">Top 3 Choices</span>
               </div>
               <div id="cadCurrentOriSummary" style="font-size: 10.5px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 8px;">Current orientation score will appear after CAD parse.</div>
+              <div class="table-responsive">
               <table class="custom-table" style="font-size: 10.5px;">
                 <thead><tr><th>Orientation</th><th>Z Height / Support</th><th>Score</th><th>Rotate</th></tr></thead>
                 <tbody id="cadOrientationBody"><tr><td colspan="4" style="color:var(--text-muted); text-align:center;">—</td></tr></tbody>
               </table>
+              </div>
             </div>
 
             <div style="border-radius: 10px; padding: 14px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
@@ -10708,7 +11029,7 @@ window.addEventListener('click', function(e) {
             <div style="border-radius: 10px; padding: 14px; background: rgba(15,23,42,0.72); border: 1px solid rgba(255,255,255,0.08);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
                 <strong style="font-size: 12.5px; color: #f1f5f9;">Build Time, Material &amp; Cost Estimate</strong>
-                <label style="font-size: 10.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px;">
+                <label for="cadBatchSizeInput" style="font-size: 10.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px;">
                   Batch Qty:
                   <input type="number" id="cadBatchSizeInput" min="1" max="24" value="1" onchange="runCadPhase4Simulation()" style="width: 44px; background: #070c14; color: #fff; border: 1px solid rgba(56,189,248,0.4); border-radius: 4px; padding: 2px 5px; font-size: 10.5px;">
                 </label>
@@ -17064,7 +17385,7 @@ function drawLitTopicGraph() {
   const setLeg = (arr) => setLegend(legEl, arr);
 
   if (topic === 'Stress-Strain') {
-    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setLitTopicSubMode('tempC',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="25" ${litPlotState.tempC==='25'?'selected':''}>25 °C (RT)</option><option value="400" ${litPlotState.tempC==='400'?'selected':''}>400 °C</option><option value="600" ${litPlotState.tempC==='600'?'selected':''}>600 °C</option></select>`;
+    if (ctrlBox) ctrlBox.innerHTML = `<select aria-label="Select tensile test temperature" onchange="setLitTopicSubMode('tempC',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="25" ${litPlotState.tempC==='25'?'selected':''}>25 °C (RT)</option><option value="400" ${litPlotState.tempC==='400'?'selected':''}>400 °C</option><option value="600" ${litPlotState.tempC==='600'?'selected':''}>600 °C</option></select>`;
     const tc = Number(litPlotState.tempC), tf = tc===25?1:(tc===400?0.72:0.46), ef = tc===25?1:(tc===400?1.3:1.8), Ef = tc===25?114000:(tc===400?94000:78000);
     const ax = drawAxes(0, 0.22, 0, 1400, 'True Strain (ε_T)', 'True Stress σ_T (MPa)', [0,0.05,0.1,0.15,0.2], [0,350,700,1050,1400], v => v.toFixed(2));
     const gen = (ys0, K, n, eMax) => Array.from({length:70}, (_,i)=>{ const e=(i/69)*Math.min(0.21,eMax*ef), ey=ys0*tf/Ef; return [e, e<=ey?e*Ef:ys0*tf+K*tf*Math.pow(Math.max(1e-6,e-ey),n)]; });
@@ -17074,7 +17395,7 @@ function drawLitTopicGraph() {
     setLeg([['#fb7185',`LPBF As-Built (α') @ ${tc}°C`], ['#38bdf8',`LPBF + HIP (920°C) @ ${tc}°C`], ['#34d399',`Wrought Mill-Annealed @ ${tc}°C`]]);
     if (noteEl) noteEl.innerText = 'True stress-strain curves (El-Magd 2006; Vrancken 2012; Wang Z. 2018): Fine α\' martensite raises flow stress above 1100 MPa at RT; HIP α+β basketweave doubles true fracture strain.';
   } else if (topic === 'Eng. Stress-Strain') {
-    if (ctrlBox) ctrlBox.innerHTML = `<label style="color:#cbd5e1;cursor:pointer;"><input type="checkbox" ${litPlotState.showTrue?'checked':''} onchange="setLitTopicSubMode('showTrue',this.checked)"> Overlay True σ_T</label>`;
+    if (ctrlBox) ctrlBox.innerHTML = `<label style="color:#cbd5e1;cursor:pointer;"><input type="checkbox" aria-label="Overlay True Stress-Strain Curve" ${litPlotState.showTrue?'checked':''} onchange="setLitTopicSubMode('showTrue',this.checked)"> Overlay True σ_T</label>`;
     const ax = drawAxes(0, 0.18, 0, 1250, 'Strain (ε)', 'Stress (MPa)', [0,0.04,0.08,0.12,0.16], [0,300,600,900,1200], v => v.toFixed(2));
     const eng = (ys, uts, eU, eF) => { const p=[], tp=[], E=114000, ey=ys/E; for(let i=0;i<=80;i++){ const e=(i/80)*eF; let s=e<=ey?e*E:(e<=eU?ys+(uts-ys)*Math.pow((e-ey)/(eU-ey),0.42):uts-uts*0.24*Math.pow((e-eU)/(eF-eU),1.55)); if(e<=eU&&e>ey) tp.push([Math.log(1+e),s*(1+e)]); p.push([e,s]); } return {p,tp}; };
     const asb = eng(1055,1145,0.048,0.072), hip = eng(865,965,0.078,0.152);
@@ -17084,7 +17405,7 @@ function drawLitTopicGraph() {
     setLeg(leg);
     if (noteEl) noteEl.innerText = 'Engineering σ_e vs ε_e (Saboori 2016; Xiao 2012; Mirone 2020): Low uniform hardening causes early necking onset near ε ≈ 5–8% followed by geometric softening to fracture.';
   } else if (topic === 'Compression') {
-    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setLitTopicSubMode('compMode',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="rate" ${litPlotState.compMode==='rate'?'selected':''}>Strain Rate (RT vs SHPB)</option><option value="hot" ${litPlotState.compMode==='hot'?'selected':''}>Hot Working (650–950°C)</option></select>`;
+    if (ctrlBox) ctrlBox.innerHTML = `<select aria-label="Select compression test mode" onchange="setLitTopicSubMode('compMode',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="rate" ${litPlotState.compMode==='rate'?'selected':''}>Strain Rate (RT vs SHPB)</option><option value="hot" ${litPlotState.compMode==='hot'?'selected':''}>Hot Working (650–950°C)</option></select>`;
     if (litPlotState.compMode === 'rate') {
       const ax = drawAxes(0, 0.35, 0, 1750, 'Compressive Strain (ε_c)', 'Flow Stress (MPa)', [0,0.08,0.16,0.24,0.32], [0,400,800,1200,1600], v => v.toFixed(2));
       const jc = (C, ed, ts) => Array.from({length:60}, (_,i)=>{ const e=(i/59)*0.34; return [e, e<0.009?e*116000:(980+520*Math.pow(e-0.009,0.38))*(1+C*Math.log(ed/0.001))*(1-ts*Math.max(0,e-0.04))]; });
@@ -17098,7 +17419,7 @@ function drawLitTopicGraph() {
     }
     if (noteEl) noteEl.innerText = 'Uniaxial & SHPB Compression (Semiatin 1999/2001; Seo 2005; Cai 2011): Avoids tensile necking; dynamic globularization & adiabatic shear govern high-rate / elevated-temperature softening.';
   } else if (topic === 'Fatigue HCF/LCF') {
-    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setLitTopicSubMode('fatigueMode',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="hcf" ${litPlotState.fatigueMode==='hcf'?'selected':''}>HCF S–N (Basquin)</option><option value="lcf" ${litPlotState.fatigueMode==='lcf'?'selected':''}>LCF ε_a–2N_f (Coffin-Manson)</option></select>`;
+    if (ctrlBox) ctrlBox.innerHTML = `<select aria-label="Select fatigue analysis mode" onchange="setLitTopicSubMode('fatigueMode',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="hcf" ${litPlotState.fatigueMode==='hcf'?'selected':''}>HCF S–N (Basquin)</option><option value="lcf" ${litPlotState.fatigueMode==='lcf'?'selected':''}>LCF ε_a–2N_f (Coffin-Manson)</option></select>`;
     if (litPlotState.fatigueMode === 'hcf') {
       const ax = drawAxes(4, 7.2, 150, 950, 'log10 Cycles to Failure (N_f)', 'Stress Amplitude σ_a (MPa)', [4,5,6,7], [200,400,600,800], v => `10^${v}`);
       const sn = (sf, b, lim) => Array.from({length:32}, (_,i)=>{ const x=4+i*0.1; return [x, Math.max(lim, sf*Math.pow(2*Math.pow(10,x), b))]; });
@@ -17112,7 +17433,7 @@ function drawLitTopicGraph() {
     }
     if (noteEl) noteEl.innerText = 'HCF & LCF (Nalla 2003; Altenberger 2012; Benedetti 2018): Surface treatments (LSP/deep rolling) & HIP close subsurface pores and boost endurance strength above 500 MPa.';
   } else if (topic === 'Creep') {
-    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setLitTopicSubMode('creepView',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="strain-time" ${litPlotState.creepView==='strain-time'?'selected':''}>3-Stage ε vs t</option><option value="norton" ${litPlotState.creepView==='norton'?'selected':''}>Norton log ε̇_s vs log σ</option></select>`;
+    if (ctrlBox) ctrlBox.innerHTML = `<select aria-label="Select creep plot mode" onchange="setLitTopicSubMode('creepView',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="strain-time" ${litPlotState.creepView==='strain-time'?'selected':''}>3-Stage ε vs t</option><option value="norton" ${litPlotState.creepView==='norton'?'selected':''}>Norton log ε̇_s vs log σ</option></select>`;
     if (litPlotState.creepView === 'strain-time') {
       const ax = drawAxes(0, 120, 0, 6.5, 'Creep Time t (h)', 'Creep Strain ε_cr (%)', [0,30,60,90,120], [0,1.5,3,4.5,6], v => String(v), v => v.toFixed(1));
       const cr = (p0, r, tr) => Array.from({length:65}, (_,i)=>{ const t=(i/64)*Math.min(118,tr); return [t, Math.min(6.3, p0*(1-Math.exp(-t/8))+r*t+(t>tr*0.72?2.4*Math.pow((t-tr*0.72)/(tr*0.28),2.3):0))]; });
@@ -17127,7 +17448,7 @@ function drawLitTopicGraph() {
     }
     if (noteEl) noteEl.innerText = 'Creep Behavior (Barboza 2004/2006; Kim 2018; Reis 2005): Lamellar α+β microstructures retard Stage II steady-state creep rate relative to fine quenched α\' LPBF.';
   } else {
-    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setLitTopicSubMode('hvView',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="temp" ${litPlotState.hvView==='temp'?'selected':''}>Heat-Treatment Temp vs HV</option><option value="hallpetch" ${litPlotState.hvView==='hallpetch'?'selected':''}>Hall-Petch λ_α⁻½ vs HV</option></select>`;
+    if (ctrlBox) ctrlBox.innerHTML = `<select aria-label="Select hardness plot view" onchange="setLitTopicSubMode('hvView',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;"><option value="temp" ${litPlotState.hvView==='temp'?'selected':''}>Heat-Treatment Temp vs HV</option><option value="hallpetch" ${litPlotState.hvView==='hallpetch'?'selected':''}>Hall-Petch λ_α⁻½ vs HV</option></select>`;
     if (litPlotState.hvView === 'temp') {
       const ax = drawAxes(0, 1000, 290, 430, 'Heat-Treatment Temp (°C)', 'Vickers Hardness (HV 0.5)', [0,200,400,600,800,1000], [300,340,380,420]);
       plot(ax, [[25,398],[300,402],[500,414],[650,364],[730,346],[850,336],[920,332]], '#fb7185');
@@ -17212,12 +17533,12 @@ function renderPredMechCurves(physInput) {
 
   if (activePredMechTopic === 'Stress-Strain') {
     if (ctrlBox) ctrlBox.innerHTML = `
-      <select onchange="setPredMechCtrl('tempC',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 7px;">
+      <select aria-label="Select tensile test temperature" onchange="setPredMechCtrl('tempC',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 7px;">
         <option value="25" ${predMechState.tempC==='25'?'selected':''}>Test Temp: 25 °C (RT)</option>
         <option value="400" ${predMechState.tempC==='400'?'selected':''}>Test Temp: 400 °C</option>
         <option value="600" ${predMechState.tempC==='600'?'selected':''}>Test Temp: 600 °C</option>
       </select>
-      <label style="color:#cbd5e1;cursor:pointer;"><input type="checkbox" ${predMechState.showOverlay?'checked':''} onchange="setPredMechCtrl('showOverlay',this.checked)"> Ref Overlay (${isAsBuilt?'HIP':'As-Built'})</label>`;
+      <label style="color:#cbd5e1;cursor:pointer;"><input type="checkbox" aria-label="Toggle post-processing reference overlay" ${predMechState.showOverlay?'checked':''} onchange="setPredMechCtrl('showOverlay',this.checked)"> Ref Overlay (${isAsBuilt?'HIP':'As-Built'})</label>`;
     const tc = Number(predMechState.tempC), tf = tc===25?1:(tc===400?0.74:0.48), ef = tc===25?1:(tc===400?1.25:1.65);
     const curTrue = generateStressStrainCurve({ yieldStrengthMpa: ys * tf, utsMpa: uts * tf, elongationPct: elong * ef });
     const cmpTrue = generateStressStrainCurve({ yieldStrengthMpa: compYs * tf, utsMpa: compUts * tf, elongationPct: compEl * ef });
@@ -17232,7 +17553,7 @@ function renderPredMechCurves(physInput) {
     setLeg([['#38bdf8', `Active [${proc} · ${post}] @ ${tc}°C (YS ${Math.round(ys*tf)}, UTS ${Math.round(uts*tf)} MPa)`], ...(predMechState.showOverlay ? [['#fbbf24', `Same build params w/ ${compPost} reference`, true]] : [])]);
     if (noteEl) noteEl.innerText = `True stress–strain coupled to active ${proc} parameters (cooling rate ${coolingRate.toExponential(1)} K/s, α-lath ${lath.toFixed(2)} µm, O₂ ${o2.toFixed(3)} wt%). Strain-hardening exponent n=${curTrue.strainHardeningN.toFixed(3)}.`;
   } else if (activePredMechTopic === 'Eng. Stress-Strain') {
-    if (ctrlBox) ctrlBox.innerHTML = `<label style="color:#cbd5e1;cursor:pointer;"><input type="checkbox" ${predMechState.showOverlay?'checked':''} onchange="setPredMechCtrl('showOverlay',this.checked)"> Overlay True σ_T &amp; Ref</label>`;
+    if (ctrlBox) ctrlBox.innerHTML = `<label style="color:#cbd5e1;cursor:pointer;"><input type="checkbox" aria-label="Overlay true stress-strain curve" ${predMechState.showOverlay?'checked':''} onchange="setPredMechCtrl('showOverlay',this.checked)"> Overlay True σ_T &amp; Ref</label>`;
     const curSs = generateStressStrainCurve({ yieldStrengthMpa: ys, utsMpa: uts, elongationPct: elong });
     const cmpSs = generateStressStrainCurve({ yieldStrengthMpa: compYs, utsMpa: compUts, elongationPct: compEl });
     const maxEps = Math.max(18, Math.ceil(Math.max(elong, predMechState.showOverlay ? compEl : 0) + 3));
@@ -17249,7 +17570,7 @@ function renderPredMechCurves(physInput) {
     setLeg([['#38bdf8', `Engineering σ_e–ε_e (${proc} · ${post}: YS ${ys}, UTS ${uts}, El ${elong.toFixed(1)}%)`], ...(predMechState.showOverlay ? [['#34d399', 'True σ_T up to Considère necking', true], ['#fbbf24', `${compPost} Ref`, true]] : [])]);
     if (noteEl) noteEl.innerText = `Live Engineering tensile curve: linear elastic modulus 113.8 GPa -> 0.2% yield at ${ys} MPa -> Considère UTS peak at ${uts} MPa -> post-necking drop to fracture (${elong.toFixed(1)}% total elongation).`;
   } else if (activePredMechTopic === 'Compression') {
-    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setPredMechCtrl('compMode',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 7px;"><option value="rate" ${predMechState.compMode==='rate'?'selected':''}>Room Temp + SHPB Strain Rate</option><option value="hot" ${predMechState.compMode==='hot'?'selected':''}>Hot-Working (650–950°C Softening)</option></select>`;
+    if (ctrlBox) ctrlBox.innerHTML = `<select aria-label="Select compression regime" onchange="setPredMechCtrl('compMode',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 7px;"><option value="rate" ${predMechState.compMode==='rate'?'selected':''}>Room Temp + SHPB Strain Rate</option><option value="hot" ${predMechState.compMode==='hot'?'selected':''}>Hot-Working (650–950°C Softening)</option></select>`;
     const ysComp = ys * 1.06; // Ti-6Al-4V HCP tension-compression SD effect (~+6%)
     const hardSpan = Math.max(120, (uts - ys) * 3.8);
     if (predMechState.compMode === 'rate') {
@@ -17270,7 +17591,7 @@ function renderPredMechCurves(physInput) {
       if (noteEl) noteEl.innerText = `Hot-compression softening driven by initial α-lath width (λ_α=${lath.toFixed(2)} µm from ${proc} cooling rate + ${post}) and dynamic O₂-shifted β-transus (${(st.betaTransusC||995).toFixed(1)}°C).`;
     }
   } else if (activePredMechTopic === 'Fatigue HCF/LCF') {
-    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setPredMechCtrl('fatigueMode',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 7px;"><option value="hcf" ${predMechState.fatigueMode==='hcf'?'selected':''}>HCF: Murakami S–N (10⁴–10⁸)</option><option value="lcf" ${predMechState.fatigueMode==='lcf'?'selected':''}>LCF: Coffin-Manson ε_a–2N_f</option></select>`;
+    if (ctrlBox) ctrlBox.innerHTML = `<select aria-label="Select fatigue life model" onchange="setPredMechCtrl('fatigueMode',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 7px;"><option value="hcf" ${predMechState.fatigueMode==='hcf'?'selected':''}>HCF: Murakami S–N (10⁴–10⁸)</option><option value="lcf" ${predMechState.fatigueMode==='lcf'?'selected':''}>LCF: Coffin-Manson ε_a–2N_f</option></select>`;
     if (predMechState.fatigueMode === 'hcf') {
       const defectProf = inferActiveDefectProfile({ postProcessing: post, densityPct, lofIndex, keyholeRatio });
       const curSn = computeMurakamiSnFatigueCurve({ hv, utsMpa: uts, surfaceResidualStressMpa: surfStress, defectType: defectProf.defectType, maxDefectSizeUm: defectProf.maxDefectSizeUm });
@@ -17294,13 +17615,13 @@ function renderPredMechCurves(physInput) {
     }
   } else if (activePredMechTopic === 'Creep') {
     if (ctrlBox) ctrlBox.innerHTML = `
-      <select onchange="setPredMechCtrl('creepTemp',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;">
+      <select aria-label="Select creep exposure temperature" onchange="setPredMechCtrl('creepTemp',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;">
         <option value="450" ${predMechState.creepTemp==='450'?'selected':''}>450 °C</option>
         <option value="500" ${predMechState.creepTemp==='500'?'selected':''}>500 °C</option>
         <option value="550" ${predMechState.creepTemp==='550'?'selected':''}>550 °C</option>
         <option value="600" ${predMechState.creepTemp==='600'?'selected':''}>600 °C</option>
       </select>
-      <select onchange="setPredMechCtrl('creepView',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;">
+      <select aria-label="Select creep curve view" onchange="setPredMechCtrl('creepView',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 6px;">
         <option value="strain-time" ${predMechState.creepView==='strain-time'?'selected':''}>Creep ε vs t</option>
         <option value="norton" ${predMechState.creepView==='norton'?'selected':''}>Norton Power-Law</option>
       </select>`;
@@ -17327,7 +17648,7 @@ function renderPredMechCurves(physInput) {
       if (noteEl) noteEl.innerText = `Log-log Norton power-law rate (n ≈ 4.8): lamellar α+β coarsening from HIP/Annealing lowers dislocation-climb creep rate compared to fine as-built α' LPBF.`;
     }
   } else {
-    if (ctrlBox) ctrlBox.innerHTML = `<select onchange="setPredMechCtrl('hvView',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 7px;"><option value="temp" ${predMechState.hvView==='temp'?'selected':''}>Heat-Treatment Curve vs HV</option><option value="hallpetch" ${predMechState.hvView==='hallpetch'?'selected':''}>Hall-Petch λ_α⁻½ vs HV</option></select>`;
+    if (ctrlBox) ctrlBox.innerHTML = `<select aria-label="Select hardness relationship view" onchange="setPredMechCtrl('hvView',this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid rgba(56,189,248,0.35);border-radius:6px;padding:3px 7px;"><option value="temp" ${predMechState.hvView==='temp'?'selected':''}>Heat-Treatment Curve vs HV</option><option value="hallpetch" ${predMechState.hvView==='hallpetch'?'selected':''}>Hall-Petch λ_α⁻½ vs HV</option></select>`;
     const stateTempMap = { 'None': 25, 'As-Built': 25, 'Stress-relieved': 650, 'Annealed': 730, 'HIP': 920, 'Bi-modal': 940, 'Solution-Aged': 540 };
     const actT = stateTempMap[post] ?? 920;
     const statesSeq = [['None',25], ['Solution-Aged',540], ['Stress-relieved',650], ['Annealed',730], ['HIP',920]];
@@ -17477,6 +17798,88 @@ function updateNetworkTelemetry() {
 window.addEventListener('online', updateNetworkTelemetry);
 window.addEventListener('offline', updateNetworkTelemetry);
 
+function deferNonCriticalInit(fn) {
+  if (typeof window !== 'undefined' && typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => setTimeout(fn, 0));
+  } else {
+    fn();
+  }
+}
+
+function runHeroLiveDemo() {
+  const predBtn = document.querySelector(".tab-btn[onclick*=\"'predictions'\"]");
+  if (typeof switchTab === 'function') switchTab('predictions', predBtn || undefined);
+  applyVedPreset(66.3);
+  applySolvedToSliders();
+  const kpiRow = document.querySelector('.kpi-row');
+  if (kpiRow && typeof kpiRow.scrollIntoView === 'function') {
+    kpiRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+window.runHeroLiveDemo = runHeroLiveDemo;
+
+function openContactModal() {
+  const modal = document.getElementById('contactModal');
+  if (!modal) return;
+  modal.style.display = 'block';
+  const orgEl = document.getElementById('contactOrgInput');
+  if (orgEl && typeof orgEl.focus === 'function') orgEl.focus();
+}
+window.openContactModal = openContactModal;
+
+function closeContactModal() {
+  const modal = document.getElementById('contactModal');
+  if (modal) modal.style.display = 'none';
+}
+window.closeContactModal = closeContactModal;
+
+function buildContactInquiryText() {
+  const org = (document.getElementById('contactOrgInput')?.value || '').trim() || 'Unspecified Organization';
+  const email = (document.getElementById('contactEmailInput')?.value || '').trim() || 'Not provided';
+  const msg = (document.getElementById('contactMsgInput')?.value || '').trim() || 'Requesting research collaboration or experimental calibration evaluation for Ti-6Al-4V AM.';
+  const st = window.latestPhysicsState || {};
+  const ctx = `Active Context: ${st.process || 'lpbf'} | P=${st.p || 280}W, v=${st.v || 960}mm/s, h=${st.h || 110}µm, t=${st.t || 40}µm`;
+  return {
+    org,
+    email,
+    msg,
+    subject: `[MatSci Navigator] Ti-6Al-4V Research / Evaluation Inquiry (${org})`,
+    body: `Organization: ${org}\nReply Email: ${email}\n${ctx}\n\nInquiry:\n${msg}`
+  };
+}
+
+function submitContactMailto(event) {
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
+  const d = buildContactInquiryText();
+  const mailtoUrl = `mailto:nit-am-research@example.org?subject=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(d.body)}`;
+  const statusEl = document.getElementById('contactModalStatus');
+  if (statusEl) {
+    statusEl.innerText = 'Opening email draft (or use GitHub Issues / Copy Summary below).';
+  }
+  window.location.href = mailtoUrl;
+}
+window.submitContactMailto = submitContactMailto;
+
+function copyContactSummary() {
+  const d = buildContactInquiryText();
+  const statusEl = document.getElementById('contactModalStatus');
+  const txt = `${d.subject}\n\n${d.body}`;
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    navigator.clipboard.writeText(txt).then(() => {
+      if (statusEl) statusEl.innerText = '✓ Inquiry summary copied to clipboard.';
+    }).catch(() => {
+      if (statusEl) statusEl.innerText = 'Copy unavailable — please use Open GitHub Issues.';
+    });
+  } else if (statusEl) {
+    statusEl.innerText = txt;
+  }
+}
+window.copyContactSummary = copyContactSummary;
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeContactModal();
+});
+
 window.addEventListener('DOMContentLoaded', () => {
   let rawTheme = 'dark';
   try {
@@ -17488,8 +17891,8 @@ window.addEventListener('DOMContentLoaded', () => {
   document.documentElement.className = savedTheme;
   updateThemeIcon();
   updateNetworkTelemetry();
-  initSupabaseCloudSync();
-  populatePapersTable(PAPERS_DATABASE);
+
+  // Critical first-paint path: compute active physics & render visible KPI cards immediately
   const prevAutoInit = autoSync;
   autoSync = false;
   updateVedSolver(66.3);
@@ -17499,12 +17902,17 @@ window.addEventListener('DOMContentLoaded', () => {
   } else {
     calculatePhysics();
   }
-  renderBonthaProfileTable();
-  if (typeof updateCustomEconomics === 'function') updateIndustrialEconomics();
   if (typeof renderMicrostructureSvg === 'function') renderMicrostructureSvg(globalMaterialState || 'hip');
-  startTwinAnimation();
-  // Start 60 FPS Live Melt Pool Fluid Dynamics Animation Loop
-  ensureMpAnimationRunning();
+
+  // Defer background/off-screen work so FCP/LCP stay fast on mobile
+  deferNonCriticalInit(() => {
+    initSupabaseCloudSync();
+    populatePapersTable(PAPERS_DATABASE);
+    renderBonthaProfileTable();
+    if (typeof updateCustomEconomics === 'function') updateIndustrialEconomics();
+    startTwinAnimation();
+    ensureMpAnimationRunning();
+  });
 });
 
 // ========================================================
@@ -21778,7 +22186,7 @@ window.openCadPartReportModal = openCadPartReportModal;
         <div style="font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 10px;">5. CAD Part Geometry, Printability &amp; Cost Assessment (<span id="repCadFileName">—</span>)</div>
         <div style="display: grid; grid-template-columns: 220px 1fr; gap: 12px; align-items: start;">
           <div style="background: #040812; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 6px; text-align: center;">
-            <img id="cadRepSnapshotImg" alt="CAD 3D Render Snapshot" style="width: 100%; height: auto; border-radius: 4px; display: block;">
+            <img id="cadRepSnapshotImg" loading="lazy" decoding="async" alt="CAD 3D Render Snapshot" style="width: 100%; height: auto; border-radius: 4px; display: block;">
             <div style="font-size: 9.5px; color: #94a3b8; margin-top: 4px; font-family: monospace;" id="repCadOriLabel">Orientation: —</div>
           </div>
           <div style="font-size: 11px; color: #cbd5e1; line-height: 1.55; font-family: monospace;">
@@ -21973,5 +22381,70 @@ window.openCadPartReportModal = openCadPartReportModal;
       </div>
     </div>
   </div>
+
+  <!-- LIGHTWEIGHT RESEARCH COLLABORATION & CONTACT MODAL -->
+  <div id="contactModal" class="report-modal" role="dialog" aria-modal="true" aria-labelledby="contactModalTitle" style="display: none;" onclick="if(event.target === this) closeContactModal();">
+    <div class="contact-modal-paper">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h2 id="contactModalTitle" style="font-size: 17px; font-weight: 800; margin: 0; color: var(--text-primary);">Contact / Research Collaboration</h2>
+        <button type="button" class="step-btn" onclick="closeContactModal()" aria-label="Close contact dialog">✕ Close</button>
+      </div>
+      <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+        Request experimental Ti-6Al-4V coupon calibration, benchmark integration, or technical collaboration with the MatSci Navigator team at NIT Tiruchirappalli.
+      </p>
+      <form onsubmit="submitContactMailto(event)">
+        <div class="contact-field-group">
+          <label for="contactOrgInput">Organization / Lab</label>
+          <input type="text" id="contactOrgInput" placeholder="e.g., NIT Trichy / Aerospace R&amp;D">
+        </div>
+        <div class="contact-field-group">
+          <label for="contactEmailInput">Reply Email</label>
+          <input type="email" id="contactEmailInput" placeholder="name@organization.org">
+        </div>
+        <div class="contact-field-group">
+          <label for="contactMsgInput">Research Evaluation / Inquiry</label>
+          <textarea id="contactMsgInput" rows="3" placeholder="Share alloy grade, process route (LPBF, L-DED, WAAM, Binder Jetting), or dataset request..."></textarea>
+        </div>
+        <div id="contactModalStatus" style="font-size: 11.5px; color: var(--accent-emerald); margin-bottom: 10px; min-height: 16px;"></div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+          <button type="submit" class="primary-hero-cta" style="font-size: 12px; padding: 8px 14px;">Open Email Draft (mailto:)</button>
+          <button type="button" class="step-btn" onclick="copyContactSummary()">Copy Summary</button>
+          <a href="https://github.com/Roshan5329p/NITT-Internship/issues" target="_blank" rel="noopener noreferrer" class="step-btn" style="text-decoration: none;">Open GitHub Issues ↗</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "MatSci Navigator — Ti-6Al-4V Additive Manufacturing Physics & ML Predictor",
+        "url": "https://nit-titanium-am-platform.vercel.app/",
+        "applicationCategory": "EngineeringApplication",
+        "operatingSystem": "Web",
+        "description": "Ti-6Al-4V additive manufacturing physics and machine learning platform for LPBF, L-DED, WAAM, and Binder Jetting with Rosenthal thermal kinetics, Bontha CET solidification, 3D residual stress digital twin, and ASTM F2924/F3001 compliance.",
+        "featureList": [
+          "Analytical Rosenthal & KU Leuven Hybrid Melt Pool Kinematics",
+          "Bontha 2D/3D Columnar-to-Equiaxed Solidification Maps",
+          "Multi-Model LOPO-CV Machine Learning & PINN Hardness/Strength Predictions",
+          "Interactive 3D ASTM E8 Digital Twin & Stress Tensor Heatmap",
+          "Zero-Upload Browser STL/STEP CAD Part Analyzer",
+          "ASTM F2924, F3001, AMS 4999, and ISO 5832-3 Qualification Auditor"
+        ],
+        "publisher": {
+          "@type": "Organization",
+          "name": "NIT Tiruchirappalli — MatSci Navigator Titanium AM Lab"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Roshan P."
+        }
+      }
+    ]
+  }
+  </script>
 </body>
 </html>

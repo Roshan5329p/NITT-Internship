@@ -17,6 +17,13 @@ fs.copyFileSync(
   path.join(OUT_DIR, 'process_windows_dashboard.html')
 );
 
+for (const rootFile of ['robots.txt', 'sitemap.xml']) {
+  const srcFile = path.join(ROOT, rootFile);
+  if (fs.existsSync(srcFile)) {
+    fs.copyFileSync(srcFile, path.join(OUT_DIR, rootFile));
+  }
+}
+
 for (const dir of ['plots', 'vendor']) {
   const src = path.join(ROOT, dir);
   if (fs.existsSync(src)) {

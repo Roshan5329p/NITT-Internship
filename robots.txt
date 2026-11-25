@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://nit-titanium-am-platform.vercel.app/sitemap.xml
