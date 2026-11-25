@@ -1283,6 +1283,9 @@
     }
     renderShowcaseNarratorUi();
     if (typeof renderCadViewer === 'function') renderCadViewer();
+    if (typeof window !== 'undefined' && window.UiMotion && !state.isPlaying) {
+      window.UiMotion.syncAll();
+    }
   }
 
   function nextStage() {
@@ -1299,6 +1302,10 @@
       if (mode === 'lpbf' || mode === 'ded-laser') state.toolheadProcess = mode;
       renderShowcaseNarratorUi();
       if (typeof renderCadViewer === 'function') renderCadViewer();
+      if (typeof window !== 'undefined' && window.UiMotion) {
+        window.UiMotion.syncAll();
+        window.UiMotion.animateCanvasWipe(document.getElementById('cadPinnInsetCanvas'));
+      }
     }
   }
 
