@@ -21,7 +21,7 @@
 <script defer src="js/dashboard-data.js"></script>
 <script defer src="js/pinn-cad-showcase.js"></script>
 <script defer src="js/ui-motion.js"></script>
-<script defer src="js/active-learning-ui.js"></script>
+<script defer src="js/active-learning-ui.js?v=20261126b"></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -13843,8 +13843,8 @@ function switchTab(tabId, btn) {
     PinnCadShowcase.pauseShowcase();
   }
   if (tabId === 'active-learning' && typeof window !== 'undefined' && window.ActiveLearningUi) {
-    window.ActiveLearningUi.renderProofCard();
-    window.ActiveLearningUi.initPlanner(true);
+    if (typeof window.ActiveLearningUi.renderProofCard === 'function') window.ActiveLearningUi.renderProofCard();
+    if (typeof window.ActiveLearningUi.initPlanner === 'function') window.ActiveLearningUi.initPlanner(true);
   }
   if (tabId === 'predictions' && !hadDirtyPreds && typeof renderPredMechCurves === 'function') {
     setTimeout(() => renderPredMechCurves(window.latestPhysicsState), 30);

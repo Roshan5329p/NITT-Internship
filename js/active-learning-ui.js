@@ -1327,13 +1327,19 @@
 
   function recomputeAndRender() {
     plannerState.initialized = true;
-    const opts = readPlannerDomOptions();
-    const res = runActiveLearningPlanner(opts);
-    plannerState.lastResult = res;
-    plannerState.selectedRank = 1;
-    renderRecommendationsTable(res);
-    renderAcquisitionSvg(res);
-    return res;
+    try {
+      const opts = readPlannerDomOptions();
+      const res = runActiveLearningPlanner(opts);
+      plannerState.lastResult = res;
+      plannerState.selectedRank = 1;
+      renderRecommendationsTable(res);
+      renderAcquisitionSvg(res);
+      return res;
+    } catch (err) {
+      const metaEl = typeof document !== 'undefined' ? document.getElementById('alPlannerMeta') : null;
+      if (metaEl) metaEl.textContent = `Planner error: ${err && err.message ? err.message : String(err)}`;
+      throw err;
+    }
   }
 
   function downloadActiveLearningCsv() {
@@ -1467,6 +1473,15 @@
     if (openBtn && !openBtn.dataset.alLazyBound) {
       openBtn.dataset.alLazyBound = '1';
       openBtn.addEventListener('click', () => initPlanner(true));
+    }
+
+    const navBtn = document.getElementById('navBtnActiveLearning');
+    if (navBtn && !navBtn.dataset.alLazyBound) {
+      navBtn.dataset.alLazyBound = '1';
+      navBtn.addEventListener('click', () => {
+        renderProofCard();
+        initPlanner(true);
+      });
     }
 
     const alView = document.getElementById('view_active-learning');
