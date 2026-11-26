@@ -1650,6 +1650,97 @@
     color: #38bdf8;
     font-weight: 600;
   }
+  .twin-nonfea-badge {
+    border: 1px solid rgba(251, 191, 36, 0.45);
+    background: rgba(245, 158, 11, 0.14);
+    color: #fde68a;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 9999px;
+    cursor: help;
+  }
+  html.light .twin-nonfea-badge {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #f59e0b;
+  }
+  .twin-preset-group {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+  }
+  .twin-preset-btn {
+    background: transparent;
+    border: none;
+    color: #cbd5e1;
+    font-size: 10.5px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .twin-preset-btn:hover {
+    background: rgba(56, 189, 248, 0.16);
+    color: #ffffff;
+  }
+  .twin-preset-btn.active {
+    background: rgba(56, 189, 248, 0.22);
+    color: #7dd3fc;
+    font-weight: 700;
+  }
+  .twin-smart-hint {
+    margin-top: 8px;
+    padding: 7px 11px;
+    border-radius: 8px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: #fde68a;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+  }
+  html.light .twin-smart-hint {
+    background: #fef3c7;
+    color: #78350f;
+    border-color: #f59e0b;
+  }
+  .twin-scale-tick {
+    position: absolute;
+    top: -4px;
+    width: 4px;
+    height: 18px;
+    border-radius: 2px;
+    background: #ffffff;
+    border: 1px solid #0f172a;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.85);
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .twin-split-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    font-size: 11px;
+    color: #e2e8f0;
+  }
+  .twin-split-bar.visible {
+    display: flex;
+  }
+  html.light .twin-split-bar {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #0f172a;
+  }
 
   /* Range sliders */
   .twin-slider {
@@ -10109,16 +10200,17 @@ window.addEventListener('click', function(e) {
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
               <h2 class="model-card-title" style="font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.2px; margin: 0;">3D Digital Twin &amp; Stress Tensor Heatmap</h2>
-              <span id="twinCardBadge" style="border: 1px solid rgba(56, 189, 248, 0.45); background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 9999px;">Interactive WebGL Specimen</span>
+              <span id="twinCardBadge" style="border: 1px solid rgba(56, 189, 248, 0.45); background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 9999px;">Physics-Informed Coupled Twin</span>
+              <span id="twinNonFeaBadge" class="twin-nonfea-badge" title="Geometry-coupled analytical &amp; PINN thermal-mechanical screening field (non-FEA; does not solve a full 3D volumetric stiffness matrix).">Non-FEA Screening</span>
             </div>
             <div class="model-card-sub" id="twinCardSub" style="font-size: 12.5px; color: #cbd5e1; margin-top: 6px; line-height: 1.5; max-width: 820px; white-space: normal; overflow-wrap: anywhere; word-break: break-word;">
-              Real-time volumetric 3D representation of an <strong>ASTM E8 Tensile Specimen</strong> in Ti-6Al-4V (Grade 5, α+β workhorse). Drag to orbit, zoom, slice cross-sections, and visualize residual stress tensors and thermal cooling contours.
+              Geometry-coupled analytical &amp; PINN thermal-mechanical screening field (non-FEA; does not solve a full 3D volumetric stiffness matrix) on an <strong>ASTM E8 Tensile Specimen</strong> in Ti-6Al-4V. Drag to orbit, zoom, slice cross-sections, compare As-Built vs. Post-Processed, and inspect 3D hotspots.
             </div>
           </div>
           <div class="fx-pill-dock" style="display: flex; gap: 8px; padding: 3px;">
-            <button class="twin-mode-btn active" id="twinMode_stress" onclick="setTwinMode('residual-stress')">Residual Stress</button>
-            <button class="twin-mode-btn" id="twinMode_cooling" onclick="setTwinMode('cooling-rate')">Cooling Rate</button>
-            <button class="twin-mode-btn" id="twinMode_phase" onclick="setTwinMode('phase-fraction')">Martensite α'</button>
+            <button type="button" class="twin-mode-btn active" id="twinMode_stress" onclick="setTwinMode('residual-stress')">Residual Stress</button>
+            <button type="button" class="twin-mode-btn" id="twinMode_cooling" onclick="setTwinMode('cooling-rate')">Cooling Rate</button>
+            <button type="button" class="twin-mode-btn" id="twinMode_phase" onclick="setTwinMode('phase-fraction')">Martensite α'</button>
           </div>
         </div>
 
@@ -10131,15 +10223,24 @@ window.addEventListener('click', function(e) {
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; user-select: none; flex-wrap: wrap; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 600; color: #f1f5f9;">
                   <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow: 0 0 8px #10b981;"></span>
-                  <span id="twinEngineTitle">ASTM E8 Solid Round Tensile Specimen • 60 FPS FEA Twin</span>
+                  <span id="twinEngineTitle">ASTM E8 Solid Round Tensile Specimen • Physics-Informed Coupled Twin</span>
                 </div>
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                  <button type="button" class="twin-pill-btn" id="btnTwinGeomSource" onclick="toggleTwinGeometrySource()" title="Load a CAD file in Part Analyzer to enable CAD Twin" disabled style="opacity: 0.55; cursor: not-allowed;">Use Uploaded CAD</button>
-                  <button type="button" class="twin-pill-btn" id="btnTwinUploadCad" onclick="openCadAnalyzerFromTwin()" title="Open CAD Part Analyzer to upload or change 3D part" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);">Upload / Change CAD</button>
-                  <button type="button" class="twin-pill-btn active" id="btnAutoOrbit" onclick="toggleAutoOrbit()">Auto-Orbit: ON</button>
-                  <button type="button" class="twin-pill-btn" id="btnCutaway" onclick="toggleCutaway()">Cutaway: OFF</button>
-                  <button type="button" class="twin-pill-btn" id="btnWireframe" onclick="toggleWireframe()">Wireframe</button>
-                  <button type="button" class="twin-pill-btn" onclick="resetCamera()" title="Reset Camera View" style="padding: 5px 8px;">
+                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                  <button type="button" class="twin-pill-btn" id="btnTwinGeomSource" onclick="toggleTwinGeometrySource()" title="Load a CAD file in Part Analyzer to enable CAD Twin" aria-label="Toggle uploaded CAD geometry" disabled style="opacity: 0.55; cursor: not-allowed;">Use Uploaded CAD</button>
+                  <button type="button" class="twin-pill-btn" id="btnTwinUploadCad" onclick="openCadAnalyzerFromTwin()" title="Open CAD Part Analyzer to upload or change 3D part" aria-label="Open CAD Part Analyzer" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);">Upload / Change CAD</button>
+                  <div class="twin-preset-group" role="group" aria-label="Camera Presets">
+                    <button type="button" class="twin-preset-btn active" id="btnPresetIso" onclick="setTwinCameraPreset('iso')" aria-label="Isometric camera view">Iso</button>
+                    <button type="button" class="twin-preset-btn" id="btnPresetFront" onclick="setTwinCameraPreset('front')" aria-label="Front camera view">Front</button>
+                    <button type="button" class="twin-preset-btn" id="btnPresetSide" onclick="setTwinCameraPreset('side')" aria-label="Side camera view">Side</button>
+                    <button type="button" class="twin-preset-btn" id="btnPresetTop" onclick="setTwinCameraPreset('top')" aria-label="Top camera view">Top</button>
+                  </div>
+                  <button type="button" class="twin-pill-btn active" id="btnTwinHotspots" onclick="toggleTwinHotspots()" aria-pressed="true" aria-label="Toggle 3D Hotspot Callout Pins">Hotspot Pins</button>
+                  <button type="button" class="twin-pill-btn" id="btnTwinSplit" onclick="toggleTwinSplitMode()" aria-pressed="false" aria-label="Compare As-Built vs Post-Processed Split View">Compare: As-Built ↔ Post</button>
+                  <button type="button" class="twin-pill-btn" id="btnAutoOrbit" onclick="toggleAutoOrbit()" aria-pressed="false" aria-label="Toggle Auto-Orbit">Auto-Orbit: OFF</button>
+                  <button type="button" class="twin-pill-btn" id="btnCutaway" onclick="toggleCutaway()" aria-pressed="false" aria-label="Toggle Cutaway">Cutaway: OFF</button>
+                  <button type="button" class="twin-pill-btn" id="btnWireframe" onclick="toggleWireframe()" aria-pressed="false" aria-label="Toggle Wireframe">Wireframe</button>
+                  <button type="button" class="twin-pill-btn" id="btnTwinSavePng" onclick="exportTwinPngSnapshot()" aria-label="Save 3D Digital Twin PNG Snapshot" style="color: #6ee7b7; border-color: rgba(16, 185, 129, 0.45);">Save PNG</button>
+                  <button type="button" class="twin-pill-btn" onclick="resetCamera()" title="Reset Camera View" aria-label="Reset Camera View" style="padding: 5px 8px;">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                   </button>
                 </div>
@@ -10148,10 +10249,17 @@ window.addEventListener('click', function(e) {
               <!-- Canvas element -->
               <canvas id="twinCanvas" width="760" height="420" style="width: 100%; height: 420px; display: block; cursor: grab;"></canvas>
 
+              <!-- Keyboard/Touch Split Curtain Slider (shown when Split Mode is active) -->
+              <div class="twin-split-bar" id="twinSplitSliderWrap">
+                <label for="slTwinSplit" style="font-weight: 700; color: #7dd3fc;">Split Curtain:</label>
+                <input type="range" id="slTwinSplit" min="10" max="90" value="50" oninput="setTwinSplitRatio(this.value)" aria-label="As-Built vs Post-Processed split position" class="twin-slider" style="flex: 1; min-width: 120px;">
+                <span id="lblTwinSplitRatio" style="font-family: 'JetBrains Mono', monospace; color: #f8fafc;">50%</span>
+              </div>
+
               <!-- Bottom flex footer bar (non-overlapping at all widths) -->
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.06);">
-                <div style="font-size: 10.5px; color: #64748b; font-family: 'JetBrains Mono', monospace; pointer-events: none; user-select: none;">
-                  Click &amp; Drag to Orbit • Scroll to Zoom
+                <div style="font-size: 10.5px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; pointer-events: none; user-select: none;">
+                  Drag to Orbit • Scroll to Zoom • Non-FEA Screening Model
                 </div>
                 <div id="twinContextBadge" style="font-size: 10.5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: #e2e8f0; background: rgba(7, 11, 20, 0.86); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 9999px; padding: 4px 12px; backdrop-filter: blur(8px); pointer-events: none; max-width: 100%; white-space: normal; overflow-wrap: anywhere;">
                   LPBF • 280 W / 960 mm/s • T₀ 200°C • HIP | Peak +42 MPa • Optimal
@@ -10162,10 +10270,13 @@ window.addEventListener('click', function(e) {
             <!-- Heatmap Scale bar underneath canvas box -->
             <div style="display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 0 4px; font-size: 11px; font-family: 'JetBrains Mono', monospace; flex-wrap: wrap;">
               <span style="color: #94a3b8; font-family: 'Inter', sans-serif; font-size: 12px;" id="scaleTitleLabel">Heatmap Scale:</span>
-              <div id="twinHeatmapScaleBar" style="width: 150px; height: 10px; border-radius: 5px; background: linear-gradient(to right, #2563eb, #06b6d4, #22c55e, #facc15, #ef4444); border: 1px solid rgba(255,255,255,0.15);"></div>
+              <div id="twinHeatmapScaleBar" style="position: relative; width: 150px; height: 10px; border-radius: 5px; background: linear-gradient(to right, #2563eb, #06b6d4, #22c55e, #facc15, #ef4444); border: 1px solid rgba(255,255,255,0.15);">
+                <span id="twinScaleTick" class="twin-scale-tick" style="left: 45%;" aria-hidden="true"></span>
+              </div>
               <span style="color: #38bdf8;" id="scaleMinLabel">Min: -30 MPa (Core Compressive)</span>
               <span style="color: #22c55e; font-weight: 600;" id="scaleMaxLabel">Max: +42 MPa (Surface Tensile)</span>
             </div>
+            <div id="twinSmartLegendHint" class="twin-smart-hint" role="status" style="display: none;"></div>
           </div>
 
           <!-- RIGHT COLUMN: Slicing & Tensor Decomposition Cards -->
@@ -14679,11 +14790,11 @@ function openEvidenceHub() {
 // 5. 3D DIGITAL TWIN CANVAS ENGINE (60 FPS SOLID ASTM E8 + UPLOADED CAD MESH)
 // ==========================================
 let twinMode = 'residual-stress';
-let autoOrbit = true;
+let autoOrbit = false;
 let cutaway = false;
 let wireframe = false;
-let yaw = -1.08;
-let pitch = -0.34;
+let yaw = -0.61;
+let pitch = -0.44;
 let scale = 1.25;
 let sliceDepth = 100;
 let isDragging = false;
@@ -14692,6 +14803,22 @@ let lastMouseY = 0;
 let animFrameId = null;
 let twinGeometrySource = 'auto'; // 'auto' | 'cad' | 'dogbone'
 let twinNeedsCadAutoFit = false;
+let twinShowHotspots = true;
+let twinSplitMode = false;
+let twinSplitRatio = 0.50;
+let twinIsDraggingSplit = false;
+let _twinCameraPresetAnim = null;
+
+const TWIN_CAMERA_PRESETS = {
+  iso: { yaw: -0.61, pitch: -0.44 },
+  front: { yaw: 0.0, pitch: 0.0 },
+  side: { yaw: Math.PI * 0.5, pitch: 0.0 },
+  top: { yaw: 0.0, pitch: -1.55 }
+};
+
+window.twinShowHotspots = twinShowHotspots;
+window.twinSplitMode = twinSplitMode;
+window.twinSplitRatio = twinSplitRatio;
 
 function hasLoadedCadMeshForTwin() {
   return Boolean(typeof cadActiveMesh !== 'undefined' && cadActiveMesh && cadActiveMesh.triangleCount > 0);
@@ -14723,6 +14850,103 @@ function requestTwinFrame() {
   }
 }
 window.requestTwinFrame = requestTwinFrame;
+
+function _updateTwinPresetButtons(activePreset) {
+  const ids = {
+    iso: 'btnPresetIso',
+    front: 'btnPresetFront',
+    side: 'btnPresetSide',
+    top: 'btnPresetTop'
+  };
+  Object.keys(ids).forEach((key) => {
+    const el = $id(ids[key]);
+    if (el) el.classList.toggle('active', key === activePreset);
+  });
+}
+
+function setTwinCameraPreset(presetName) {
+  const target = TWIN_CAMERA_PRESETS[presetName];
+  if (!target) return;
+  if (autoOrbit) {
+    autoOrbit = false;
+    const btnAuto = $id('btnAutoOrbit');
+    if (btnAuto) {
+      btnAuto.innerText = 'Auto-Orbit: OFF';
+      btnAuto.classList.remove('active');
+      btnAuto.setAttribute('aria-pressed', 'false');
+    }
+  }
+  _updateTwinPresetButtons(presetName);
+
+  const reducedMotion = typeof window !== 'undefined' &&
+    window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reducedMotion || typeof performance === 'undefined') {
+    _twinCameraPresetAnim = null;
+    yaw = target.yaw;
+    pitch = target.pitch;
+    requestTwinFrame();
+    return;
+  }
+
+  // Shortest angular delta for yaw wrap-around
+  let deltaYaw = (target.yaw - yaw) % (Math.PI * 2);
+  if (deltaYaw > Math.PI) deltaYaw -= Math.PI * 2;
+  if (deltaYaw < -Math.PI) deltaYaw += Math.PI * 2;
+  _twinCameraPresetAnim = {
+    startYaw: yaw,
+    deltaYaw: deltaYaw,
+    startPitch: pitch,
+    targetPitch: target.pitch,
+    startTime: performance.now(),
+    durationMs: 260
+  };
+  requestTwinFrame();
+}
+window.setTwinCameraPreset = setTwinCameraPreset;
+
+function toggleTwinHotspots() {
+  twinShowHotspots = !twinShowHotspots;
+  window.twinShowHotspots = twinShowHotspots;
+  const btn = $id('btnTwinHotspots');
+  if (btn) {
+    btn.classList.toggle('active', twinShowHotspots);
+    btn.setAttribute('aria-pressed', twinShowHotspots ? 'true' : 'false');
+  }
+  requestTwinFrame();
+}
+window.toggleTwinHotspots = toggleTwinHotspots;
+
+function toggleTwinSplitMode() {
+  twinSplitMode = !twinSplitMode;
+  window.twinSplitMode = twinSplitMode;
+  const btn = $id('btnTwinSplit');
+  if (btn) {
+    btn.classList.toggle('active', twinSplitMode);
+    btn.setAttribute('aria-pressed', twinSplitMode ? 'true' : 'false');
+  }
+  const sliderWrap = $id('twinSplitSliderWrap');
+  if (sliderWrap) {
+    sliderWrap.classList.toggle('visible', twinSplitMode);
+  }
+  if (typeof updateTwinScaleAndHud === 'function') {
+    updateTwinScaleAndHud();
+  }
+  requestTwinFrame();
+}
+window.toggleTwinSplitMode = toggleTwinSplitMode;
+
+function setTwinSplitRatio(pct) {
+  const clamped = Math.max(10, Math.min(90, Math.round(Number(pct) || 50)));
+  twinSplitRatio = clamped / 100.0;
+  window.twinSplitRatio = twinSplitRatio;
+  const sl = $id('slTwinSplit');
+  const lbl = $id('lblTwinSplitRatio');
+  if (sl && String(sl.value) !== String(clamped)) sl.value = String(clamped);
+  if (lbl) lbl.innerText = clamped + '%';
+  requestTwinFrame();
+}
+window.setTwinSplitRatio = setTwinSplitRatio;
 
 function toggleTwinGeometrySource() {
   if (!hasLoadedCadMeshForTwin()) {
@@ -14758,10 +14982,12 @@ function setTwinMode(mode) {
 
 function toggleAutoOrbit() {
   autoOrbit = !autoOrbit;
+  if (autoOrbit) _twinCameraPresetAnim = null;
   const btn = $id('btnAutoOrbit');
   if (btn) {
     btn.innerText = 'Auto-Orbit: ' + (autoOrbit ? 'ON' : 'OFF');
     btn.classList.toggle('active', autoOrbit);
+    btn.setAttribute('aria-pressed', autoOrbit ? 'true' : 'false');
   }
   if (autoOrbit) requestTwinFrame();
 }
@@ -14773,6 +14999,7 @@ function toggleCutaway() {
   if (btn) {
     btn.innerText = 'Cutaway: ' + (cutaway ? 'ON' : 'OFF');
     btn.classList.toggle('active', cutaway);
+    btn.setAttribute('aria-pressed', cutaway ? 'true' : 'false');
   }
   requestTwinFrame();
 }
@@ -14783,7 +15010,10 @@ function toggleWireframe() {
     wireframe = false;
     window.twinWireframe = false;
     const btn = $id('btnWireframe');
-    if (btn) btn.classList.remove('active');
+    if (btn) {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-pressed', 'false');
+    }
     requestTwinFrame();
     return;
   }
@@ -14792,15 +15022,18 @@ function toggleWireframe() {
   const btn = $id('btnWireframe');
   if (btn) {
     btn.classList.toggle('active', wireframe);
+    btn.setAttribute('aria-pressed', wireframe ? 'true' : 'false');
   }
   requestTwinFrame();
 }
 
 function resetCamera() {
-  yaw = -1.08;
-  pitch = -0.34;
+  _twinCameraPresetAnim = null;
+  yaw = -0.61;
+  pitch = -0.44;
   scale = 1.25;
   sliceDepth = 100;
+  _updateTwinPresetButtons('iso');
   const slZoom = $id('slTwinZoom');
   const lblZoom = $id('lblZoomLevel');
   const slSlice = $id('slTwinSlice');
@@ -14827,19 +15060,50 @@ function setZoomLevel(val) {
 }
 
 const canvas = document.getElementById('twinCanvas');
-const ctx = canvas ? canvas.getContext('2d') : null;
+let ctx = canvas ? canvas.getContext('2d') : null;
 const wrapper = document.getElementById('canvasWrapper');
 
+function _isPointOnTwinSplitDivider(clientX, clientY) {
+  if (!twinSplitMode || !canvas) return false;
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width <= 0 || clientY < rect.top || clientY > rect.bottom) return false;
+  const splitX = rect.left + twinSplitRatio * rect.width;
+  return Math.abs(clientX - splitX) <= 18;
+}
+
 if (wrapper && canvas && ctx) {
-  wrapper.addEventListener('mousedown', (e) => {
-    if (e.target && e.target.closest && e.target.closest('button')) return;
+  const _startPointer = (clientX, clientY, target) => {
+    if (target && target.closest && target.closest('button, input, label, select, a, #twinSplitSliderWrap')) return;
+    _twinCameraPresetAnim = null;
+    if (_isPointOnTwinSplitDivider(clientX, clientY)) {
+      twinIsDraggingSplit = true;
+      canvas.style.cursor = 'ew-resize';
+      requestTwinFrame();
+      return;
+    }
     isDragging = true;
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
+    lastMouseX = clientX;
+    lastMouseY = clientY;
+    canvas.style.cursor = 'grabbing';
     requestTwinFrame();
+  };
+
+  wrapper.addEventListener('mousedown', (e) => {
+    _startPointer(e.clientX, e.clientY, e.target);
   });
+
+  wrapper.addEventListener('touchstart', (e) => {
+    if (!e.touches || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    if (_isPointOnTwinSplitDivider(t.clientX, t.clientY)) {
+      e.preventDefault();
+    }
+    _startPointer(t.clientX, t.clientY, e.target);
+  }, { passive: false });
+
   wrapper.addEventListener('wheel', (e) => {
     e.preventDefault();
+    _twinCameraPresetAnim = null;
     scale = Math.max(0.70, Math.min(2.4, scale - e.deltaY * 0.0012));
     const slZoom = $id('slTwinZoom');
     const lblZoom = $id('lblZoomLevel');
@@ -14849,17 +15113,72 @@ if (wrapper && canvas && ctx) {
     requestTwinFrame();
   }, { passive: false });
 }
+
+function _movePointer(clientX, clientY) {
+  if (twinIsDraggingSplit && canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const ratio = (clientX - rect.left) / Math.max(1, rect.width);
+    setTwinSplitRatio(Math.round(Math.max(0.10, Math.min(0.90, ratio)) * 100));
+    return;
+  }
+  if (isDragging) {
+    const dx = clientX - lastMouseX;
+    const dy = clientY - lastMouseY;
+    lastMouseX = clientX;
+    lastMouseY = clientY;
+    yaw += dx * 0.009;
+    pitch = Math.max(-1.56, Math.min(1.56, pitch + dy * 0.009));
+    _updateTwinPresetButtons(null);
+    requestTwinFrame();
+    return;
+  }
+  if (canvas) {
+    canvas.style.cursor = _isPointOnTwinSplitDivider(clientX, clientY) ? 'ew-resize' : 'grab';
+  }
+}
+
 window.addEventListener('mousemove', (e) => {
-  if (!isDragging) return;
-  const dx = e.clientX - lastMouseX;
-  const dy = e.clientY - lastMouseY;
-  lastMouseX = e.clientX;
-  lastMouseY = e.clientY;
-  yaw += dx * 0.009;
-  pitch = Math.max(-1.4, Math.min(1.4, pitch + dy * 0.009));
-  requestTwinFrame();
+  _movePointer(e.clientX, e.clientY);
 });
-window.addEventListener('mouseup', () => { isDragging = false; });
+
+window.addEventListener('touchmove', (e) => {
+  if ((!isDragging && !twinIsDraggingSplit) || !e.touches || e.touches.length !== 1) return;
+  e.preventDefault();
+  _movePointer(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: false });
+
+const _endPointer = () => {
+  isDragging = false;
+  twinIsDraggingSplit = false;
+  if (canvas) canvas.style.cursor = 'grab';
+};
+window.addEventListener('mouseup', _endPointer);
+window.addEventListener('touchend', _endPointer);
+
+function _syncTwinCanvasSize() {
+  if (!canvas || typeof canvas.getBoundingClientRect !== 'function' || _twinPreserveBackdrop) return false;
+  const rect = canvas.getBoundingClientRect();
+  if (!rect || rect.width < 120) return false;
+  const targetW = Math.max(240, Math.round(rect.width));
+  const targetH = targetW < 420 ? 340 : 420;
+  let changed = false;
+  if (canvas.width !== targetW || canvas.height !== targetH) {
+    canvas.width = targetW;
+    canvas.height = targetH;
+    canvas.style.height = targetH + 'px';
+    changed = true;
+  }
+  return changed;
+}
+
+if (typeof ResizeObserver === 'function' && wrapper && canvas) {
+  const _twinResizeObserver = new ResizeObserver(() => {
+    if (_syncTwinCanvasSize()) {
+      requestTwinFrame();
+    }
+  });
+  _twinResizeObserver.observe(wrapper);
+}
 
 // Anatomically Accurate Solid ASTM E8 Round Tensile Specimen Revolve Mesh
 function buildDogboneMesh() {
@@ -14932,10 +15251,11 @@ function project(x, y, z, w, h) {
   const y2 = y * cosP - z1 * sinP;
   const z2 = y * sinP + z1 * cosP;
 
-  // Perspective projection
+  // Perspective projection (responsive framing on narrow mobile widths)
   const fov = 420;
   const cameraDist = 450;
-  const factor = (fov / (cameraDist + z2)) * scale;
+  const viewScale = Math.min(1.0, Math.max(0.55, w / 520.0));
+  const factor = (fov / (cameraDist + z2)) * scale * viewScale;
   const px = w / 2 + x1 * factor;
   const py = h / 2 - y2 * factor;
 
@@ -15018,13 +15338,50 @@ function updateTwinScaleAndHud() {
   window.currentTwinCooling = currentCooling;
   window.currentTwinAlphaPrime = alphaPrime;
 
+  // Compute As-Built vs. Post-Processed pair for Split Curtain comparison mode
+  const isCurrentlyAsBuilt = (post === 'None' || post === 'As-Built' || stateKey === 'as_built');
+  const leftField = isCurrentlyAsBuilt
+    ? stressField
+    : computeSpecimenStressField(proc, alloyId, { P: P, v: v, h: h, t: t, T0: T0, coolingRate: currentCooling }, 'None', activeRegime);
+  const rightPost = isCurrentlyAsBuilt ? 'HIP' : post;
+  const rightField = isCurrentlyAsBuilt
+    ? computeSpecimenStressField(proc, alloyId, { P: P, v: v, h: h, t: t, T0: T0, coolingRate: currentCooling }, 'HIP', activeRegime)
+    : stressField;
+  const asBuiltAlphaBase = stressField.isBinderJetting
+    ? 0.0
+    : ((typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY.as_built && Number.isFinite(MATERIAL_STATE_REGISTRY.as_built.alphaPrime))
+      ? MATERIAL_STATE_REGISTRY.as_built.alphaPrime
+      : 94.0);
+  const leftAlphaPrime = isCurrentlyAsBuilt ? alphaPrime : asBuiltAlphaBase;
+  const rightAlphaPrime = (rightPost === 'HIP' || rightPost === 'Annealed' || stressField.isBinderJetting)
+    ? 0.0
+    : (rightPost === 'Stress-Relieved'
+      ? ((typeof MATERIAL_STATE_REGISTRY !== 'undefined' && MATERIAL_STATE_REGISTRY.stress_relieved && Number.isFinite(MATERIAL_STATE_REGISTRY.stress_relieved.alphaPrime))
+        ? MATERIAL_STATE_REGISTRY.stress_relieved.alphaPrime
+        : Math.max(0, alphaPrime))
+      : alphaPrime);
+
+  window.twinSplitPairState = {
+    leftLabel: stressField.isBinderJetting ? 'Green-Sinter' : 'As-Built',
+    rightLabel: isCurrentlyAsBuilt ? 'Simulated HIP' : rightPost,
+    leftField: leftField,
+    rightField: rightField,
+    leftAlphaPrime: leftAlphaPrime,
+    rightAlphaPrime: rightAlphaPrime
+  };
+
   const engineTitleEl = document.getElementById('twinEngineTitle');
   const cardSubEl = document.getElementById('twinCardSub');
   const cardBadgeEl = document.getElementById('twinCardBadge');
+  const nonFeaBadgeEl = document.getElementById('twinNonFeaBadge');
   const btnGeomSource = document.getElementById('btnTwinGeomSource');
   const btnWireEl = document.getElementById('btnWireframe');
   const hasCad = hasLoadedCadMeshForTwin();
   const usingCad = isTwinUsingCad();
+
+  if (nonFeaBadgeEl) {
+    nonFeaBadgeEl.innerText = 'Non-FEA Screening';
+  }
 
   if (btnGeomSource) {
     if (!hasCad) {
@@ -15060,29 +15417,32 @@ function updateTwinScaleAndHud() {
     const rawName = (typeof cadCurrentFileName !== 'undefined' && cadCurrentFileName) ? cadCurrentFileName : 'Uploaded CAD';
     const safeName = typeof escapeHtml === 'function' ? escapeHtml(rawName) : rawName;
     if (engineTitleEl) {
-      engineTitleEl.innerHTML = `${safeName} • ${sizeX.toFixed(1)} × ${sizeY.toFixed(1)} × ${sizeZ.toFixed(1)} mm • ${fullTriCount.toLocaleString()} tris • Coupled FEA Twin`;
+      engineTitleEl.innerHTML = `${safeName} • ${sizeX.toFixed(1)} × ${sizeY.toFixed(1)} × ${sizeZ.toFixed(1)} mm • ${fullTriCount.toLocaleString()} tris • Physics-Informed Coupled Twin`;
     }
     if (cardBadgeEl) {
-      cardBadgeEl.innerText = 'Interactive CAD FEA Twin';
+      cardBadgeEl.innerText = 'Physics-Informed Coupled CAD Twin';
     }
     if (cardSubEl) {
-      cardSubEl.innerHTML = `Real-time volumetric 3D Digital Twin of uploaded CAD geometry <strong>${safeName}</strong> (${sizeX.toFixed(1)} × ${sizeY.toFixed(1)} × ${sizeZ.toFixed(1)} mm, ${fullTriCount.toLocaleString()} triangles) in Ti-6Al-4V. Drag to orbit, zoom, slice build layers, cutaway interior core, and visualize coupled residual stress, cooling rate, and α' martensite heatmaps.`;
+      cardSubEl.innerHTML = `Geometry-coupled analytical &amp; PINN thermal-mechanical screening field (non-FEA; does not solve a full 3D volumetric stiffness matrix) of uploaded CAD geometry <strong>${safeName}</strong> (${sizeX.toFixed(1)} × ${sizeY.toFixed(1)} × ${sizeZ.toFixed(1)} mm, ${fullTriCount.toLocaleString()} triangles) in Ti-6Al-4V. Drag to orbit, slice build layers, compare As-Built vs. Post-Processed, and inspect 3D hotspots.`;
     }
     const isProxy = typeof isCadDecimatedProxy === 'function' && isCadDecimatedProxy(cadActiveMesh);
     if (isProxy && wireframe) {
       wireframe = false;
       window.twinWireframe = false;
-      if (btnWireEl) btnWireEl.classList.remove('active');
+      if (btnWireEl) {
+        btnWireEl.classList.remove('active');
+        btnWireEl.setAttribute('aria-pressed', 'false');
+      }
     }
   } else {
     if (engineTitleEl) {
-      engineTitleEl.innerText = 'ASTM E8 Solid Round Tensile Specimen • 60 FPS FEA Twin';
+      engineTitleEl.innerText = 'ASTM E8 Solid Round Tensile Specimen • Physics-Informed Coupled Twin';
     }
     if (cardBadgeEl) {
-      cardBadgeEl.innerText = 'Interactive WebGL Specimen';
+      cardBadgeEl.innerText = 'Physics-Informed Coupled Twin';
     }
     if (cardSubEl) {
-      cardSubEl.innerHTML = 'Real-time volumetric 3D representation of an <strong>ASTM E8 Tensile Specimen</strong> in Ti-6Al-4V (Grade 5, α+β workhorse). Drag to orbit, zoom, slice cross-sections, and visualize residual stress tensors and thermal cooling contours.';
+      cardSubEl.innerHTML = 'Geometry-coupled analytical &amp; PINN thermal-mechanical screening field (non-FEA; does not solve a full 3D volumetric stiffness matrix) on an <strong>ASTM E8 Tensile Specimen</strong> in Ti-6Al-4V. Drag to orbit, zoom, slice cross-sections, compare As-Built vs. Post-Processed, and inspect 3D hotspots.';
     }
   }
 
@@ -15208,6 +15568,47 @@ function updateTwinScaleAndHud() {
     }
   }
 
+  // Active scale-bar tick indicator & smart zero-variance legend hint
+  const tickEl = document.getElementById('twinScaleTick');
+  if (tickEl) {
+    let tickU = 0.5;
+    if (twinMode === 'residual-stress') {
+      if (stressField.isBinderJetting) {
+        tickU = 0.40 + (peakStress / 120.0);
+      } else {
+        const refMin = stressField.referenceScaleMinMpa !== undefined ? stressField.referenceScaleMinMpa : -450;
+        const refMax = stressField.referenceScaleMaxMpa !== undefined ? stressField.referenceScaleMaxMpa : 650;
+        tickU = (peakStress - refMin) / Math.max(1, refMax - refMin);
+      }
+    } else if (twinMode === 'cooling-rate') {
+      tickU = Math.log10(Math.max(0.05, currentCooling) + 1.0) / 6.1;
+    } else {
+      const aRatio = Math.max(0, Math.min(1, (alphaPrime || 0) / 100.0));
+      tickU = aRatio > 0.15 ? (0.25 + 0.73 * aRatio) : 0.34;
+    }
+    const tickClamped = Math.max(0.02, Math.min(0.98, tickU));
+    tickEl.style.left = (tickClamped * 100).toFixed(1) + '%';
+  }
+
+  const hintEl = document.getElementById('twinSmartLegendHint');
+  if (hintEl) {
+    const safePost = typeof escapeHtml === 'function' ? escapeHtml(String(post || 'HIP')) : String(post || 'HIP');
+    if (twinMode === 'phase-fraction' && alphaPrime <= 5) {
+      hintEl.style.display = 'block';
+      if (stressField.isBinderJetting) {
+        hintEl.innerHTML = '<strong>Uniform Field Context:</strong> Binder Jetting uses solid-state vacuum sintering (no melt-quench), yielding <strong>0.0% α\' martensite</strong> across the specimen. Switch to <strong>Residual Stress</strong> or test LPBF/L-DED for phase gradients.';
+      } else {
+        hintEl.innerHTML = `<strong>Uniform Field Context:</strong> ${safePost} decomposes 100% of α' martensite into ductile α+β lamellae everywhere (0.0% α') — toggle <strong>Compare: As-Built ↔ Post</strong> or switch to <strong>Residual Stress</strong> to inspect spatial gradients.`;
+      }
+    } else if (twinMode === 'residual-stress' && stressField.isBinderJetting) {
+      hintEl.style.display = 'block';
+      hintEl.innerHTML = `<strong>Uniform Field Context:</strong> Solid-state sintering relaxes macro thermal gradients (surface ≤ +${peakStress} MPa). Compare against melt-based <strong>LPBF / L-DED / WAAM</strong> for full-range tensile-compressive tensors.`;
+    } else {
+      hintEl.style.display = 'none';
+      hintEl.textContent = '';
+    }
+  }
+
   requestTwinFrame();
 }
 
@@ -15321,16 +15722,8 @@ function evaluateCadTriangleHeatmapU(t, zNorm, rHorizFrac, isInteriorFace, field
 }
 window.evaluateCadTriangleHeatmapU = evaluateCadTriangleHeatmapU;
 
-let _twinCadColorCache = {
-  meshRef: null,
-  simRef: null,
-  geoRef: null,
-  mode: '',
-  stressKey: '',
-  nTri: 0,
-  frontRgb: null,
-  interiorRgb: null
-};
+const _twinCadColorCacheSlots = [];
+let _twinPreserveBackdrop = false;
 
 let _twinTriCap = 0;
 let _twinP0x = null, _twinP0y = null, _twinP1x = null, _twinP1y = null, _twinP2x = null, _twinP2y = null;
@@ -15356,21 +15749,30 @@ function _getTwinCadColorCache(mesh, sf, aPrimeVal) {
   const geo = typeof cadGeometryReport !== 'undefined' ? cadGeometryReport : null;
   const peakCool = window.currentTwinCooling || 480000;
   const stressKey = `${twinMode}|${sf.coreCompressiveStressMpa}|${sf.gaugeSurfaceStressMpa}|${sf.isBinderJetting}|${peakCool}|${aPrimeVal}`;
-  if (
-    _twinCadColorCache.meshRef === mesh &&
-    _twinCadColorCache.simRef === sim &&
-    _twinCadColorCache.geoRef === geo &&
-    _twinCadColorCache.stressKey === stressKey &&
-    _twinCadColorCache.nTri === nTri
-  ) {
-    return _twinCadColorCache;
+
+  for (let s = 0; s < _twinCadColorCacheSlots.length; s++) {
+    const slot = _twinCadColorCacheSlots[s];
+    if (
+      slot.meshRef === mesh &&
+      slot.simRef === sim &&
+      slot.geoRef === geo &&
+      slot.stressKey === stressKey &&
+      slot.nTri === nTri
+    ) {
+      if (s > 0) {
+        _twinCadColorCacheSlots.splice(s, 1);
+        _twinCadColorCacheSlots.unshift(slot);
+      }
+      return slot;
+    }
   }
 
-  const frontRgb = (_twinCadColorCache.frontRgb && _twinCadColorCache.frontRgb.length >= nTri * 3)
-    ? _twinCadColorCache.frontRgb
+  let reuseSlot = _twinCadColorCacheSlots.length >= 2 ? _twinCadColorCacheSlots.pop() : null;
+  const frontRgb = (reuseSlot && reuseSlot.frontRgb && reuseSlot.frontRgb.length >= nTri * 3)
+    ? reuseSlot.frontRgb
     : new Uint8Array(nTri * 3);
-  const interiorRgb = (_twinCadColorCache.interiorRgb && _twinCadColorCache.interiorRgb.length >= nTri * 3)
-    ? _twinCadColorCache.interiorRgb
+  const interiorRgb = (reuseSlot && reuseSlot.interiorRgb && reuseSlot.interiorRgb.length >= nTri * 3)
+    ? reuseSlot.interiorRgb
     : new Uint8Array(nTri * 3);
 
   const pos = mesh.positions;
@@ -15395,8 +15797,368 @@ function _getTwinCadColorCache(mesh, sf, aPrimeVal) {
     interiorRgb[o] = cInt.r; interiorRgb[o + 1] = cInt.g; interiorRgb[o + 2] = cInt.b;
   }
 
-  _twinCadColorCache = { meshRef: mesh, simRef: sim, geoRef: geo, stressKey, nTri, frontRgb, interiorRgb };
-  return _twinCadColorCache;
+  const nextSlot = { meshRef: mesh, simRef: sim, geoRef: geo, stressKey, nTri, frontRgb, interiorRgb };
+  _twinCadColorCacheSlots.unshift(nextSlot);
+  return nextSlot;
+}
+
+function drawTwinOrientationTriad(drawCtx, w, h) {
+  if (!drawCtx) return;
+  const cx = 42;
+  const cy = h - 42;
+  const armLen = 19;
+  const cosY = Math.cos(yaw), sinY = Math.sin(yaw);
+  const cosP = Math.cos(pitch), sinP = Math.sin(pitch);
+
+  // World mapping matches renderTwinCadMesh: CAD X -> (1,0,0), CAD Y -> (0,0,1), +Z Build -> (0,1,0)
+  const rawAxes = [
+    { label: 'X', color: '#f87171', wx: 1, wy: 0, wz: 0 },
+    { label: 'Y', color: '#34d399', wx: 0, wy: 0, wz: 1 },
+    { label: '+Z Build', color: '#38bdf8', wx: 0, wy: 1, wz: 0 }
+  ];
+
+  const projected = rawAxes.map((ax) => {
+    const x1 = ax.wx * cosY - ax.wz * sinY;
+    const z1 = ax.wx * sinY + ax.wz * cosY;
+    const y2 = ax.wy * cosP - z1 * sinP;
+    const z2 = ax.wy * sinP + z1 * cosP;
+    return {
+      label: ax.label,
+      color: ax.color,
+      dx: x1 * armLen,
+      dy: -y2 * armLen,
+      zDepth: z2
+    };
+  });
+  projected.sort((a, b) => b.zDepth - a.zDepth);
+
+  drawCtx.save();
+  drawCtx.fillStyle = 'rgba(7, 11, 20, 0.78)';
+  drawCtx.strokeStyle = 'rgba(148, 163, 184, 0.28)';
+  drawCtx.lineWidth = 1;
+  drawCtx.beginPath();
+  if (drawCtx.roundRect) {
+    drawCtx.roundRect(14, h - 70, 56, 56, 10);
+  } else {
+    drawCtx.rect(14, h - 70, 56, 56);
+  }
+  drawCtx.fill();
+  drawCtx.stroke();
+
+  drawCtx.font = 'bold 9.5px "JetBrains Mono", monospace';
+  drawCtx.textBaseline = 'middle';
+  for (let i = 0; i < projected.length; i++) {
+    const ax = projected[i];
+    const tx = cx + ax.dx;
+    const ty = cy + ax.dy;
+    drawCtx.strokeStyle = ax.color;
+    drawCtx.lineWidth = 2;
+    drawCtx.beginPath();
+    drawCtx.moveTo(cx, cy);
+    drawCtx.lineTo(tx, ty);
+    drawCtx.stroke();
+
+    drawCtx.fillStyle = ax.color;
+    drawCtx.beginPath();
+    drawCtx.arc(tx, ty, 2.5, 0, Math.PI * 2);
+    drawCtx.fill();
+
+    const lblX = Math.max(10, Math.min(w - 58, cx + ax.dx * 1.38));
+    const lblY = Math.max(12, Math.min(h - 8, cy + ax.dy * 1.38));
+    drawCtx.textAlign = ax.dx < -3 ? 'right' : (ax.dx > 3 ? 'left' : 'center');
+    drawCtx.fillText(ax.label, lblX, lblY);
+  }
+
+  drawCtx.fillStyle = '#e2e8f0';
+  drawCtx.beginPath();
+  drawCtx.arc(cx, cy, 2.2, 0, Math.PI * 2);
+  drawCtx.fill();
+  drawCtx.restore();
+}
+
+function drawTwinHotspotPins(drawCtx, pins, w, h, hasTopWarning) {
+  if (!drawCtx || !twinShowHotspots || !pins || !pins.length) return;
+  drawCtx.save();
+  drawCtx.font = 'bold 10px "JetBrains Mono", monospace';
+  const minTopY = hasTopWarning ? 46 : 14;
+  const maxBotY = h - 32;
+  const boxes = [];
+
+  for (let i = 0; i < pins.length && boxes.length < 3; i++) {
+    const p = pins[i];
+    if (!Number.isFinite(p.px) || !Number.isFinite(p.py)) continue;
+    if (p.px < 16 || p.px > w - 16 || p.py < 18 || p.py > h - 18) continue;
+
+    const textW = drawCtx.measureText(p.text).width;
+    const bw = Math.round(textW + 14);
+    const bh = 20;
+    const placeLeft = p.px > w * 0.62;
+    const lx = placeLeft ? Math.max(10 + bw, p.px - 22) : Math.min(w - 10 - bw, p.px + 22);
+    const bx = placeLeft ? (lx - bw) : lx;
+    const by = Math.max(minTopY, Math.min(maxBotY - bh, Math.round(p.py - 22)));
+    boxes.push({
+      px: p.px,
+      py: p.py,
+      lx: lx,
+      bx: Math.max(10, Math.min(w - bw - 10, bx)),
+      by: by,
+      bw: bw,
+      bh: bh,
+      text: p.text,
+      accent: p.accent || '#38bdf8'
+    });
+  }
+
+  // Vertical collision avoidance + triad corner clearance
+  boxes.sort((a, b) => a.by - b.by);
+  for (let i = 0; i < boxes.length; i++) {
+    const cur = boxes[i];
+    if (cur.bx < 92 && cur.by + cur.bh > h - 78) {
+      cur.by = Math.max(minTopY, h - 82 - cur.bh);
+    }
+    for (let j = 0; j < i; j++) {
+      const prev = boxes[j];
+      const xOverlap = cur.bx < prev.bx + prev.bw + 6 && cur.bx + cur.bw + 6 > prev.bx;
+      if (xOverlap && Math.abs(cur.by - prev.by) < 24) {
+        cur.by = Math.min(maxBotY - cur.bh, prev.by + 24);
+      }
+    }
+  }
+
+  for (let i = 0; i < boxes.length; i++) {
+    const b = boxes[i];
+    const lineEndX = b.px > b.bx + b.bw * 0.5 ? b.bx + b.bw : b.bx;
+    const lineEndY = b.by + b.bh * 0.5;
+
+    drawCtx.strokeStyle = 'rgba(226, 232, 240, 0.85)';
+    drawCtx.lineWidth = 1.2;
+    drawCtx.beginPath();
+    drawCtx.moveTo(b.px, b.py);
+    drawCtx.lineTo(lineEndX, lineEndY);
+    drawCtx.stroke();
+
+    drawCtx.fillStyle = b.accent;
+    drawCtx.strokeStyle = '#ffffff';
+    drawCtx.lineWidth = 1.5;
+    drawCtx.beginPath();
+    drawCtx.arc(b.px, b.py, 4, 0, Math.PI * 2);
+    drawCtx.fill();
+    drawCtx.stroke();
+
+    drawCtx.fillStyle = 'rgba(7, 11, 20, 0.92)';
+    drawCtx.strokeStyle = b.accent;
+    drawCtx.lineWidth = 1;
+    drawCtx.beginPath();
+    if (drawCtx.roundRect) {
+      drawCtx.roundRect(b.bx, b.by, b.bw, b.bh, 5);
+    } else {
+      drawCtx.rect(b.bx, b.by, b.bw, b.bh);
+    }
+    drawCtx.fill();
+    drawCtx.stroke();
+
+    drawCtx.fillStyle = '#f8fafc';
+    drawCtx.textAlign = 'left';
+    drawCtx.textBaseline = 'middle';
+    drawCtx.fillText(b.text, b.bx + 7, b.by + b.bh * 0.5 + 0.5);
+  }
+  drawCtx.restore();
+}
+
+function _formatTwinCoolingRateShort(val) {
+  return val < 1000 ? Number(val).toFixed(1) : Number(val).toExponential(1);
+}
+
+function _drawTwinSplitOverlay(drawCtx, w, h, xSplit, pairState, hasTopWarning) {
+  if (!drawCtx || !twinSplitMode || !pairState) return;
+  drawCtx.save();
+
+  // Glowing vertical split curtain divider
+  drawCtx.shadowColor = 'rgba(56, 189, 248, 0.65)';
+  drawCtx.shadowBlur = 10;
+  drawCtx.strokeStyle = '#e0f2fe';
+  drawCtx.lineWidth = 2;
+  drawCtx.beginPath();
+  drawCtx.moveTo(xSplit, 0);
+  drawCtx.lineTo(xSplit, h);
+  drawCtx.stroke();
+  drawCtx.shadowBlur = 0;
+
+  // Circular drag grip handle at vertical midpoint
+  const cy = Math.round(h * 0.5);
+  drawCtx.fillStyle = 'rgba(7, 11, 20, 0.94)';
+  drawCtx.strokeStyle = '#38bdf8';
+  drawCtx.lineWidth = 1.6;
+  drawCtx.beginPath();
+  drawCtx.arc(xSplit, cy, 14, 0, Math.PI * 2);
+  drawCtx.fill();
+  drawCtx.stroke();
+
+  drawCtx.fillStyle = '#f8fafc';
+  drawCtx.font = 'bold 10px "Inter", sans-serif';
+  drawCtx.textAlign = 'center';
+  drawCtx.textBaseline = 'middle';
+  drawCtx.fillText('◀ ▶', xSplit, cy + 0.5);
+
+  const curCool = window.currentTwinCooling || 480000;
+  let leftStat = '';
+  let rightStat = '';
+  if (twinMode === 'residual-stress') {
+    leftStat = `+${pairState.leftField.peakSurfaceStressMpa} MPa`;
+    rightStat = `+${pairState.rightField.peakSurfaceStressMpa} MPa`;
+  } else if (twinMode === 'cooling-rate') {
+    const cr = _formatTwinCoolingRateShort(curCool);
+    leftStat = `${cr} K/s`;
+    rightStat = `${cr} K/s`;
+  } else {
+    leftStat = `${pairState.leftAlphaPrime.toFixed(1)}% α'`;
+    rightStat = `${pairState.rightAlphaPrime.toFixed(1)}% α'`;
+  }
+
+  const leftTxt = `${pairState.leftLabel}: ${leftStat}`;
+  const rightTxt = `${pairState.rightLabel}: ${rightStat}`;
+  drawCtx.font = 'bold 10.5px "JetBrains Mono", monospace';
+  const topY = hasTopWarning ? 40 : 12;
+
+  const lw = Math.round(drawCtx.measureText(leftTxt).width + 18);
+  drawCtx.fillStyle = 'rgba(7, 11, 20, 0.90)';
+  drawCtx.strokeStyle = 'rgba(244, 63, 94, 0.75)';
+  drawCtx.lineWidth = 1;
+  drawCtx.beginPath();
+  if (drawCtx.roundRect) {
+    drawCtx.roundRect(14, topY, lw, 22, 6);
+  } else {
+    drawCtx.rect(14, topY, lw, 22);
+  }
+  drawCtx.fill();
+  drawCtx.stroke();
+  drawCtx.fillStyle = '#fecaca';
+  drawCtx.textAlign = 'left';
+  drawCtx.textBaseline = 'middle';
+  drawCtx.fillText(leftTxt, 23, topY + 11.5);
+
+  const rw = Math.round(drawCtx.measureText(rightTxt).width + 18);
+  const rx = Math.max(14, w - rw - 14);
+  drawCtx.fillStyle = 'rgba(7, 11, 20, 0.90)';
+  drawCtx.strokeStyle = 'rgba(52, 211, 153, 0.78)';
+  drawCtx.beginPath();
+  if (drawCtx.roundRect) {
+    drawCtx.roundRect(rx, topY, rw, 22, 6);
+  } else {
+    drawCtx.rect(rx, topY, rw, 22);
+  }
+  drawCtx.fill();
+  drawCtx.stroke();
+  drawCtx.fillStyle = '#a7f3d0';
+  drawCtx.fillText(rightTxt, rx + 9, topY + 11.5);
+  drawCtx.restore();
+}
+
+function exportTwinPngSnapshot() {
+  if (!canvas || !ctx) return;
+  const w = canvas.width || 760;
+  const h = canvas.height || 420;
+  const off = document.createElement('canvas');
+  off.width = w * 2;
+  off.height = h * 2;
+  const octx = off.getContext('2d');
+  if (!octx) return;
+
+  const prevCtx = ctx;
+  const prevAnimId = animFrameId;
+  const sf = window.currentTwinStressField || {};
+  const procSlug = String(sf.processId || 'lpbf').replace(/[^a-z0-9_-]/gi, '').toLowerCase() || 'lpbf';
+  const modeSlug = String(twinMode || 'residual-stress').replace(/[^a-z0-9_-]/gi, '').toLowerCase() || 'field';
+
+  try {
+    const grad = octx.createRadialGradient(w * 0.9, h * 0.9, 20, w, h, w * 1.4);
+    grad.addColorStop(0, '#111827');
+    grad.addColorStop(0.65, '#090e18');
+    grad.addColorStop(1, '#050811');
+    octx.fillStyle = grad;
+    octx.fillRect(0, 0, off.width, off.height);
+
+    octx.save();
+    octx.scale(2, 2);
+    _twinPreserveBackdrop = true;
+    ctx = octx;
+    renderTwin();
+    octx.restore();
+
+    // Crisp metadata footer stamp on exported report image
+    const stampText = String(sf.contextHudSummary || `Ti-6Al-4V • ${procSlug.toUpperCase()} • Non-FEA Screening`).slice(0, 110);
+    octx.fillStyle = 'rgba(7, 11, 20, 0.86)';
+    octx.fillRect(0, off.height - 34, off.width, 34);
+    octx.fillStyle = '#cbd5e1';
+    octx.font = 'bold 18px "JetBrains Mono", monospace';
+    octx.textAlign = 'right';
+    octx.textBaseline = 'middle';
+    octx.fillText(stampText, off.width - 24, off.height - 17);
+  } finally {
+    _twinPreserveBackdrop = false;
+    ctx = prevCtx;
+    animFrameId = prevAnimId;
+  }
+
+  const dataUrl = off.toDataURL('image/png');
+  const link = document.createElement('a');
+  link.href = dataUrl;
+  link.download = `matsci-3d-twin-${procSlug}-${modeSlug}.png`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+window.exportTwinPngSnapshot = exportTwinPngSnapshot;
+
+function _paintCadColorBufferClipped(colorCache, count, drawWire, isDecimatedProxy, xClipMin, xClipMax) {
+  const orderView = _twinOrder.subarray(0, count);
+  const frontRgb = colorCache.frontRgb;
+  const interiorRgb = colorCache.interiorRgb;
+  const edgeWidth = isDecimatedProxy ? 1.35 : 0.75;
+
+  for (let i = 0; i < count; i++) {
+    const k = orderView[i];
+    const x0 = _twinP0x[k], x1 = _twinP1x[k], x2 = _twinP2x[k];
+    if (xClipMin !== null) {
+      const triMinX = Math.min(x0, x1, x2);
+      const triMaxX = Math.max(x0, x1, x2);
+      if (triMaxX < xClipMin || triMinX > xClipMax) continue;
+    }
+
+    const flags = _twinFlags[k];
+    const light = _twinLight[k];
+    const colOff = _twinOrigIdx[k] * 3;
+    const rgbArr = (flags & 2) ? interiorRgb : frontRgb;
+    const cr = Math.min(255, Math.round(rgbArr[colOff] * light));
+    const cg = Math.min(255, Math.round(rgbArr[colOff + 1] * light));
+    const cb = Math.min(255, Math.round(rgbArr[colOff + 2] * light));
+
+    ctx.beginPath();
+    ctx.moveTo(x0, _twinP0y[k]);
+    ctx.lineTo(x1, _twinP1y[k]);
+    ctx.lineTo(x2, _twinP2y[k]);
+    ctx.closePath();
+
+    if (drawWire) {
+      if (flags & 1) {
+        ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.22)`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.92)`;
+        ctx.lineWidth = 0.95;
+      } else {
+        ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.16)`;
+        ctx.lineWidth = 0.6;
+      }
+      ctx.stroke();
+    } else {
+      const rgbStr = `rgb(${cr}, ${cg}, ${cb})`;
+      ctx.fillStyle = rgbStr;
+      ctx.fill();
+      ctx.strokeStyle = rgbStr;
+      ctx.lineWidth = edgeWidth;
+      ctx.stroke();
+    }
+  }
 }
 
 function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
@@ -15421,6 +16183,7 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
   const isDecimatedProxy = typeof isCadDecimatedProxy === 'function' && isCadDecimatedProxy(mesh);
   const drawWire = wireframe && !isDecimatedProxy;
   const geoRep = typeof cadGeometryReport !== 'undefined' ? cadGeometryReport : null;
+  const simRep = typeof cadSimReport !== 'undefined' ? cadSimReport : null;
 
   let windingSign = (geoRep && geoRep.windingSign) ? geoRep.windingSign : 1;
   if (!geoRep && !isDecimatedProxy) {
@@ -15438,17 +16201,21 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
 
   const isWatertight = Boolean(!isDecimatedProxy && geoRep && geoRep.isWatertight);
   const doubleSided = drawWire || !isWatertight || cutaway || sliceDepth < 99.5;
-  const triBudget = nTri <= 60000 ? nTri : ((isDragging || autoOrbit) ? 45000 : 60000);
+  const triBudget = nTri <= 60000 ? nTri : ((isDragging || autoOrbit || twinIsDraggingSplit) ? 45000 : 60000);
   const drawCount = Math.min(nTri, triBudget);
   const stepFrac = nTri / Math.max(1, drawCount);
 
-  const colorCache = _getTwinCadColorCache(mesh, sf, aPrimeVal);
+  const pairState = twinSplitMode ? window.twinSplitPairState : null;
+  const colorCache = (!pairState) ? _getTwinCadColorCache(mesh, sf, aPrimeVal) : null;
+  const colorCacheLeft = pairState ? _getTwinCadColorCache(mesh, pairState.leftField, pairState.leftAlphaPrime) : null;
+  const colorCacheRight = pairState ? _getTwinCadColorCache(mesh, pairState.rightField, pairState.rightAlphaPrime) : null;
   _ensureTwinTriBuffers(drawCount);
 
   const cosY = Math.cos(yaw), sinY = Math.sin(yaw);
   const cosP = Math.cos(pitch), sinP = Math.sin(pitch);
   const halfW = w * 0.5, halfH = h * 0.5;
-  const fovScale = 420.0 * scale;
+  const viewScale = Math.min(1.0, Math.max(0.55, w / 520.0));
+  const fovScale = 420.0 * scale * viewScale;
 
   // Build-plate footprint frame at Z = min[2]
   const yBaseWorld = (bb.min[2] - cz) * normScale;
@@ -15474,6 +16241,10 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
   ctx.stroke();
   ctx.restore();
 
+  let bestPeakScore = -1, bestPeakPin = null;
+  let bestWeakScore = -1, bestWeakPin = null;
+  let bestThermScore = -1, bestThermPin = null;
+
   let count = 0;
   for (let idx = 0; idx < drawCount; idx++) {
     const t = drawCount === nTri ? idx : Math.floor(idx * stepFrac);
@@ -15490,8 +16261,8 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
 
     let warpDy = 0;
     if (warpageAmp > 0) {
-      const rHorizFrac = Math.min(1.0, Math.hypot(cxTri - cx, cyTri - cy) / rHorizMax);
-      warpDy = warpageAmp * (rHorizFrac * rHorizFrac - 0.35);
+      const rHorizFracWarp = Math.min(1.0, Math.hypot(cxTri - cx, cyTri - cy) / rHorizMax);
+      warpDy = warpageAmp * (rHorizFracWarp * rHorizFracWarp - 0.35);
     }
 
     // Inline 3D view-space transform (0 object allocations)
@@ -15530,62 +16301,79 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
     const diffuse = doubleSided ? Math.abs(rawDot) : Math.max(0.08, Math.min(1.0, rawDot));
     const light = isInteriorFace ? (0.38 + 0.42 * diffuse) : (0.46 + 0.54 * Math.max(0.08, diffuse));
 
-    _twinP0x[count] = halfW + p0rx * f0; _twinP0y[count] = halfH - p0ry * f0;
-    _twinP1x[count] = halfW + p1rx * f1; _twinP1y[count] = halfH - p1ry * f1;
-    _twinP2x[count] = halfW + p2rx * f2; _twinP2y[count] = halfH - p2ry * f2;
+    const sx0 = halfW + p0rx * f0, sy0 = halfH - p0ry * f0;
+    const sx1 = halfW + p1rx * f1, sy1 = halfH - p1ry * f1;
+    const sx2 = halfW + p2rx * f2, sy2 = halfH - p2ry * f2;
+    _twinP0x[count] = sx0; _twinP0y[count] = sy0;
+    _twinP1x[count] = sx1; _twinP1y[count] = sy1;
+    _twinP2x[count] = sx2; _twinP2y[count] = sy2;
     _twinDepth[count] = crz;
     _twinLight[count] = light;
     _twinFlags[count] = (facingDot >= 0 ? 1 : 0) | (isInteriorFace ? 2 : 0);
     _twinOrigIdx[count] = t;
     _twinOrder[count] = count;
+
+    if (twinShowHotspots && facingDot >= 0) {
+      const pxMid = (sx0 + sx1 + sx2) * 0.33333333;
+      const pyMid = (sy0 + sy1 + sy2) * 0.33333333;
+      if (pxMid >= 20 && pxMid <= w - 20 && pyMid >= 24 && pyMid <= h - 24) {
+        const zNormTri = Math.max(0, Math.min(1, (czTri - bb.min[2]) / sz));
+        const rFracTri = Math.min(1.0, Math.hypot(cxTri - cx, cyTri - cy) / rHorizMax);
+        const sVal = (simRep && simRep.perStress && t < simRep.perStress.length)
+          ? simRep.perStress[t]
+          : (0.45 * rFracTri + 0.35 * (1.0 - zNormTri));
+        const thVal = (simRep && simRep.perThermal && t < simRep.perThermal.length)
+          ? simRep.perThermal[t]
+          : (0.40 * zNormTri + 0.30 * rFracTri);
+        const isOh = (geoRep && geoRep.perOverhang && t < geoRep.perOverhang.length) ? geoRep.perOverhang[t] : 0;
+        const thickMm = (geoRep && geoRep.perThick && t < geoRep.perThick.length && geoRep.perThick[t] > 0) ? geoRep.perThick[t] : 4.0;
+        const weakScore = (isOh ? 0.55 : 0) + (thickMm < 2.0 ? 0.45 : 0) + zNormTri * 0.25 + (1 - Math.abs(pxMid - halfW) / halfW) * 0.1;
+        const zBuildMm = Math.max(0, czTri - bb.min[2]);
+
+        if (sVal > bestPeakScore) {
+          bestPeakScore = sVal;
+          bestPeakPin = { px: pxMid, py: pyMid, zMm: zBuildMm };
+        }
+        if (weakScore > bestWeakScore) {
+          bestWeakScore = weakScore;
+          bestWeakPin = { px: pxMid, py: pyMid, zMm: zBuildMm, isOh: isOh };
+        }
+        if (thVal > bestThermScore) {
+          bestThermScore = thVal;
+          bestThermPin = { px: pxMid, py: pyMid, zMm: zBuildMm };
+        }
+      }
+    }
     count++;
   }
 
+  // Single painter depth sort (zero duplicate projection or sorting in Split Mode)
   const orderView = _twinOrder.subarray(0, count);
   orderView.sort((a, b) => _twinDepth[b] - _twinDepth[a]);
 
-  const frontRgb = colorCache.frontRgb;
-  const interiorRgb = colorCache.interiorRgb;
-  ctx.save();
-  ctx.lineJoin = 'round';
-  const edgeWidth = isDecimatedProxy ? 1.35 : 0.75;
-  for (let i = 0; i < count; i++) {
-    const k = orderView[i];
-    const flags = _twinFlags[k];
-    const light = _twinLight[k];
-    const colOff = _twinOrigIdx[k] * 3;
-    const rgbArr = (flags & 2) ? interiorRgb : frontRgb;
-    const cr = Math.min(255, Math.round(rgbArr[colOff] * light));
-    const cg = Math.min(255, Math.round(rgbArr[colOff + 1] * light));
-    const cb = Math.min(255, Math.round(rgbArr[colOff + 2] * light));
-
+  const xSplit = Math.round(twinSplitRatio * w);
+  if (pairState && colorCacheLeft && colorCacheRight) {
+    ctx.save();
+    ctx.lineJoin = 'round';
     ctx.beginPath();
-    ctx.moveTo(_twinP0x[k], _twinP0y[k]);
-    ctx.lineTo(_twinP1x[k], _twinP1y[k]);
-    ctx.lineTo(_twinP2x[k], _twinP2y[k]);
-    ctx.closePath();
+    ctx.rect(0, 0, xSplit, h);
+    ctx.clip();
+    _paintCadColorBufferClipped(colorCacheLeft, count, drawWire, isDecimatedProxy, 0, xSplit);
+    ctx.restore();
 
-    if (drawWire) {
-      if (flags & 1) {
-        ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.22)`;
-        ctx.fill();
-        ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.92)`;
-        ctx.lineWidth = 0.95;
-      } else {
-        ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.16)`;
-        ctx.lineWidth = 0.6;
-      }
-      ctx.stroke();
-    } else {
-      const rgbStr = `rgb(${cr}, ${cg}, ${cb})`;
-      ctx.fillStyle = rgbStr;
-      ctx.fill();
-      ctx.strokeStyle = rgbStr;
-      ctx.lineWidth = edgeWidth;
-      ctx.stroke();
-    }
+    ctx.save();
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.rect(xSplit, 0, w - xSplit, h);
+    ctx.clip();
+    _paintCadColorBufferClipped(colorCacheRight, count, drawWire, isDecimatedProxy, xSplit, w);
+    ctx.restore();
+  } else {
+    ctx.save();
+    ctx.lineJoin = 'round';
+    _paintCadColorBufferClipped(colorCache, count, drawWire, isDecimatedProxy, null, null);
+    ctx.restore();
   }
-  ctx.restore();
 
   if (cutaway || sliceDepth < 98) {
     const zFocusWorld = sliceDepth < 98 ? ((zCutMax - cz) * normScale) : 0;
@@ -15621,7 +16409,8 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
     ctx.fillText(tagText, tagX, tagY);
   }
 
-  if (warpageAmp > 0) {
+  const hasWarpage = warpageAmp > 0;
+  if (hasWarpage) {
     const warnTxt = '⚠️ Thermal Warpage / Corner Lift Active (HI > 600 J/mm)';
     ctx.save();
     ctx.font = 'bold 10.5px "JetBrains Mono", monospace';
@@ -15640,6 +16429,47 @@ function renderTwinCadMesh(w, h, sf, aPrimeVal, warpageAmp, nlx, nly, nlz) {
     ctx.fillText(warnTxt, 22, 27);
     ctx.restore();
   }
+
+  if (twinShowHotspots) {
+    const cadPins = [];
+    const curCoolStr = _formatTwinCoolingRateShort(window.currentTwinCooling || 480000);
+    if (bestPeakPin) {
+      const activePeakStress = pairState
+        ? (bestPeakPin.px < xSplit ? pairState.leftField.peakSurfaceStressMpa : pairState.rightField.peakSurfaceStressMpa)
+        : sf.peakSurfaceStressMpa;
+      const activeAlphaPrime = pairState
+        ? (bestPeakPin.px < xSplit ? pairState.leftAlphaPrime : pairState.rightAlphaPrime)
+        : Number(aPrimeVal || 0);
+      const peakLbl = twinMode === 'cooling-rate'
+        ? `Peak Quench: ${curCoolStr} K/s`
+        : (twinMode === 'phase-fraction'
+          ? `Surface α': ${activeAlphaPrime.toFixed(1)}%`
+          : `Peak Tensile: +${activePeakStress} MPa`);
+      cadPins.push({ px: bestPeakPin.px, py: bestPeakPin.py, text: peakLbl, accent: '#f43f5e' });
+    }
+    if (bestWeakPin) {
+      cadPins.push({
+        px: bestWeakPin.px,
+        py: bestWeakPin.py,
+        text: bestWeakPin.isOh ? `Overhang Layer z=${bestWeakPin.zMm.toFixed(1)}mm` : `Weakest Layer z=${bestWeakPin.zMm.toFixed(1)}mm`,
+        accent: '#fbbf24'
+      });
+    }
+    if (bestThermPin && (!bestPeakPin || Math.hypot(bestThermPin.px - bestPeakPin.px, bestThermPin.py - bestPeakPin.py) > 22)) {
+      cadPins.push({
+        px: bestThermPin.px,
+        py: bestThermPin.py,
+        text: `Thermal Grad z=${bestThermPin.zMm.toFixed(1)}mm`,
+        accent: '#38bdf8'
+      });
+    }
+    drawTwinHotspotPins(ctx, cadPins, w, h, hasWarpage);
+  }
+
+  if (pairState) {
+    _drawTwinSplitOverlay(ctx, w, h, xSplit, pairState, hasWarpage);
+  }
+  drawTwinOrientationTriad(ctx, w, h);
 }
 
 function renderTwin() {
@@ -15651,11 +16481,29 @@ function renderTwin() {
   if (viewTwin && !viewTwin.classList.contains('active')) {
     return;
   }
+
+  if (_twinCameraPresetAnim) {
+    const now = typeof performance !== 'undefined' ? performance.now() : _twinCameraPresetAnim.startTime + _twinCameraPresetAnim.durationMs;
+    const rawT = (now - _twinCameraPresetAnim.startTime) / Math.max(1, _twinCameraPresetAnim.durationMs);
+    const p = Math.max(0, Math.min(1, rawT));
+    const ease = 1 - Math.pow(1 - p, 3);
+    yaw = _twinCameraPresetAnim.startYaw + _twinCameraPresetAnim.deltaYaw * ease;
+    pitch = _twinCameraPresetAnim.startPitch + (_twinCameraPresetAnim.targetPitch - _twinCameraPresetAnim.startPitch) * ease;
+    if (p >= 1) {
+      _twinCameraPresetAnim = null;
+    }
+  }
+
+  if (!_twinPreserveBackdrop) {
+    _syncTwinCanvasSize();
+  }
   const w = canvas.width;
   const h = canvas.height;
-  ctx.clearRect(0, 0, w, h);
+  if (!_twinPreserveBackdrop) {
+    ctx.clearRect(0, 0, w, h);
+  }
 
-  if (autoOrbit && !isDragging) {
+  if (autoOrbit && !isDragging && !_twinCameraPresetAnim) {
     yaw += 0.007;
   }
 
@@ -15685,7 +16533,7 @@ function renderTwin() {
     } catch (err) {
       console.error('Error in renderTwinCadMesh:', err);
     }
-    if (autoOrbit || isDragging) requestTwinFrame();
+    if (autoOrbit || isDragging || _twinCameraPresetAnim) requestTwinFrame();
     return;
   }
 
@@ -15703,6 +16551,7 @@ function renderTwin() {
   const zMinNorm = dogboneMesh.outerRings[0][0].zNorm;
   const zMax = dogboneMesh.outerRings[maxSlice][0].z;
   const zMaxNorm = dogboneMesh.outerRings[maxSlice][0].zNorm;
+  const pairState = twinSplitMode ? window.twinSplitPairState : null;
 
   try {
     // 1. Project outer shell vertices for i = 0..maxSlice
@@ -15720,7 +16569,7 @@ function renderTwin() {
     // 2. Collect all solid quads into a single painter-sorted draw list
     const quads = [];
 
-    const pushQuad = (p0, p1, p2, p3, uVal, zNormAvg, kind) => {
+    const pushQuad = (p0, p1, p2, p3, rFracVal, zNormAvg, angleVal, kind) => {
       const v1x = p1.rx - p0.rx, v1y = p1.ry - p0.ry, v1z = p1.rz - p0.rz;
       const v2x = p3.rx - p0.rx, v2y = p3.ry - p0.ry, v2z = p3.rz - p0.rz;
       let nx = v1y * v2z - v1z * v2y;
@@ -15738,7 +16587,11 @@ function renderTwin() {
       const dot = Math.max(0.08, Math.min(1.0, -(nx * nlx + ny * nly + nz * nlz)));
       const light = kind === 'cut' ? (0.62 + 0.38 * dot) : (0.48 + 0.52 * dot);
 
-      quads.push({ p0, p1, p2, p3, uVal, light, avgZ, nz, zNormAvg, kind });
+      const uVal = pairState ? 0 : getHeatmapNormalizedU(rFracVal, zNormAvg, angleVal, sf, aPrimeVal);
+      const uLeft = pairState ? getHeatmapNormalizedU(rFracVal, zNormAvg, angleVal, pairState.leftField, pairState.leftAlphaPrime) : uVal;
+      const uRight = pairState ? getHeatmapNormalizedU(rFracVal, zNormAvg, angleVal, pairState.rightField, pairState.rightAlphaPrime) : uVal;
+
+      quads.push({ p0, p1, p2, p3, uVal, uLeft, uRight, light, avgZ, nz, zNormAvg, kind });
     };
 
     // 2A. Outer ASTM E8 Shell Quads (outward normal (+cosθ, +sinθ, 0))
@@ -15751,8 +16604,7 @@ function renderTwin() {
         const p2 = projOuter[i + 1][nextJ];
         const p3 = projOuter[i + 1][j];
         const angle = (j / angSegs) * Math.PI * 2;
-        const uVal = getHeatmapNormalizedU(1.0, zNormAvg, angle, sf, aPrimeVal);
-        pushQuad(p0, p1, p2, p3, uVal, zNormAvg, 'outer');
+        pushQuad(p0, p1, p2, p3, 1.0, zNormAvg, angle, 'outer');
       }
     }
 
@@ -15791,8 +16643,7 @@ function renderTwin() {
         const p2 = botData.ringsByK[k + 1][nextJ];
         const p3 = botData.ringsByK[k + 1][j];
         const angle = (j / angSegs) * Math.PI * 2;
-        const uVal = getHeatmapNormalizedU(rfMid, zMinNorm, angle, sf, aPrimeVal);
-        pushQuad(p0, p1, p2, p3, uVal, zMinNorm, 'cap');
+        pushQuad(p0, p1, p2, p3, rfMid, zMinNorm, angle, 'cap');
       }
     }
 
@@ -15807,8 +16658,7 @@ function renderTwin() {
         const p2 = topData.ringsByK[k + 1][nextJ];
         const p3 = k === 0 ? topData.pCenter : topData.ringsByK[k][nextJ];
         const angle = (j / angSegs) * Math.PI * 2;
-        const uVal = getHeatmapNormalizedU(rfMid, zMaxNorm, angle, sf, aPrimeVal);
-        pushQuad(p0, p1, p2, p3, uVal, zMaxNorm, 'cap');
+        pushQuad(p0, p1, p2, p3, rfMid, zMaxNorm, angle, 'cap');
       }
     }
 
@@ -15834,54 +16684,77 @@ function renderTwin() {
         const zNormAvg = (dogboneMesh.outerRings[i][0].zNorm + dogboneMesh.outerRings[i + 1][0].zNorm) * 0.5;
         for (let k = 0; k < radSegs; k++) {
           const rfMid = (k + 0.5) / radSegs;
-          const uCutA = getHeatmapNormalizedU(rfMid, zNormAvg, Math.PI * 0.5, sf, aPrimeVal);
-          const uCutB = getHeatmapNormalizedU(rfMid, zNormAvg, 0, sf, aPrimeVal);
           // Wall A (outward normal +x): (i,k) -> (i,k+1) -> (i+1,k+1) -> (i+1,k)
-          pushQuad(projCutA[i][k], projCutA[i][k + 1], projCutA[i + 1][k + 1], projCutA[i + 1][k], uCutA, zNormAvg, 'cut');
+          pushQuad(projCutA[i][k], projCutA[i][k + 1], projCutA[i + 1][k + 1], projCutA[i + 1][k], rfMid, zNormAvg, Math.PI * 0.5, 'cut');
           // Wall B (outward normal +y): (i,k) -> (i+1,k) -> (i+1,k+1) -> (i,k+1)
-          pushQuad(projCutB[i][k], projCutB[i + 1][k], projCutB[i + 1][k + 1], projCutB[i][k + 1], uCutB, zNormAvg, 'cut');
+          pushQuad(projCutB[i][k], projCutB[i + 1][k], projCutB[i + 1][k + 1], projCutB[i][k + 1], rfMid, zNormAvg, 0, 'cut');
         }
       }
     }
 
-    // Sort back-to-front by centroid camera depth
+    // Single back-to-front depth sort (shared across both Split Curtain passes)
     quads.sort((a, b) => b.avgZ - a.avgZ);
 
-    // 3. Rasterize sorted quads
-    for (let qIdx = 0; qIdx < quads.length; qIdx++) {
-      const q = quads[qIdx];
-      const baseColor = getTwinColormapColor(q.uVal);
-      const cr = Math.min(255, Math.round(baseColor.r * q.light));
-      const cg = Math.min(255, Math.round(baseColor.g * q.light));
-      const cb = Math.min(255, Math.round(baseColor.b * q.light));
-
-      ctx.beginPath();
-      ctx.moveTo(q.p0.px, q.p0.py);
-      ctx.lineTo(q.p1.px, q.p1.py);
-      ctx.lineTo(q.p2.px, q.p2.py);
-      ctx.lineTo(q.p3.px, q.p3.py);
-      ctx.closePath();
-
-      if (wireframe) {
-        const isFront = q.nz <= 0.04;
-        if (isFront) {
-          ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.22)`;
-          ctx.fill();
-          ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.92)`;
-          ctx.lineWidth = 1.0;
-        } else {
-          ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.16)`;
-          ctx.lineWidth = 0.65;
+    const paintDogboneQuads = (useFieldKey, xClipMin, xClipMax) => {
+      for (let qIdx = 0; qIdx < quads.length; qIdx++) {
+        const q = quads[qIdx];
+        if (xClipMin !== null) {
+          const qMinX = Math.min(q.p0.px, q.p1.px, q.p2.px, q.p3.px);
+          const qMaxX = Math.max(q.p0.px, q.p1.px, q.p2.px, q.p3.px);
+          if (qMaxX < xClipMin || qMinX > xClipMax) continue;
         }
-        ctx.stroke();
-      } else {
-        ctx.fillStyle = `rgb(${cr}, ${cg}, ${cb})`;
-        ctx.fill();
-        // Matching-color hairline prevents subpixel anti-aliasing gaps with zero dark grid lines
-        ctx.strokeStyle = `rgb(${cr}, ${cg}, ${cb})`;
-        ctx.lineWidth = 0.55;
-        ctx.stroke();
+        const uActive = useFieldKey === 'left' ? q.uLeft : (useFieldKey === 'right' ? q.uRight : q.uVal);
+        const baseColor = getTwinColormapColor(uActive);
+        const cr = Math.min(255, Math.round(baseColor.r * q.light));
+        const cg = Math.min(255, Math.round(baseColor.g * q.light));
+        const cb = Math.min(255, Math.round(baseColor.b * q.light));
+
+        ctx.beginPath();
+        ctx.moveTo(q.p0.px, q.p0.py);
+        ctx.lineTo(q.p1.px, q.p1.py);
+        ctx.lineTo(q.p2.px, q.p2.py);
+        ctx.lineTo(q.p3.px, q.p3.py);
+        ctx.closePath();
+
+        if (wireframe) {
+          const isFront = q.nz <= 0.04;
+          if (isFront) {
+            ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.22)`;
+            ctx.fill();
+            ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.92)`;
+            ctx.lineWidth = 1.0;
+          } else {
+            ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.16)`;
+            ctx.lineWidth = 0.65;
+          }
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = `rgb(${cr}, ${cg}, ${cb})`;
+          ctx.fill();
+          ctx.strokeStyle = `rgb(${cr}, ${cg}, ${cb})`;
+          ctx.lineWidth = 0.55;
+          ctx.stroke();
+        }
       }
+    };
+
+    const xSplit = Math.round(twinSplitRatio * w);
+    if (pairState) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, xSplit, h);
+      ctx.clip();
+      paintDogboneQuads('left', 0, xSplit);
+      ctx.restore();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(xSplit, 0, w - xSplit, h);
+      ctx.clip();
+      paintDogboneQuads('right', xSplit, w);
+      ctx.restore();
+    } else {
+      paintDogboneQuads('single', null, null);
     }
 
     // 4. Centerline & Slice/Cutaway Callouts
@@ -15919,7 +16792,8 @@ function renderTwin() {
     }
 
     // 5. Subtle Thermal Warpage / Distortion Highlight in WAAM Overheating (HI > 600 J/mm)
-    if (warpageAmp > 0) {
+    const hasWarpage = warpageAmp > 0;
+    if (hasWarpage) {
       const pRefA = project(0, 0, zMin, w, h);
       const pRefB = project(0, 0, zMax, w, h);
       ctx.save();
@@ -15949,11 +16823,99 @@ function renderTwin() {
       ctx.fillText(warnTxt, 22, 27);
       ctx.restore();
     }
+
+    // 6. 3D Hotspot Callout Pins (skipped when sliced past their z-station)
+    if (twinShowHotspots) {
+      const dogPins = [];
+      const curCoolStr = _formatTwinCoolingRateShort(window.currentTwinCooling || 480000);
+      const pickVisibleSliceIndex = (targetZNorm) => {
+        if (targetZNorm > zMaxNorm) return null;
+        let bestIdx = 0;
+        let bestDiff = Infinity;
+        for (let i = 0; i <= maxSlice; i++) {
+          const d = Math.abs(dogboneMesh.outerRings[i][0].zNorm - targetZNorm);
+          if (d < bestDiff) {
+            bestDiff = d;
+            bestIdx = i;
+          }
+        }
+        return bestIdx;
+      };
+      const pickVisibleSurfaceAngleIdx = (sliceIdx) => {
+        let bestJ = startJ;
+        let minDepth = Infinity;
+        for (let j = startJ; j < angSegs; j++) {
+          const p = projOuter[sliceIdx][j];
+          if (p.zDepth < minDepth) {
+            minDepth = p.zDepth;
+            bestJ = j;
+          }
+        }
+        return bestJ;
+      };
+
+      const filletTargetZ = zMaxNorm >= 0.46 ? 0.48 : (zMaxNorm >= -0.48 ? -0.48 : null);
+      if (filletTargetZ !== null) {
+        const sIdx = pickVisibleSliceIndex(filletTargetZ);
+        if (sIdx !== null) {
+          const jBest = pickVisibleSurfaceAngleIdx(sIdx);
+          const pFillet = projOuter[sIdx][jBest];
+          const activeFilletStress = pairState
+            ? (pFillet.px < xSplit ? pairState.leftField.peakSurfaceStressMpa : pairState.rightField.peakSurfaceStressMpa)
+            : sf.peakSurfaceStressMpa;
+          const activeFilletAlpha = pairState
+            ? (pFillet.px < xSplit ? pairState.leftAlphaPrime : pairState.rightAlphaPrime)
+            : Number(aPrimeVal || 0);
+          const filletLabel = twinMode === 'cooling-rate'
+            ? `Fillet Quench: ${curCoolStr} K/s`
+            : (twinMode === 'phase-fraction'
+              ? `Surface α': ${activeFilletAlpha.toFixed(1)}%`
+              : `Peak Fillet: +${activeFilletStress} MPa`);
+          dogPins.push({ px: pFillet.px, py: pFillet.py, text: filletLabel, accent: '#f43f5e' });
+        }
+      }
+
+      // Weakest / active slice layer z (mapped across 0..100 mm specimen length)
+      const layerTargetZ = Math.min(zMaxNorm, 0.0);
+      const layerIdx = pickVisibleSliceIndex(layerTargetZ);
+      if (layerIdx !== null) {
+        const jLayer = pickVisibleSurfaceAngleIdx(layerIdx);
+        const pLayer = projOuter[layerIdx][jLayer];
+        const zMm = (dogboneMesh.outerRings[layerIdx][0].zNorm + 1.0) * 50.0;
+        dogPins.push({
+          px: pLayer.px,
+          py: pLayer.py,
+          text: `Gauge Zone z=${zMm.toFixed(0)}mm (${sf.regimeShortLabel || 'Conduction'})`,
+          accent: '#fbbf24'
+        });
+      }
+
+      // Thermal gradient pin on opposite grip shoulder
+      const gradIdx = pickVisibleSliceIndex(-0.56);
+      if (gradIdx !== null) {
+        const jGrad = pickVisibleSurfaceAngleIdx(gradIdx);
+        const pGrad = projOuter[gradIdx][jGrad];
+        const T0Val = Math.round((window.twinPhysicsState && window.twinPhysicsState.preheat) || 200);
+        dogPins.push({
+          px: pGrad.px,
+          py: pGrad.py,
+          text: sf.isBinderJetting ? `Sinter ${sf.sinterTempC || 1260}°C` : `Thermal Grad: ${curCoolStr} K/s (T₀ ${T0Val}°C)`,
+          accent: '#38bdf8'
+        });
+      }
+
+      drawTwinHotspotPins(ctx, dogPins, w, h, hasWarpage);
+    }
+
+    if (pairState) {
+      _drawTwinSplitOverlay(ctx, w, h, xSplit, pairState, hasWarpage);
+    }
+    drawTwinOrientationTriad(ctx, w, h);
   } catch (err) {
     console.error('Error in renderTwin mesh traversal:', err);
   }
 
-  if (autoOrbit || isDragging) {
+  if (autoOrbit || isDragging || _twinCameraPresetAnim) {
     requestTwinFrame();
   }
 }
