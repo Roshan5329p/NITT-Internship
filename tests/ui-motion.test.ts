@@ -27,9 +27,6 @@ describe('UiMotion zero-dependency motion controller', () => {
       'initPillDock',
       'spawnRipple',
       'syncDock',
-      'initRipplePillDock',
-      'syncRippleDock',
-      'spawnNavTapRipple',
       'initKpiGlider',
       'syncKpiGlider',
       'animateValueTick',
@@ -66,19 +63,12 @@ describe('UiMotion zero-dependency motion controller', () => {
     const dashHtml = fs.readFileSync(dashPath, 'utf8');
     const methHtml = fs.readFileSync(methPath, 'utf8');
 
-    expect(dashHtml).toContain('src="js/ui-motion.js?v=20261126"');
-    expect(methHtml).toContain('src="js/ui-motion.js?v=20261126"');
+    expect(dashHtml).toContain('<script defer src="js/ui-motion.js"></script>');
+    expect(methHtml).toContain('<script defer src="js/ui-motion.js"></script>');
     expect(dashHtml).toContain('id="fxDiagonalHatch"');
     expect(dashHtml).toContain('fx-aurora-fluted');
     expect(dashHtml).toContain('fx-kpi-glide-grid');
     expect(dashHtml).toContain('fx-pill-dock');
-    expect(dashHtml).toContain('nav-dock-shell');
-    expect(dashHtml).toContain('nav-dock-carousel');
-    expect(dashHtml).toContain('nav-pill-glider');
-    expect(dashHtml).toContain('nav-tap-ripple');
-    expect(dashHtml).toContain('process-dock-shell');
-    expect(dashHtml).toContain('role="radiogroup"');
-    expect(dashHtml).toContain('role="tablist"');
     expect(dashHtml).toContain('fx-segmented-track');
     expect(dashHtml).toContain('prefers-reduced-motion: reduce');
     expect(methHtml).toContain('class="fx-aurora-fluted"');

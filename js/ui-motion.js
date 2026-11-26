@@ -363,261 +363,6 @@
   }
 
   // -------------------------------------------------------
-  // 3B. Reusable Ripple-and-Glide Pill Dock Carousel (.nav-dock-shell)
-  // -------------------------------------------------------
-  function spawnNavTapRipple(dockEl, btn, event) {
-    if (!dockEl || prefersReducedMotion() || sliderDragging || typeof document === 'undefined') return;
-    dockEl.querySelectorAll(':scope > .nav-tap-ripple').forEach((old) => old.remove());
-
-    const dockRect = dockEl.getBoundingClientRect();
-    if (!dockRect || dockRect.width <= 0 || dockRect.height <= 0) return;
-
-    let x = dockRect.width / 2;
-    let y = dockRect.height / 2;
-
-    if (event && typeof event.clientX === 'number' && event.clientX !== 0 && event.clientY !== 0) {
-      x = event.clientX - dockRect.left;
-      y = event.clientY - dockRect.top;
-    } else if (btn && typeof btn.getBoundingClientRect === 'function') {
-      const bRect = btn.getBoundingClientRect();
-      x = bRect.left - dockRect.left + bRect.width / 2;
-      y = bRect.top - dockRect.top + bRect.height / 2;
-    }
-
-    const ripple = document.createElement('span');
-    ripple.className = 'nav-tap-ripple';
-    ripple.setAttribute('aria-hidden', 'true');
-    ripple.style.left = `${x.toFixed(1)}px`;
-    ripple.style.top = `${y.toFixed(1)}px`;
-
-    dockEl.appendChild(ripple);
-    const cleanup = () => {
-      if (ripple.parentNode) ripple.parentNode.removeChild(ripple);
-    };
-    ripple.addEventListener('animationend', cleanup, { once: true });
-    setTimeout(cleanup, 520);
-  }
-
-  function _getDockItems(track) {
-    if (!track) return [];
-    return Array.from(
-      track.querySelectorAll(':scope > .tab-btn, :scope > .process-pill, :scope > button[role="tab"], :scope > [role="radio"]')
-    );
-  }
-
-  function syncRippleDock(dockEl, opts) {
-    if (!dockEl) return;
-    const options = opts || {};
-    const track = dockEl.querySelector('.nav-dock-track') || dockEl;
-    const glider = track.querySelector(':scope > .nav-pill-glider');
-    if (!glider) return;
-
-    const activeItem = track.querySelector('.tab-btn.active, .process-pill.active, [aria-selected="true"], [aria-checked="true"], button.active');
-    if (!activeItem) {
-      glider.style.opacity = '0';
-      return;
-    }
-
-    const noTransition = Boolean(options.instant) || prefersReducedMotion();
-    if (noTransition) {
-      glider.classList.add('fx-no-transition');
-    }
-
-    const left = activeItem.offsetLeft;
-    const top = activeItem.offsetTop;
-    const width = activeItem.offsetWidth;
-    const height = activeItem.offsetHeight;
-
-    if (width <= 0 || height <= 0) {
-      glider.style.opacity = '0';
-      if (noTransition) glider.classList.remove('fx-no-transition');
-      return;
-    }
-
-    glider.style.opacity = '1';
-    glider.style.width = `${width.toFixed(1)}px`;
-    glider.style.height = `${height.toFixed(1)}px`;
-    glider.style.transform = `translate3d(${left.toFixed(1)}px, ${top.toFixed(1)}px, 0)`;
-
-    if (noTransition && typeof requestAnimationFrame === 'function') {
-      void glider.offsetWidth;
-      requestAnimationFrame(() => glider.classList.remove('fx-no-transition'));
-    }
-
-    const dockOpts = dockEl._fxDockOpts || { centerOnSelect: true };
-    const shouldCenter = options.center !== undefined ? Boolean(options.center) : Boolean(dockOpts.centerOnSelect);
-    if (shouldCenter && track.scrollWidth > track.clientWidth + 4 && typeof track.scrollTo === 'function') {
-      const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
-      const targetLeft = Math.max(0, Math.min(maxScroll, left - (track.clientWidth - width) / 2));
-      track.scrollTo({
-        left: targetLeft,
-        behavior: (options.instant || prefersReducedMotion()) ? 'auto' : 'smooth'
-      });
-    }
-
-    if (options.rippleOnActive) {
-      spawnNavTapRipple(dockEl, activeItem, null);
-    }
-  }
-
-  function initRipplePillDock(dockEl, options) {
-    if (!dockEl) return;
-    const opts = Object.assign(
-      {
-        centerOnSelect: dockEl.dataset.centerOnSelect !== 'false',
-        compactCarousel: dockEl.dataset.compactCarousel === 'true'
-      },
-      options || {}
-    );
-    dockEl._fxDockOpts = opts;
-
-    if (dockEl.dataset.fxRippleDockInit === '1') {
-      syncRippleDock(dockEl, { center: false, instant: true });
-      return;
-    }
-    dockEl.dataset.fxRippleDockInit = '1';
-
-    const track = dockEl.querySelector('.nav-dock-track') || dockEl;
-    let glider = track.querySelector(':scope > .nav-pill-glider');
-    if (!glider && typeof document !== 'undefined') {
-      glider = document.createElement('span');
-      glider.className = 'nav-pill-glider';
-      glider.setAttribute('aria-hidden', 'true');
-      track.insertBefore(glider, track.firstChild);
-    }
-
-    let suppressNextClick = false;
-
-    track.addEventListener('click', (e) => {
-      if (suppressNextClick) {
-        suppressNextClick = false;
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
-      if (!(e.target instanceof Element)) return;
-      const item = e.target.closest('.tab-btn, .process-pill, button[role="tab"], [role="radio"]');
-      if (!item || !track.contains(item)) return;
-      spawnNavTapRipple(dockEl, item, e);
-      const runSync = () => syncRippleDock(dockEl, { center: opts.centerOnSelect });
-      if (typeof requestAnimationFrame === 'function') {
-        requestAnimationFrame(runSync);
-      } else {
-        runSync();
-      }
-    });
-
-    track.addEventListener('keydown', (e) => {
-      if (!(e.target instanceof Element)) return;
-      const items = _getDockItems(track);
-      if (!items.length) return;
-      const current = e.target.closest('.tab-btn, .process-pill, button[role="tab"], [role="radio"]');
-      const idx = current ? items.indexOf(current) : -1;
-
-      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'Home' || e.key === 'End') {
-        e.preventDefault();
-        let nextIdx = 0;
-        if (e.key === 'ArrowRight') nextIdx = idx >= 0 ? (idx + 1) % items.length : 0;
-        else if (e.key === 'ArrowLeft') nextIdx = idx >= 0 ? (idx - 1 + items.length) % items.length : items.length - 1;
-        else if (e.key === 'End') nextIdx = items.length - 1;
-
-        const targetItem = items[nextIdx];
-        if (targetItem) {
-          targetItem.focus();
-          spawnNavTapRipple(dockEl, targetItem, null);
-          if (typeof targetItem.click === 'function') targetItem.click();
-          if (typeof requestAnimationFrame === 'function') {
-            requestAnimationFrame(() => syncRippleDock(dockEl, { center: opts.centerOnSelect }));
-          }
-        }
-      } else if ((e.key === 'Enter' || e.key === ' ') && current && current.tagName !== 'BUTTON') {
-        e.preventDefault();
-        spawnNavTapRipple(dockEl, current, null);
-        if (typeof current.click === 'function') current.click();
-      }
-    });
-
-    // Vertical mouse wheel over horizontally scrollable carousel translates smoothly to horizontal scroll
-    dockEl.addEventListener('wheel', (e) => {
-      if (track.scrollWidth <= track.clientWidth + 2) return;
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && e.deltaY !== 0) {
-        e.preventDefault();
-        track.scrollLeft += e.deltaY * 0.9;
-      }
-    }, { passive: false });
-
-    // Left/Right chevron buttons for effortless mouse scrolling
-    const prevBtn = dockEl.querySelector(':scope > .nav-scroll-btn.prev');
-    const nextBtn = dockEl.querySelector(':scope > .nav-scroll-btn.next');
-    const scrollByStep = (dir) => {
-      if (typeof track.scrollBy === 'function') {
-        track.scrollBy({ left: dir * 220, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
-      } else {
-        track.scrollLeft += dir * 220;
-      }
-    };
-    if (prevBtn) {
-      prevBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        scrollByStep(-1);
-      });
-    }
-    if (nextBtn) {
-      nextBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        scrollByStep(1);
-      });
-    }
-
-    // Mouse click-drag scrolling for compact carousel (window-scoped move/up so cursor drift never drops drag)
-    let dragging = false;
-    let startX = 0;
-    let startScrollLeft = 0;
-    let moved = false;
-
-    track.addEventListener('pointerdown', (e) => {
-      if (e.pointerType !== 'mouse' || e.button !== 0 || track.scrollWidth <= track.clientWidth + 2) return;
-      dragging = true;
-      moved = false;
-      startX = e.clientX;
-      startScrollLeft = track.scrollLeft;
-    });
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('pointermove', (e) => {
-        if (!dragging) return;
-        const dx = e.clientX - startX;
-        if (Math.abs(dx) > 5) {
-          moved = true;
-          track.classList.add('is-dragging');
-          track.scrollLeft = startScrollLeft - dx;
-        }
-      });
-
-      const endDrag = () => {
-        if (!dragging) return;
-        dragging = false;
-        track.classList.remove('is-dragging');
-        if (moved) {
-          suppressNextClick = true;
-          setTimeout(() => { suppressNextClick = false; }, 60);
-        }
-      };
-      window.addEventListener('pointerup', endDrag);
-      window.addEventListener('pointercancel', endDrag);
-    }
-
-    if (typeof ResizeObserver === 'function') {
-      const ro = new ResizeObserver(() => syncRippleDock(dockEl, { center: false, instant: true }));
-      ro.observe(dockEl);
-      if (track !== dockEl) ro.observe(track);
-      resizeObservers.push(ro);
-    }
-
-    syncRippleDock(dockEl, { center: opts.centerOnSelect, instant: true });
-  }
-
-  // -------------------------------------------------------
   // 4. Gliding Active KPI Card Highlight + Value Tick
   // -------------------------------------------------------
   function animateValueTick(valueEl) {
@@ -835,7 +580,6 @@
     if (typeof document === 'undefined') return;
     document.querySelectorAll('.fx-segmented-track').forEach(syncSegmentedGlider);
     document.querySelectorAll('.fx-pill-dock').forEach((d) => syncDock(d, false));
-    document.querySelectorAll('.nav-dock-shell').forEach((d) => syncRippleDock(d, { center: false }));
     document.querySelectorAll('.fx-kpi-glide-grid').forEach(syncKpiGlider);
     _syncAuroraVisibility();
   }
@@ -846,14 +590,8 @@
     initFlutedAuroraObservers();
     document.querySelectorAll('.fx-segmented-track').forEach(initSegmentedTrack);
     document.querySelectorAll('.fx-pill-dock').forEach(initPillDock);
-    document.querySelectorAll('.nav-dock-shell').forEach((d) => initRipplePillDock(d));
     document.querySelectorAll('.fx-kpi-glide-grid').forEach(initKpiGlider);
     syncAll();
-    if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
-      document.fonts.ready.then(() => {
-        document.querySelectorAll('.nav-dock-shell').forEach((d) => syncRippleDock(d, { center: false, instant: true }));
-      });
-    }
   }
 
   function _setActiveModelGliderById(modelId) {
@@ -910,9 +648,6 @@
     initPillDock,
     spawnRipple,
     syncDock,
-    initRipplePillDock,
-    syncRippleDock,
-    spawnNavTapRipple,
     initKpiGlider,
     syncKpiGlider,
     animateValueTick,

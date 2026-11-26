@@ -20,7 +20,7 @@
 <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
 <script defer src="js/dashboard-data.js"></script>
 <script defer src="js/pinn-cad-showcase.js"></script>
-<script defer src="js/ui-motion.js?v=20261126"></script>
+<script defer src="js/ui-motion.js"></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -1406,26 +1406,6 @@
     width: 100%;
     height: 420px;
     display: block;
-  }
-
-  #twinAnimationVideo {
-    width: 100%;
-    height: 420px;
-    display: none;
-    object-fit: contain;
-    background: #050811;
-    border-radius: 8px;
-  }
-
-  #twinAnimationVideo.active {
-    display: block;
-  }
-
-  @media (max-width: 640px) {
-    #twinAnimationVideo,
-    canvas#twinCanvas {
-      height: 300px;
-    }
   }
 
   /* Industrial Economics & ESG Telemetry Engine (Screenshots & Industrial Architecture) */
@@ -3611,278 +3591,20 @@
     to { transform: scaleX(1); opacity: 1; }
   }
 
-  /* Animation 3: Tactile Ripple Pill Dock Carousel & Process Bar */
-  .nav-dock-shell {
-    position: relative;
-    overflow: hidden;
-    border-radius: 20px;
-    isolation: isolate;
-    background: rgba(15, 23, 42, 0.84);
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 24px rgba(2, 6, 23, 0.35);
-  }
-  html.light .nav-dock-shell {
-    background: rgba(241, 245, 249, 0.94);
-    border: 1px solid rgba(15, 23, 42, 0.14);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 14px rgba(15, 23, 42, 0.08);
-  }
-  .nav-dock-shell.nav-dock-carousel {
-    max-width: min(760px, 100%);
-    width: 100%;
-    margin: 0 auto;
-  }
-  .tabs-bar-wrapper {
-    max-width: 100%;
-    padding: 8px 14px;
-    overflow: hidden;
-  }
-  .nav-dock-track {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    box-sizing: border-box;
-    max-width: 100%;
-  }
-  .nav-dock-track::-webkit-scrollbar {
-    display: none;
-  }
-  .nav-dock-track.is-dragging {
-    cursor: grabbing !important;
-    user-select: none;
-  }
-  .nav-dock-carousel .tabs-bar.nav-dock-track {
-    padding: 6px calc(50% - 80px);
-    margin: 0;
-    cursor: grab;
-    mask-image: linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
-    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
-  }
-  .nav-scroll-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 4;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 1px solid rgba(167, 139, 250, 0.45);
-    background: rgba(15, 23, 42, 0.92);
-    color: #f8fafc;
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 2px 10px rgba(2, 6, 23, 0.55);
-    transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
-  }
-  .nav-scroll-btn:hover {
-    background: rgba(139, 92, 246, 0.35);
-    border-color: rgba(196, 181, 253, 0.75);
-    transform: translateY(-50%) scale(1.08);
-  }
-  .nav-scroll-btn.prev { left: 8px; }
-  .nav-scroll-btn.next { right: 8px; }
-  html.light .nav-scroll-btn {
-    background: rgba(255, 255, 255, 0.94);
-    color: #0f172a;
-    border-color: rgba(124, 58, 237, 0.38);
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.14);
-  }
-  html.light .nav-scroll-btn:hover {
-    background: rgba(124, 58, 237, 0.14);
-  }
-  .nav-dock-shell.process-dock-shell {
-    width: 100%;
-    border-radius: 16px;
-  }
-  .process-dock-shell .process-list.nav-dock-track {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: stretch;
-    gap: 4px;
-    padding: 5px;
-  }
-  .nav-dock-track > .tab-btn,
-  .nav-dock-track > .process-pill {
-    position: relative;
-    z-index: 2;
-    flex-shrink: 0;
-    background: transparent !important;
-    border: 1px solid transparent !important;
-    box-shadow: none !important;
-    transition: transform 280ms cubic-bezier(0.34, 1.4, 0.64, 1), opacity 220ms ease, color 200ms ease;
-  }
-  .nav-dock-carousel .nav-dock-track > .tab-btn {
-    border-radius: 14px;
-    padding: 8px 13px;
-    color: #e2e8f0;
-  }
-  .process-dock-shell .nav-dock-track > .process-pill {
-    flex: 1 1 0;
-    min-width: 70px;
-    padding: 8px 5px;
-    border-radius: 12px;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 3px;
-    color: #e2e8f0;
-  }
-  .process-dock-shell .process-pill .process-radio {
-    width: 11px;
-    height: 11px;
-    border-width: 1.5px;
-  }
-  .process-dock-shell .process-pill.active .process-radio {
-    border-color: #c4b5fd;
-  }
-  .process-dock-shell .process-pill.active .process-radio::after {
-    width: 5px;
-    height: 5px;
-    background: #c4b5fd;
-  }
-  .process-dock-shell .proc-title {
-    font-size: 11.5px;
-    font-weight: 700;
-    line-height: 1.15;
-    white-space: nowrap;
-  }
-  .process-dock-shell .proc-sub {
-    font-size: 9.5px;
-    line-height: 1.15;
-    color: #cbd5e1;
-    white-space: nowrap;
-  }
-  .nav-dock-track > .tab-btn:not(.active),
-  .nav-dock-track > .process-pill:not(.active) {
-    opacity: 0.70;
-    transform: scale(0.96);
-  }
-  .nav-dock-track > .tab-btn:not(.active):hover,
-  .nav-dock-track > .tab-btn:not(.active):focus-visible,
-  .nav-dock-track > .process-pill:not(.active):hover,
-  .nav-dock-track > .process-pill:not(.active):focus-visible {
-    opacity: 0.95;
-    transform: scale(1);
-    outline: none;
-  }
-  .nav-dock-track > .tab-btn.active,
-  .nav-dock-track > .process-pill.active {
-    color: #ffffff !important;
-    opacity: 1;
-    transform: scale(1.05);
-    font-weight: 700;
-  }
-  .nav-dock-track > .tab-btn svg {
-    transition: transform 280ms cubic-bezier(0.34, 1.4, 0.64, 1), stroke 200ms ease;
-    flex-shrink: 0;
-  }
-  .nav-dock-track > .tab-btn.active svg {
-    color: #ffffff;
-    stroke: #ffffff;
-    transform: scale(1.08);
-  }
-  html.light .nav-dock-track > .tab-btn,
-  html.light .nav-dock-track > .process-pill {
-    color: #1e293b;
-  }
-  html.light .process-dock-shell .proc-sub {
-    color: #334155;
-  }
-  html.light .nav-dock-track > .tab-btn:not(.active),
-  html.light .nav-dock-track > .process-pill:not(.active) {
-    color: #334155;
-    opacity: 0.78;
-  }
-  html.light .nav-dock-track > .tab-btn:not(.active):hover,
-  html.light .nav-dock-track > .process-pill:not(.active):hover {
-    opacity: 1;
-  }
-  html.light .nav-dock-track > .tab-btn.active,
-  html.light .nav-dock-track > .process-pill.active {
-    color: #0f172a !important;
-  }
-  html.light .nav-dock-track > .tab-btn.active svg {
-    color: #4c1d95;
-    stroke: #4c1d95;
-  }
-  html.light .process-dock-shell .process-pill.active .process-radio {
-    border-color: #6d28d9;
-  }
-  html.light .process-dock-shell .process-pill.active .process-radio::after {
-    background: #6d28d9;
-  }
-  html.light .tabs-bar .tab-tag.tag-cyan { background: rgba(2, 132, 199, 0.14); color: #0369a1; }
-  html.light .tabs-bar .tab-tag.tag-emerald { background: rgba(5, 150, 105, 0.14); color: #047857; }
-  html.light .tabs-bar .tab-tag.tag-amber { background: rgba(217, 119, 6, 0.14); color: #92400e; }
-
-  .nav-pill-glider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
-    pointer-events: none;
-    border-radius: 14px;
-    border: 1px solid rgba(167, 139, 250, 0.65);
-    background: rgba(139, 92, 246, 0.22);
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-    transition: transform 360ms cubic-bezier(0.34, 1.28, 0.64, 1), width 320ms cubic-bezier(0.22, 1, 0.36, 1), height 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
-    opacity: 0;
-  }
-  .process-dock-shell .nav-pill-glider {
-    border-radius: 12px;
-  }
-  .nav-pill-glider.fx-no-transition {
-    transition: none !important;
-  }
-  html.light .nav-pill-glider {
-    border-color: rgba(124, 58, 237, 0.48);
-    background: rgba(124, 58, 237, 0.14);
-    box-shadow: 0 2px 10px rgba(124, 58, 237, 0.14);
-  }
-  .nav-tap-ripple {
-    position: absolute;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 3;
-    animation: fxNavTapBloom 480ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  }
-  @keyframes fxNavTapBloom {
-    0% {
-      transform: translate(-50%, -50%) scale(0.75);
-      background: rgba(167, 139, 250, 0.88);
-      opacity: 0.95;
-    }
-    35% {
-      transform: translate(-50%, -50%) scale(4.2);
-      background: radial-gradient(circle, rgba(139, 92, 246, 0.45) 0%, rgba(139, 92, 246, 0.16) 50%, transparent 72%);
-      opacity: 0.88;
-    }
-    100% {
-      transform: translate(-50%, -50%) scale(5.4);
-      background: radial-gradient(circle, rgba(139, 92, 246, 0.45) 0%, rgba(139, 92, 246, 0.16) 50%, transparent 72%);
-      opacity: 0;
-    }
-  }
-
-  /* Legacy compact pill dock for Twin mode & PINN stage rail */
+  /* Animation 3: Tactile Ripple Pill Dock & Focus Slide */
   .fx-pill-dock {
     position: relative;
     isolation: isolate;
     border-radius: 20px;
   }
+  .tabs-bar.fx-pill-dock {
+    border-radius: 999px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
   .fx-pill-dock > button,
+  .fx-pill-dock > .process-pill,
+  .fx-pill-dock > .tab-btn,
   .fx-pill-dock > .twin-mode-btn,
   .fx-pill-dock > .showcase-stage-pill {
     position: relative;
@@ -3891,19 +3613,34 @@
     flex-shrink: 0;
     transition: transform 280ms cubic-bezier(0.34, 1.4, 0.64, 1), opacity 220ms ease, color 200ms ease, background-color 200ms ease;
   }
+  .tabs-bar-wrapper {
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .tabs-bar.fx-pill-dock {
+    max-width: 100%;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+  }
   .fx-pill-dock > button:not(.active),
+  .fx-pill-dock > .process-pill:not(.active),
+  .fx-pill-dock > .tab-btn:not(.active),
   .fx-pill-dock > .twin-mode-btn:not(.active),
   .fx-pill-dock > .showcase-stage-pill:not(.active) {
     opacity: 0.82;
     transform: scale(0.97);
   }
   .fx-pill-dock > button:not(.active):hover,
+  .fx-pill-dock > .process-pill:not(.active):hover,
+  .fx-pill-dock > .tab-btn:not(.active):hover,
   .fx-pill-dock > .twin-mode-btn:not(.active):hover,
   .fx-pill-dock > .showcase-stage-pill:not(.active):hover {
     opacity: 1;
     transform: scale(1);
   }
   .fx-pill-dock > button.active,
+  .fx-pill-dock > .process-pill.active,
+  .fx-pill-dock > .tab-btn.active,
   .fx-pill-dock > .twin-mode-btn.active,
   .fx-pill-dock > .showcase-stage-pill.active {
     opacity: 1;
@@ -3921,6 +3658,9 @@
     box-shadow: 0 4px 16px rgba(139, 92, 246, 0.18);
     transition: transform 320ms cubic-bezier(0.34, 1.4, 0.64, 1), width 320ms cubic-bezier(0.22, 1, 0.36, 1), height 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
     opacity: 0;
+  }
+  .tabs-bar.fx-pill-dock > .fx-dock-glider {
+    border-radius: 999px;
   }
   .fx-ripple {
     position: absolute;
@@ -4007,24 +3747,11 @@
     .fx-stroke-wipe {
       animation: none !important;
     }
-    .nav-tap-ripple {
-      display: none !important;
-      animation: none !important;
-    }
     .fx-seg-glider,
     .fx-dock-glider,
-    .nav-pill-glider,
     .fx-kpi-active-glider,
-    .fx-pill-dock > *,
-    .nav-dock-track > .tab-btn,
-    .nav-dock-track > .process-pill,
-    .nav-dock-track svg {
+    .fx-pill-dock > * {
       transition: none !important;
-    }
-    .nav-dock-track > .tab-btn,
-    .nav-dock-track > .process-pill,
-    .nav-dock-track > .tab-btn.active svg {
-      transform: none !important;
     }
   }
   </style>
@@ -7253,10 +6980,7 @@ function hydrateDashboardFromUrl() {
     window.currentProcess = state.proc;
     document.querySelectorAll('.process-pill').forEach(function(pill) {
       const onclickAttr = pill.getAttribute ? (pill.getAttribute('onclick') || '') : '';
-      const isMatch = (pill.dataset && pill.dataset.proc === state.proc) || onclickAttr.includes("'" + state.proc + "'");
-      pill.classList.toggle('active', isMatch);
-      pill.setAttribute('aria-checked', isMatch ? 'true' : 'false');
-      pill.setAttribute('tabindex', isMatch ? '0' : '-1');
+      pill.classList.toggle('active', onclickAttr.includes("'" + state.proc + "'"));
     });
 
     if (typeof configureProcessControls === 'function') {
@@ -7294,11 +7018,6 @@ function hydrateDashboardFromUrl() {
     }
   } finally {
     _isHydratingFromUrl = false;
-  }
-  if (typeof window !== 'undefined' && window.UiMotion) {
-    const procDock = document.getElementById('processSelectorDock');
-    if (procDock) window.UiMotion.syncRippleDock(procDock, { center: true, instant: true });
-    window.UiMotion.syncAll();
   }
   flushUrlStateSync();
 }
@@ -7764,49 +7483,44 @@ window.addEventListener('click', function(e) {
 </header>
 
 <!-- NAVIGATION TABS -->
-<nav class="tabs-bar-wrapper" aria-label="Dashboard Modules">
-  <div class="nav-dock-shell nav-dock-carousel" id="mainNavDock" data-center-on-select="true" data-compact-carousel="true">
-    <button type="button" class="nav-scroll-btn prev" aria-label="Scroll tabs left" title="Scroll tabs left">&#8249;</button>
-    <div class="tabs-bar nav-dock-track" id="mainNavTrack" role="tablist">
-      <span class="nav-pill-glider" aria-hidden="true"></span>
-      <button type="button" class="tab-btn active" role="tab" aria-selected="true" onclick="switchTab('predictions', this)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
-        Predictions
-      </button>
-      <button type="button" class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('process-map', this)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-        Process Map
-      </button>
-      <button type="button" class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('defect-map', this)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Defect Process Window <span class="tab-tag tag-cyan">Enthalpy</span>
-      </button>
-      <button type="button" class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('economics', this)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        Build Economics &amp; ESG <span class="tab-tag tag-emerald">ROI</span>
-      </button>
-      <button type="button" class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('digital-twin', this)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-        3D Digital Twin <span class="tab-tag tag-cyan">Tensor</span>
-      </button>
-      <button type="button" class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('qualification', this)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        ASTM Qualification <span class="tab-tag tag-amber">Audit</span>
-      </button>
-      <button type="button" class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('melt-pool', this)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-        Melt pool &amp; thermal
-      </button>
-      <button type="button" class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('literature', this)" id="navBtnLit">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
-        Literature Evidence (199 Papers)
-      </button>
-      <button type="button" class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('cad-analyzer', this)" id="navBtnCadAnalyzer">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
-        Part Analyzer <span class="tab-tag tag-cyan">CAD 3D</span>
-      </button>
-    </div>
-    <button type="button" class="nav-scroll-btn next" aria-label="Scroll tabs right" title="Scroll tabs right">&#8250;</button>
+<nav class="tabs-bar-wrapper">
+  <div class="tabs-bar fx-pill-dock">
+    <button class="tab-btn active" onclick="switchTab('predictions', this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+      Predictions
+    </button>
+    <button class="tab-btn" onclick="switchTab('process-map', this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+      Process Map
+    </button>
+    <button class="tab-btn" onclick="switchTab('defect-map', this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Defect Process Window <span class="tab-tag tag-cyan">Enthalpy</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('economics', this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Build Economics & ESG <span class="tab-tag tag-emerald">ROI</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('digital-twin', this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      3D Digital Twin <span class="tab-tag tag-cyan">Tensor</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('qualification', this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      ASTM Qualification <span class="tab-tag tag-amber">Audit</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('melt-pool', this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+      Melt pool & thermal
+    </button>
+    <button class="tab-btn" onclick="switchTab('literature', this)" id="navBtnLit">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+      Literature Evidence (199 Papers)
+    </button>
+    <button class="tab-btn" onclick="switchTab('cad-analyzer', this)" id="navBtnCadAnalyzer">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+      Part Analyzer <span class="tab-tag tag-cyan">CAD 3D</span>
+    </button>
   </div>
 </nav>
 
@@ -7822,28 +7536,33 @@ window.addEventListener('click', function(e) {
         <span>AM Process</span>
         <span style="color: var(--accent-cyan); font-family: monospace;">ISO/ASTM 52900</span>
       </div>
-      <div class="nav-dock-shell process-dock-shell" id="processSelectorDock" data-center-on-select="true" data-compact-carousel="false">
-        <div class="process-list nav-dock-track" id="processSelectorTrack" role="radiogroup" aria-label="Additive Manufacturing Process">
-          <span class="nav-pill-glider" aria-hidden="true"></span>
-          <div class="process-pill active" role="radio" aria-checked="true" tabindex="0" data-proc="lpbf" aria-label="LPBF / SLM (powder bed)" onclick="selectProcess('lpbf', this)">
-            <div class="process-radio" aria-hidden="true"></div>
-            <div class="proc-title">LPBF</div>
-            <div class="proc-sub">Powder Bed</div>
+      <div class="process-list fx-pill-dock">
+        <div class="process-pill active" onclick="selectProcess('lpbf', this)">
+          <div class="process-radio"></div>
+          <div>
+            <div>LPBF / SLM (powder bed)</div>
+            <div style="font-size: 10.5px; color: var(--text-muted);">Laser Powder Bed Fusion</div>
           </div>
-          <div class="process-pill" role="radio" aria-checked="false" tabindex="-1" data-proc="ded-laser" aria-label="L-DED (laser directed energy)" onclick="selectProcess('ded-laser', this)">
-            <div class="process-radio" aria-hidden="true"></div>
-            <div class="proc-title">L-DED</div>
-            <div class="proc-sub">Laser DED</div>
+        </div>
+        <div class="process-pill" onclick="selectProcess('ded-laser', this)">
+          <div class="process-radio"></div>
+          <div>
+            <div>L-DED (laser directed energy)</div>
+            <div style="font-size: 10.5px; color: var(--text-muted);">Blown-powder & Wire LENS</div>
           </div>
-          <div class="process-pill" role="radio" aria-checked="false" tabindex="-1" data-proc="waam" aria-label="WAAM (wire arc additive)" onclick="selectProcess('waam', this)">
-            <div class="process-radio" aria-hidden="true"></div>
-            <div class="proc-title">WAAM</div>
-            <div class="proc-sub">Wire Arc</div>
+        </div>
+        <div class="process-pill" onclick="selectProcess('waam', this)">
+          <div class="process-radio"></div>
+          <div>
+            <div>WAAM (wire arc additive)</div>
+            <div style="font-size: 10.5px; color: var(--text-muted);">Gas Metal Arc / Plasma Arc</div>
           </div>
-          <div class="process-pill" role="radio" aria-checked="false" tabindex="-1" data-proc="binder-jetting" aria-label="Binder Jetting (inkjet + sinter)" onclick="selectProcess('binder-jetting', this)">
-            <div class="process-radio" aria-hidden="true"></div>
-            <div class="proc-title">Binder Jet</div>
-            <div class="proc-sub">Sintered</div>
+        </div>
+        <div class="process-pill" onclick="selectProcess('binder-jetting', this)">
+          <div class="process-radio"></div>
+          <div>
+            <div>Binder Jetting (inkjet + sinter)</div>
+            <div style="font-size: 10.5px; color: var(--text-muted);">Liquid binder + vacuum sinter</div>
           </div>
         </div>
       </div>
@@ -10089,7 +9808,6 @@ window.addEventListener('click', function(e) {
                   <button type="button" class="twin-pill-btn active" id="btnAutoOrbit" onclick="toggleAutoOrbit()">Auto-Orbit: ON</button>
                   <button type="button" class="twin-pill-btn" id="btnCutaway" onclick="toggleCutaway()">Cutaway: OFF</button>
                   <button type="button" class="twin-pill-btn" id="btnWireframe" onclick="toggleWireframe()">Wireframe</button>
-                  <button type="button" class="twin-pill-btn" id="btnTwinAnimation" onclick="toggleTwinAnimation()">Play Scene Animation</button>
                   <button type="button" class="twin-pill-btn" onclick="resetCamera()" title="Reset Camera View" style="padding: 5px 8px;">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                   </button>
@@ -10098,9 +9816,6 @@ window.addEventListener('click', function(e) {
 
               <!-- Canvas element -->
               <canvas id="twinCanvas" width="760" height="420" style="width: 100%; height: 420px; display: block; cursor: grab;"></canvas>
-              <video id="twinAnimationVideo" controls autoplay muted loop playsinline preload="metadata" aria-label="3D scene animation">
-                <source src="scene-animation.mp4" type="video/mp4">
-              </video>
 
               <!-- Bottom flex footer bar (non-overlapping at all widths) -->
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.06);">
@@ -13747,8 +13462,6 @@ function resetDefaults() {
   calculatePhysics();
   if (typeof window !== 'undefined' && window.UiMotion && !window.UiMotion.isSliderDragging()) {
     window.UiMotion.syncAll();
-    const procDock = document.getElementById('processSelectorDock');
-    if (procDock) window.UiMotion.syncRippleDock(procDock, { center: true });
     window.UiMotion.animateHeadlineMetrics();
     window.UiMotion.animateStaggeredBars();
     window.UiMotion.triggerSvgStrokeDraw();
@@ -13757,13 +13470,8 @@ function resetDefaults() {
 
 function selectProcess(proc, el) {
   currentProcess = proc;
-  const targetPill = el || document.querySelector(`.process-pill[data-proc="${proc}"]`);
-  document.querySelectorAll('.process-pill').forEach(p => {
-    const active = p === targetPill;
-    p.classList.toggle('active', active);
-    p.setAttribute('aria-checked', active ? 'true' : 'false');
-    p.setAttribute('tabindex', active ? '0' : '-1');
-  });
+  document.querySelectorAll('.process-pill').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
 
   configureProcessControls(proc);
 
@@ -13816,8 +13524,6 @@ function selectProcess(proc, el) {
   calculatePhysics();
   if (typeof window !== 'undefined' && window.UiMotion && !window.UiMotion.isSliderDragging()) {
     window.UiMotion.syncAll();
-    const procDock = document.getElementById('processSelectorDock');
-    if (procDock) window.UiMotion.syncRippleDock(procDock, { center: true });
     window.UiMotion.animateHeadlineMetrics();
     window.UiMotion.animateStaggeredBars();
     window.UiMotion.triggerSvgStrokeDraw();
@@ -13952,10 +13658,7 @@ function flushDirtyTab(tabId) {
 }
 
 function switchTab(tabId, btn) {
-  document.querySelectorAll('.tab-btn').forEach(b => {
-    b.classList.remove('active');
-    b.setAttribute('aria-selected', 'false');
-  });
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
   
   let targetBtn = btn;
@@ -13970,17 +13673,12 @@ function switchTab(tabId, btn) {
       }
     }
   }
-  if (targetBtn) {
-    targetBtn.classList.add('active');
-    targetBtn.setAttribute('aria-selected', 'true');
-  }
+  if (targetBtn) targetBtn.classList.add('active');
   const targetView = $id('view_' + tabId);
   if (targetView) targetView.classList.add('active');
 
   if (typeof window !== 'undefined' && window.UiMotion && (typeof _isHydratingFromUrl === 'undefined' || !_isHydratingFromUrl)) {
     window.UiMotion.animateCurtainEnter(targetView);
-    const navDock = document.getElementById('mainNavDock');
-    if (navDock) window.UiMotion.syncRippleDock(navDock, { center: true });
     window.UiMotion.syncAll();
   }
 
@@ -14115,25 +13813,6 @@ function toggleAutoOrbit() {
   }
   if (autoOrbit) requestTwinFrame();
 }
-
-function toggleTwinAnimation() {
-  const canvas = $id('twinCanvas');
-  const video = $id('twinAnimationVideo');
-  const button = $id('btnTwinAnimation');
-  if (!canvas || !video || !button) return;
-
-  const showingAnimation = video.classList.toggle('active');
-  canvas.style.display = showingAnimation ? 'none' : 'block';
-  button.classList.toggle('active', showingAnimation);
-  button.textContent = showingAnimation ? 'Return to 3D Twin' : 'Play Scene Animation';
-
-  if (showingAnimation) {
-    video.play().catch(() => {});
-  } else {
-    video.pause();
-  }
-}
-window.toggleTwinAnimation = toggleTwinAnimation;
 
 function toggleCutaway() {
   cutaway = !cutaway;
