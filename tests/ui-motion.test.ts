@@ -66,8 +66,8 @@ describe('UiMotion zero-dependency motion controller', () => {
     const dashHtml = fs.readFileSync(dashPath, 'utf8');
     const methHtml = fs.readFileSync(methPath, 'utf8');
 
-    expect(dashHtml).toContain('<script defer src="js/ui-motion.js"></script>');
-    expect(methHtml).toContain('<script defer src="js/ui-motion.js"></script>');
+    expect(dashHtml).toContain('src="js/ui-motion.js?v=20261126"');
+    expect(methHtml).toContain('src="js/ui-motion.js?v=20261126"');
     expect(dashHtml).toContain('id="fxDiagonalHatch"');
     expect(dashHtml).toContain('fx-aurora-fluted');
     expect(dashHtml).toContain('fx-kpi-glide-grid');

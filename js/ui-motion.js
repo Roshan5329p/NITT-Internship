@@ -546,7 +546,30 @@
       }
     }, { passive: false });
 
-    // Mouse click-drag scrolling for compact carousel
+    // Left/Right chevron buttons for effortless mouse scrolling
+    const prevBtn = dockEl.querySelector(':scope > .nav-scroll-btn.prev');
+    const nextBtn = dockEl.querySelector(':scope > .nav-scroll-btn.next');
+    const scrollByStep = (dir) => {
+      if (typeof track.scrollBy === 'function') {
+        track.scrollBy({ left: dir * 220, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+      } else {
+        track.scrollLeft += dir * 220;
+      }
+    };
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        scrollByStep(-1);
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        scrollByStep(1);
+      });
+    }
+
+    // Mouse click-drag scrolling for compact carousel (window-scoped move/up so cursor drift never drops drag)
     let dragging = false;
     let startX = 0;
     let startScrollLeft = 0;
@@ -560,28 +583,29 @@
       startScrollLeft = track.scrollLeft;
     });
 
-    track.addEventListener('pointermove', (e) => {
-      if (!dragging) return;
-      const dx = e.clientX - startX;
-      if (Math.abs(dx) > 6) {
-        moved = true;
-        track.classList.add('is-dragging');
-        track.scrollLeft = startScrollLeft - dx;
-      }
-    });
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const dx = e.clientX - startX;
+        if (Math.abs(dx) > 5) {
+          moved = true;
+          track.classList.add('is-dragging');
+          track.scrollLeft = startScrollLeft - dx;
+        }
+      });
 
-    const endDrag = () => {
-      if (!dragging) return;
-      dragging = false;
-      track.classList.remove('is-dragging');
-      if (moved) {
-        suppressNextClick = true;
-        setTimeout(() => { suppressNextClick = false; }, 60);
-      }
-    };
-    track.addEventListener('pointerup', endDrag);
-    track.addEventListener('pointercancel', endDrag);
-    track.addEventListener('mouseleave', endDrag);
+      const endDrag = () => {
+        if (!dragging) return;
+        dragging = false;
+        track.classList.remove('is-dragging');
+        if (moved) {
+          suppressNextClick = true;
+          setTimeout(() => { suppressNextClick = false; }, 60);
+        }
+      };
+      window.addEventListener('pointerup', endDrag);
+      window.addEventListener('pointercancel', endDrag);
+    }
 
     if (typeof ResizeObserver === 'function') {
       const ro = new ResizeObserver(() => syncRippleDock(dockEl, { center: false, instant: true }));
