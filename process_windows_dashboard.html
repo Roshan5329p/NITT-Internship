@@ -21,6 +21,7 @@
 <script defer src="js/dashboard-data.js"></script>
 <script defer src="js/pinn-cad-showcase.js"></script>
 <script defer src="js/ui-motion.js"></script>
+<script defer src="js/active-learning-ui.js"></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -8453,6 +8454,22 @@ window.addEventListener('click', function(e) {
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- 4B. Active Learning Lab Planner — Peer-Reviewed Proof & Literature Backing -->
+        <div class="res-card" id="activeLearningProofCard" style="margin-top: 0;">
+          <div class="res-card-header" style="flex-wrap: wrap; gap: 8px;">
+            <div>
+              <div class="res-card-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                <span>Active Learning Lab Planner — Peer-Reviewed Proof &amp; Literature Backing</span>
+                <span class="brand-badge" id="activeLearningProofCountBadge" style="font-size: 10px; color: #c4b5fd; background: rgba(139, 92, 246, 0.14); border-color: rgba(167, 139, 250, 0.4);">4 Scopus-Verified Papers</span>
+              </div>
+              <div class="res-card-sub">Live Elsevier Scopus-verified Bayesian optimization &amp; active learning methodology benchmarks informing acquisition strategies (strictly excluded from empirical LOPO-CV training &amp; comparator).</div>
+            </div>
+            <button type="button" class="step-btn" onclick="window.ActiveLearningUi?.showInLiteratureTable()" style="font-size: 11px; color: #7dd3fc; border-color: rgba(56, 189, 248, 0.35);">Show in Literature Table →</button>
+          </div>
+          <div id="activeLearningProofGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 10px;"></div>
         </div>
       </div>
 
@@ -17375,16 +17392,31 @@ function deduplicateAndNormalizePapers(rawPapers) {
     const mDoi = absStr.match(/DOI:\s*([^|\]]+)/i);
     const mTop = absStr.match(/Topic:\s*([^|\]]+)/i);
     const mOa = absStr.match(/OA:\s*([^|\]]+)/i);
+    const mCited = absStr.match(/Cited:\s*(\d+)/i);
+    const mJournal = absStr.match(/Journal:\s*([^|\]]+)/i);
+    const mPolicy = absStr.match(/Policy:\s*([^|\]]+)/i);
+    const topicStr = p.topic || (mTop ? mTop[1].trim() : (curated?.topic || ''));
+    const isAlProof = Boolean(curated?.active_learning_proof) || /active learning/i.test(topicStr);
+    const citedNum = Number.isFinite(Number(curated?.citedByCount))
+      ? Number(curated.citedByCount)
+      : (mCited ? parseInt(mCited[1], 10) : null);
 
     out.push({
       id: formattedId,
       author: curated ? curated.author : authorStr,
       process: procStr,
-      topic: p.topic || (mTop ? mTop[1].trim() : (curated?.topic || '')),
+      topic: topicStr,
       doi: p.doi || (curated?.doi || (mDoi ? mDoi[1].trim() : '')),
       oaUrl: sanitizeExternalHttpUrl(p.oaUrl || (curated?.oaUrl || (mOa ? mOa[1].trim() : ''))),
-      type: curated?.type || 'EXP',
-      treatment: curated?.treatment || (mTop ? `Scopus (${mTop[1].trim()})` : 'Scopus Indexed (Pending Extraction)'),
+      scopusUrl: sanitizeExternalHttpUrl(p.scopusUrl || curated?.scopusUrl || ''),
+      journal: curated?.journal || (mJournal ? mJournal[1].trim() : ''),
+      citedByCount: citedNum,
+      acquisitionMethod: curated?.acquisitionMethod || (mPolicy ? mPolicy[1].trim() : ''),
+      active_learning_proof: isAlProof,
+      benchmark_eligible: isAlProof ? false : Boolean(curated?.benchmark_eligible),
+      params_extracted: isAlProof ? false : Boolean(curated?.params_extracted),
+      type: curated?.type || (isAlProof ? 'MOD' : 'EXP'),
+      treatment: curated?.treatment || (citedNum !== null ? `Scopus (${citedNum} citations)` : (mTop ? `Scopus (${mTop[1].trim()})` : 'Scopus Indexed (Pending Extraction)')),
       desc: curated?.desc || ((p.title || '') + (absStr ? ` — ${absStr.substring(0, 115)}...` : '')),
       density: denStr,
       ys: ysVal,
@@ -17416,6 +17448,7 @@ async function initSupabaseCloudSync() {
 
     if (rawPapers && rawPapers.length > 0) {
       livePapersCatalog = deduplicateAndNormalizePapers(rawPapers);
+      window.livePapersCatalog = livePapersCatalog;
       const liveCount = livePapersCatalog.length || PAPERS_DATABASE.length;
       if (badge) {
         badge.innerText = `⚡ ${sourceLabel} (${liveCount} Papers)`;
@@ -17425,13 +17458,16 @@ async function initSupabaseCloudSync() {
       }
       filterPapersTable();
       updateLitPaperCountBadges(liveCount);
+      if (window.ActiveLearningUi) window.ActiveLearningUi.renderProofCard();
     } else {
       if (badge) badge.innerText = `⚡ Local Catalog (${PAPERS_DATABASE.length} Papers)`;
       updateLitPaperCountBadges(PAPERS_DATABASE.length);
+      if (window.ActiveLearningUi) window.ActiveLearningUi.renderProofCard();
     }
   } catch (e) {
     if (badge) badge.innerText = `⚡ Local Catalog (${PAPERS_DATABASE.length} Papers)`;
     updateLitPaperCountBadges(PAPERS_DATABASE.length);
+    if (window.ActiveLearningUi) window.ActiveLearningUi.renderProofCard();
   }
   drawLitTopicGraph();
 }
@@ -18231,6 +18267,7 @@ function findMatchingLiteratureStudies(state, limit = 5) {
   const normProc = _normCompProcKey(cur.processId);
 
   const processFiltered = (typeof PAPERS_DATABASE !== 'undefined' ? PAPERS_DATABASE : []).filter(p => {
+    if (p.active_learning_proof || /active learning/i.test(p.topic || '')) return false;
     return normalizeComparatorProcess(p.process).includes(normProc);
   });
   const filtered = processFiltered.filter(p => hasValidProcessInputs(p, normProc));

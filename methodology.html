@@ -108,6 +108,13 @@
       transition: transform 240ms cubic-bezier(0.34, 1.4, 0.64, 1), background-color 180ms ease;
     }
     .pill-link:hover { background: rgba(56, 189, 248, 0.24); transform: translateY(-1px); }
+    .ref-list { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; list-style: none; margin-left: 0; }
+    .ref-card { background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; }
+    .ref-title { color: #f8fafc; font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+    .ref-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 12.5px; color: #cbd5e1; }
+    .cite-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(16, 185, 129, 0.16); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; font-size: 11.5px; font-weight: 700; }
+    .doi-link { color: #7dd3fc; text-decoration: none; font-weight: 600; }
+    .doi-link:hover { text-decoration: underline; }
     footer { margin-top: 26px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.10); color: #9ca3af; font-size: 12.5px; }
     @media (prefers-reduced-motion: reduce) {
       .fx-aurora-fluted::before { animation: none !important; }
@@ -153,7 +160,48 @@
     </section>
 
     <section>
-      <h2>4. Launch Process-Specific Live Predictors</h2>
+      <h2>4. Active Learning &amp; Bayesian Optimization Scientific Basis</h2>
+      <p>Multi-objective Pareto acquisition and uncertainty-aware Bayesian sampling follow verified Elsevier Scopus-indexed methodology benchmarks (kept separate from the input-verified empirical LOPO-CV dataset):</p>
+      <ul class="ref-list">
+        <li class="ref-card">
+          <div class="ref-title">Active learning framework to optimize process parameters for additive-manufactured Ti-6Al-4V with high strength and ductility</div>
+          <div class="ref-meta">
+            <span>Lee J.A., Park J., Sagong M.J., Ahn S.Y., Cho J.W., Lee S., Kim H.S. · <em>Nature Communications</em> (2025)</span>
+            <span class="cite-badge">83 Scopus Citations</span>
+            <a class="doi-link" href="https://doi.org/10.1038/s41467-025-56267-1" target="_blank" rel="noopener noreferrer">DOI: 10.1038/s41467-025-56267-1 ↗</a>
+            <a class="doi-link" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11754831/" target="_blank" rel="noopener noreferrer" style="color:#6ee7b7;">OA PDF ↗</a>
+          </div>
+        </li>
+        <li class="ref-card">
+          <div class="ref-title">Multi-Fidelity Surrogate-Based Process Mapping with Uncertainty Quantification in Laser Directed Energy Deposition</div>
+          <div class="ref-meta">
+            <span>Menon N., Mondal S., Basak A. · <em>Materials</em> (2022)</span>
+            <span class="cite-badge">31 Scopus Citations</span>
+            <a class="doi-link" href="https://doi.org/10.3390/ma15082902" target="_blank" rel="noopener noreferrer">DOI: 10.3390/ma15082902 ↗</a>
+            <a class="doi-link" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9025529/" target="_blank" rel="noopener noreferrer" style="color:#6ee7b7;">OA PDF ↗</a>
+          </div>
+        </li>
+        <li class="ref-card">
+          <div class="ref-title">Active learning via adaptive weighted uncertainty sampling applied to additive manufacturing</div>
+          <div class="ref-meta">
+            <span>van Houtum G.J.J., Vlasea M.L. · <em>Additive Manufacturing</em> (2021)</span>
+            <span class="cite-badge">37 Scopus Citations</span>
+            <a class="doi-link" href="https://doi.org/10.1016/j.addma.2021.102411" target="_blank" rel="noopener noreferrer">DOI: 10.1016/j.addma.2021.102411 ↗</a>
+          </div>
+        </li>
+        <li class="ref-card">
+          <div class="ref-title">Active learning in materials science with emphasis on adaptive sampling using uncertainties for targeted design</div>
+          <div class="ref-meta">
+            <span>Lookman T., Balachandran P.V., Xue D., Yuan R. · <em>Npj Computational Materials</em> (2019)</span>
+            <span class="cite-badge">825 Scopus Citations</span>
+            <a class="doi-link" href="https://doi.org/10.1038/s41524-019-0153-8" target="_blank" rel="noopener noreferrer">DOI: 10.1038/s41524-019-0153-8 ↗</a>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>5. Launch Process-Specific Live Predictors</h2>
       <div class="links-grid">
         <a class="pill-link" href="/?proc=lpbf">LPBF Ti-6Al-4V Predictor</a>
         <a class="pill-link" href="/?proc=ded-laser">L-DED Laser Predictor</a>

@@ -17,10 +17,11 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const ROOT = process.cwd();
 const DATA_DIR = path.join(ROOT, 'data');
-const DASHBOARD_PATH = path.join(ROOT, 'process_windows_dashboard.html');
+const DASHBOARD_DATA_PATH = path.join(ROOT, 'js', 'dashboard-data.js');
 const OUT_CORPUS_PATH = path.join(DATA_DIR, 'cleaned_benchmark_corpus.json');
 
 const CATALOG_DUP_IDS = new Set([109, 115, 118, 127, 131, 132, 135, 145, 151, 153]);
@@ -342,11 +343,11 @@ function main() {
     'utf8'
   );
 
-  // Also sync PAPERS_DATABASE inside process_windows_dashboard.html cleanly
-  let html = fs.readFileSync(DASHBOARD_PATH, 'utf8');
-  const dbMatch = html.match(/const PAPERS_DATABASE = (\[[\s\S]*?\n\]);/);
-  if (!dbMatch) throw new Error('PAPERS_DATABASE not found in process_windows_dashboard.html');
-  const db = eval(dbMatch[1]);
+  // Also sync PAPERS_DATABASE inside js/dashboard-data.js cleanly
+  let ddTxt = fs.readFileSync(DASHBOARD_DATA_PATH, 'utf8');
+  const dbMatch = ddTxt.match(/var PAPERS_DATABASE = (\[[\s\S]*?\n\]);/);
+  if (!dbMatch) throw new Error('PAPERS_DATABASE not found in js/dashboard-data.js');
+  const db = JSON.parse(dbMatch[1]);
 
   const stripAccents = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const firstTok = (s) => stripAccents(s).trim().split(/[\s,(]+/)[0].toLowerCase().replace(/\./g, '');
@@ -359,8 +360,31 @@ function main() {
   };
   const recByNum = new Map(records.map((r) => [r.paperNumber, r]));
 
+  const ACTIVE_LEARNING_DOIS = new Set([
+    '10.1038/s41467-025-56267-1',
+    '10.3390/ma15082902',
+    '10.1016/j.addma.2021.102411',
+    '10.1038/s41524-019-0153-8'
+  ]);
+
   const updatedDb = db.map((entry) => {
     const copy = Object.assign({}, entry);
+    const isActiveLearningProof =
+      Boolean(copy.active_learning_proof) ||
+      /active learning/i.test(copy.topic || '') ||
+      ACTIVE_LEARNING_DOIS.has(String(copy.doi || '').trim().toLowerCase());
+
+    if (isActiveLearningProof) {
+      copy.topic = copy.topic || 'Active Learning';
+      copy.active_learning_proof = true;
+      copy.benchmark_eligible = false;
+      copy.params_extracted = false;
+      copy.specimen_type = 'active_learning_proof';
+      copy.exclusion_reason =
+        copy.exclusion_reason || 'Active Learning & Bayesian Optimization methodology reference (excluded from LOPO-CV)';
+      return copy;
+    }
+
     const numStr = entry.id.replace(/^P-0*/, '');
     const yr = (entry.author.match(/\b(19|20)\d{2}\b/) || [])[0];
 
@@ -434,9 +458,9 @@ function main() {
     return copy;
   });
 
-  const serializedDb = 'const PAPERS_DATABASE = [\n' + updatedDb.map((o) => '  ' + JSON.stringify(o)).join(',\n') + '\n];';
-  html = html.replace(dbMatch[0], serializedDb);
-  fs.writeFileSync(DASHBOARD_PATH, html, 'utf8');
+  const serializedDb = 'var PAPERS_DATABASE = [\n  ' + updatedDb.map((o) => JSON.stringify(o)).join(',\n  ') + '\n];';
+  ddTxt = ddTxt.replace(dbMatch[0], serializedDb);
+  fs.writeFileSync(DASHBOARD_DATA_PATH, ddTxt, 'utf8');
 
   const eligibleByProc = {};
   for (const r of records) {
@@ -450,4 +474,6 @@ function main() {
   console.log(`Saved canonical cleaned corpus to ${path.relative(ROOT, OUT_CORPUS_PATH)}`);
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  main();
+}
