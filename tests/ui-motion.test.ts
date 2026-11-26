@@ -27,6 +27,9 @@ describe('UiMotion zero-dependency motion controller', () => {
       'initPillDock',
       'spawnRipple',
       'syncDock',
+      'initRipplePillDock',
+      'syncRippleDock',
+      'spawnNavTapRipple',
       'initKpiGlider',
       'syncKpiGlider',
       'animateValueTick',
@@ -69,6 +72,13 @@ describe('UiMotion zero-dependency motion controller', () => {
     expect(dashHtml).toContain('fx-aurora-fluted');
     expect(dashHtml).toContain('fx-kpi-glide-grid');
     expect(dashHtml).toContain('fx-pill-dock');
+    expect(dashHtml).toContain('nav-dock-shell');
+    expect(dashHtml).toContain('nav-dock-carousel');
+    expect(dashHtml).toContain('nav-pill-glider');
+    expect(dashHtml).toContain('nav-tap-ripple');
+    expect(dashHtml).toContain('process-dock-shell');
+    expect(dashHtml).toContain('role="radiogroup"');
+    expect(dashHtml).toContain('role="tablist"');
     expect(dashHtml).toContain('fx-segmented-track');
     expect(dashHtml).toContain('prefers-reduced-motion: reduce');
     expect(methHtml).toContain('class="fx-aurora-fluted"');
