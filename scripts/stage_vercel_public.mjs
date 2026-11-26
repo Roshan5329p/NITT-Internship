@@ -31,4 +31,15 @@ for (const dir of ['plots', 'vendor', 'js']) {
   }
 }
 
+const requiredStagedAssets = [
+  path.join(OUT_DIR, 'js', 'active-learning-ui.js'),
+  path.join(OUT_DIR, 'js', 'ui-motion.js'),
+  path.join(OUT_DIR, 'js', 'dashboard-data.js')
+];
+for (const assetPath of requiredStagedAssets) {
+  if (!fs.existsSync(assetPath)) {
+    throw new Error(`Expected staged asset missing from public/: ${assetPath}`);
+  }
+}
+
 console.log('Staged minimal public Vercel output directory cleanly (data/, docs/, report/ excluded from CDN).');

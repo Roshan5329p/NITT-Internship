@@ -174,7 +174,31 @@ export function parseLabCouponsCsv(csvText: string, fileSizeBytes?: number): Par
     };
   }
 
-  const headers = lines[0].split(',').map((h) => h.trim());
+  const parseCsvRow = (line: string): string[] => {
+    const out: string[] = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let idx = 0; idx < line.length; idx++) {
+      const ch = line[idx];
+      if (ch === '"') {
+        if (inQuotes && line[idx + 1] === '"') {
+          cur += '"';
+          idx++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === ',' && !inQuotes) {
+        out.push(cur.trim());
+        cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    out.push(cur.trim());
+    return out;
+  };
+
+  const headers = parseCsvRow(lines[0]);
   const missingHeaders = REQUIRED_HEADERS.filter((req) => !headers.includes(req));
   if (missingHeaders.length > 0) {
     return {
@@ -186,21 +210,24 @@ export function parseLabCouponsCsv(csvText: string, fileSizeBytes?: number): Par
   }
 
   const colIdx = new Map<string, number>();
-  headers.forEach((h, i) => colIdx.set(h, i));
+  headers.forEach((h, i) => {
+    colIdx.set(h, i);
+    colIdx.set(h.toLowerCase(), i);
+  });
 
   const coupons: LabCouponRecord[] = [];
   const errors: CsvValidationError[] = [];
 
   for (let i = 1; i < lines.length; i++) {
     const rawLine = lines[i];
-    const parts = rawLine.split(',').map((p) => p.trim());
+    const parts = parseCsvRow(rawLine);
     if (parts.length < headers.length - 4) {
       errors.push({ rowNumber: i + 1, rawLine, reason: 'Too few comma-separated fields.' });
       continue;
     }
 
     const get = (name: string): string => {
-      const idx = colIdx.get(name);
+      const idx = colIdx.get(name) ?? colIdx.get(name.toLowerCase());
       return idx !== undefined && idx < parts.length ? parts[idx] : '';
     };
 
@@ -230,7 +257,7 @@ export function parseLabCouponsCsv(csvText: string, fileSizeBytes?: number): Par
     const hvParsed = parseOptionalPositive(get('measured_HV'));
     const ysParsed = parseOptionalPositive(get('measured_YS_MPa'));
     const utsParsed = parseOptionalPositive(get('measured_UTS_MPa'));
-    const elParsed = parseOptionalPositive(get('measured_elong_pct'));
+    const elParsed = parseOptionalPositive(get('measured_elong_pct') || get('measured_elongation_pct'));
 
     if (!hvParsed.valid || !ysParsed.valid || !utsParsed.valid || !elParsed.valid) {
       errors.push({ rowNumber: i + 1, rawLine, reason: 'Measured property contains non-numeric or non-positive value.' });

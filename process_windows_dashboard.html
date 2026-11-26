@@ -7522,6 +7522,10 @@ window.addEventListener('click', function(e) {
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
       Part Analyzer <span class="tab-tag tag-cyan">CAD 3D</span>
     </button>
+    <button class="tab-btn" onclick="switchTab('active-learning', this)" id="navBtnActiveLearning">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
+      Active Learning <span class="tab-tag tag-cyan">Bayes</span>
+    </button>
   </div>
 </nav>
 
@@ -8394,7 +8398,10 @@ window.addEventListener('click', function(e) {
               </div>
               <div class="res-card-sub">Specify target properties &amp; ASTM class to solve Pareto-optimal (P, v, h, t, T₀, Heat Treatment) recipes</div>
             </div>
-            <button type="button" class="step-btn" onclick="applyInversePresetAerospace()" style="font-size: 10.5px; color: #38bdf8; border-color: rgba(56,189,248,0.35);">Aerospace Class 1 Preset</button>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <button type="button" id="btnJumpActiveLearningPlanner" class="step-btn" style="font-size: 10.5px; color: #ddd6fe; border-color: rgba(167,139,250,0.45);">Open Active Learning Tab →</button>
+              <button type="button" class="step-btn" onclick="applyInversePresetAerospace()" style="font-size: 10.5px; color: #38bdf8; border-color: rgba(56,189,248,0.35);">Aerospace Class 1 Preset</button>
+            </div>
           </div>
 
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; font-size: 11px;">
@@ -8454,22 +8461,6 @@ window.addEventListener('click', function(e) {
               </tbody>
             </table>
           </div>
-        </div>
-
-        <!-- 4B. Active Learning Lab Planner — Peer-Reviewed Proof & Literature Backing -->
-        <div class="res-card" id="activeLearningProofCard" style="margin-top: 0;">
-          <div class="res-card-header" style="flex-wrap: wrap; gap: 8px;">
-            <div>
-              <div class="res-card-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
-                <span>Active Learning Lab Planner — Peer-Reviewed Proof &amp; Literature Backing</span>
-                <span class="brand-badge" id="activeLearningProofCountBadge" style="font-size: 10px; color: #c4b5fd; background: rgba(139, 92, 246, 0.14); border-color: rgba(167, 139, 250, 0.4);">4 Scopus-Verified Papers</span>
-              </div>
-              <div class="res-card-sub">Live Elsevier Scopus-verified Bayesian optimization &amp; active learning methodology benchmarks informing acquisition strategies (strictly excluded from empirical LOPO-CV training &amp; comparator).</div>
-            </div>
-            <button type="button" class="step-btn" onclick="window.ActiveLearningUi?.showInLiteratureTable()" style="font-size: 11px; color: #7dd3fc; border-color: rgba(56, 189, 248, 0.35);">Show in Literature Table →</button>
-          </div>
-          <div id="activeLearningProofGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 10px;"></div>
         </div>
       </div>
 
@@ -11503,6 +11494,137 @@ window.addEventListener('click', function(e) {
       </div>
     </div>
 
+    <!-- ========================================================
+         TAB 10: BAYESIAN ACTIVE LEARNING SECTION
+         ======================================================== -->
+    <div id="view_active-learning" class="tab-view">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px;" id="activeLearningSuiteGrid">
+        <!-- Bayesian Active Learning Lab Planner ("Next Best Experiment" Recommender) -->
+        <div class="res-card" id="activeLearningPlannerCard" style="margin-top: 0;">
+          <div class="res-card-header" style="flex-wrap: wrap; gap: 10px; align-items: center;">
+            <div>
+              <h2 class="res-card-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
+                <span>Active Learning Lab Planner — Next Best Experiment Recommender</span>
+                <span class="brand-badge" style="font-size: 10px; color: #e9d5ff; background: rgba(139, 92, 246, 0.18); border-color: rgba(167, 139, 250, 0.45);">Bayesian Acquisition</span>
+              </h2>
+              <div class="res-card-sub">Combines Latin Hypercube candidate sampling, Ti-6Al-4V PINN / sintering physics, 95% GPR uncertainty, and 6×6 OOD Mahalanobis distance (d_M) to select high-value lab coupons.</div>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <button type="button" id="alRunBtn" style="background: linear-gradient(135deg, #8b5cf6, #0ea5e9); color: #ffffff; border: none; border-radius: 8px; padding: 7px 14px; font-weight: 800; font-size: 11.5px; cursor: pointer;">Recommend Next Lab Coupons</button>
+              <button type="button" id="alExportCsvBtn" class="step-btn" style="font-size: 11px; color: #6ee7b7; border-color: rgba(16, 185, 129, 0.45);">Export Lab Coupon Sheet (CSV)</button>
+            </div>
+          </div>
+
+          <div id="alPlannerBody">
+            <!-- Strategy Segmented Track -->
+            <div class="mp-control-group fx-segmented-track" id="alStrategyTrack" role="group" aria-label="Acquisition Strategy" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; margin-bottom: 12px; background: rgba(7, 12, 20, 0.88); border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 10px;">
+              <button type="button" class="mp-toggle-btn al-strategy-btn active" data-strategy="uncertainty" aria-pressed="true" style="font-size: 11px; padding: 6px 12px;">Uncertainty Reduction (Fill Data Gaps)</button>
+              <button type="button" class="mp-toggle-btn al-strategy-btn" data-strategy="ei" aria-pressed="false" style="font-size: 11px; padding: 6px 12px;">Expected Improvement (Single Target)</button>
+              <button type="button" class="mp-toggle-btn al-strategy-btn" data-strategy="pareto" aria-pressed="false" style="font-size: 11px; padding: 6px 12px;">Pareto Active Learning (UTS + Elongation)</button>
+            </div>
+
+            <!-- Parameter Controls (WCAG AA + explicit label[for]) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 10px; margin-bottom: 10px; font-size: 11px;">
+              <div id="alEiControlsWrap" style="display: none;">
+                <div>
+                  <label for="alTargetSelect" style="display: block; color: #cbd5e1; font-size: 10.5px; font-weight: 600;">Target Property (EI)</label>
+                  <select id="alTargetSelect" class="dark-select" style="width: 100%; padding: 6px 8px; margin-top: 3px;">
+                    <option value="uts_mpa" selected>UTS (MPa)</option>
+                    <option value="ys_mpa">Yield Strength (MPa)</option>
+                    <option value="hardness_hv">Hardness (HV)</option>
+                    <option value="elongation_pct">Elongation (%)</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="alXiSlider" style="display: flex; justify-content: space-between; color: #cbd5e1; font-size: 10.5px; font-weight: 600;">
+                    <span>Exploration ξ</span>
+                    <span id="alXiReadout" style="color: #7dd3fc; font-family: 'JetBrains Mono', monospace;">0.05</span>
+                  </label>
+                  <input type="range" id="alXiSlider" min="0.01" max="0.15" step="0.01" value="0.05" style="width: 100%; margin-top: 8px;">
+                </div>
+              </div>
+
+              <div>
+                <label for="alBatchSelect" style="display: block; color: #cbd5e1; font-size: 10.5px; font-weight: 600;">Batch Size (Lab Coupons)</label>
+                <select id="alBatchSelect" class="dark-select" style="width: 100%; padding: 6px 8px; margin-top: 3px;">
+                  <option value="3">Top 3 Coupons</option>
+                  <option value="5" selected>Top 5 Coupons</option>
+                  <option value="10">Top 10 Coupons</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Constraint Checkboxes -->
+            <div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 12px; font-size: 11px; color: #e2e8f0;">
+              <label for="alReqConduction" style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                <input type="checkbox" id="alReqConduction" checked>
+                <span>Require Conduction / Transition Window</span>
+              </label>
+              <label for="alReqAstm" style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                <input type="checkbox" id="alReqAstm" checked>
+                <span>Require ASTM Elongation ≥ 10%</span>
+              </label>
+              <label for="alIncludePost" style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                <input type="checkbox" id="alIncludePost" checked>
+                <span>Include Post-Processing Search (As-Built / SR / Anneal / HIP)</span>
+              </label>
+            </div>
+
+            <!-- Status Meta + Axis Switch + Toast -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+              <span id="alPlannerMeta" style="font-size: 11px; color: #cbd5e1; font-family: 'JetBrains Mono', monospace;">Ready — computing 300 Latin Hypercube candidates</span>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <span id="alActionToast" role="status" aria-live="polite" style="display: none; font-size: 11px; color: #6ee7b7; background: rgba(16, 185, 129, 0.16); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 6px; padding: 3px 9px;"></span>
+                <button type="button" id="alAxisToggleBtn" class="step-btn" style="font-size: 10.5px; color: #bae6fd; border-color: rgba(56, 189, 248, 0.35);">Switch Axes</button>
+              </div>
+            </div>
+
+            <!-- Interactive SVG Acquisition Plot -->
+            <div id="alSvgWrap" style="position: relative; background: #040810; border: 1px solid rgba(56, 189, 248, 0.18); border-radius: 10px; padding: 8px; margin-bottom: 12px;">
+              <svg id="alAcquisitionSvg" viewBox="0 0 640 280" style="width: 100%; height: auto; display: block;" role="img" aria-label="Bayesian Active Learning Acquisition Map"></svg>
+              <div id="alSvgTooltip" style="display: none; margin-top: 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #fef08a; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(250, 204, 21, 0.4); border-radius: 6px; padding: 5px 10px;"></div>
+            </div>
+
+            <!-- Ranked Recommendations Table -->
+            <div style="overflow-x: auto; max-width: 100%;">
+              <table class="custom-table" style="font-size: 11px; width: 100%;">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Recommended Parameters</th>
+                    <th>Predicted μ ± 95% PI (UTS / Elong / HV)</th>
+                    <th>Regime &amp; OOD (d_M)</th>
+                    <th>Why Print This Next</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="alResultsTableBody">
+                  <tr><td colspan="6" style="color: #cbd5e1; text-align: center; padding: 14px;">Click "Recommend Next Lab Coupons" to compute the optimal batch.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Peer-Reviewed Proof & Literature Backing -->
+        <div class="res-card" id="activeLearningProofCard" style="margin-top: 0;">
+          <div class="res-card-header" style="flex-wrap: wrap; gap: 8px;">
+            <div>
+              <h3 class="res-card-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                <span>Active Learning Lab Planner — Peer-Reviewed Proof &amp; Literature Backing</span>
+                <span class="brand-badge" id="activeLearningProofCountBadge" style="font-size: 10px; color: #e9d5ff; background: rgba(139, 92, 246, 0.16); border-color: rgba(167, 139, 250, 0.45);">4 Scopus-Verified Papers</span>
+              </h3>
+              <div class="res-card-sub">Live Elsevier Scopus-verified Bayesian optimization &amp; active learning methodology benchmarks informing acquisition strategies (strictly excluded from empirical LOPO-CV training &amp; comparator).</div>
+            </div>
+            <button type="button" class="step-btn" onclick="window.ActiveLearningUi?.showInLiteratureTable()" style="font-size: 11px; color: #7dd3fc; border-color: rgba(56, 189, 248, 0.35);">Show in Literature Table →</button>
+          </div>
+          <div id="activeLearningProofGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 10px;"></div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -13539,6 +13661,9 @@ function selectProcess(proc, el) {
   updateVedSolver(parseFloat(document.getElementById('targetVedSlider').value));
   autoSync = prevAuto;
   calculatePhysics();
+  if (typeof window !== 'undefined' && window.ActiveLearningUi && typeof window.ActiveLearningUi.onProcessChanged === 'function') {
+    window.ActiveLearningUi.onProcessChanged(proc);
+  }
   if (typeof window !== 'undefined' && window.UiMotion && !window.UiMotion.isSliderDragging()) {
     window.UiMotion.syncAll();
     window.UiMotion.animateHeadlineMetrics();
@@ -13682,8 +13807,10 @@ function switchTab(tabId, btn) {
   if (!targetBtn) {
     if (tabId === 'literature') {
       targetBtn = document.getElementById('navBtnLit');
+    } else if (tabId === 'active-learning') {
+      targetBtn = document.getElementById('navBtnActiveLearning');
     } else {
-      const tabOrder = ['predictions', 'process-map', 'defect-map', 'economics', 'digital-twin', 'qualification', 'melt-pool', 'literature', 'cad-analyzer'];
+      const tabOrder = ['predictions', 'process-map', 'defect-map', 'economics', 'digital-twin', 'qualification', 'melt-pool', 'literature', 'cad-analyzer', 'active-learning'];
       const idx = tabOrder.indexOf(tabId);
       if (idx !== -1) {
         targetBtn = document.querySelectorAll('.tab-btn')[idx];
@@ -13714,6 +13841,10 @@ function switchTab(tabId, btn) {
     if (typeof PinnCadShowcase !== 'undefined') PinnCadShowcase.syncFromDashboard();
   } else if (typeof PinnCadShowcase !== 'undefined') {
     PinnCadShowcase.pauseShowcase();
+  }
+  if (tabId === 'active-learning' && typeof window !== 'undefined' && window.ActiveLearningUi) {
+    window.ActiveLearningUi.renderProofCard();
+    window.ActiveLearningUi.initPlanner(true);
   }
   if (tabId === 'predictions' && !hadDirtyPreds && typeof renderPredMechCurves === 'function') {
     setTimeout(() => renderPredMechCurves(window.latestPhysicsState), 30);
