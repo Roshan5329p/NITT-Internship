@@ -7840,6 +7840,8 @@ window.addEventListener('click', function(e) {
       <a href="/methodology.html" class="step-btn" style="text-decoration: none; white-space: nowrap; font-size: 11.5px; font-weight: 700; padding: 7px 12px;">Read Full Validation Study →</a>
     </section>
 
+    <!-- TAB 1: PREDICTIONS VIEW (DEFAULT) -->
+    <div id="view_predictions" class="tab-view active">
     <!-- 1. TOP 5 KPI CARDS -->
     <div class="kpi-row fx-kpi-glide-grid">
       <div class="kpi-card kpi-card-1 cyan fx-kpi-selected">
@@ -7912,8 +7914,6 @@ window.addEventListener('click', function(e) {
       <button class="lit-strip-btn" onclick="openEvidenceHub()">Compare Literature Papers →</button>
     </div>
 
-    <!-- TAB 1: PREDICTIONS VIEW (DEFAULT) -->
-    <div id="view_predictions" class="tab-view active">
     <!-- ACTIVE CAD PART COUPLING BANNER -->
     <div id="cadCouplingBanner" style="display: none; margin: 0 0 14px 0; padding: 11px 14px; border-radius: 10px; background: rgba(56, 189, 248, 0.10); border: 1px solid rgba(56, 189, 248, 0.4); align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
       <div>
@@ -13824,6 +13824,11 @@ function switchTab(tabId, btn) {
   if (typeof window !== 'undefined' && window.UiMotion && (typeof _isHydratingFromUrl === 'undefined' || !_isHydratingFromUrl)) {
     window.UiMotion.animateCurtainEnter(targetView);
     window.UiMotion.syncAll();
+    if (tabId === 'predictions' && typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => {
+        if (window.UiMotion) window.UiMotion.syncAll();
+      });
+    }
   }
 
   const hadDirtyPreds = tabId === 'predictions' && dirtyTabs.has('predictions');
