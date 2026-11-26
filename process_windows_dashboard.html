@@ -1408,6 +1408,26 @@
     display: block;
   }
 
+  #twinAnimationVideo {
+    width: 100%;
+    height: 420px;
+    display: none;
+    object-fit: contain;
+    background: #050811;
+    border-radius: 8px;
+  }
+
+  #twinAnimationVideo.active {
+    display: block;
+  }
+
+  @media (max-width: 640px) {
+    #twinAnimationVideo,
+    canvas#twinCanvas {
+      height: 300px;
+    }
+  }
+
   /* Industrial Economics & ESG Telemetry Engine (Screenshots & Industrial Architecture) */
   .econ-layout-grid {
     display: grid;
@@ -10069,6 +10089,7 @@ window.addEventListener('click', function(e) {
                   <button type="button" class="twin-pill-btn active" id="btnAutoOrbit" onclick="toggleAutoOrbit()">Auto-Orbit: ON</button>
                   <button type="button" class="twin-pill-btn" id="btnCutaway" onclick="toggleCutaway()">Cutaway: OFF</button>
                   <button type="button" class="twin-pill-btn" id="btnWireframe" onclick="toggleWireframe()">Wireframe</button>
+                  <button type="button" class="twin-pill-btn" id="btnTwinAnimation" onclick="toggleTwinAnimation()">Play Scene Animation</button>
                   <button type="button" class="twin-pill-btn" onclick="resetCamera()" title="Reset Camera View" style="padding: 5px 8px;">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                   </button>
@@ -10077,6 +10098,9 @@ window.addEventListener('click', function(e) {
 
               <!-- Canvas element -->
               <canvas id="twinCanvas" width="760" height="420" style="width: 100%; height: 420px; display: block; cursor: grab;"></canvas>
+              <video id="twinAnimationVideo" controls autoplay muted loop playsinline preload="metadata" aria-label="3D scene animation">
+                <source src="scene-animation.mp4" type="video/mp4">
+              </video>
 
               <!-- Bottom flex footer bar (non-overlapping at all widths) -->
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.06);">
@@ -14091,6 +14115,25 @@ function toggleAutoOrbit() {
   }
   if (autoOrbit) requestTwinFrame();
 }
+
+function toggleTwinAnimation() {
+  const canvas = $id('twinCanvas');
+  const video = $id('twinAnimationVideo');
+  const button = $id('btnTwinAnimation');
+  if (!canvas || !video || !button) return;
+
+  const showingAnimation = video.classList.toggle('active');
+  canvas.style.display = showingAnimation ? 'none' : 'block';
+  button.classList.toggle('active', showingAnimation);
+  button.textContent = showingAnimation ? 'Return to 3D Twin' : 'Play Scene Animation';
+
+  if (showingAnimation) {
+    video.play().catch(() => {});
+  } else {
+    video.pause();
+  }
+}
+window.toggleTwinAnimation = toggleTwinAnimation;
 
 function toggleCutaway() {
   cutaway = !cutaway;

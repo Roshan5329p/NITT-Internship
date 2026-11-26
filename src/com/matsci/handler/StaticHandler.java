@@ -252,6 +252,7 @@ public class StaticHandler implements HttpHandler {
         if (lower.endsWith(".gif")) return "image/gif";
         if (lower.endsWith(".webp")) return "image/webp";
         if (lower.endsWith(".ico")) return "image/x-icon";
+        if (lower.endsWith(".mp4")) return "video/mp4";
         if (lower.endsWith(".woff2")) return "font/woff2";
         if (lower.endsWith(".woff")) return "font/woff";
         if (lower.endsWith(".ttf")) return "font/ttf";
