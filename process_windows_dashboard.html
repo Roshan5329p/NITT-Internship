@@ -22,6 +22,7 @@
 <script defer src="js/pinn-cad-showcase.js"></script>
 <script defer src="js/ui-motion.js"></script>
 <script defer src="js/active-learning-ui.js?v=20261126b"></script>
+<script defer src="js/chart-export.js"></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -2650,6 +2651,40 @@
   .process-map-expand-btn:hover {
     background: rgba(56, 189, 248, 0.26);
     color: #ffffff;
+  }
+  .chart-dl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(16, 185, 129, 0.14);
+    border: 1px solid rgba(16, 185, 129, 0.42);
+    color: #6ee7b7;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+  }
+  .chart-dl-btn:hover {
+    background: rgba(16, 185, 129, 0.28);
+    color: #ffffff;
+    border-color: rgba(16, 185, 129, 0.72);
+  }
+  html.light .chart-dl-btn {
+    background: #d1fae5;
+    border-color: #059669;
+    color: #065f46;
+  }
+  html.light .chart-dl-btn:hover {
+    background: #059669;
+    color: #ffffff;
+  }
+  .process-map-lightbox .chart-dl-btn {
+    background: rgba(16, 185, 129, 0.18);
+    border-color: rgba(16, 185, 129, 0.5);
+    color: #6ee7b7;
   }
   .process-map-img-frame {
     position: relative;
@@ -8976,15 +9011,19 @@ window.addEventListener('click', function(e) {
             <button type="button" class="mp-toggle-btn active" id="btnSsEng" onclick="setStressStrainMode('engineering')" style="font-size: 11px; padding: 4px 10px;">Engineering σ–ε</button>
             <button type="button" class="mp-toggle-btn" id="btnSsTrue" onclick="setStressStrainMode('true')" style="font-size: 11px; padding: 4px 10px;">True σ–ε</button>
             <button type="button" class="mp-toggle-btn active" id="btnCurvesOverlay" onclick="toggleCurvesOverlay()" style="font-size: 11px; padding: 4px 10px;">Overlay: Current vs. Ref</button>
+            <button type="button" class="chart-dl-btn" id="btnDlPhase3All" onclick="downloadDashboardGraphGroup(['cctSvg','stressStrainSvg','snFatigueSvg'], 'cct-tensile-fatigue-curves', 'Ti-6Al-4V Transformation Kinetics, Tensile & Fatigue')" aria-label="Download all 3 transformation, tensile, and fatigue graphs as PNG">↓ All 3 PNG</button>
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px;">
           <!-- 1. Ti-6Al-4V CCT Diagram -->
           <div class="plot-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px; gap: 6px;">
               <span style="font-weight: 700; color: #fff;">Continuous Cooling Transformation (CCT)</span>
-              <span class="res-tag" id="cctRegimeBadge" style="font-size: 10px; background: rgba(16,185,129,0.16); color: #34d399; border-color: rgba(16,185,129,0.35);">HIP α+β Equil.</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="res-tag" id="cctRegimeBadge" style="font-size: 10px; background: rgba(16,185,129,0.16); color: #34d399; border-color: rgba(16,185,129,0.35);">HIP α+β Equil.</span>
+                <button type="button" class="chart-dl-btn" id="btnDlCct" onclick="downloadDashboardGraph('cctSvg', 'cct-diagram', 'Continuous Cooling Transformation (CCT)')" aria-label="Download CCT diagram as PNG">↓ PNG</button>
+              </div>
             </div>
             <svg id="cctSvg" viewBox="0 0 420 260" style="width: 100%; height: auto; display: block; background: #040810; border-radius: 6px;"></svg>
             <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; font-size: 10.5px; font-family: 'JetBrains Mono', monospace;">
@@ -8996,9 +9035,12 @@ window.addEventListener('click', function(e) {
 
           <!-- 2. Synthetic Stress-Strain Curve -->
           <div class="plot-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px; gap: 6px;">
               <span style="font-weight: 700; color: #fff;" id="ssChartTitle">Tensile Stress-Strain (Engineering σ–ε)</span>
-              <span style="color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-size: 10px;" id="ssSummaryBadge">YS 906 | UTS 988 | El 14.5%</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-size: 10px;" id="ssSummaryBadge">YS 906 | UTS 988 | El 14.5%</span>
+                <button type="button" class="chart-dl-btn" id="btnDlStressStrain" onclick="downloadDashboardGraph('stressStrainSvg', 'tensile-stress-strain', 'Tensile Stress-Strain Curve')" aria-label="Download Tensile Stress-Strain graph as PNG">↓ PNG</button>
+              </div>
             </div>
             <svg id="stressStrainSvg" viewBox="0 0 420 260" style="width: 100%; height: auto; display: block; background: #040810; border-radius: 6px;"></svg>
             <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 8px; font-family: 'JetBrains Mono', monospace;">
@@ -9010,9 +9052,12 @@ window.addEventListener('click', function(e) {
 
           <!-- 3. Murakami sqrt(area) S-N Fatigue Curve -->
           <div class="plot-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px; gap: 6px;">
               <span style="font-weight: 700; color: #fff;">Murakami √area S–N Fatigue (10⁴–10⁸)</span>
-              <span style="color: #34d399; font-family: 'JetBrains Mono', monospace; font-size: 10px;" id="snEnduranceVal">Endurance: 540 MPa</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #34d399; font-family: 'JetBrains Mono', monospace; font-size: 10px;" id="snEnduranceVal">Endurance: 540 MPa</span>
+                <button type="button" class="chart-dl-btn" id="btnDlSnFatigue" onclick="downloadDashboardGraph('snFatigueSvg', 'murakami-sn-fatigue', 'Murakami √area S-N Fatigue Curve')" aria-label="Download Murakami S-N Fatigue graph as PNG">↓ PNG</button>
+              </div>
             </div>
             <svg id="snFatigueSvg" viewBox="0 0 420 260" style="width: 100%; height: auto; display: block; background: #040810; border-radius: 6px;"></svg>
             <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 8px; font-family: 'JetBrains Mono', monospace;">
@@ -9037,7 +9082,10 @@ window.addEventListener('click', function(e) {
             </div>
             <div class="res-card-sub">Live constitutive response coupled to AM Process, Sliders, O₂, Orientation, Post-Processing &amp; CAD thermal shift</div>
           </div>
-          <div id="predMechControlBox" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 11px;"></div>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <div id="predMechControlBox" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 11px;"></div>
+            <button type="button" class="chart-dl-btn" id="btnDlPredMech" onclick="downloadDashboardGraph('predMechCanvas', 'process-mechanical-curve', 'Process-Driven Ti-6Al-4V Mechanical Curve')" aria-label="Download Process-Driven Mechanical Curve as PNG">↓ PNG</button>
+          </div>
         </div>
 
         <div class="mp-control-group fx-segmented-track" id="predMechPills" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; margin-bottom: 12px; background: rgba(7,12,20,0.85); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px;">
@@ -9206,18 +9254,22 @@ window.addEventListener('click', function(e) {
             </div>
             <div class="res-card-sub">Leave-One-Study-Out (LOSO) Cross-Validation across 54 Benchmark Experiments (231 Train / 58 Test Records)</div>
           </div>
-          <div style="display: flex; gap: 6px;">
+          <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
             <span class="res-tag res-tag-exp">[EXP] Ground Truth</span>
             <span class="res-tag res-tag-ml">[ML] Surrogate</span>
+            <button type="button" class="chart-dl-btn" id="btnDlParityGroup" onclick="downloadDashboardGraphGroup(['paritySvg','residualSvg'], 'parity-and-residual-errors', 'Explainable ML Parity & Residual Errors')" aria-label="Download Parity and Residual plots as PNG">↓ Both PNG</button>
           </div>
         </div>
 
         <div class="explain-grid">
           <!-- Left: Actual vs Predicted Parity Plot -->
           <div class="plot-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px; gap: 6px;">
               <span style="font-weight: 700; color: #fff;">Actual vs. Predicted Hardness (HV)</span>
-              <span style="color: #38bdf8; font-family: monospace;">±5% & ±10% Bounds</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #38bdf8; font-family: monospace;">±5% & ±10% Bounds</span>
+                <button type="button" class="chart-dl-btn" id="btnDlParity" onclick="downloadDashboardGraph('paritySvg', 'actual-vs-predicted-parity', 'Actual vs. Predicted Hardness Parity (HV)')" aria-label="Download Parity plot as PNG">↓ PNG</button>
+              </div>
             </div>
             <svg id="paritySvg" viewBox="0 0 460 300" style="width: 100%; height: auto; display: block; background: #040810; border-radius: 6px;">
               <!-- Dynamic Parity Plot Layers injected by renderParityAndResidualPlots() -->
@@ -9231,9 +9283,12 @@ window.addEventListener('click', function(e) {
 
           <!-- Right: Residual Distribution Plot -->
           <div class="plot-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px; gap: 6px;">
               <span style="font-weight: 700; color: #fff;">Residual Error Distribution (y - ŷ)</span>
-              <span style="color: #a7f3d0; font-family: monospace;">Gaussian Bell Fit</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #a7f3d0; font-family: monospace;">Gaussian Bell Fit</span>
+                <button type="button" class="chart-dl-btn" id="btnDlResidual" onclick="downloadDashboardGraph('residualSvg', 'residual-error-distribution', 'Residual Error Distribution (y - ŷ)')" aria-label="Download Residual error distribution as PNG">↓ PNG</button>
+              </div>
             </div>
             <svg id="residualSvg" viewBox="0 0 380 300" style="width: 100%; height: auto; display: block; background: #040810; border-radius: 6px;">
               <!-- Dynamic Residual Histogram injected by renderParityAndResidualPlots() -->
@@ -9373,7 +9428,10 @@ window.addEventListener('click', function(e) {
             </div>
             <div class="res-card-sub">Interactive schematic micrographs and phase volume fractions across thermal history and heat treatment states</div>
           </div>
-          <span class="res-tag res-tag-sim">[SIM] EBSD / XRD Calibrated</span>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span class="res-tag res-tag-sim">[SIM] EBSD / XRD Calibrated</span>
+            <button type="button" class="chart-dl-btn" id="btnDlMicrograph" onclick="downloadDashboardGraph('micrographSvg', 'microstructure-explorer', 'Ti-6Al-4V Microstructure Explorer')" aria-label="Download Microstructure Explorer micrograph as PNG">↓ PNG</button>
+          </div>
         </div>
 
         <!-- Microstructure Switcher Pills -->
@@ -9908,9 +9966,12 @@ window.addEventListener('click', function(e) {
 
         <!-- OVAT Sensitivity Curve SVG -->
         <div style="margin-top: 14px; background: #040810; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 11px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 11px; flex-wrap: wrap; gap: 6px;">
             <span style="font-weight: 700; color: #fff;">OVAT Sensitivity: Parameter Perturbations (±30%) vs. Predicted Hardness & Depth</span>
-            <span style="color: #38bdf8; font-family: monospace;">Gradients: ∂HV/∂P, ∂HV/∂v</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: #38bdf8; font-family: monospace;">Gradients: ∂HV/∂P, ∂HV/∂v</span>
+              <button type="button" class="chart-dl-btn" id="btnDlOvat" onclick="downloadDashboardGraph('sensitivitySvg', 'ovat-sensitivity', 'OVAT Parameter Perturbations vs Predicted Hardness')" aria-label="Download OVAT Sensitivity graph as PNG">↓ PNG</button>
+            </div>
           </div>
           <svg id="sensitivitySvg" viewBox="0 0 760 220" style="width: 100%; height: auto; display: block; background: #02060c; border-radius: 6px;">
             <!-- Dynamically populated by updateSensitivityCurves() -->
@@ -10009,7 +10070,10 @@ window.addEventListener('click', function(e) {
                 <h3 class="process-map-card-title">LPBF Defect Process Window (P vs. v)</h3>
                 <div class="process-map-card-sub">Conduction Window (55–85 J/mm³) · Keyholing · Lack of Fusion · Balling · Experimental Literature Overlay</div>
               </div>
-              <button type="button" class="process-map-expand-btn" onclick="openProcessMapLightbox('plots/ti64_lpbf_defect_processing_window.png', 'LPBF Defect Process Window (P vs. v)', 'Laser Power vs. Scan Speed showing Safe Conduction Zone, Keyholing, Lack of Fusion, and Balling thresholds (h = 100 µm, t = 40 µm)')" aria-label="Expand and zoom LPBF Defect Process Window">Expand / Zoom ⤢</button>
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <button type="button" class="chart-dl-btn" id="btnDlPmLpbf" onclick="downloadStaticPlotPng('plots/ti64_lpbf_defect_processing_window.png', 'lpbf-defect-process-window')" aria-label="Download LPBF Defect Process Window as PNG">↓ PNG</button>
+                <button type="button" class="process-map-expand-btn" onclick="openProcessMapLightbox('plots/ti64_lpbf_defect_processing_window.png', 'LPBF Defect Process Window (P vs. v)', 'Laser Power vs. Scan Speed showing Safe Conduction Zone, Keyholing, Lack of Fusion, and Balling thresholds (h = 100 µm, t = 40 µm)')" aria-label="Expand and zoom LPBF Defect Process Window">Expand / Zoom ⤢</button>
+              </div>
             </div>
             <div class="process-map-img-frame" role="button" tabindex="0" aria-label="Zoom LPBF Defect Process Window" onclick="openProcessMapLightbox('plots/ti64_lpbf_defect_processing_window.png', 'LPBF Defect Process Window (P vs. v)', 'Laser Power vs. Scan Speed showing Safe Conduction Zone, Keyholing, Lack of Fusion, and Balling thresholds (h = 100 µm, t = 40 µm)')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProcessMapLightbox('plots/ti64_lpbf_defect_processing_window.png', 'LPBF Defect Process Window (P vs. v)', 'Laser Power vs. Scan Speed showing Safe Conduction Zone, Keyholing, Lack of Fusion, and Balling thresholds (h = 100 µm, t = 40 µm)');}">
               <picture>
@@ -10026,7 +10090,10 @@ window.addEventListener('click', function(e) {
                 <h3 class="process-map-card-title">DED &amp; WAAM Linear Heat Input Window</h3>
                 <div class="process-map-card-sub">Laser / Arc Power vs. Travel Speed · Linear Heat Input (J/mm) · Coarsening vs. Incomplete Sidewall Fusion</div>
               </div>
-              <button type="button" class="process-map-expand-btn" onclick="openProcessMapLightbox('plots/ti64_ded_waam_process_window.png', 'DED & WAAM Linear Heat Input Window', 'Power vs. Travel Speed mapping Linear Heat Input (J/mm), High-Integrity Deposition Zone, Coarsening, and LOF boundaries')" aria-label="Expand and zoom DED and WAAM Linear Heat Input Window">Expand / Zoom ⤢</button>
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <button type="button" class="chart-dl-btn" id="btnDlPmDed" onclick="downloadStaticPlotPng('plots/ti64_ded_waam_process_window.png', 'ded-waam-heat-input-window')" aria-label="Download DED and WAAM Linear Heat Input Window as PNG">↓ PNG</button>
+                <button type="button" class="process-map-expand-btn" onclick="openProcessMapLightbox('plots/ti64_ded_waam_process_window.png', 'DED & WAAM Linear Heat Input Window', 'Power vs. Travel Speed mapping Linear Heat Input (J/mm), High-Integrity Deposition Zone, Coarsening, and LOF boundaries')" aria-label="Expand and zoom DED and WAAM Linear Heat Input Window">Expand / Zoom ⤢</button>
+              </div>
             </div>
             <div class="process-map-img-frame" role="button" tabindex="0" aria-label="Zoom DED and WAAM Linear Heat Input Window" onclick="openProcessMapLightbox('plots/ti64_ded_waam_process_window.png', 'DED & WAAM Linear Heat Input Window', 'Power vs. Travel Speed mapping Linear Heat Input (J/mm), High-Integrity Deposition Zone, Coarsening, and LOF boundaries')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProcessMapLightbox('plots/ti64_ded_waam_process_window.png', 'DED & WAAM Linear Heat Input Window', 'Power vs. Travel Speed mapping Linear Heat Input (J/mm), High-Integrity Deposition Zone, Coarsening, and LOF boundaries');}">
               <picture>
@@ -10049,6 +10116,7 @@ window.addEventListener('click', function(e) {
               <button type="button" class="process-map-view-btn active" id="btnPmZoom1" onclick="setProcessMapLightboxZoom(1)" aria-label="Fit image to screen" style="color: #e2e8f0;">Fit (1×)</button>
               <button type="button" class="process-map-view-btn" id="btnPmZoom15" onclick="setProcessMapLightboxZoom(1.5)" aria-label="Zoom to 1.5x" style="color: #e2e8f0;">1.5×</button>
               <button type="button" class="process-map-view-btn" id="btnPmZoom2" onclick="setProcessMapLightboxZoom(2)" aria-label="Zoom to 2x" style="color: #e2e8f0;">2×</button>
+              <button type="button" class="chart-dl-btn" id="btnDlPmLightbox" onclick="downloadStaticPlotPng(document.getElementById('pmLightboxImg').getAttribute('src'), 'process-map-highres')" aria-label="Download active process map as PNG">↓ PNG</button>
               <a id="pmLightboxRawLink" href="plots/ti64_lpbf_defect_processing_window.png" target="_blank" rel="noopener noreferrer" class="process-map-expand-btn" style="text-decoration: none;">Open High-Res PNG ↗</a>
               <button type="button" class="process-map-expand-btn" id="btnPmLightboxClose" onclick="closeProcessMapLightbox()" aria-label="Close expanded process map" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(248, 113, 113, 0.65); color: #fecaca;">Close ✕</button>
             </div>
@@ -10059,13 +10127,14 @@ window.addEventListener('click', function(e) {
         </div>
         <!-- Bontha Solidification Map (Bontha et al. 2006, 2009) -->
         <div style="margin-top: 18px; background: #080d14; border: 1px solid var(--border-color); border-radius: 8px; padding: 18px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
             <div>
               <div style="font-size: 14px; font-weight: 700; color: #fff;">Solidification Microstructure Map: Thermal Gradient G vs. Solidification Rate R (Bontha et al. 2006, 2009)</div>
               <div style="font-size: 11.5px; color: var(--text-muted);">Predicts prior-β grain morphology (Columnar vs. Equiaxed) and solidus cooling rate (Ṫ = G · R) across bulky 3D Ti-6Al-4V AM deposits</div>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
               <span class="brand-badge" id="bonthaMorphBadge" style="background: rgba(80, 216, 233, 0.2); color: var(--accent-cyan);">FULLY COLUMNAR</span>
+              <button type="button" class="chart-dl-btn" id="btnDlBonthaSmall" onclick="downloadDashboardGraph('bonthaSvg', 'bontha-solidification-map', 'Bontha Solidification Microstructure Map (G vs R)')" aria-label="Download Bontha Solidification Map as PNG">↓ PNG</button>
             </div>
           </div>
 
@@ -10174,7 +10243,10 @@ window.addEventListener('click', function(e) {
             <h2 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0;" id="defectMapTitle">2D Defect Process Window (King's Enthalpy Criterion)</h2>
             <p style="font-size: 11.5px; color: var(--text-muted);" id="defectMapSubtitle">Melt pool depth-to-width ratio & normalized enthalpy ΔH/h_s mapped across Laser Power P and Scan Speed v.</p>
           </div>
-          <button class="step-btn" style="background: var(--accent-cyan); color: #070b10; font-weight: bold; padding: 6px 14px;" onclick="autoTuneSafeWindow()">Auto-Tune to Safe Window</button>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="chart-dl-btn" id="btnDlDefectMap" onclick="downloadDashboardGraph('defectMapSvg', 'defect-process-window', '2D Defect Process Window (Enthalpy Criterion)')" aria-label="Download 2D Defect Process Window as PNG">↓ PNG</button>
+            <button class="step-btn" style="background: var(--accent-cyan); color: #070b10; font-weight: bold; padding: 6px 14px;" onclick="autoTuneSafeWindow()">Auto-Tune to Safe Window</button>
+          </div>
         </div>
 
         <div class="defect-window-split-grid">
@@ -11100,6 +11172,7 @@ window.addEventListener('click', function(e) {
               <button type="button" class="mp-toggle-btn" id="btnMpAbort" onclick="toggleEmergencyAbort()" style="border-color: rgba(239,68,68,0.4); color: #fca5a5;">
                 <span id="txtMpAbort">⛔ Quench Emitter</span>
               </button>
+              <button type="button" class="chart-dl-btn" id="btnDlMpSvg" onclick="downloadDashboardGraph('mpSvg', 'melt-pool-thermal-simulation', 'Melt Pool Thermal Field & Solidification Simulation', {overlayCanvasId:'mpAnimCanvas'})" aria-label="Download Melt Pool simulation graph as PNG">↓ PNG</button>
             </div>
           </div>
         </div>
@@ -11484,6 +11557,7 @@ window.addEventListener('click', function(e) {
                 <input type="checkbox" id="chk3dFem" checked onchange="toggleBonthaFemOverlay(this.checked)" style="accent-color: #c084fc;">
                 <strong>3D FEM Overlay (Figs. 6 & 7)</strong>
               </label>
+              <button type="button" class="chart-dl-btn" id="btnDlBonthaLarge" onclick="downloadDashboardGraph('bonthaLargeSvg', 'bontha-solidification-explorer', 'Solidification Microstructure Explorer (G vs R)')" aria-label="Download Bontha Solidification Explorer map as PNG">↓ PNG</button>
             </div>
           </div>
 
@@ -11554,11 +11628,14 @@ window.addEventListener('click', function(e) {
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
               <div style="background: #05080c; border: 1px solid #16202c; border-radius: 8px; padding: 12px;">
-                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
                   <span style="font-weight: 700; color: #fbbf24;">Fig. 2(a): Dimensionless Cooling Rate ∂T̄/∂t̄</span>
-                  <span style="color: #718da9; font-family: monospace;">Max at surface (z=0)</span>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="color: #718da9; font-family: monospace;">Max at surface (z=0)</span>
+                    <button type="button" class="chart-dl-btn" id="btnDlDimRate" onclick="downloadDashboardGraph('bonthaDimRateSvg', 'dimensionless-cooling-rate', 'Fig. 2(a): Dimensionless Cooling Rate')" aria-label="Download Dimensionless Cooling Rate graph as PNG">↓ PNG</button>
+                  </div>
                 </div>
-                <svg viewBox="0 0 380 200" style="width: 100%; height: auto;">
+                <svg id="bonthaDimRateSvg" viewBox="0 0 380 200" style="width: 100%; height: auto;">
                   <line x1="45" y1="165" x2="360" y2="165" stroke="#334155" stroke-width="1"/>
                   <line x1="45" y1="20" x2="45" y2="165" stroke="#334155" stroke-width="1"/>
                   <text x="200" y="190" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="monospace">Normalized Temperature T̄m</text>
@@ -11572,11 +11649,14 @@ window.addEventListener('click', function(e) {
                 </svg>
               </div>
               <div style="background: #05080c; border: 1px solid #16202c; border-radius: 8px; padding: 12px;">
-                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
                   <span style="font-weight: 700; color: #38bdf8;">Fig. 2(b): Dimensionless Thermal Gradient |∇̄T̄|</span>
-                  <span style="color: #718da9; font-family: monospace;">Max at root (z=zm)</span>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="color: #718da9; font-family: monospace;">Max at root (z=zm)</span>
+                    <button type="button" class="chart-dl-btn" id="btnDlDimGrad" onclick="downloadDashboardGraph('bonthaDimGradSvg', 'dimensionless-thermal-gradient', 'Fig. 2(b): Dimensionless Thermal Gradient')" aria-label="Download Dimensionless Thermal Gradient graph as PNG">↓ PNG</button>
+                  </div>
                 </div>
-                <svg viewBox="0 0 380 200" style="width: 100%; height: auto;">
+                <svg id="bonthaDimGradSvg" viewBox="0 0 380 200" style="width: 100%; height: auto;">
                   <line x1="45" y1="165" x2="360" y2="165" stroke="#334155" stroke-width="1"/>
                   <line x1="45" y1="20" x2="45" y2="165" stroke="#334155" stroke-width="1"/>
                   <text x="200" y="190" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="monospace">Normalized Temperature T̄m</text>
@@ -11877,7 +11957,10 @@ window.addEventListener('click', function(e) {
             </div>
             <div class="model-card-sub" id="litTopicSubtitle">Select a characterization topic below to inspect constitutive reference graphs and filter matching peer-reviewed papers in the database.</div>
           </div>
-          <div id="litTopicControlBox" style="display: flex; align-items: center; gap: 8px; font-size: 11px;"></div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div id="litTopicControlBox" style="display: flex; align-items: center; gap: 8px; font-size: 11px;"></div>
+            <button type="button" class="chart-dl-btn" id="btnDlLitTopic" onclick="downloadDashboardGraph('litTopicCanvas', 'mechanical-behavior-scopus-curves', 'Ti-6Al-4V Mechanical Behavior Curves & Scopus Topics')" aria-label="Download Mechanical Behavior Scopus Curve as PNG">↓ PNG</button>
+          </div>
         </div>
         <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;" id="litTopicPills">
           <button type="button" class="mp-pill-btn active" id="btnFilterTopicsAll" onclick="selectLitTopic('ALL', this)">All Topics (199)</button>

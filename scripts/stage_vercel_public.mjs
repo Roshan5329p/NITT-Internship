@@ -33,6 +33,7 @@ for (const dir of ['plots', 'vendor', 'js']) {
 
 const requiredStagedAssets = [
   path.join(OUT_DIR, 'js', 'active-learning-ui.js'),
+  path.join(OUT_DIR, 'js', 'chart-export.js'),
   path.join(OUT_DIR, 'js', 'ui-motion.js'),
   path.join(OUT_DIR, 'js', 'dashboard-data.js')
 ];
