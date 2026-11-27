@@ -3829,6 +3829,100 @@
     to { clip-path: inset(0 0% 0 0); }
   }
 
+  /* Compact Side Condition Explanation Panel Alongside Defect Window SVG */
+  .defect-window-split-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(260px, 1fr);
+    gap: 14px;
+    align-items: stretch;
+  }
+  .defect-side-explainer {
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    background: rgba(11, 18, 32, 0.92);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-left: 3px solid #10b981;
+    border-radius: 10px;
+    padding: 14px 15px;
+    transition: border-color 180ms ease;
+  }
+  .defect-side-explainer.is-optimal {
+    border-left-color: #10b981;
+  }
+  .defect-side-explainer.is-warning {
+    border-left-color: #f59e0b;
+  }
+  .defect-side-explainer.is-danger {
+    border-left-color: #ef4444;
+  }
+  .defect-side-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  }
+  .defect-side-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .defect-side-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.65px;
+    text-transform: uppercase;
+    color: #94a3b8;
+  }
+  .defect-side-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.3;
+    color: var(--text-primary);
+  }
+  .defect-side-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .defect-side-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #7dd3fc;
+  }
+  .defect-side-text {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #cbd5e1;
+  }
+  .defect-side-trigger {
+    margin-top: 4px;
+    padding: 7px 9px;
+    border-radius: 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    line-height: 1.45;
+    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+  }
+  .defect-side-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
+  }
+
   /* Defect Window Theoretical & Experimental Breakdown Card */
   .defect-explainer-card {
     margin-top: 16px;
@@ -4033,6 +4127,24 @@
     font-weight: 800;
   }
   /* Light Theme WCAG AA Overrides */
+  html.light .defect-side-explainer {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.14);
+  }
+  html.light .defect-side-eyebrow {
+    color: #475569;
+  }
+  html.light .defect-side-label {
+    color: #0369a1;
+  }
+  html.light .defect-side-text {
+    color: #1e293b;
+  }
+  html.light .defect-side-trigger {
+    background: #e0f2fe;
+    border-color: #38bdf8;
+    color: #0c4a6e;
+  }
   html.light .defect-explainer-card {
     background: #ffffff;
     border-color: rgba(15, 23, 42, 0.14);
@@ -4097,6 +4209,14 @@
   }
   html.light .defect-matrix-table tr.is-active-regime td:first-child {
     color: #0369a1;
+  }
+  @media (max-width: 980px) {
+    .defect-window-split-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .defect-side-explainer {
+      min-height: auto;
+    }
   }
   @media (max-width: 768px) {
     .defect-explainer-grid {
@@ -9812,61 +9932,92 @@ window.addEventListener('click', function(e) {
           <button class="step-btn" style="background: var(--accent-cyan); color: #070b10; font-weight: bold; padding: 6px 14px;" onclick="autoTuneSafeWindow()">Auto-Tune to Safe Window</button>
         </div>
 
-        <div style="position: relative; width: 100%; height: 420px; background: #070b10; border: 1px solid #142131; border-radius: 8px; overflow: hidden;">
-          <svg id="defectMapSvg" viewBox="0 0 600 360" style="width: 100%; height: 100%;">
-            <defs>
-              <linearGradient id="keyholeGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#ef4444" stop-opacity="0.45"/>
-                <stop offset="100%" stop-color="#ef4444" stop-opacity="0.10"/>
-              </linearGradient>
-              <linearGradient id="lofGrad" x1="0" y1="1" x2="1" y2="0">
-                <stop offset="0%" stop-color="#f97316" stop-opacity="0.45"/>
-                <stop offset="100%" stop-color="#f97316" stop-opacity="0.08"/>
-              </linearGradient>
-              <linearGradient id="conductionGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#10b981" stop-opacity="0.35"/>
-                <stop offset="100%" stop-color="#10b981" stop-opacity="0.15"/>
-              </linearGradient>
-              <linearGradient id="ballingGrad" x1="1" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#eab308" stop-opacity="0.45"/>
-                <stop offset="100%" stop-color="#eab308" stop-opacity="0.08"/>
-              </linearGradient>
-            </defs>
+        <div class="defect-window-split-grid">
+          <div style="position: relative; width: 100%; height: 420px; background: #070b10; border: 1px solid #142131; border-radius: 8px; overflow: hidden;">
+            <svg id="defectMapSvg" viewBox="0 0 600 360" style="width: 100%; height: 100%;">
+              <defs>
+                <linearGradient id="keyholeGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ef4444" stop-opacity="0.45"/>
+                  <stop offset="100%" stop-color="#ef4444" stop-opacity="0.10"/>
+                </linearGradient>
+                <linearGradient id="lofGrad" x1="0" y1="1" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#f97316" stop-opacity="0.45"/>
+                  <stop offset="100%" stop-color="#f97316" stop-opacity="0.08"/>
+                </linearGradient>
+                <linearGradient id="conductionGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#10b981" stop-opacity="0.35"/>
+                  <stop offset="100%" stop-color="#10b981" stop-opacity="0.15"/>
+                </linearGradient>
+                <linearGradient id="ballingGrad" x1="1" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#eab308" stop-opacity="0.45"/>
+                  <stop offset="100%" stop-color="#eab308" stop-opacity="0.08"/>
+                </linearGradient>
+              </defs>
 
-            <!-- Grid Lines -->
-            <line x1="70" y1="30" x2="70" y2="310" stroke="#16202c" stroke-dasharray="3 3"/>
-            <line x1="200" y1="30" x2="200" y2="310" stroke="#16202c" stroke-dasharray="3 3"/>
-            <line x1="330" y1="30" x2="330" y2="310" stroke="#16202c" stroke-dasharray="3 3"/>
-            <line x1="460" y1="30" x2="460" y2="310" stroke="#16202c" stroke-dasharray="3 3"/>
-            <line x1="70" y1="100" x2="560" y2="100" stroke="#16202c" stroke-dasharray="3 3"/>
-            <line x1="70" y1="170" x2="560" y2="170" stroke="#16202c" stroke-dasharray="3 3"/>
-            <line x1="70" y1="240" x2="560" y2="240" stroke="#16202c" stroke-dasharray="3 3"/>
+              <!-- Grid Lines -->
+              <line x1="70" y1="30" x2="70" y2="310" stroke="#16202c" stroke-dasharray="3 3"/>
+              <line x1="200" y1="30" x2="200" y2="310" stroke="#16202c" stroke-dasharray="3 3"/>
+              <line x1="330" y1="30" x2="330" y2="310" stroke="#16202c" stroke-dasharray="3 3"/>
+              <line x1="460" y1="30" x2="460" y2="310" stroke="#16202c" stroke-dasharray="3 3"/>
+              <line x1="70" y1="100" x2="560" y2="100" stroke="#16202c" stroke-dasharray="3 3"/>
+              <line x1="70" y1="170" x2="560" y2="170" stroke="#16202c" stroke-dasharray="3 3"/>
+              <line x1="70" y1="240" x2="560" y2="240" stroke="#16202c" stroke-dasharray="3 3"/>
 
-            <!-- Dynamic Process Zones Group -->
-            <g id="defectZonesGroup">
-              <polygon points="70,30 350,30 220,130 70,160" fill="url(#keyholeGrad)" stroke="#ef4444" stroke-width="1.2"/>
-              <polygon points="260,310 560,310 560,170 380,240" fill="url(#lofGrad)" stroke="#f97316" stroke-width="1.2"/>
-              <polygon points="460,30 560,30 560,170 420,110" fill="url(#ballingGrad)" stroke="#eab308" stroke-width="1"/>
-              <polygon points="120,240 280,110 460,110 380,240" fill="url(#conductionGrad)" stroke="#10b981" stroke-width="1.8"/>
-              <text x="110" y="80" fill="#f87171" font-size="11" font-weight="bold">KEYHOLING REGIME (Deep Vapor Cavity)</text>
-              <text x="210" y="180" fill="#34d399" font-size="11" font-weight="bold">STABLE CONDUCTION WINDOW</text>
-              <text x="390" y="275" fill="#fb923c" font-size="10" font-weight="bold">LACK OF FUSION</text>
-              <text x="470" y="70" fill="#fde047" font-size="10" font-weight="bold">BALLING</text>
-            </g>
+              <!-- Dynamic Process Zones Group -->
+              <g id="defectZonesGroup">
+                <polygon points="70,30 350,30 220,130 70,160" fill="url(#keyholeGrad)" stroke="#ef4444" stroke-width="1.2"/>
+                <polygon points="260,310 560,310 560,170 380,240" fill="url(#lofGrad)" stroke="#f97316" stroke-width="1.2"/>
+                <polygon points="460,30 560,30 560,170 420,110" fill="url(#ballingGrad)" stroke="#eab308" stroke-width="1"/>
+                <polygon points="120,240 280,110 460,110 380,240" fill="url(#conductionGrad)" stroke="#10b981" stroke-width="1.8"/>
+                <text x="110" y="80" fill="#f87171" font-size="11" font-weight="bold">KEYHOLING REGIME (Deep Vapor Cavity)</text>
+                <text x="210" y="180" fill="#34d399" font-size="11" font-weight="bold">STABLE CONDUCTION WINDOW</text>
+                <text x="390" y="275" fill="#fb923c" font-size="10" font-weight="bold">LACK OF FUSION</text>
+                <text x="470" y="70" fill="#fde047" font-size="10" font-weight="bold">BALLING</text>
+              </g>
 
-            <!-- Dynamic Operating Point -->
-            <circle id="svgCursor" cx="240" cy="180" r="7" fill="#50d8e9" stroke="#fff" stroke-width="2">
-              <animate attributeName="r" values="6;9;6" dur="2s" repeatCount="indefinite"/>
-            </circle>
-            <text id="svgCursorLabel" x="255" y="185" fill="#50d8e9" font-size="11" font-family="monospace" font-weight="bold">Operating Point (280W, 960mm/s)</text>
+              <!-- Dynamic Operating Point -->
+              <circle id="svgCursor" cx="240" cy="180" r="7" fill="#50d8e9" stroke="#fff" stroke-width="2">
+                <animate attributeName="r" values="6;9;6" dur="2s" repeatCount="indefinite"/>
+              </circle>
+              <text id="svgCursorLabel" x="255" y="185" fill="#50d8e9" font-size="11" font-family="monospace" font-weight="bold">Operating Point (280W, 960mm/s)</text>
 
-            <!-- Axes & Ticks -->
-            <line x1="70" y1="310" x2="560" y2="310" stroke="#475569" stroke-width="1.5"/>
-            <line x1="70" y1="30" x2="70" y2="310" stroke="#475569" stroke-width="1.5"/>
-            <g id="defectAxisTicks"></g>
-            <text x="295" y="346" fill="#94a3b8" font-size="11" text-anchor="middle" id="defectXAxisLabel">Scan Speed v (mm/s)</text>
-            <text x="16" y="170" fill="#94a3b8" font-size="11" text-anchor="middle" transform="rotate(-90 16 170)" id="defectYAxisLabel">Laser Power P (W)</text>
-          </svg>
+              <!-- Axes & Ticks -->
+              <line x1="70" y1="310" x2="560" y2="310" stroke="#475569" stroke-width="1.5"/>
+              <line x1="70" y1="30" x2="70" y2="310" stroke="#475569" stroke-width="1.5"/>
+              <g id="defectAxisTicks"></g>
+              <text x="295" y="346" fill="#94a3b8" font-size="11" text-anchor="middle" id="defectXAxisLabel">Scan Speed v (mm/s)</text>
+              <text x="16" y="170" fill="#94a3b8" font-size="11" text-anchor="middle" transform="rotate(-90 16 170)" id="defectYAxisLabel">Laser Power P (W)</text>
+            </svg>
+          </div>
+
+          <aside class="defect-side-explainer is-optimal" id="defectSideExplainer" aria-label="Active Defect Condition Explanation">
+            <div class="defect-side-header">
+              <div class="defect-side-header-top">
+                <span class="defect-side-eyebrow">Active Window Condition</span>
+                <span class="defect-regime-badge is-optimal" id="defectSideBadge">Safe Window</span>
+              </div>
+              <h3 class="defect-side-title" id="defectSideConditionTitle">Optimal Conduction Window</h3>
+            </div>
+
+            <div class="defect-side-block">
+              <span class="defect-side-label">Why It Is Occurring</span>
+              <p class="defect-side-text" id="defectSideDriver"></p>
+              <div class="defect-side-trigger" id="defectSideTrigger" aria-live="polite"></div>
+            </div>
+
+            <div class="defect-side-block">
+              <span class="defect-side-label">Observed Effect</span>
+              <p class="defect-side-text" id="defectSideEffect"></p>
+            </div>
+
+            <div class="defect-side-footer">
+              <div class="defect-side-block">
+                <span class="defect-side-label">Key Adjustment</span>
+                <p class="defect-side-text" id="defectSideFix"></p>
+              </div>
+              <button type="button" class="defect-snap-btn" id="btnDefectSideSnap" onclick="tweakToConduction()" style="display: none;" aria-label="Snap parameters to safe operating window">Fix → Safe Window</button>
+            </div>
+          </aside>
         </div>
 
         <!-- WHY THIS REGIME IS HAPPENING: THEORETICAL & EXPERIMENTAL BREAKDOWN -->
@@ -14152,6 +14303,8 @@ function updateDefectRegimeExplainer(physInput) {
   }
   const calloutEl = $id('defectLiveTriggerCallout');
   if (calloutEl) calloutEl.textContent = live.callout;
+  const sideTriggerEl = $id('defectSideTrigger');
+  if (sideTriggerEl) sideTriggerEl.textContent = live.callout;
 
   // Skip full narrative & table DOM work if process + regime have not changed
   if (_lastDefectExplainerKey === explainerKey) return;
@@ -14165,9 +14318,35 @@ function updateDefectRegimeExplainer(physInput) {
 
   const badgeEl = $id('defectExplainerBadge');
   const sev = (regInfo && regInfo.severity) || (regKey === 'conduction' || regKey === 'optimal_sinter' ? 'optimal' : 'warning');
+  const activeRegimeTitle = (regInfo && regInfo.regimeLabel) ? regInfo.regimeLabel : entry.name;
   if (badgeEl) {
-    badgeEl.textContent = (regInfo && regInfo.regimeLabel) ? regInfo.regimeLabel : entry.name;
+    badgeEl.textContent = activeRegimeTitle;
     badgeEl.className = 'defect-regime-badge ' + (sev === 'optimal' ? 'is-optimal' : (sev === 'danger' ? 'is-danger' : 'is-warning'));
+  }
+
+  const sidePanelEl = $id('defectSideExplainer');
+  if (sidePanelEl) {
+    sidePanelEl.className = 'defect-side-explainer ' + (sev === 'optimal' ? 'is-optimal' : (sev === 'danger' ? 'is-danger' : 'is-warning'));
+  }
+  const sideTitleEl = $id('defectSideConditionTitle');
+  if (sideTitleEl) sideTitleEl.textContent = activeRegimeTitle;
+  const sideBadgeEl = $id('defectSideBadge');
+  if (sideBadgeEl) {
+    sideBadgeEl.textContent = sev === 'optimal' ? 'Safe Window' : (sev === 'danger' ? 'Defect Active' : 'Edge / Caution');
+    sideBadgeEl.className = 'defect-regime-badge ' + (sev === 'optimal' ? 'is-optimal' : (sev === 'danger' ? 'is-danger' : 'is-warning'));
+  }
+  const sideDriverEl = $id('defectSideDriver');
+  if (sideDriverEl) sideDriverEl.textContent = `${entry.shortDriver} (${entry.thresholds}).`;
+  const sideEffectEl = $id('defectSideEffect');
+  if (sideEffectEl) sideEffectEl.textContent = `${entry.shortExp}.`;
+  const sideFixEl = $id('defectSideFix');
+  if (sideFixEl) sideFixEl.textContent = (entry.mitigations && entry.mitigations[0]) ? entry.mitigations[0] : '';
+  const sideSnapBtn = $id('btnDefectSideSnap');
+  if (sideSnapBtn) {
+    sideSnapBtn.style.display = sev === 'optimal' ? 'none' : 'inline-flex';
+    sideSnapBtn.textContent = procKey === 'binder-jetting'
+      ? 'Fix → Safe Sinter'
+      : (procKey === 'waam' ? 'Fix → Safe Arc' : 'Fix → Safe Window');
   }
 
   const snapBtn = $id('btnDefectSnapOptimal');
