@@ -4149,6 +4149,29 @@
     background: rgba(15, 23, 42, 0.85);
     border: 1px solid rgba(56, 189, 248, 0.25);
   }
+  .defect-side-causes,
+  .defect-causes-list {
+    margin: 4px 0 0 0;
+    padding-left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: #cbd5e1;
+  }
+  .defect-side-causes strong,
+  .defect-causes-list strong {
+    color: #f8fafc;
+  }
+  html.light .defect-side-causes,
+  html.light .defect-causes-list {
+    color: #1e293b;
+  }
+  html.light .defect-side-causes strong,
+  html.light .defect-causes-list strong {
+    color: #0f172a;
+  }
   .defect-side-footer {
     display: flex;
     flex-direction: column;
@@ -10317,8 +10340,9 @@ window.addEventListener('click', function(e) {
             </div>
 
             <div class="defect-side-block">
-              <span class="defect-side-label">Why It Is Occurring</span>
+              <span class="defect-side-label">All Possible Causes</span>
               <p class="defect-side-text" id="defectSideDriver"></p>
+              <ul class="defect-side-causes" id="defectSideCauses"></ul>
               <div class="defect-side-trigger" id="defectSideTrigger" aria-live="polite"></div>
             </div>
 
@@ -10351,8 +10375,9 @@ window.addEventListener('click', function(e) {
 
           <div class="defect-explainer-grid">
             <div class="defect-explainer-col">
-              <h4 class="defect-col-heading">Theoretical Mechanism</h4>
+              <h4 class="defect-col-heading">Theoretical Mechanism &amp; Root Causes</h4>
               <p class="defect-col-copy" id="defectTheoryBody"></p>
+              <ul class="defect-causes-list" id="defectAllCausesList"></ul>
               <div class="defect-live-callout" id="defectLiveTriggerCallout"></div>
             </div>
             <div class="defect-explainer-col">
@@ -10363,7 +10388,7 @@ window.addEventListener('click', function(e) {
             </div>
           </div>
 
-          <details class="defect-regime-matrix" id="defectRegimeMatrixDetails">
+          <details class="defect-regime-matrix" id="defectRegimeMatrixDetails" open>
             <summary id="defectRegimeMatrixSummary">Compare All Operating Regimes (Theory vs. Experiment)</summary>
             <div class="defect-matrix-scroll">
               <table class="defect-matrix-table">
@@ -10371,7 +10396,7 @@ window.addEventListener('click', function(e) {
                   <tr>
                     <th>Regime</th>
                     <th>Governing Thresholds</th>
-                    <th>Theoretical Driver</th>
+                    <th>All Possible Causes</th>
                     <th>Experimental Signature</th>
                   </tr>
                 </thead>
@@ -14274,6 +14299,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: 'VED < 55 J/mm³ or LOF Index > 1.05 (d/t < 1.35)',
         shortDriver: 'Insufficient Rosenthal thermal enthalpy to wet & remelt underlying layer',
         shortExp: 'Irregular crescent voids enclosing unmelted Ti-6Al-4V powder',
+        causes: [
+          { factor: 'Low VED (< 55 J/mm³)', detail: 'Volumetric energy P/(v·h·t) is below the melting enthalpy needed to fully fuse the powder bed.' },
+          { factor: 'Shallow Melt Pool (d/t < 1.35)', detail: 'Melt pool depth d fails to penetrate ≥1.35× layer thickness t into the substrate.' },
+          { factor: 'Wide Hatch h or Thick Layer t', detail: 'Excessive hatch spacing or layer height drops lateral overlap below 25% (LOF Index > 1.05).' },
+          { factor: 'Low Power P / Fast Speed v', detail: 'Short laser dwell time starves local heat input before capillary wetting completes.' }
+        ],
         theory: 'Per Rosenthal (1946) moving point-source conduction and Coen et al. (2022), thermal diffusion outpaces laser energy absorption when VED drops below ~55 J/mm³. Insufficient melt depth relative to layer thickness t and hatch spacing h (d/t < 1.35) prevents full substrate remelting and capillary wetting.',
         experiment: 'Cross-section metallography and XCT reveal jagged, crescent-shaped interlaminar cavities containing trapped, partially sintered spherical Ti-6Al-4V powder particles along hatch/layer boundaries.',
         astmImpact: 'Severe notch stress concentration cuts Elongation (<6%) and high-cycle fatigue endurance (>40% knockdown), causing ASTM F2924 / F3001 failure even after stress relief.',
@@ -14287,6 +14318,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: '55 ≤ VED ≤ 85 J/mm³, ΔH/hs < 5.5, LOF ≤ 1.05, L/w ≤ π',
         shortDriver: 'Balanced Rosenthal/Eagar-Tsai conduction without vapor recoil instability',
         shortExp: 'Smooth parabolic tracks with >99.8% theoretical density',
+        causes: [
+          { factor: 'Balanced VED (55–85 J/mm³)', detail: 'Laser energy matches Ti-6Al-4V melting enthalpy without triggering vaporization.' },
+          { factor: 'Stable Melt Pool (d/w < 0.60, L/w ≤ π)', detail: 'Semi-elliptical pool remelts ~1.4–2.0× layer thickness without keyhole or balling.' },
+          { factor: 'Sub-Threshold Enthalpy (ΔH/hs < 5.5)', detail: 'Conduction and gentle centrifugal Marangoni convection avoid vapor recoil collapse.' },
+          { factor: 'Adequate Track Overlap (LOF ≤ 1.05)', detail: 'Coordinated P, v, h, and t eliminate inter-track cold-lap voids.' }
+        ],
         theory: 'Following Eagar–Tsai & King et al. (2014), absorbed laser flux melts a smooth semi-elliptical pool governed by conduction and gentle centrifugal Marangoni convection, keeping normalized enthalpy ΔH/hs below the keyhole threshold while remelting ~1.4–2.0× layer thickness.',
         experiment: 'Optical micrographs and synchrotron X-ray imaging show clean overlapping parabolic melt boundaries, relative density >99.8%, minimal spatter, and uniform epitaxial prior-β grains.',
         astmImpact: 'Maximizes structural consistency; pairs cleanly with HIP or Stress-Relief/Annealing to meet ASTM F2924 / F3001 strength, ductility (≥10%), and fatigue targets.',
@@ -14300,6 +14337,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: '85 < VED ≤ 110 J/mm³ or ΔH/hs ≥ 5.5 or d/w ≥ 0.60',
         shortDriver: 'Onset of vapor recoil pressure creating a shallow U-shaped depression',
         shortExp: 'Deeper U-shaped tracks with occasional near-root sub-15 µm gas pores',
+        causes: [
+          { factor: 'Borderline VED (85–110 J/mm³)', detail: 'Energy density sits between stable conduction and full keyhole instability.' },
+          { factor: 'Moderate Pool Aspect (d/w 0.60–0.85)', detail: 'Vapor recoil depresses the melt pool into a U-shaped cavity without deep tip collapse yet.' },
+          { factor: 'Enthalpy Onset (ΔH/hs ≥ 5.5)', detail: 'Peak temperature exceeds ~2500°C, boosting local Fresnel laser absorption.' },
+          { factor: 'High Preheat T₀ / Tight Spot d_b', detail: 'Extra baseplate heat or focal irradiance pushes nominal tracks toward vaporization.' }
+        ],
         theory: 'As peak melt temperature rises past Ti/Al boiling (~2500–3200°C), vapor recoil momentum depresses the liquid surface into a U-shaped cavity (Cunningham et al. 2019). Fresnel multiple laser reflections boost local absorptivity while capillary surface tension still prevents violent collapse.',
         experiment: 'High-speed synchrotron X-ray movies (Khairallah et al. 2016) capture mild surface depression oscillations and sporadic tiny spherical Ar/vapor pores near the transition floor.',
         astmImpact: 'Moderate ductility and fatigue scatter; sporadic microporosity demands HIP post-treatment for critical aerospace ASTM F3001 fracture/fatigue qualification.',
@@ -14313,6 +14356,13 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: 'VED > 110 J/mm³ or d/w ≥ 0.85 or Keyhole Ratio > 1.0',
         shortDriver: 'Violent vapor recoil & Fresnel trapping exceeding surface tension stability',
         shortExp: 'Deep V/J-shaped roots pinching off spherical vapor bubbles + Al loss',
+        causes: [
+          { factor: 'Excessive VED (> 110 J/mm³)', detail: 'Over-concentrated volumetric energy drives pool temperatures toward Ti boiling (3,287°C).' },
+          { factor: 'Deep Melt Pool (d/w ≥ 0.85)', detail: 'High depth-to-width aspect ratio forms a narrow vapor cavity prone to rear-wall collapse.' },
+          { factor: 'High Normalized Enthalpy (ΔH/hs ≥ 5.5)', detail: 'Intense irradiance triggers multiple internal Fresnel reflections, amplifying recoil drilling.' },
+          { factor: 'High Power / Slow Scan Speed or Turnarounds', detail: 'Excess dwell time (or overhang/vector-turnaround heat buildup) spikes vapor pressure.' },
+          { factor: 'Tight Spot d_b / High Preheat T₀', detail: 'Small beam diameter or hot build plate lowers the threshold power for keyhole collapse.' }
+        ],
         theory: 'Per King et al. (2014) and Cunningham et al. (2019), intense vapor recoil drills a deep, narrow capillary cavity amplified by multiple internal Fresnel reflections. Rayleigh–Taylor / hydrodynamic rear-wall surges pinch off the cavity tip, trapping gas bubbles while preferential Al volatilization alters β-transus chemistry.',
         experiment: 'Longitudinal metallography and XCT show high-aspect-ratio (d/w > 0.85) dagger-like tracks trailing strings of large spherical pores at the melt root alongside heavy plume condensate and spatter.',
         astmImpact: 'Root keyhole pores act as internal crack starters under cyclic loading, degrading HCF fatigue life and breaching ASTM F2924 internal porosity limits unless healed by HIP.',
@@ -14326,6 +14376,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: 'L/w > π (Balling Ratio > 1.05)',
         shortDriver: 'Capillary pinch-off of an over-elongated molten cylinder',
         shortExp: 'Discontinuous "string-of-pearls" beaded tracks & rough top surface',
+        causes: [
+          { factor: 'Elongated Melt Pool (L/w > π)', detail: 'Melt pool length exceeds circumference, triggering Plateau–Rayleigh surface-tension pinch-off.' },
+          { factor: 'Excessive Scan Speed v', detail: 'High Peclet number stretches the trailing liquid tail faster than lateral thermal diffusion.' },
+          { factor: 'Poor Wetting / Surface Tension', detail: 'High viscosity or surface oxidation prevents smooth spreading, breaking tracks into beads.' },
+          { factor: 'Low Preheat T₀ & Thin Melt Depth', detail: 'Rapid substrate quench freezes droplets before adjacent tracks can coalesce.' }
+        ],
         theory: 'At excessive scan speed, high Peclet number elongates the trailing melt pool faster than lateral thermal diffusion. Once melt pool length exceeds circumference (L/w > π), Plateau–Rayleigh surface-tension instability minimizes free energy by breaking the liquid cylinder into discrete droplets (Khairallah et al. 2016).',
         experiment: 'Top-surface SEM shows discontinuous, humping "string-of-pearls" beads, open surface crevices, powder denudation gaps, and audible recoater blade strikes during spreading.',
         astmImpact: 'Severe surface roughness (Ra spike) triggers early fatigue crack nucleation, delamination, and build crashes well below ASTM density thresholds.',
@@ -14344,6 +14400,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: 'HI < 75 J/mm or LOF Index > 1.05',
         shortDriver: 'Insufficient linear heat input for powder-stream & substrate dilution',
         shortExp: 'High contact-angle beads with inter-track cold-lap crevices',
+        causes: [
+          { factor: 'Low Heat Input (HI < 75 J/mm)', detail: 'P/v ratio is too low to melt both coaxial powder stream and substrate.' },
+          { factor: 'Insufficient Dilution (d/t < 1.35)', detail: 'Cold melt pool fails to remelt the prior layer, leaving steep >90° bead contact angles.' },
+          { factor: 'Wide Step-Over Hatch h', detail: 'Excessive lateral spacing creates inter-bead cold-lap crevices (LOF Index > 1.05).' },
+          { factor: 'High Traverse Speed v / Low Power P', detail: 'Powder catchment cools the pool before metallurgical bonding occurs.' }
+        ],
         theory: 'When linear heat input HI = P/v falls below 75 J/mm in blown-powder L-DED, coaxial gas-shielded powder catchment drains latent enthalpy before sufficient substrate remelting occurs, preventing metallurgical wetting across adjacent tracks.',
         experiment: 'Cross-sections reveal convex clad beads (>90° contact angle) with sharp inter-bead & inter-layer lack-of-fusion crevices trapping unmelted satellite powder.',
         astmImpact: 'Inter-layer cold-lap planes severely lower transverse ductility and fatigue life below ASTM F2924 / F3187 requirements.',
@@ -14357,6 +14419,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: '75 ≤ HI ≤ 240 J/mm, d/w < 0.58, ΔH/hs < 5.5',
         shortDriver: 'Balanced coaxial powder melting & shallow substrate dilution',
         shortExp: 'Smooth lenticular beads (~15–30% dilution, >99.7% density)',
+        causes: [
+          { factor: 'Optimal Heat Input (75–240 J/mm)', detail: 'Energy balances in-flight powder melting with ~15–30% substrate dilution.' },
+          { factor: 'Controlled Melt Pool (d/w < 0.58)', detail: 'Shallow lenticular pool avoids keyhole gas entrapment and excessive coarsening.' },
+          { factor: 'Sub-Critical Enthalpy (ΔH/hs < 5.5)', detail: 'Steady focal irradiance keeps vapor recoil pressure negligible.' },
+          { factor: 'Consistent Inter-Pass Dwell', detail: 'Controlled substrate preheat preserves uniform bead overlap and cooling rate.' }
+        ],
         theory: 'Inside 75–240 J/mm linear heat input, absorbed laser energy melts blown Ti-6Al-4V powder in flight and forms a stable conduction pool that remelts 15–30% of the prior bead without violent vapor recoil.',
         experiment: 'Optical macrographs display clean, low-porosity lenticular bead overlap, fine basketweave α+β upon stress relief/HIP, and steady melt pool pyrometry signatures.',
         astmImpact: 'Delivers structural >99.7% density and reliable tensile/toughness balance per ASTM F3187 / F2924 after standard stress-relief or HIP.',
@@ -14370,6 +14438,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: 'ΔH/hs ≥ 5.5 or d/w ≥ 0.58 within HI ≤ 240 J/mm',
         shortDriver: 'Elevated irradiance triggering deep dilution & boundary recoil',
         shortExp: 'Deeply penetrating tracks with coarser prior-β and mild gas porosity',
+        causes: [
+          { factor: 'High Irradiance (> 1.5×10⁵ W/cm²)', detail: 'Elevated power or tight spot size drives ΔH/hs ≥ 5.5 and partial recoil depression.' },
+          { factor: 'Elevated Pool Aspect (d/w ≥ 0.58)', detail: 'Downward Marangoni flow deepens remelt penetration into prior beads.' },
+          { factor: 'Rising Inter-Pass Preheat', detail: 'Cumulative substrate heat slows solidification cooling rates and widens prior-β.' },
+          { factor: 'Carrier Gas Entrainment', detail: 'Deeper turbulent pool traps occasional coaxial argon carrier bubbles.' }
+        ],
         theory: 'High irradiance (>1.5×10⁵ W/cm²) or rising inter-pass preheat intensifies downward Marangoni flow and partial recoil depression, deepening remelt penetration and slowing solidification cooling rates.',
         experiment: 'Macrographs show deeper U-shaped dilution profiles into prior layers, coarser columnar prior-β widths, and occasional trapped carrier-gas pores.',
         astmImpact: 'Moderate yield reduction via Hall–Petch lath coarsening plus occasional gas porosity risk requiring Stress-Relief or HIP.',
@@ -14383,6 +14457,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: 'HI > 240 J/mm or Keyhole Ratio > 1.0 or d/w ≥ 0.80',
         shortDriver: 'Excessive linear heat input causing deep remelt & gas entrapment',
         shortExp: 'Bulbous deep penetration, heavy Al oxidation risk, and spherical pores',
+        causes: [
+          { factor: 'Excessive Heat Input (HI > 240 J/mm)', detail: 'High P/v saturates substrate thermal capacity and collapses thermal gradients.' },
+          { factor: 'Deep Keyhole Pool (d/w ≥ 0.80)', detail: 'Vapor recoil turbulence traps coaxial argon carrier gas in the solidifying root.' },
+          { factor: 'Insufficient Inter-Layer Dwell', detail: 'Unchecked heat buildup causes >50% remelt dilution and coarse columnar β grains.' },
+          { factor: 'High Power / Slow Traverse Speed', detail: 'Prolonged laser residence induces Al vaporization and shielding heat-tint risk.' }
+        ],
         theory: 'Above 240 J/mm, heat accumulation collapses thermal gradients, drives excessive vapor depression and melt turbulence, and entraps coaxial argon carrier bubbles inside a sluggish solidifying root.',
         experiment: 'Metallography reveals >50% remelt dilution, coarse columnar β grains, heat-tint discoloration if shielding lags, and sub-surface spherical gas pores.',
         astmImpact: 'Thermal distortion, softened yield strength, and trapped gas porosity degrade fatigue resistance below ASTM F3187 targets.',
@@ -14401,6 +14481,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: 'HI < 120 J/mm (Arc Heat Input)',
         shortDriver: 'Insufficient arc enthalpy to wet thick cold Ti-6Al-4V beads',
         shortExp: 'Tall narrow "fingered" beads with inter-pass cold-lap grooves',
+        causes: [
+          { factor: 'Low Arc Heat Input (HI < 120 J/mm)', detail: 'Arc energy P/v cannot overcome rapid conduction into the dense Ti-6Al-4V substrate.' },
+          { factor: 'Shallow Weld Penetration', detail: 'High bead contact angle leaves un-fused root cold-lap notches along pass toes.' },
+          { factor: 'Fast Arc Travel Speed v / Low Current', detail: 'Cold pool freezes before wire metal wets laterally onto adjacent beads.' },
+          { factor: 'Wide Step-Over / Low Interpass Temp', detail: 'Insufficient pass overlap prevents smooth tie-in between parallel weld tracks.' }
+        ],
         theory: 'In wire-arc AM, thermal conduction into the dense substrate rapidly quenches a low-energy arc pool when HI = P/v < 120 J/mm, raising bead contact angle and preventing fusion wetting along toe lines.',
         experiment: 'Macro-etched cross-sections show steep bead flanks, un-fused root cold-lap notches between parallel passes, and uneven deposit geometry.',
         astmImpact: 'Inter-bead cold-lap notches trigger premature brittle fracture under transverse bending/fatigue loads.',
@@ -14414,6 +14500,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: '120 ≤ HI ≤ 600 J/mm',
         shortDriver: 'Stable CMT/TIG arc pool wetting with controlled Widmanstätten α+β',
         shortExp: 'Flat, uniform weld beads (>99.8% density, 12–14% as-built elongation)',
+        causes: [
+          { factor: 'Balanced Arc HI (120–600 J/mm)', detail: 'Arc energy matches wire feed rate with controlled substrate remelting.' },
+          { factor: 'Moderate Cooling (10–250 K/s)', detail: 'Naturally transforms β into tough Widmanstätten α+β basketweave (>12% elongation).' },
+          { factor: 'Stable Pool Wetting', detail: 'Low bead contact angle yields >99.8% density with zero cold-lap grooves.' },
+          { factor: 'Controlled Interpass (< 200°C)', detail: 'Pure Ar trailing shield and dwell keep prior-β colony size refined.' }
+        ],
         theory: 'Within HI = 120–600 J/mm, arc heat input balances wire melting rate with substrate remelt depth, yielding moderate cooling rates (~10–250 K/s) that naturally transform β into tough Widmanstätten α+β basketweave.',
         experiment: 'Macrographs show uniform flat-topped tracks, full inter-pass fusion with minimal humping, and naturally ductile >12% as-deposited tensile elongation.',
         astmImpact: 'Satisfies structural WAAM Ti-6Al-4V baselines cleanly; stress-relief further removes residual macro-warpage for thick preforms.',
@@ -14427,6 +14519,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: '420 < HI ≤ 600 J/mm (Upper Arc Window)',
         shortDriver: 'Slow solidification cooling promoting broader columnar prior-β',
         shortExp: 'Wider flatter beads with coarser α+β colonies and heat-tint edge risk',
+        causes: [
+          { factor: 'Upper Arc HI (420–600 J/mm)', detail: 'Elevated linear heat input slows solidification cooling rate dT/dt.' },
+          { factor: 'Multi-Layer Heat Retention', detail: 'Accumulated enthalpy coarsens α-lath colonies (Hall–Petch yield drop).' },
+          { factor: 'Wide Shallow Arc Pool', detail: 'Flatter beads increase thermal distortion risk on thin unsupported walls.' },
+          { factor: 'Elevated Trailing Purge Demand', detail: 'Longer hot residence time raises surface oxidation / heat-tint sensitivity.' }
+        ],
         theory: 'Operating near the upper 420–600 J/mm boundary reduces solidification cooling rate dT/dt as multi-layer heat accumulates, thickening α-lath colonies (Hall–Petch softening) and elevating purge demands.',
         experiment: 'Etched sections exhibit centimeter-scale columnar prior-β bands traversing multiple deposited layers and heightened trailing-shield argon demand.',
         astmImpact: 'Higher ductility (>13.5%) accompanied by slight yield strength drop (~20–40 MPa) and elevated thermal distortion on thin walls.',
@@ -14440,6 +14538,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: 'HI > 600 J/mm (Overheat Ratio > 1.0)',
         shortDriver: 'Excessive arc energy causing pool sag, distortion & β coarsening',
         shortExp: 'Wall slumping, coarse β bands, heat-tint embrittlement risk',
+        causes: [
+          { factor: 'Excessive Arc HI (> 600 J/mm)', detail: 'Over-energized arc pool exceeds surface-tension containment, causing side-wall sag.' },
+          { factor: 'Slow Cooling & Coarse β Bands', detail: 'Collapsed thermal gradients grow centimeter-scale β grains and weaken yield.' },
+          { factor: 'High Macro Thermal Warpage', detail: 'Large remelt volume drives severe longitudinal tensile stress and baseplate bowing.' },
+          { factor: 'Shielding Lag / O₂ Pickup', detail: 'Prolonged molten exposure risks straw/blue heat-tint oxidation and embrittlement.' }
+        ],
         theory: 'Above 600 J/mm, multi-layer enthalpy retention shrinks surface-tension containment of the large molten arc pool, inducing side-wall bead sag, heavy thermal residual distortion, and severe α-colony coarsening.',
         experiment: 'Builds show molten side-wall run-off, macro-warpage of baseplates, straw/blue surface oxidation if purge lags, and degraded yield strength.',
         astmImpact: 'Dimensional out-of-tolerance distortion and potential oxygen pickup violate aerospace Ti-6Al-4V interstitial & mechanical limits.',
@@ -14458,6 +14562,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: 'Binder Sat < 40% or Bed Temp < 80°C or Sinter Temp < 1180°C',
         shortDriver: 'Insufficient green-body polymer bridges or slow solid-state neck diffusion',
         shortExp: 'Fragile depowdering green parts & interconnected open porosity (>5%)',
+        causes: [
+          { factor: 'Low Binder Saturation (< 40%)', detail: 'Too little polymer binder forms weak particle bridges, causing green edge crumbling.' },
+          { factor: 'Low Sintering Temp (< 1180°C)', detail: 'Insufficient thermal activation arrests solid-state grain-boundary neck diffusion.' },
+          { factor: 'Short Vacuum Soak / Low Bed Temp', detail: 'Incomplete curing and short dwell leave >5% interconnected open porosity.' },
+          { factor: 'Open Surface-Connected Voids', detail: 'Open pores (<94% density) cannot be closed by capsule-free HIP.' }
+        ],
         theory: 'Binder Jetting relies on room-temperature capillary inkjet binding followed by thermally activated solid-state diffusion (vacancy & grain-boundary diffusion). Too little binder or insufficient thermal soak arrests neck growth between powder particles.',
         experiment: 'Microscopy & Archimedes density show interconnected open pores (<94% density), crumbling green edges during depowdering, and sharp shrinkage deficit.',
         astmImpact: 'Open surface-connected porosity cannot be sealed by capsule-free HIP, resulting in brittle low-elongation parts failing ASTM F2924.',
@@ -14471,6 +14581,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: 'Sat 40–110%, Bed 80–210°C, Vacuum Sinter 1250–1350°C',
         shortDriver: 'Uniform polymer burnout & closed-pore solid-state diffusional shrinkage',
         shortExp: 'Equiaxed α+β microstructure with closed >96–99.8% density (post-HIP)',
+        causes: [
+          { factor: 'Balanced Saturation (40–110%)', detail: 'Holds isotropic green strength for depowdering without capillary bed bleeding.' },
+          { factor: 'β-Field Vacuum Sinter (1250–1350°C)', detail: 'Drives diffusional shrinkage past 95% density into closed spherical pores.' },
+          { factor: 'Clean Low-O₂ Debinding', detail: 'Removes polymer residue completely, preserving ASTM interstitial limits.' },
+          { factor: 'Zero Melt-Pool Gradients', detail: 'Solid-state sintering avoids columnar texture, residual stress, and keyhole voids.' }
+        ],
         theory: 'Balanced binder saturation holds isotropic green strength without bed bleeding, followed by clean debinding and vacuum sintering in the β-phase field (1250–1350°C), isolating residual pores (<4%) into closed spherical voids ready for HIP closure.',
         experiment: 'Micrographs show equiaxed α+β grains (zero columnar texture or melt-pool porosity) reaching ~96.5% sintered density and >99.8% theoretical density after HIP.',
         astmImpact: 'With post-sinter HIP (920°C / 100 MPa), meets ASTM F2924 isotropic mechanical and ductility targets (>12% elongation).',
@@ -14484,6 +14600,12 @@ const DEFECT_REGIME_EXPLAINERS = Object.freeze({
         thresholds: 'Binder Sat > 110% or Bed Temp > 210°C or Sinter Temp > 1350°C',
         shortDriver: 'Capillary binder bleeding & excessive β-grain creep slumping',
         shortExp: 'Blurred dimensional edges, carbon residue & giant equiaxed grains',
+        causes: [
+          { factor: 'Excess Binder Saturation (> 110%)', detail: 'Capillary wicking bleeds liquid binder beyond CAD contours, swelling edges.' },
+          { factor: 'Excess Sinter Temp (> 1350°C)', detail: 'Drops skeleton creep resistance, causing gravity-driven overhang slumping.' },
+          { factor: 'Rapid β-Grain Coarsening', detail: 'High soak temperature grows giant prior-β colonies and lowers yield strength.' },
+          { factor: 'Carbon / O₂ Interstitial Pickup', detail: 'Incomplete burnout of excess binder leaves brittle carbides/oxides.' }
+        ],
         theory: 'Oversaturated inkjet binder wicks laterally beyond CAD contours during printing, while excessive vacuum temperatures (>1350°C) drop flow resistance of the porous skeleton, triggering gravity-driven creep slumping and rapid β-grain growth.',
         experiment: 'Sintered parts display sagged overhangs, swollen edges, elevated interstitial carbon/oxygen pickup from incomplete debind, and coarsened α colonies.',
         astmImpact: 'Dimensional warpage and interstitial embrittlement violate both geometric tolerances and ASTM Ti-6Al-4V elongation minimums.',
@@ -14665,6 +14787,19 @@ function updateDefectRegimeExplainer(physInput) {
   }
   const sideDriverEl = $id('defectSideDriver');
   if (sideDriverEl) sideDriverEl.textContent = `${entry.shortDriver} (${entry.thresholds}).`;
+
+  const _buildCauseNodes = (causesArr) => (Array.isArray(causesArr) ? causesArr : []).map((c) => {
+    const li = document.createElement('li');
+    const strong = document.createElement('strong');
+    strong.textContent = `${c.factor}: `;
+    li.appendChild(strong);
+    li.appendChild(document.createTextNode(c.detail));
+    return li;
+  });
+
+  const sideCausesEl = $id('defectSideCauses');
+  if (sideCausesEl) sideCausesEl.replaceChildren(..._buildCauseNodes(entry.causes));
+
   const sideEffectEl = $id('defectSideEffect');
   if (sideEffectEl) sideEffectEl.textContent = `${entry.shortExp}.`;
   const sideFixEl = $id('defectSideFix');
@@ -14688,6 +14823,9 @@ function updateDefectRegimeExplainer(physInput) {
   const theoryEl = $id('defectTheoryBody');
   if (theoryEl) theoryEl.textContent = entry.theory;
 
+  const allCausesEl = $id('defectAllCausesList');
+  if (allCausesEl) allCausesEl.replaceChildren(..._buildCauseNodes(entry.causes));
+
   const expEl = $id('defectExpBody');
   if (expEl) expEl.textContent = entry.experiment;
 
@@ -14710,7 +14848,7 @@ function updateDefectRegimeExplainer(physInput) {
   const matSummary = $id('defectRegimeMatrixSummary');
   if (matSummary) {
     const pTitle = procKey === 'ded-laser' ? 'L-DED' : (procKey === 'binder-jetting' ? 'Binder Jetting' : procKey.toUpperCase());
-    matSummary.textContent = `Compare All ${pTitle} Operating Regimes (${procSpec.order.length} Regimes · Theory vs. Experiment)`;
+    matSummary.textContent = `Compare All ${pTitle} Operating Regimes (${procSpec.order.length} Regimes · All Possible Causes & Experiment)`;
   }
 
   const matBody = $id('defectRegimeMatrixBody');
@@ -14719,7 +14857,10 @@ function updateDefectRegimeExplainer(physInput) {
       const r = procSpec.regimes[key];
       const tr = document.createElement('tr');
       if (key === regKey) tr.className = 'is-active-regime';
-      const cols = [r.name, r.thresholds, r.shortDriver, r.shortExp];
+      const allFactors = Array.isArray(r.causes) && r.causes.length
+        ? r.causes.map((c) => c.factor).join(' · ')
+        : r.shortDriver;
+      const cols = [r.name, r.thresholds, allFactors, r.shortExp];
       cols.forEach((val) => {
         const td = document.createElement('td');
         td.textContent = val;
