@@ -2560,6 +2560,12 @@
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 12px;
+    color: #cbd5e1;
+  }
+  html.light .scenario-card {
+    background: #f8fafc;
+    border-color: rgba(15, 23, 42, 0.14);
+    color: #1e293b;
   }
 
   /* Editable Economics Inputs */
@@ -21529,7 +21535,17 @@ function updateSensitivityCurves(p, v, h, t) {
 
 // 7. Scenario Comparison & Staging (Scenario A vs B)
 let scenarioA = null;
-function stageScenarioA() {
+
+function _parseNumSafe(el, fallback) {
+  if (!el) return fallback;
+  const raw = (el.value !== undefined && el.value !== '') ? String(el.value) : String(el.innerText || el.textContent || '');
+  const cleaned = raw.replace(/,/g, '').replace(/[^0-9.\-+]/g, ' ').trim().split(/\s+/)[0];
+  const parsed = parseFloat(cleaned);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function _captureCurrentScenarioSnapshot() {
+  const st = (typeof window !== 'undefined' && window.latestPhysicsState) ? window.latestPhysicsState : {};
   const elP = document.getElementById('sl_p');
   const elV = document.getElementById('sl_v');
   const elH = document.getElementById('sl_h');
@@ -21538,89 +21554,130 @@ function stageScenarioA() {
   const elUts = document.getElementById('kpi_uts');
   const elVed = document.getElementById('kpi_ved');
 
-  scenarioA = {
-    p: elP ? parseFloat(elP.value) : 280,
-    v: elV ? parseFloat(elV.value) : 960,
-    h: elH ? parseFloat(elH.value) : 110,
-    t: elT ? parseFloat(elT.value) : 40,
-    hv: elHv ? parseInt(elHv.innerText) || 339 : 339,
-    uts: elUts ? parseInt(elUts.innerText) || 1034 : 1034,
-    ved: elVed ? parseFloat(elVed.innerText) || 66.3 : 66.3
-  };
+  const p = Number.isFinite(Number(st.p)) ? Math.round(Number(st.p)) : _parseNumSafe(elP, 280);
+  const v = Number.isFinite(Number(st.v)) ? Number(Number(st.v).toFixed(1)) : _parseNumSafe(elV, 960);
+  const h = Number.isFinite(Number(st.h)) ? Math.round(Number(st.h)) : _parseNumSafe(elH, 110);
+  const t = Number.isFinite(Number(st.t)) ? Math.round(Number(st.t)) : _parseNumSafe(elT, 40);
+  const hvFallback = _parseNumSafe(elHv, 339);
+  const hv = (typeof window !== 'undefined' && Number.isFinite(Number(window.__lastCalcPrimaryHv)))
+    ? Math.round(Number(window.__lastCalcPrimaryHv))
+    : Math.round(hvFallback);
+  const utsFallback = _parseNumSafe(elUts, 1034);
+  const uts = Number.isFinite(Number(st.tensileStrength)) ? Math.round(Number(st.tensileStrength)) : Math.round(utsFallback);
+  const vedFallback = _parseNumSafe(elVed, 66.3);
+  const ved = Number((Number.isFinite(Number(st.ved)) ? Number(st.ved) : vedFallback).toFixed(1));
+  const meltW = Number.isFinite(Number(st.estW)) ? Math.round(Number(st.estW)) : 145;
+  const meltD = Number.isFinite(Number(st.estD)) ? Math.round(Number(st.estD)) : 74;
+  const aspectRatio = Number.isFinite(Number(st.aspectRatio))
+    ? Number(st.aspectRatio)
+    : Number((meltD / Math.max(1, meltW)).toFixed(2));
+  const buildRate = Number(((v * h * t * 3600) / 1e9).toFixed(1));
+  const rawRegime = String(st.regimeLabel || st.defectLabel || 'Conduction');
+  const regime = rawRegime.replace(/\s*\[.*\]\s*$/, '');
+
+  return { p, v, h, t, hv, uts, ved, meltW, meltD, aspectRatio, buildRate, regime };
+}
+
+function _renderScenarioCard(elId, scen) {
+  const el = document.getElementById(elId);
+  if (!el || !scen) return;
+  const line1 = document.createElement('div');
+  line1.textContent = `Power: ${scen.p} W · Speed: ${scen.v} mm/s · Hatch: ${scen.h} µm · Layer: ${scen.t} µm`;
+  const line2 = document.createElement('div');
+  line2.textContent = `VED: ${scen.ved.toFixed(1)} J/mm³ · Hardness: ${scen.hv} HV · UTS: ${Math.round(scen.uts).toLocaleString()} MPa`;
+  const line3 = document.createElement('div');
+  line3.textContent = `Melt Pool: ${scen.meltW} × ${scen.meltD} µm · Build Rate: ${scen.buildRate.toFixed(1)} cm³/h · Regime: ${scen.regime}`;
+  el.replaceChildren(line1, line2, line3);
+}
+
+let _stageBtnTimer = null;
+function stageScenarioA() {
+  scenarioA = _captureCurrentScenarioSnapshot();
 
   const btn = document.getElementById('btnStageA');
   if (btn) {
     btn.innerText = '✅ Scenario A Staged!';
     btn.style.color = '#34d399';
-    setTimeout(() => { btn.innerText = '📌 Re-Freeze Scenario A'; btn.style.color = ''; }, 2000);
+    if (_stageBtnTimer) clearTimeout(_stageBtnTimer);
+    _stageBtnTimer = setTimeout(() => {
+      btn.innerText = '📌 Re-Freeze Scenario A';
+      btn.style.color = '';
+      _stageBtnTimer = null;
+    }, 2000);
   }
+  const tagA = document.getElementById('scenATag');
+  if (tagA) tagA.textContent = 'Frozen';
 
-  const dEl = document.getElementById('scenADetails');
-  if (dEl) {
-    dEl.innerHTML = '<div>Power: ' + scenarioA.p + ' W · Speed: ' + scenarioA.v + ' mm/s · Hatch: ' + scenarioA.h + ' µm · Layer: ' + scenarioA.t + ' µm</div>' +
-      '<div>VED: ' + scenarioA.ved + ' J/mm³ · Hardness: ' + scenarioA.hv + ' HV · UTS: ' + scenarioA.uts + ' MPa</div>' +
-      '<div>Melt Pool Aspect: 0.51 · Staged as Baseline</div>';
-  }
   updateScenarioComparison();
 }
 
 function updateScenarioComparison() {
-  const elP = document.getElementById('sl_p');
-  const elV = document.getElementById('sl_v');
-  const elH = document.getElementById('sl_h');
-  const elT = document.getElementById('sl_t');
-  const elHv = document.getElementById('kpi_hv');
-  const elUts = document.getElementById('kpi_uts');
-  const elVed = document.getElementById('kpi_ved');
-
-  const curB = {
-    p: elP ? parseFloat(elP.value) : 280,
-    v: elV ? parseFloat(elV.value) : 960,
-    h: elH ? parseFloat(elH.value) : 110,
-    t: elT ? parseFloat(elT.value) : 40,
-    hv: elHv ? parseInt(elHv.innerText) || 339 : 339,
-    uts: elUts ? parseInt(elUts.innerText) || 1034 : 1034,
-    ved: elVed ? parseFloat(elVed.innerText) || 66.3 : 66.3
-  };
-
-  const bDetails = document.getElementById('scenBDetails');
-  if (bDetails) {
-    bDetails.innerHTML = '<div>Power: ' + curB.p + ' W · Speed: ' + curB.v + ' mm/s · Hatch: ' + curB.h + ' µm · Layer: ' + curB.t + ' µm</div>' +
-      '<div>VED: ' + curB.ved + ' J/mm³ · Hardness: ' + curB.hv + ' HV · UTS: ' + curB.uts + ' MPa</div>' +
-      '<div>Active Operating Point</div>';
+  const curB = _captureCurrentScenarioSnapshot();
+  if (!scenarioA) {
+    scenarioA = Object.assign({}, curB);
   }
+
+  _renderScenarioCard('scenADetails', scenarioA);
+  _renderScenarioCard('scenBDetails', curB);
 
   const tbody = document.getElementById('scenarioDeltaBody');
   if (!tbody) return;
 
-  const a = scenarioA || curB;
-  const deltaP = curB.p - a.p;
-  const deltaV = curB.v - a.v;
-  const deltaHv = curB.hv - a.hv;
-  const deltaUts = curB.uts - a.uts;
+  const a = scenarioA;
+  const deltaP = Number((curB.p - a.p).toFixed(1));
+  const deltaV = Number((curB.v - a.v).toFixed(1));
+  const deltaHv = Math.round(curB.hv - a.hv);
+  const deltaUts = Math.round(curB.uts - a.uts);
   const deltaVed = Number((curB.ved - a.ved).toFixed(1));
+  const deltaRate = Number((curB.buildRate - a.buildRate).toFixed(1));
+
+  const fmtDelta = (val, decimals) => {
+    const num = decimals > 0 ? Number(val.toFixed(decimals)) : Math.round(val);
+    if (Object.is(num, -0) || num === 0) return '0';
+    return (num > 0 ? '+' : '') + (decimals > 0 ? num.toFixed(decimals) : num.toLocaleString());
+  };
 
   const rows = [
-    { name: "Laser Power P", valA: a.p + " W", valB: curB.p + " W", delta: (deltaP > 0 ? '+' : '') + deltaP + " W", note: deltaP === 0 ? "Identical power" : (deltaP > 0 ? "Higher melt penetration" : "Lower heat input") },
-    { name: "Scan Speed v", valA: a.v + " mm/s", valB: curB.v + " mm/s", delta: (deltaV > 0 ? '+' : '') + deltaV + " mm/s", note: deltaV === 0 ? "Identical speed" : (deltaV > 0 ? "Faster cooling rate" : "Slower cooling rate") },
-    { name: "Volumetric Energy (VED)", valA: a.ved + " J/mm³", valB: curB.ved + " J/mm³", delta: (deltaVed > 0 ? '+' : '') + deltaVed + " J/mm³", note: Math.abs(deltaVed) < 5 ? "Equi-energetic regime" : (deltaVed > 0 ? "Higher enthalpy input" : "Lower energy density") },
-    { name: "Predicted Hardness", valA: a.hv + " HV", valB: curB.hv + " HV", delta: (deltaHv > 0 ? '+' : '') + deltaHv + " HV", note: Math.abs(deltaHv) < 5 ? "Within measurement scatter" : (deltaHv > 0 ? "Harder α' lath structure" : "Softened / decomposed") },
-    { name: "Estimated Tensile UTS", valA: a.uts + " MPa", valB: curB.uts + " MPa", delta: (deltaUts > 0 ? '+' : '') + deltaUts + " MPa", note: curB.uts >= 895 ? "Exceeds ASTM F2924 (895 MPa)" : "Below ASTM F2924 minimum" }
+    { name: 'Laser Power P', valA: `${a.p} W`, valB: `${curB.p} W`, delta: `${fmtDelta(deltaP, 0)} W`, rawDelta: deltaP, note: deltaP === 0 ? 'Identical power' : (deltaP > 0 ? 'Higher melt penetration' : 'Lower heat input') },
+    { name: 'Scan Speed v', valA: `${a.v} mm/s`, valB: `${curB.v} mm/s`, delta: `${fmtDelta(deltaV, 1).replace(/\.0$/, '')} mm/s`, rawDelta: deltaV, note: deltaV === 0 ? 'Identical speed' : (deltaV > 0 ? 'Faster cooling rate' : 'Slower cooling rate') },
+    { name: 'Volumetric Energy (VED)', valA: `${a.ved.toFixed(1)} J/mm³`, valB: `${curB.ved.toFixed(1)} J/mm³`, delta: `${fmtDelta(deltaVed, 1)} J/mm³`, rawDelta: deltaVed, note: Math.abs(deltaVed) < 5 ? 'Equi-energetic regime' : (deltaVed > 0 ? 'Higher enthalpy input' : 'Lower energy density') },
+    { name: 'Predicted Hardness', valA: `${a.hv} HV`, valB: `${curB.hv} HV`, delta: `${fmtDelta(deltaHv, 0)} HV`, rawDelta: deltaHv, note: Math.abs(deltaHv) < 5 ? 'Within measurement scatter' : (deltaHv > 0 ? "Harder α' lath structure" : 'Softened / decomposed') },
+    { name: 'Estimated Tensile UTS', valA: `${a.uts.toLocaleString()} MPa`, valB: `${curB.uts.toLocaleString()} MPa`, delta: `${fmtDelta(deltaUts, 0)} MPa`, rawDelta: deltaUts, note: curB.uts >= 895 ? 'Exceeds ASTM F2924 (895 MPa)' : 'Below ASTM F2924 minimum' },
+    { name: 'Volumetric Build Rate', valA: `${a.buildRate.toFixed(1)} cm³/h`, valB: `${curB.buildRate.toFixed(1)} cm³/h`, delta: `${fmtDelta(deltaRate, 1)} cm³/h`, rawDelta: deltaRate, note: Math.abs(deltaRate) < 0.2 ? 'Equivalent throughput' : (deltaRate > 0 ? 'Higher build productivity' : 'Lower volumetric throughput') }
   ];
 
-  let htmlStr = '';
-  rows.forEach(r => {
-    const isZero = r.delta.startsWith('0') || r.delta === '+0' || r.delta === '-0';
-    const col = isZero ? '#94a3b8' : (r.delta.startsWith('+') ? '#fbbf24' : '#38bdf8');
-    htmlStr += '<tr>' +
-      '<td style="font-weight: 700; color: #fff;">' + r.name + '</td>' +
-      '<td style="font-family: monospace; color: var(--text-secondary);">' + r.valA + '</td>' +
-      '<td style="font-family: monospace; color: #fff;">' + r.valB + '</td>' +
-      '<td style="font-family: monospace; color: ' + col + '; font-weight: bold;">' + r.delta + '</td>' +
-      '<td style="color: var(--text-muted); font-size: 10.5px;">' + r.note + '</td>' +
-    '</tr>';
+  const rowEls = rows.map((r) => {
+    const tr = document.createElement('tr');
+    const tdName = document.createElement('td');
+    tdName.style.fontWeight = '700';
+    tdName.style.color = 'var(--text-primary)';
+    tdName.textContent = r.name;
+
+    const tdA = document.createElement('td');
+    tdA.style.fontFamily = 'monospace';
+    tdA.style.color = 'var(--text-secondary)';
+    tdA.textContent = r.valA;
+
+    const tdB = document.createElement('td');
+    tdB.style.fontFamily = 'monospace';
+    tdB.style.color = 'var(--text-primary)';
+    tdB.textContent = r.valB;
+
+    const tdDelta = document.createElement('td');
+    tdDelta.style.fontFamily = 'monospace';
+    tdDelta.style.fontWeight = 'bold';
+    tdDelta.style.color = r.rawDelta === 0 ? '#94a3b8' : (r.rawDelta > 0 ? '#fbbf24' : '#38bdf8');
+    tdDelta.textContent = r.delta;
+
+    const tdNote = document.createElement('td');
+    tdNote.style.color = 'var(--text-muted)';
+    tdNote.style.fontSize = '10.5px';
+    tdNote.textContent = r.note;
+
+    tr.append(tdName, tdA, tdB, tdDelta, tdNote);
+    return tr;
   });
-  tbody.innerHTML = htmlStr;
+  tbody.replaceChildren(...rowEls);
 }
 
 // 8. Interactive Editable Economics Calculator
